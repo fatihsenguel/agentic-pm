@@ -1,0 +1,36 @@
+@"
+# Python
+__pycache__/
+*.py[cod]
+*`$py.class
+*.so
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Database
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Environment
+.env
+*.local
+
+# IDE
+.vscode/
+.idea/
+
+# Outputs
+outputs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+"@ | Out-File -FilePath .gitignore -Encoding UTF8

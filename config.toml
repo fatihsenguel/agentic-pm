@@ -1,0 +1,6 @@
+[data_fetch]
+# Intervalle in Tagen, wie oft wir versuchen sollen, diese Daten abzurufen.
+earnings_fetch_interval_days = 7
+profile_fetch_interval_days  = 30
+shares_fetch_interval_days   = 30
+
