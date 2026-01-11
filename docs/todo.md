@@ -46,7 +46,7 @@ result = dm.update_prices_for_asset(asset)
 - [ ] Refactor `update_prices_for_asset()` to return `UpdateResult`
 
 ### ⏳ **Not Started:**
-- [ ] Refactor remaining 4 update methods
+- [x] Refactor remaining 4 update methods
 - [ ] Create LangChain tool wrappers
 - [ ] Build single-agent MVP
 

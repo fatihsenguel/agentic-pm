@@ -144,3 +144,23 @@ class DatabaseQuotaManager:
             print(f"FATAL [QuotaManager]: Logging des API-Aufrufs fehlgeschlagen: {e}")
             # Dies ist ein ernstes Problem, da unser Logging versagt,
             # aber wir sollten den Hauptprozess nicht deswegen abbrechen.
+
+
+# MOCK QUOTA MANAGER JUST FOR TESTING
+class MockQuotaManager:
+    """
+    Mock QuotaManager für Tests.
+    Erlaubt alle API-Calls ohne echte Quota-Prüfung und DB-Logs.
+    """
+    
+    def __init__(self, session):
+        self.session = session
+        print("   ℹ️  Using MockQuotaManager (Testing Mode)")
+    
+    def can_consume_credit(self, cost: int = 1) -> bool:
+        """Immer erlauben (für Tests)."""
+        return True
+    
+    def log_api_call(self, **kwargs):
+        """Nichts loggen (für Tests)."""
+        pass

@@ -136,6 +136,9 @@ class DataManager:
             self.session.rollback()
             raise e  # WICHTIG: Fehler weiterwerfen, damit UpdateResult ihn fangen kann
 
+
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
     def update_prices_for_asset(self, asset: Asset, start_date: date | None = None) -> UpdateResult:
         """Updates daily prices for an asset."""
         try:
@@ -210,7 +213,6 @@ class DataManager:
                 error_message=str(e)
             )
 
-
     def update_dividends_for_asset(self, asset: Asset) -> UpdateResult:
         try:
             print(f"... prüfe Dividenden für {asset.ticker}")
@@ -244,7 +246,6 @@ class DataManager:
 
         except Exception as e:
             return UpdateResult(False, "update_dividends", 0, [asset.ticker], "asset", error_message=str(e))
-
 
     def update_splits_for_asset(self, asset: Asset) -> UpdateResult:
         try:
@@ -281,7 +282,6 @@ class DataManager:
             
         except Exception as e:
             return UpdateResult(False, "update_splits", 0, [asset.ticker], "asset", error_message=str(e))
-
 
     def update_shares_history_for_asset(self, asset: Asset, force_update: bool = False) -> UpdateResult:
         try:
@@ -338,7 +338,6 @@ class DataManager:
             except:
                 pass
             return UpdateResult(False, "update_shares", 0, [asset.ticker], "asset", error_message=str(e))
-
 
     def update_quarterly_earnings_for_asset(self, asset: Asset, force_update: bool = False) -> UpdateResult:
         try:

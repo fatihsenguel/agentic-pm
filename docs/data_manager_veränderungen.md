@@ -3,7 +3,7 @@
 ---
 
 ## **Die Goldene Regel:**
-s
+
 > **Jede neue Methode im `data_manager.py`, die Daten ändert oder abruft, MUSS `UpdateResult` oder `QueryResult` zurückgeben.**
 
 ---
