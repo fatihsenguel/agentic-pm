@@ -9,10 +9,12 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker, Session
 import datetime
 
-# Database (portfolio.db) unah vom pfad machen
-base_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(base_dir)
+# Database (portfolio.db) unabh vom pfad machen
+base_dir = os.path.dirname(os.path.abspath(__file__))  # src/portfolio_tool/
+src_dir = os.path.dirname(base_dir)                      # src/
+project_root = os.path.dirname(src_dir)                  # E:\Programming\AGENTIC_FINANCE\
 db_path = os.path.join(project_root, "data", "portfolio.db")
+
 DATABASE_URL = f"sqlite:///{db_path}"
 
 print(f"DEBUG: Verbinde mit DB unter {DATABASE_URL}")
