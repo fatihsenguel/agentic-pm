@@ -1,0 +1,30 @@
+[project]
+name = "agentic-finance"
+version = "0.1.0"
+description = "Multi-agent financial analysis"
+requires-python = ">=3.10"
+
+# All your dependencies in one place
+dependencies = [
+    "sqlalchemy>=2.0.0",
+    "pandas>=2.0.0",
+    "yfinance>=0.2.0",
+]
+
+# Optional dependency groups
+[project.optional-dependencies]
+agents = [
+    "langchain>=0.2.0",
+    "langgraph>=0.2.0",
+]
+dev = [
+    "pytest>=7.4.0",
+    "black>=23.0.0",
+]
+
+# Tool configurations
+[tool.black]
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
