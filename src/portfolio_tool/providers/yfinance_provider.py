@@ -12,8 +12,8 @@ from ..provider_models import (
     ProviderSplitData, ProviderSharesData,
     ProviderFundamentalData, ProviderEarningsData, ProviderFinancialStatement
 )
-# (1) WIR BEHALTEN SimpleRateLimiter für die FREQUENZ
-from .utils import SimpleRateLimiter
+# (1) WIR BEHALTEN SimpleRateLimiter für die FREQUENZ, safe_int und float für unsave int,float conversation fixes
+from .utils import SimpleRateLimiter, safe_float, safe_int, safe_decimal
 # (2) WIR IMPORTIEREN den NEUEN Manager für das VOLUMEN/LOGGIN
 from portfolio_tool.services.quota_manager import DatabaseQuotaManager
 
@@ -168,11 +168,11 @@ class YFinanceProvider(DataProviderInterface):
             for date_ts, row in df.iterrows():
                 results.append(ProviderPriceData(
                     date=date_ts.date(),
-                    open=Decimal(str(row['Open'])),
-                    high=Decimal(str(row['High'])),
-                    low=Decimal(str(row['Low'])),
-                    close=Decimal(str(row['Close'])),
-                    volume=int(row['Volume'])
+                    open=safe_decimal(row['Open']),
+                    high=safe_decimal(row['High']),
+                    low=safe_decimal(row['Low']),
+                    close=safe_decimal(row['Close']),
+                    volume=safe_int(row['Volume'])
                 ))
             return results
         except (QuotaExceededError, Exception) as e:
@@ -197,7 +197,7 @@ class YFinanceProvider(DataProviderInterface):
                     continue
                 results.append(ProviderDividendData(
                     ex_date=ex_date,
-                    amount=Decimal(str(amount))
+                    amount=safe_decimal(str(amount))
                 ))
             return sorted(results, key=lambda x: x.ex_date)
         except (QuotaExceededError, Exception) as e:
@@ -221,7 +221,7 @@ class YFinanceProvider(DataProviderInterface):
                     continue
                 results.append(ProviderSplitData(
                     date=split_date,
-                    ratio_str=f"{float(ratio)}:1"
+                    ratio_str=f"{safe_float(ratio)}:1"
                 ))
             return sorted(results, key=lambda x: x.date)
         except (QuotaExceededError, Exception) as e:
@@ -244,10 +244,14 @@ class YFinanceProvider(DataProviderInterface):
                 if since and report_date <= since:
                     continue
                 try:
+                    shares = safe_int(shares_val)
+                    if shares is None:
+                        print(f"   [Provider-WARNUNG] Shares-Wert für {ticker} am {report_date} ist NaN/None, überspringe.", file=sys.stderr)
+                        continue
                     results.append(
                         ProviderSharesData(
                             date=report_date,
-                            shares=int(shares_val)
+                            shares=shares
                         )
                     )
                 except (TypeError, ValueError) as e:
@@ -271,7 +275,7 @@ class YFinanceProvider(DataProviderInterface):
                 market_cap=None, 
                 forward_pe=None,
                 trailing_eps=None,
-                beta=Decimal(str(beta)) if beta is not None else None
+                beta=safe_decimal(str(beta)) if beta is not None else None
             )
         except (QuotaExceededError, Exception) as e:
             return None
@@ -293,8 +297,8 @@ class YFinanceProvider(DataProviderInterface):
                 if since and report_date <= since:
                     continue
                 try:
-                    revenue = int(row.get('Total Revenue', 0))
-                    basic_eps = Decimal(str(row.get('Basic EPS', 0.0)))
+                    revenue = safe_int(row.get('Total Revenue', 0))
+                    basic_eps = safe_decimal(str(row.get('Basic EPS', 0.0)))
                     results.append(
                         ProviderEarningsData(
                             report_date=report_date,
@@ -422,15 +426,15 @@ class YFinanceProvider(DataProviderInterface):
                     report_type=report_type,
                     period_type=period_type,
                     source="yfinance",
-                    revenue=float(revenue) if revenue is not None else None,
-                    net_income=float(net_income) if net_income is not None else None,
-                    eps=float(eps) if eps is not None else None,
-                    free_cash_flow=float(kwargs.pop("free_cash_flow")) if "free_cash_flow" in kwargs and kwargs["free_cash_flow"] is not None else None,
-                    total_assets=float(total_assets) if total_assets is not None else None,
-                    total_liabilities=float(total_liabilities) if total_liabilities is not None else None,
+                    revenue=safe_float(revenue) if revenue is not None else None,
+                    net_income=safe_float(net_income) if net_income is not None else None,
+                    eps=safe_float(eps) if eps is not None else None,
+                    free_cash_flow=safe_float(kwargs.pop("free_cash_flow")) if "free_cash_flow" in kwargs and kwargs["free_cash_flow"] is not None else None,
+                    total_assets=safe_float(total_assets) if total_assets is not None else None,
+                    total_liabilities=safe_float(total_liabilities) if total_liabilities is not None else None,
                     raw_json=raw,
                     **{
-                        k: float(v) if v is not None else None
+                        k: safe_float(v) if v is not None else None
                         for k, v in kwargs.items()
                     },
                 )

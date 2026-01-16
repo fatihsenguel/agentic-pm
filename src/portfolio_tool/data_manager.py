@@ -44,7 +44,7 @@ class DataManager:
     
     def __init__(self, session: Session, provider: DataProviderInterface):
         self.session = session
-        self.provider = provider  
+        self.provider = provider
         self.config = CONFIG['data_fetch']
         
     # --- Interne Helfer (unverändert) ---
@@ -138,7 +138,6 @@ class DataManager:
 
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
     def update_prices_for_asset(self, asset: Asset, start_date: date | None = None) -> UpdateResult:
         """Updates daily prices for an asset."""
         try:

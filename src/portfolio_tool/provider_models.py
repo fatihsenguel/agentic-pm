@@ -1,5 +1,5 @@
 # portfolio_tool/provider_models.py
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
 from typing import Optional, Dict, Any
@@ -8,26 +8,29 @@ from typing import Optional, Dict, Any
 Definiert die standardisierten "Data Transfer Objects" (DTOs).
 JEDER Provider (yfinance, alphavantage, etc.) MUSS seine Rohdaten
 in DIESE Formate umwandeln, bevor er sie an den DataManager übergibt.
+
+NOTE: Felder die von externen APIs kommen können NaN/None sein,
+daher sind numerische Felder als Optional definiert.
 """
 
 @dataclass
 class ProviderAssetInfo:
     """Standardisiertes Format für Asset-Stammdaten."""
-    sector: Optional[str]
-    industry: Optional[str]
-    country: Optional[str]
-    currency: Optional[str]
-    long_name: Optional[str]
+    sector: Optional[str] = None
+    industry: Optional[str] = None
+    country: Optional[str] = None
+    currency: Optional[str] = None
+    long_name: Optional[str] = None
 
 @dataclass
 class ProviderPriceData:
     """Standardisiertes Format für tägliche Kurse."""
     date: date
-    open: Decimal
-    high: Decimal
-    low: Decimal
-    close: Decimal
-    volume: int
+    open: Optional[Decimal] = None
+    high: Optional[Decimal] = None
+    low: Optional[Decimal] = None
+    close: Decimal = None  # close ist required für viele Berechnungen
+    volume: Optional[int] = None  # Volume kann NaN sein bei manchen APIs
 
 @dataclass
 class ProviderDividendData:
@@ -45,22 +48,22 @@ class ProviderSplitData:
 class ProviderSharesData:
     """Standardisiertes Format für Aktienanzahl-Historie."""
     date: date
-    shares: int
+    shares: Optional[int] = None  # Kann NaN sein
 
 @dataclass
 class ProviderFundamentalData:
     """Standardisiertes Format für Snapshot-Fundamentaldaten."""
-    market_cap: Optional[int]
-    forward_pe: Optional[Decimal]
-    beta: Optional[Decimal]
-    trailing_eps: Optional[Decimal]
+    market_cap: Optional[int] = None
+    forward_pe: Optional[Decimal] = None
+    beta: Optional[Decimal] = None
+    trailing_eps: Optional[Decimal] = None
 
 @dataclass
 class ProviderEarningsData:
     """Standardisiertes Format für historische Quartalsberichte."""
     report_date: date
-    revenue: int
-    basic_eps: Decimal
+    revenue: Optional[int] = None  # Kann NaN sein
+    basic_eps: Optional[Decimal] = None  # Kann NaN sein
 
 @dataclass
 class ProviderFinancialStatement:
@@ -113,4 +116,4 @@ class ProviderFinancialStatement:
     repurchase_of_stock: Optional[float] = None
 
     # kompletter Roh-Dump aus yfinance (eine Spalte der DataFrame)
-    raw_json: Dict[str, Any] = None
+    raw_json: Optional[Dict[str, Any]] = None

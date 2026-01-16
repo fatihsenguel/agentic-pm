@@ -1,36 +1,58 @@
-# portfolio_tool/services/quota_manager.py
-import sys
-database_setup_path = r"E:\\Programming\\Finance_Phase_3\\portfolio_tool\\database_setup.py"
-
-if database_setup_path not in sys.path:
-        sys.path.append(database_setup_path)
-
-from portfolio_tool.database_setup import ApiQuota, ApiCallLog, PipelineRun
+# =============================================================================
+# FIX 2: quota_manager.py - Session Isolation
+# =============================================================================
+# Location: src/portfolio_tool/services/quota_manager.py
+# 
+# CHANGES:
+# 1. QuotaManager creates its own sessions (not shared with DataManager)
+# 2. Each operation uses a fresh session with proper cleanup
+# 3. No more nested transactions that conflict with DataManager
+#
+# =============================================================================
 
 import datetime
+from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
+
+from portfolio_tool.database_setup import (
+    ApiQuota, 
+    ApiCallLog, 
+    PipelineRun,
+    SessionLocal  # Use the session factory directly
+)
+
 
 class DatabaseQuotaManager:
     """
     Verwaltet zentral API-Quotas und loggt Aufrufe in der Datenbank.
-    Diese Klasse ist zustandsbehaftet und an einen einzelnen PipelineRun gebunden.
+    
+    WICHTIG: Diese Klasse verwendet EIGENE Sessions für alle DB-Operationen,
+    um Konflikte mit dem DataManager zu vermeiden (SQLite Locking).
     """
     
     def __init__(self, 
-                 session: Session, 
-                 pipeline_run_id: int, 
                  provider_name: str, 
-                 daily_limit: int):
+                 daily_limit: int,
+                 pipeline_run_id: int = 9999):  # Default for agent usage
+        """
+        Initialize QuotaManager.
         
-        if not pipeline_run_id:
-            raise ValueError("DatabaseQuotaManager erfordert eine gültige pipeline_run_id.")
-            
-        self.session = session
-        self.pipeline_run_id = pipeline_run_id
+        NOTE: No session parameter! QuotaManager manages its own sessions.
+        
+        Args:
+            provider_name: Name of the API provider (e.g., 'yfinance')
+            daily_limit: Maximum API calls per day
+            pipeline_run_id: ID of the current pipeline run for logging
+        """
         self.provider_name = provider_name
         self.daily_limit = daily_limit
+        self.pipeline_run_id = pipeline_run_id
         print(f"DEBUG [QuotaManager]: Initialisiert für '{provider_name}', Run ID {pipeline_run_id}, Limit {daily_limit}")
+
+    def _get_session(self) -> Session:
+        """Create a new independent session for this operation."""
+        return SessionLocal()
 
     def _get_current_bucket_key(self) -> str:
         """Erzeugt den eindeutigen Schlüssel für das heutige tägliche Quota-Fenster."""
@@ -46,56 +68,54 @@ class DatabaseQuotaManager:
     def can_consume_credit(self) -> bool:
         """
         Prüft atomar, ob ein Aufruf getätigt werden darf und verbraucht ein Credit.
-        Dies ist der "atomisch prüfen + konsumieren"-Schritt.
         
-        Führt einen 'SELECT ... FOR UPDATE' aus, um die Zeile zu sperren,
-        den Zähler zu prüfen, ihn zu erhöhen und zu committen - alles in
-        einer Transaktion.
+        Uses its own session to avoid conflicts with DataManager.
+        
+        Returns:
+            True if credit was consumed, False if limit reached or error
         """
         bucket_key = self._get_current_bucket_key()
+        session = self._get_session()
         
         try:
-            # Wir starten eine "nested" Transaktion. Wenn der aufrufende Code
-            # (z.B. der DataManager) bereits in einer Transaktion ist, wird
-            # ein Savepoint erstellt.
-            with self.session.begin_nested():
-                # 1. Atomar die Quota-Zeile holen und sperren
-                stmt = (
-                    select(ApiQuota)
-                    .where(ApiQuota.bucket_key == bucket_key)
-                    .with_for_update() # WICHTIG: Sperrt die Zeile bis zum Transaktionsende
+            # 1. Get or create quota entry
+            quota = session.query(ApiQuota).filter(
+                ApiQuota.bucket_key == bucket_key
+            ).first()
+            
+            if not quota:
+                print(f"DEBUG [QuotaManager]: Erstelle neuen Quota-Bucket: {bucket_key}")
+                quota = ApiQuota(
+                    provider_name=self.provider_name,
+                    bucket_key=bucket_key,
+                    calls_consumed=0,
+                    window_start_time=self._get_window_start()
                 )
-                quota = self.session.scalars(stmt).first()
-                
-                # 2. Quota-Eintrag erstellen, falls er nicht existiert
-                if not quota:
-                    print(f"DEBUG [QuotaManager]: Erstelle neuen Quota-Bucket: {bucket_key}")
-                    quota = ApiQuota(
-                        provider_name=self.provider_name,
-                        bucket_key=bucket_key,
-                        calls_consumed=0,
-                        window_start_time=self._get_window_start()
-                    )
-                    self.session.add(quota)
-
-                # 3. Prüfen, ob das Limit erreicht ist
-                if quota.calls_consumed < self.daily_limit:
-                    # 4. Limit nicht erreicht: Zähler erhöhen und 'True' zurückgeben
-                    quota.calls_consumed += 1
-                    print(f"DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für {bucket_key}: {quota.calls_consumed}/{self.daily_limit}")
-                    # Die Transaktion wird am Ende des 'with'-Blocks committed
-                    return True
-                else:
-                    # 5. Limit erreicht: Nichts tun, 'False' zurückgeben
-                    print(f"WARN [QuotaManager]: Tägliches Limit erreicht für {bucket_key} ({self.daily_limit})")
-                    # Die Transaktion wird am Ende des 'with'-Blocks committed (ohne Änderung)
-                    # oder zurückgerollt, falls ein Fehler auftritt.
-                    return False
-
+                session.add(quota)
+                session.flush()  # Get the ID without committing
+            
+            # 2. Check limit
+            if quota.calls_consumed >= self.daily_limit:
+                print(f"WARN [QuotaManager]: Tägliches Limit erreicht für {bucket_key} ({self.daily_limit})")
+                session.rollback()
+                return False
+            
+            # 3. Consume credit
+            quota.calls_consumed += 1
+            print(f"DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für {bucket_key}: {quota.calls_consumed}/{self.daily_limit}")
+            
+            session.commit()
+            return True
+            
         except Exception as e:
             print(f"ERROR [QuotaManager]: Fehler bei der Quota-Prüfung: {e}")
-            # Bei einem DB-Fehler (z.B. Deadlock) den Aufruf sicherheitshalber ablehnen
+            try:
+                session.rollback()
+            except:
+                pass
             return False
+        finally:
+            session.close()
 
     def log_api_call(self, 
                      endpoint_name: str, 
@@ -105,56 +125,50 @@ class DatabaseQuotaManager:
                      error_message: str = None,
                      credits_consumed: int = 1):
         """
-        Protokolliert den *Ausgang* eines API-Aufrufs in der ApiCallLog-Tabelle.
+        Protokolliert den Ausgang eines API-Aufrufs in der ApiCallLog-Tabelle.
+        
+        Uses its own session to avoid conflicts with DataManager.
         """
-        if not success:
-            # Wenn der Aufruf fehlschlug, zählen wir ihn nicht gegen das Quota,
-            # (das wir bereits in can_consume_credit gebucht haben).
-            # ABER: Wir loggen ihn als '0 credits' verbraucht.
-            # Dies ist eine Design-Entscheidung: Zählen wir Versuche oder Erfolge?
-            # Aktuell zählt can_consume_credit() den *Versuch*.
-            # Wir loggen hier das Ergebnis.
-            
-            # Wenn der Aufruf selbst fehlschlug (z.B. 404, 500),
-            # wurde der Credit in can_consume_credit() trotzdem verbraucht.
-            # Wir setzen credits_consumed auf 0 nur, wenn die *Quota-Prüfung* fehlschlug.
-            pass # Logik siehe unten
-
-        if error_message and len(error_message) > 950: # Kürzen für die DB
-            error_message = error_message[:950] + "..."
-
-        log_entry = ApiCallLog(
-            pipeline_run_id=self.pipeline_run_id,
-            provider_name=self.provider_name,
-            endpoint_name=endpoint_name,
-            asset_ticker=asset_ticker,
-            call_timestamp=func.now(), # Serverseitige Zeit
-            http_status_code=http_status_code,
-            success=success,
-            # Wenn 'success' Falsch ist, setzen wir die verbrauchten Credits auf 0,
-            # da der Aufruf (vermutlich) nicht durchging.
-            credits_consumed=credits_consumed if success else 0,
-            error_message=error_message
-        )
+        session = self._get_session()
         
         try:
-            with self.session.begin_nested():
-                self.session.add(log_entry)
+            # Truncate error message if too long
+            if error_message and len(error_message) > 950:
+                error_message = error_message[:950] + "..."
+
+            log_entry = ApiCallLog(
+                pipeline_run_id=self.pipeline_run_id,
+                provider_name=self.provider_name,
+                endpoint_name=endpoint_name,
+                asset_ticker=asset_ticker,
+                call_timestamp=datetime.datetime.utcnow(),
+                http_status_code=http_status_code,
+                success=success,
+                credits_consumed=credits_consumed if success else 0,
+                error_message=error_message
+            )
+            
+            session.add(log_entry)
+            session.commit()
+            
         except Exception as e:
-            print(f"FATAL [QuotaManager]: Logging des API-Aufrufs fehlgeschlagen: {e}")
-            # Dies ist ein ernstes Problem, da unser Logging versagt,
-            # aber wir sollten den Hauptprozess nicht deswegen abbrechen.
+            print(f"WARN [QuotaManager]: Logging des API-Aufrufs fehlgeschlagen: {e}")
+            try:
+                session.rollback()
+            except:
+                pass
+            # Don't raise - logging failure shouldn't break the main process
+        finally:
+            session.close()
 
 
-# MOCK QUOTA MANAGER JUST FOR TESTING
 class MockQuotaManager:
     """
     Mock QuotaManager für Tests.
     Erlaubt alle API-Calls ohne echte Quota-Prüfung und DB-Logs.
     """
     
-    def __init__(self, session):
-        self.session = session
+    def __init__(self, session=None):  # session param kept for backwards compatibility
         print("   ℹ️  Using MockQuotaManager (Testing Mode)")
     
     def can_consume_credit(self, cost: int = 1) -> bool:
