@@ -1,9 +1,10 @@
 # src/agents/cli.py
 # Purpose: Interactive REPL for the finance agent
-# Features: Token tracking, debug mode, cost estimation
+# Features: Token tracking, debug mode, cost estimation, full audit trail
 
 import os
 import sys
+import json
 from typing import Optional
 from datetime import datetime
 
@@ -98,14 +99,94 @@ class AgentObserver:
     """
     Observes agent execution for debugging.
     Shows what the agent "thinks" and which tools it calls.
+    
+    Modes:
+    - OFF: No debug output
+    - ON (brief): Shows tool calls and truncated results
+    - VERBOSE: Shows full tool results with formatted JSON
     """
     
-    def __init__(self, enabled: bool = False):
+    def __init__(self, enabled: bool = False, verbose: bool = False):
         self.enabled = enabled
+        self.verbose = verbose  # If True, show full tool results
+    
+    def toggle(self) -> str:
+        """Toggle through debug modes: OFF -> ON -> VERBOSE -> OFF"""
+        if not self.enabled:
+            self.enabled = True
+            self.verbose = False
+            return "ON (brief)"
+        elif not self.verbose:
+            self.verbose = True
+            return "ON (verbose - full tool results)"
+        else:
+            self.enabled = False
+            self.verbose = False
+            return "OFF"
     
     def log(self, message: str):
         if self.enabled:
             print(f"  🔍 {message}")
+    
+    def _format_tool_result(self, content: str) -> str:
+        """Format tool result for display."""
+        try:
+            # Try to parse as JSON and pretty-print
+            data = json.loads(content)
+            
+            if self.verbose:
+                # Full formatted output
+                return json.dumps(data, indent=2, default=str)
+            else:
+                # Brief: Show key metrics only
+                return self._extract_key_info(data)
+        except json.JSONDecodeError:
+            # Not JSON, return as-is (truncated if not verbose)
+            if self.verbose:
+                return content
+            else:
+                return content[:100] + "..." if len(content) > 100 else content
+    
+    def _extract_key_info(self, data: dict) -> str:
+        """Extract and format key information from tool result."""
+        if not isinstance(data, dict):
+            return str(data)[:100]
+        
+        # Build a brief summary based on what fields exist
+        parts = []
+        
+        # Success/Error status
+        if "success" in data:
+            status = "✓" if data["success"] else "✗"
+            parts.append(status)
+        
+        # Ticker
+        if "ticker" in data:
+            parts.append(data["ticker"])
+        
+        # Key metrics (prioritized list)
+        key_fields = [
+            ("total_return_pct", "Return"),
+            ("cagr_pct", "CAGR"),
+            ("volatility_pct", "Vol"),
+            ("sharpe_ratio", "Sharpe"),
+            ("max_drawdown_pct", "MaxDD"),
+            ("affected_count", "Records"),
+            ("count", "Count"),
+            ("current_price", "Price"),
+            ("first_date", "From"),
+            ("last_date", "To"),
+        ]
+        
+        for field, label in key_fields:
+            if field in data and data[field] is not None:
+                parts.append(f"{label}: {data[field]}")
+        
+        # Error message if present
+        if "error" in data and data["error"]:
+            parts.append(f"Error: {data['error'][:50]}")
+        
+        return " | ".join(parts) if parts else str(data)[:100]
     
     def observe_messages(self, messages: list):
         """Log the message flow for debugging."""
@@ -113,27 +194,34 @@ class AgentObserver:
             return
         
         print("\n  ┌─ Agent Thought Process ─────────────────")
+        
         for i, msg in enumerate(messages):
-            msg_type = type(msg).__name__
-            
             if isinstance(msg, SystemMessage):
                 self.log(f"[{i}] SYSTEM: (prompt loaded)")
             
             elif isinstance(msg, HumanMessage):
-                content = str(msg.content)[:50] + "..." if len(str(msg.content)) > 50 else msg.content
+                content = str(msg.content)[:60] + "..." if len(str(msg.content)) > 60 else msg.content
                 self.log(f"[{i}] USER: {content}")
             
             elif isinstance(msg, AIMessage):
                 if hasattr(msg, 'tool_calls') and msg.tool_calls:
                     for tc in msg.tool_calls:
-                        self.log(f"[{i}] 🔧 TOOL CALL: {tc['name']}({tc['args']})")
+                        args_str = json.dumps(tc['args']) if isinstance(tc['args'], dict) else str(tc['args'])
+                        self.log(f"[{i}] 🔧 TOOL CALL: {tc['name']}({args_str})")
                 else:
-                    content = str(msg.content)[:50] + "..." if len(str(msg.content)) > 50 else msg.content
+                    content = str(msg.content)[:60] + "..." if len(str(msg.content)) > 60 else msg.content
                     self.log(f"[{i}] ASSISTANT: {content}")
             
             elif isinstance(msg, ToolMessage):
-                content = str(msg.content)[:80] + "..." if len(str(msg.content)) > 80 else msg.content
-                self.log(f"[{i}] 📦 TOOL RESULT: {content}")
+                formatted = self._format_tool_result(str(msg.content))
+                
+                if self.verbose and "\n" in formatted:
+                    # Multi-line output for verbose mode
+                    self.log(f"[{i}] 📦 TOOL RESULT:")
+                    for line in formatted.split("\n"):
+                        print(f"      {line}")
+                else:
+                    self.log(f"[{i}] 📦 TOOL RESULT: {formatted}")
         
         print("  └──────────────────────────────────────────\n")
 
@@ -150,7 +238,7 @@ def print_banner():
 ║                    ─────────────────────                      ║
 ║  Commands:                                                    ║
 ║    /help     - Show available commands                        ║
-║    /debug    - Toggle debug mode (see agent thinking)         ║
+║    /debug    - Toggle debug mode (OFF → ON → VERBOSE)         ║
 ║    /stats    - Show token usage & costs                       ║
 ║    /clear    - Clear conversation history                     ║
 ║    /quit     - Exit                                           ║
@@ -162,21 +250,31 @@ def print_help():
     """Print help information."""
     print("""
 Available Commands:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   /help          Show this help message
-  /debug         Toggle debug mode ON/OFF
+  /debug         Toggle debug mode (OFF → ON → VERBOSE)
+                   - OFF: No debug output
+                   - ON: Brief tool calls and key metrics
+                   - VERBOSE: Full JSON tool results (for auditing)
   /stats         Show token usage and cost estimate
   /clear         Clear conversation history
   /history       Show conversation history
   /quit, /exit   Exit the CLI
 
 Example Queries:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   "What assets are being tracked?"
   "Fetch stock prices for AAPL"
-  "Get fundamentals for MSFT"
-  "Show me info about Tesla"
-  "Fetch earnings history for NVDA"
+  "What is the return of AAPL over the last year?"
+  "Calculate volatility for TSLA"
+  "Compare AAPL, MSFT, and GOOGL"
+
+Debug Mode Tips:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Use VERBOSE mode to verify calculations:
+  - See exact date ranges used
+  - See start/end prices for return calculations
+  - Audit all input data the agent used
 """)
 
 
@@ -192,7 +290,7 @@ def main():
     # State
     conversation_history = []
     token_tracker = TokenTracker(ACTIVE_LLM_CONFIG.model)
-    observer = AgentObserver(enabled=False)
+    observer = AgentObserver(enabled=False, verbose=False)
     
     # Main loop
     while True:
@@ -217,8 +315,7 @@ def main():
                     continue
                 
                 elif cmd == "/debug":
-                    observer.enabled = not observer.enabled
-                    status = "ON 🔍" if observer.enabled else "OFF"
+                    status = observer.toggle()
                     print(f"Debug mode: {status}")
                     continue
                 

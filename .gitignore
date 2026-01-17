@@ -15,8 +15,7 @@ build/
 *.db-journal
 *.db-wal
 *.db-shm
-data/portfolio.db
-*.db
+data/portfolio.db*.db
 *.sqlite3
 
 # Environment

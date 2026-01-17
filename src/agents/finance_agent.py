@@ -15,6 +15,10 @@ from .prompts import FINANCE_AGENT_SYSTEM_PROMPT
 
 # Tools - imported from portfolio_tool
 from portfolio_tool.tools.data_tools import ALL_DATA_TOOLS
+from portfolio_tool.tools.analytics_tools import ALL_ANALYTICS_TOOLS
+
+
+ALL_TOOLS = ALL_DATA_TOOLS + ALL_ANALYTICS_TOOLS
 
 
 # =============================================================================
@@ -35,7 +39,7 @@ def agent_node(state: AgentState) -> dict:
     
     # Get configured LLM with tools
     llm = get_llm()
-    llm_with_tools = llm.bind_tools(ALL_DATA_TOOLS, parallel_tool_calls=False)
+    llm_with_tools = llm.bind_tools(ALL_TOOLS, parallel_tool_calls=False)
     
     # Ensure system prompt is present
     messages = list(state["messages"])
@@ -86,7 +90,7 @@ def create_finance_agent():
         Compiled LangGraph agent
     """
     # Create tool node with all data tools
-    tool_node = ToolNode(ALL_DATA_TOOLS)
+    tool_node = ToolNode(ALL_TOOLS)
     
     # Build graph
     workflow = StateGraph(AgentState)
