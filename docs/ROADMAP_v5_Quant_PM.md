@@ -694,7 +694,7 @@ class PortfolioResult:
 ## Phase 5.1: Foundation + Data Agent (Woche 1)
 
 ### Ziele:
-- [ ] Multi-Agent Grundstruktur (wie Roadmap v4)
+- [ ] Multi-Agent Grundstruktur
 - [ ] Data Agent mit Quant-fokussierten Tools
 - [ ] Covariance Matrix Berechnung
 - [ ] Risk Metrics (Volatility, Correlation)
@@ -704,7 +704,7 @@ class PortfolioResult:
 ```
 src/
 ├── agents/
-│   ├── base_agent.py           # BaseAgent (wie v4)
+│   ├── base_agent.py           # BaseAgent
 │   ├── risk_manager_agent.py   # Supervisor mit Risk Focus
 │   ├── data_agent.py           # Quant Data Agent
 │   └── protocols.py            # PortfolioTask, PortfolioResult
@@ -999,7 +999,7 @@ src/
 ├── agents/
 │   └── macro_agent.py          # NEU (evolved from RAG Agent)
 ├── portfolio_tool/
-│   └── rag/                    # Wie v4, aber Macro-fokussiert
+│   └── rag/
 │       ├── __init__.py
 │       ├── document_loader.py  
 │       ├── chunker.py          # Optimized for Fed Minutes structure
