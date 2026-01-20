@@ -1,6 +1,6 @@
 # src/agents/__init__.py
 # Purpose: Clean exports for the agents module
-# Updated: Phase 5.1 - Added multi-agent system components
+# Updated: Phase 5.4 - Added Optimization Agent
 
 # =============================================================================
 # EXISTING EXPORTS (Phase 1-3: Single Agent)
@@ -30,8 +30,9 @@ from .finance_agent import (
     run_single_query,
 )
 
+
 # =============================================================================
-# NEW EXPORTS (Phase 5+: Multi-Agent System)
+# PHASE 5.1 EXPORTS (Multi-Agent Foundation)
 # =============================================================================
 
 # Protocols - DTOs for agent communication
@@ -64,25 +65,56 @@ from .base_agent import (
     AgentMessage,
 )
 
-# Specialized Agents
+# Data Agent
 from .data_agent import (
     DataAgent,
     DataAgentConfig,
     create_data_agent,
 )
 
+# Risk Manager (Supervisor)
 from .risk_manager_agent import (
     RiskManagerAgent,
     RiskManagerConfig,
     create_risk_manager,
 )
 
+# =============================================================================
+# PHASE 5.2 EXPORTS (Optimization)
+# =============================================================================
+
+from .optimization_agent import (
+    OptimizationAgent,
+    OptimizationAgentConfig,
+    create_optimization_agent,
+)
+
+# =============================================================================
+# PHASE 5.3 EXPORTS (BACKTESTS)
+# =============================================================================
+
+# Phase 5.3: Backtest Agent
+from .backtest_agent import (
+    BacktestAgent,
+    BacktestAgentConfig,
+    create_backtest_agent,
+)
+
+# =============================================================================
+# PHASE 5.3 EXPORTS (RAG)
+# =============================================================================
+
+# Phase 5.4: Macro Agent
+from .macro_agent import (
+    MacroAgent,
+    MacroAgentConfig,
+    create_macro_agent,
+)
 
 # =============================================================================
 # VERSION & EXPORTS
 # =============================================================================
-
-__version__ = "0.5.0"  # Updated for Phase 5
+__version__ = "0.5.4"  # Updated for Phase 5.4
 
 __all__ = [
     # === Phase 1-3: Single Agent ===
@@ -98,7 +130,7 @@ __all__ = [
     "AgentState",
     "trim_messages",
     
-    # === Phase 5+: Multi-Agent System ===
+    # === Phase 5.1: Multi-Agent Foundation ===
     # Enums
     "TaskType",
     "OptimizationMethod",
@@ -120,11 +152,24 @@ __all__ = [
     "SupervisorAgent",
     "AgentConfig",
     "AgentRole",
-    "MultiAgentState",  # Note: Renamed from AgentState to avoid conflict
+    "MultiAgentState",
     "AgentMessage",
-    # Agents
+    # Data Agent
     "DataAgent",
     "create_data_agent",
+    # Risk Manager
     "RiskManagerAgent",
     "create_risk_manager",
+    
+    # === Phase 5.2: Optimization ===
+    "OptimizationAgent",
+    "create_optimization_agent",
+    
+    # === Phase 5.3: Backtest ===
+    "BacktestAgent",
+    "create_backtest_agent",
+
+    # === Phase 5.4: RAG ===
+    "MacroAgent",
+   "create_macro_agent"
 ]

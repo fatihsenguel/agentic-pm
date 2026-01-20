@@ -1,6 +1,6 @@
 # portfolio_tool/provider_models.py
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional, Dict, Any
 
@@ -117,3 +117,99 @@ class ProviderFinancialStatement:
 
     # kompletter Roh-Dump aus yfinance (eine Spalte der DataFrame)
     raw_json: Optional[Dict[str, Any]] = None
+
+
+# ==================== NEUE MACRO DTOs ====================
+
+@dataclass
+class ProviderMacroData:
+    """
+    Standardisiertes Format für Macro-Indikatoren.
+    
+    Wird verwendet für: VIX, Treasury Yields, USD Index, Gold
+    Analog zu ProviderPriceData, aber für Macro-Zeitreihen.
+    """
+    date: date
+    indicator: str  # "VIX", "TNX_10Y", "TYX_30Y", "IRX_3M", "USD_INDEX", "GOLD"
+    value: float
+    source: str = "yfinance"
+
+
+@dataclass
+class ProviderMacroSnapshot:
+    """
+    Standardisiertes Format für einen Macro-Snapshot (alle Indikatoren auf einmal).
+    
+    Analog zu ProviderFundamentalData - ein Snapshot, keine Zeitreihe.
+    """
+    timestamp: datetime
+    vix: Optional[float] = None
+    treasury_10y: Optional[float] = None  # ^TNX - Wert in % (z.B. 4.35 = 4.35%)
+    treasury_2y: Optional[float] = None   # 2YY=F
+    treasury_30y: Optional[float] = None  # ^TYX
+    treasury_3m: Optional[float] = None   # ^IRX
+    usd_index: Optional[float] = None     # DX-Y.NYB
+    gold_price: Optional[float] = None    # GLD oder GC=F
+
+
+# ==================== INDICATOR CONSTANTS ====================
+
+class MacroIndicators:
+    """
+    Standard Macro-Indikator Namen.
+    Verwende diese Konstanten für Konsistenz im gesamten Codebase.
+    """
+    # Volatility
+    VIX = "VIX"
+    
+    # Treasury Yields (Werte als Prozent gespeichert, z.B. 4.5 = 4.5%)
+    TREASURY_10Y = "TNX_10Y"
+    TREASURY_2Y = "TNX_2Y"
+    TREASURY_30Y = "TYX_30Y"
+    TREASURY_3M = "IRX_3M"
+    
+    # Yield Curve (abgeleitet: 10Y - 2Y oder 10Y - 3M)
+    YIELD_CURVE_SLOPE = "YIELD_CURVE_SLOPE"
+    
+    # Currency
+    USD_INDEX = "USD_INDEX"
+    
+    # Commodities
+    GOLD = "GOLD"
+    
+    @classmethod
+    def all(cls) -> list:
+        """Alle Indikator-Namen."""
+        return [
+            cls.VIX,
+            cls.TREASURY_10Y,
+            cls.TREASURY_2Y,
+            cls.TREASURY_30Y,
+            cls.TREASURY_3M,
+            cls.USD_INDEX,
+            cls.GOLD
+        ]
+    
+    @classmethod
+    def yields(cls) -> list:
+        """Yield-bezogene Indikatoren."""
+        return [
+            cls.TREASURY_10Y,
+            cls.TREASURY_2Y,
+            cls.TREASURY_30Y,
+            cls.TREASURY_3M
+        ]
+
+
+# ==================== YAHOO TICKER MAPPINGS ====================
+
+MACRO_TICKER_MAP = {
+    "VIX": "^VIX",
+    "TNX_10Y": "^TNX",
+    "TYX_30Y": "^TYX",
+    "IRX_3M": "^IRX",
+    "TNX_2Y": "2YY=F",  # 2Y Futures
+    "USD_INDEX": "DX-Y.NYB",
+    "GOLD": "GLD",      # ETF (zuverlässiger als Futures)
+    "GOLD_FUTURES": "GC=F",
+}

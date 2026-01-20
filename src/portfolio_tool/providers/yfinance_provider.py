@@ -2,20 +2,26 @@
 import sys
 import yfinance as yf
 from decimal import Decimal
-from datetime import date
-from typing import List, Optional
+from datetime import date, datetime
+from typing import List, Optional, Dict, Optional, Any
 from contextlib import contextmanager
 
 from .base import DataProviderInterface
 from ..provider_models import (
     ProviderAssetInfo, ProviderPriceData, ProviderDividendData,
     ProviderSplitData, ProviderSharesData,
-    ProviderFundamentalData, ProviderEarningsData, ProviderFinancialStatement
+    ProviderFundamentalData, ProviderEarningsData, ProviderFinancialStatement,
+    ProviderMacroData, 
+    ProviderMacroSnapshot
 )
+
 # (1) WIR BEHALTEN SimpleRateLimiter für die FREQUENZ, safe_int und float für unsave int,float conversation fixes
 from .utils import SimpleRateLimiter, safe_float, safe_int, safe_decimal
 # (2) WIR IMPORTIEREN den NEUEN Manager für das VOLUMEN/LOGGIN
 from portfolio_tool.services.quota_manager import DatabaseQuotaManager
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 # (3) Wir definieren eine eigene Fehlerklasse für Quota-Überschreitungen
@@ -444,3 +450,139 @@ class YFinanceProvider(DataProviderInterface):
 
         except (QuotaExceededError, Exception):
             return []
+    # =========================================================================
+    # MACRO DATA IMPLEMENTATION (INTEGRATED)
+    # =========================================================================
+
+    def get_vix_data(self, start: date, end: date) -> List[ProviderMacroData]:
+        """Holt VIX (Volatility Index) Zeitreihe."""
+        try:
+            with self._execute_api_call(endpoint_name="vix_history", asset_ticker="^VIX"):
+                ticker = yf.Ticker("^VIX")
+                df = ticker.history(start=start, end=end)
+            
+            if df.empty:
+                logger.warning("No VIX data returned from yfinance")
+                return []
+            
+            results = []
+            for idx, row in df.iterrows():
+                value = safe_float(row.get('Close'))
+                if value is not None:
+                    results.append(ProviderMacroData(
+                        date=idx.date(),
+                        indicator="VIX",
+                        value=value,
+                        source="yfinance"
+                    ))
+            return results
+        except Exception as e:
+            logger.error(f"Error fetching VIX data: {e}")
+            return []
+
+    def get_treasury_yields(self, start: date, end: date) -> Dict[str, List[ProviderMacroData]]:
+        """Holt Treasury Yields für mehrere Laufzeiten."""
+        yield_tickers = {
+            "TNX_10Y": "^TNX",
+            "TYX_30Y": "^TYX",
+            "IRX_3M": "^IRX"
+        }
+        
+        results = {}
+        for yield_name, ticker_symbol in yield_tickers.items():
+            try:
+                with self._execute_api_call(endpoint_name=f"treasury_{yield_name.lower()}", asset_ticker=ticker_symbol):
+                    ticker = yf.Ticker(ticker_symbol)
+                    df = ticker.history(start=start, end=end)
+                
+                if df.empty:
+                    results[yield_name] = []
+                    continue
+                
+                data_points = []
+                for idx, row in df.iterrows():
+                    value = safe_float(row.get('Close'))
+                    if value is not None:
+                        data_points.append(ProviderMacroData(
+                            date=idx.date(),
+                            indicator=yield_name,
+                            value=value,
+                            source="yfinance"
+                        ))
+                results[yield_name] = data_points
+            except Exception as e:
+                logger.error(f"Error fetching {yield_name}: {e}")
+                results[yield_name] = []
+        return results
+
+    def get_macro_snapshot(self) -> Optional[ProviderMacroSnapshot]:
+        """Holt aktuellen Snapshot aller Macro-Indikatoren."""
+        snapshot = ProviderMacroSnapshot(timestamp=datetime.utcnow())
+        indicators = {
+            "vix": "^VIX",
+            "treasury_10y": "^TNX",
+            "treasury_30y": "^TYX",
+            "treasury_3m": "^IRX",
+            "usd_index": "DX-Y.NYB",
+            "gold_price": "GLD"
+        }
+        
+        for attr_name, ticker_symbol in indicators.items():
+            try:
+                with self._execute_api_call(endpoint_name=f"macro_snapshot_{attr_name}", asset_ticker=ticker_symbol):
+                    ticker = yf.Ticker(ticker_symbol)
+                    hist = ticker.history(period="5d")
+                
+                if not hist.empty:
+                    value = safe_float(hist['Close'].iloc[-1])
+                    if value is not None:
+                        setattr(snapshot, attr_name, value)
+            except Exception as e:
+                logger.warning(f"Could not fetch {attr_name}: {e}")
+        
+        return snapshot
+
+    def get_macro_indicator(self, indicator: str, start: date, end: date) -> List[ProviderMacroData]:
+        """Holt einen spezifischen Macro-Indikator."""
+        ticker_map = {
+            "VIX": "^VIX",
+            "TNX_10Y": "^TNX",
+            "TYX_30Y": "^TYX",
+            "IRX_3M": "^IRX",
+            "TNX_2Y": "2YY=F",
+            "USD_INDEX": "DX-Y.NYB",
+            "GOLD": "GLD",
+        }
+        
+        ticker_symbol = ticker_map.get(indicator)
+        if not ticker_symbol:
+            logger.warning(f"Unknown macro indicator: {indicator}")
+            return []
+        
+        try:
+            with self._execute_api_call(endpoint_name=f"macro_{indicator.lower()}", asset_ticker=ticker_symbol):
+                ticker = yf.Ticker(ticker_symbol)
+                df = ticker.history(start=start, end=end)
+            
+            if df.empty:
+                return []
+            
+            results = []
+            for idx, row in df.iterrows():
+                value = safe_float(row.get('Close'))
+                if value is not None:
+                    results.append(ProviderMacroData(
+                        date=idx.date(),
+                        indicator=indicator,
+                        value=value,
+                        source="yfinance"
+                    ))
+            return results
+        except Exception as e:
+            logger.error(f"Error fetching {indicator}: {e}")
+            return []
+        
+    
+
+
+

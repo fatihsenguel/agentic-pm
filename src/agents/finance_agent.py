@@ -2,7 +2,7 @@
 # Purpose: Main finance agent using LangGraph
 # Principle: Minimal, focused, cost-efficient
 
-from typing import Literal
+from typing import Literal, List, Dict, Optional, Any
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
 from langgraph.graph import StateGraph, END

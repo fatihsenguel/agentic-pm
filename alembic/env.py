@@ -1,10 +1,13 @@
 import sys
 import os
 
-# Pfad zum Hauptverzeichnis (FINANCE/) hinzufügen
-sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
+# Falsch (aktuell): Zeigt auf AGENTIC_FINANCE/
+# sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Sagen Sie Alembic, wo es Ihre Modelle (Base) findet
+# Richtig (Neu): Zeigt auf AGENTIC_FINANCE/src/
+sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+
+# Jetzt findet er portfolio_tool
 from portfolio_tool.database_setup import Base
 
 from logging.config import fileConfig

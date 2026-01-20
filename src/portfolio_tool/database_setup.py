@@ -4,7 +4,7 @@ import os
 
 import enum
 
-from sqlalchemy import create_engine, Column, Integer, String, Float, Date, DateTime, ForeignKey, UniqueConstraint, BigInteger, Enum, Boolean, JSON
+from sqlalchemy import create_engine, Column, Integer, String, Float, Date, DateTime, ForeignKey, UniqueConstraint, BigInteger, Enum, Boolean, JSON, Index
 from sqlalchemy.sql import func
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker, Session
 import datetime
@@ -360,6 +360,43 @@ class FinancialStatement(Base):
             f"date={self.date}, report_type='{self.report_type}', "
             f"period_type='{self.period_type}')>"
         )
+
+# ==================== NEUE TABELLE ====================
+
+class MacroData(Base):
+    """
+    Time-series: Macro-economic indicator data.
+    
+    Speichert tägliche Werte für:
+    - VIX (Volatility Index)
+    - Treasury Yields (10Y, 2Y, 30Y, 3M)
+    - USD Index
+    - Gold price
+    
+    PATTERN:
+    - Analog zu DailyPrice (asset_id, date) → (indicator, date)
+    - UniqueConstraint für ON CONFLICT UPDATE
+    - Indexed für schnelle Queries
+    """
+    __tablename__ = 'macro_data'
+    
+    id = Column(Integer, primary_key=True)
+    date = Column(Date, nullable=False)
+    indicator = Column(String(50), nullable=False)  # "VIX", "TNX_10Y", etc.
+    value = Column(Float, nullable=False)
+    source = Column(String(50), default="yfinance")
+    created_at = Column(DateTime, default=None)
+    
+    __table_args__ = (
+        # Unique constraint für idempotente Upserts
+        # PATTERN: Gleich wie DailyPrice._asset_date_uc
+        UniqueConstraint('date', 'indicator', name='_macro_date_indicator_uc'),
+        
+        # Indexes für häufige Queries
+        Index('ix_macro_indicator', 'indicator'),
+        Index('ix_macro_date', 'date'),
+        Index('ix_macro_indicator_date', 'indicator', 'date'),
+    )
 
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

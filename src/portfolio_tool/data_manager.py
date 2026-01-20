@@ -5,17 +5,21 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, DeclarativeMeta
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
-from typing import Optional, List
+
+from typing import Optional, List, Dict, Any
 
 # --- NEUER IMPORT FÜR RESPONSES ---
 from .models.responses import UpdateResult 
 
 from .database_setup import (
     Asset, DailyPrice, Dividend, CorporateAction, SharesHistory,
-    Fundamentals, QuarterlyEarnings, AssetFetchMetadata, Base, FinancialStatement
+    Fundamentals, QuarterlyEarnings, AssetFetchMetadata, Base, FinancialStatement, MacroData
 )
 from .providers.base import DataProviderInterface 
 from datetime import timedelta, date, datetime 
+
+import logging
+logger = logging.getLogger(__name__)
 
 # --- CONFIG-LADEN (unverändert) ---
 CONFIG_PATH = "config.toml" 
@@ -549,3 +553,403 @@ class DataManager:
 
         except Exception as e:
             return UpdateResult(False, "update_financial_statements", 0, [asset.ticker], "asset", error_message=str(e))
+        
+
+    """
+    Neue Methoden für DataManager.
+    
+    INTEGRATION:
+    Kopiere diese Methoden in deine DataManager Klasse.
+    Sie nutzen die bestehenden Patterns (session, _perform_upsert, UpdateResult).
+    """
+    
+    # ==================== UPDATE METHODS ====================
+    
+    def update_macro_data(
+        self, 
+        indicators: List[str], 
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None
+    ) -> UpdateResult:
+        """
+        Fetcht Macro-Daten vom Provider und speichert sie in der DB.
+        
+        PATTERN: Gleich wie update_prices_for_asset()
+        1. Provider holt Daten als List[ProviderMacroData]
+        2. Transform zu List[dict] für Upsert
+        3. _perform_upsert() mit index_elements=['date', 'indicator']
+        4. Return UpdateResult
+        
+        Args:
+            indicators: Liste der Indikatoren ["VIX", "TNX_10Y", etc.]
+            start_date: Startdatum (default: 30 Tage zurück)
+            end_date: Enddatum (default: heute)
+            
+        Returns:
+            UpdateResult mit affected_count
+        """
+        # Default: letzte 30 Tage
+        if end_date is None:
+            end_date = date.today()
+        if start_date is None:
+            start_date = end_date - timedelta(days=30)
+        
+        try:
+            all_values = []
+            
+            for indicator in indicators:
+                # Provider holt Daten
+                provider_data = self.provider.get_macro_indicator(
+                    indicator=indicator,
+                    start=start_date,
+                    end=end_date
+                )
+                
+                # Transform zu Upsert-Format
+                for dto in provider_data:
+                    all_values.append({
+                        'date': dto.date,
+                        'indicator': dto.indicator,
+                        'value': dto.value,
+                        'source': dto.source,
+                        'created_at': datetime.utcnow()
+                    })
+            
+            if not all_values:
+                return UpdateResult(
+                    success=True,
+                    operation="update_macro_data",
+                    affected_count=0,
+                    entities=indicators,
+                    entity_type="macro_indicator",
+                    metadata={"reason": "no_data_from_provider"}
+                )
+            
+            # Batch Upsert (nutzt bestehende Methode)
+            affected_count = self._perform_upsert(
+                MacroData, 
+                all_values, 
+                index_elements=['date', 'indicator']
+            )
+            
+            return UpdateResult(
+                success=True,
+                operation="update_macro_data",
+                affected_count=affected_count,
+                entities=indicators,
+                entity_type="macro_indicator",
+                metadata={
+                    "start_date": str(start_date),
+                    "end_date": str(end_date),
+                    "total_data_points": len(all_values)
+                }
+            )
+            
+        except Exception as e:
+            logger.error(f"Error updating macro data: {e}")
+            self.session.rollback()
+            return UpdateResult(
+                success=False,
+                operation="update_macro_data",
+                affected_count=0,
+                entities=indicators,
+                entity_type="macro_indicator",
+                error_message=str(e)
+            )
+    
+    def update_vix(self, days: int = 30) -> UpdateResult:
+        """Convenience: Update nur VIX-Daten."""
+        end_date = date.today()
+        start_date = end_date - timedelta(days=days)
+        return self.update_macro_data(["VIX"], start_date, end_date)
+    
+    def update_treasury_yields(self, days: int = 30) -> UpdateResult:
+        """Convenience: Update alle Treasury Yields."""
+        indicators = ["TNX_10Y", "TYX_30Y", "IRX_3M"]
+        end_date = date.today()
+        start_date = end_date - timedelta(days=days)
+        return self.update_macro_data(indicators, start_date, end_date)
+    
+    def update_all_macro_data(self, days: int = 30) -> UpdateResult:
+        """Convenience: Update alle Macro-Indikatoren."""
+        indicators = ["VIX", "TNX_10Y", "TYX_30Y", "IRX_3M", "USD_INDEX", "GOLD"]
+        end_date = date.today()
+        start_date = end_date - timedelta(days=days)
+        return self.update_macro_data(indicators, start_date, end_date)
+    
+    # ==================== QUERY METHODS ====================
+    
+    def get_latest_macro_values(self) -> Dict[str, Any]:
+        """
+        Holt den neuesten Wert für jeden Macro-Indikator aus der DB.
+        
+        Returns:
+            Dict mit Indikator -> {value, date}
+            
+        PATTERN: Hot Potato - gibt aggregierte Daten zurück, keine Rohdaten
+        """
+        try:
+            # Subquery: Neuestes Datum pro Indikator
+            subquery = self.session.query(
+                MacroData.indicator,
+                func.max(MacroData.date).label('max_date')
+            ).group_by(MacroData.indicator).subquery()
+            
+            # Join für neueste Werte
+            latest_records = self.session.query(MacroData).join(
+                subquery,
+                (MacroData.indicator == subquery.c.indicator) &
+                (MacroData.date == subquery.c.max_date)
+            ).all()
+            
+            result = {}
+            for record in latest_records:
+                result[record.indicator] = {
+                    "value": record.value,
+                    "date": record.date.isoformat()
+                }
+            
+            return {
+                "success": True,
+                "timestamp": datetime.utcnow().isoformat(),
+                "indicators": result
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting latest macro values: {e}")
+            return {
+                "success": False,
+                "error_message": str(e),
+                "indicators": {}
+            }
+    
+    def get_macro_history(
+        self, 
+        indicator: str, 
+        days: int = 30
+    ) -> Dict[str, Any]:
+        """
+        Holt historische Daten für einen Indikator.
+        
+        Returns:
+            Dict mit Liste der Werte (Hot Potato Principle)
+        """
+        try:
+            start_date = date.today() - timedelta(days=days)
+            
+            records = self.session.query(MacroData).filter(
+                MacroData.indicator == indicator,
+                MacroData.date >= start_date
+            ).order_by(MacroData.date).all()
+            
+            if not records:
+                return {
+                    "success": True,
+                    "indicator": indicator,
+                    "count": 0,
+                    "data": [],
+                    "metadata": {"reason": "no_data_in_db"}
+                }
+            
+            data = [
+                {"date": r.date.isoformat(), "value": r.value}
+                for r in records
+            ]
+            
+            return {
+                "success": True,
+                "indicator": indicator,
+                "count": len(records),
+                "latest_value": records[-1].value,
+                "latest_date": records[-1].date.isoformat(),
+                "data": data
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting macro history: {e}")
+            return {
+                "success": False,
+                "indicator": indicator,
+                "error_message": str(e)
+            }
+    
+    def get_vix_with_regime(self) -> Dict[str, Any]:
+        """
+        Holt VIX mit Regime-Klassifikation.
+        
+        Returns:
+            Dict mit VIX-Wert, Regime, Trend, Percentile
+            
+        PATTERN: Hot Potato - Business Logic wird hier angewendet,
+                 Agent bekommt fertige Analyse
+        """
+        try:
+            # VIX History der letzten 30 Tage
+            history = self.get_macro_history("VIX", days=30)
+            
+            if not history.get("success") or history.get("count", 0) == 0:
+                return {
+                    "success": False,
+                    "error_message": "No VIX data in database"
+                }
+            
+            values = [d["value"] for d in history["data"]]
+            current_vix = values[-1]
+            avg_30d = sum(values) / len(values)
+            
+            # Percentile berechnen
+            sorted_values = sorted(values)
+            rank = sum(1 for v in sorted_values if v <= current_vix)
+            percentile = int((rank / len(values)) * 100)
+            
+            # Regime bestimmen
+            if current_vix < 15:
+                regime = "low"
+            elif current_vix < 25:
+                regime = "normal"
+            elif current_vix < 35:
+                regime = "elevated"
+            else:
+                regime = "crisis"
+            
+            # Trend (letzte 5 vs vorherige 5 Tage)
+            if len(values) >= 10:
+                recent_avg = sum(values[-5:]) / 5
+                previous_avg = sum(values[-10:-5]) / 5
+                if recent_avg > previous_avg * 1.1:
+                    trend = "rising"
+                elif recent_avg < previous_avg * 0.9:
+                    trend = "falling"
+                else:
+                    trend = "stable"
+            else:
+                trend = "unknown"
+            
+            return {
+                "success": True,
+                "current_vix": current_vix,
+                "regime": regime,
+                "percentile_30d": percentile,
+                "average_30d": round(avg_30d, 2),
+                "trend": trend,
+                "date": history["latest_date"]
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting VIX regime: {e}")
+            return {
+                "success": False,
+                "error_message": str(e)
+            }
+    
+    def get_yield_curve_status(self) -> Dict[str, Any]:
+        """
+        Holt Yield Curve Status mit Inversions-Warnung.
+        
+        Returns:
+            Dict mit Yields, Slope, Status, Recession Signal
+        """
+        try:
+            latest = self.get_latest_macro_values()
+            
+            if not latest.get("success"):
+                return latest
+            
+            indicators = latest.get("indicators", {})
+            
+            t10y = indicators.get("TNX_10Y", {}).get("value")
+            t3m = indicators.get("IRX_3M", {}).get("value")
+            t30y = indicators.get("TYX_30Y", {}).get("value")
+            
+            result = {
+                "success": True,
+                "treasury_10y": t10y,
+                "treasury_3m": t3m,
+                "treasury_30y": t30y
+            }
+            
+            # Slope berechnen (10Y - 3M)
+            if t10y is not None and t3m is not None:
+                slope = t10y - t3m
+                result["slope_10y_3m"] = round(slope, 4)
+                
+                # Status bestimmen
+                if slope < -0.5:
+                    status = "deeply_inverted"
+                    recession_signal = True
+                elif slope < 0:
+                    status = "inverted"
+                    recession_signal = True
+                elif slope < 0.5:
+                    status = "flat"
+                    recession_signal = False
+                elif slope < 1.5:
+                    status = "normal"
+                    recession_signal = False
+                else:
+                    status = "steep"
+                    recession_signal = False
+                
+                result["status"] = status
+                result["recession_signal"] = recession_signal
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error getting yield curve status: {e}")
+            return {
+                "success": False,
+                "error_message": str(e)
+            }
+
+# Singleton instance
+_data_manager_instance = None
+
+
+def get_data_manager() -> 'DataManager':
+    """
+    Factory function to get DataManager singleton instance.
+    
+    Creates the DataManager with proper session and provider setup.
+    Uses singleton pattern to avoid multiple DB connections.
+    
+    Returns:
+        DataManager instance
+        
+    Usage:
+        from portfolio_tool.data_manager import get_data_manager
+        
+        dm = get_data_manager()
+        result = dm.update_prices_for_asset(...)
+    """
+    global _data_manager_instance
+    
+    if _data_manager_instance is None:
+        from portfolio_tool.database_setup import get_session
+        from portfolio_tool.providers.yfinance_provider import YFinanceProvider
+        from portfolio_tool.services.quota_manager import DatabaseQuotaManager
+        
+        # Create session
+        session = get_session()
+        
+        # Create provider with quota manager
+        quota_manager = DatabaseQuotaManager(provider_name="yfinance", daily_limit=2000)
+        provider = YFinanceProvider(quota_manager=quota_manager)
+        
+        # Create DataManager
+        _data_manager_instance = DataManager(session=session, provider=provider)
+    
+    return _data_manager_instance
+
+
+def reset_data_manager():
+    """
+    Reset the singleton instance (useful for testing).
+    """
+    global _data_manager_instance
+    if _data_manager_instance is not None:
+        try:
+            _data_manager_instance.session.close()
+        except:
+            pass
+    _data_manager_instance = None

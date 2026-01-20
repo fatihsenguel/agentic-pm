@@ -26,6 +26,7 @@ class TaskType(str, Enum):
     REBALANCE = "rebalance"
     FETCH_DATA = "fetch_data"
     CALCULATE_RISK = "calculate_risk"
+    MACRO_ANALYSIS = "macro_analysis"  # NEU für MacroAgent
 
 
 class OptimizationMethod(str, Enum):
@@ -47,10 +48,20 @@ class RebalanceFrequency(str, Enum):
 
 
 class RegimeType(str, Enum):
-    """Market regime classifications."""
+    """
+    Market regime classifications.
+    
+    Used by MacroAgent for TAA signal generation.
+    """
     RISK_ON = "risk_on"
     RISK_OFF = "risk_off"
     NEUTRAL = "neutral"
+    
+    # NEU: Für MacroAgent Regime Detection
+    CRISIS = "crisis"
+    RECOVERY = "recovery"
+    
+    # Legacy (für Kompatibilität)
     HIGH_VOLATILITY = "high_volatility"
     LOW_VOLATILITY = "low_volatility"
 
@@ -226,17 +237,21 @@ class BacktestMetrics:
             "win_rate": f"{self.win_rate:.1%}" if self.win_rate else None,
             "num_trades": self.num_trades,
             "num_rebalances": self.num_rebalances,
+            "turnover": f"{self.turnover:.1%}" if self.turnover else None,
             "taa_triggers": self.taa_triggers,
         }
 
 
 @dataclass
 class RiskDecomposition:
-    """Breakdown of portfolio risk by asset."""
-    # Risk contribution (% of total portfolio risk)
-    risk_contributions: Dict[str, float]  # {"SPY": 0.65, "TLT": 0.20, "GLD": 0.15}
+    """Risk contribution breakdown by asset."""
+    # Total portfolio volatility
+    portfolio_volatility: float
     
-    # Marginal risk (how much risk increases per 1% more of asset)
+    # Risk contributions per asset (should sum to 1.0)
+    risk_contributions: Dict[str, float]
+    
+    # Marginal risk contributions
     marginal_contributions: Optional[Dict[str, float]] = None
     
     # Standalone volatility per asset
@@ -286,13 +301,19 @@ class PortfolioResult:
     confidence: float = 1.0  # 0-1 scale
     warnings: List[str] = field(default_factory=list)
     
+    # NEW: For macro analysis results
+    result_type: Optional[str] = None  # "optimization", "macro_analysis", "backtest"
+    data: Optional[Dict[str, Any]] = None  # Generic data container
+    message: Optional[str] = None  # Human-readable summary
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization and LLM consumption."""
         result = {
             "agent_name": self.agent_name,
             "task_id": self.task_id,
             "success": self.success,
-            "weights": {k: f"{v:.2%}" for k, v in self.weights.items()},
+            "weights": {k: f"{v:.2%}" for k, v in self.weights.items()} if self.weights else {},
             "expected_return": f"{self.expected_return:.2%}" if self.expected_return else None,
             "expected_volatility": f"{self.expected_volatility:.2%}" if self.expected_volatility else None,
             "sharpe_ratio": f"{self.sharpe_ratio:.2f}" if self.sharpe_ratio else None,
@@ -317,12 +338,24 @@ class PortfolioResult:
         if self.backtest_metrics:
             result["backtest_metrics"] = self.backtest_metrics.to_dict()
         
+        if self.result_type:
+            result["result_type"] = self.result_type
+        
+        if self.data:
+            result["data"] = self.data
+        
+        if self.message:
+            result["message"] = self.message
+        
+        if self.metadata:
+            result["metadata"] = self.metadata
+        
         return result
     
     def to_summary(self) -> str:
         """Generate human-readable summary for LLM."""
         lines = [
-            f"Portfolio Optimization Result (Task: {self.task_id})",
+            f"Portfolio Result (Task: {self.task_id})",
             f"Status: {'✓ Success' if self.success else '✗ Failed'}",
         ]
         
@@ -330,9 +363,16 @@ class PortfolioResult:
             lines.append(f"Error: {self.error_message}")
             return "\n".join(lines)
         
-        lines.append(f"\nOptimal Weights:")
-        for asset, weight in sorted(self.weights.items(), key=lambda x: -x[1]):
-            lines.append(f"  {asset}: {weight:.1%}")
+        # For macro analysis
+        if self.result_type == "macro_analysis" and self.message:
+            lines.append(f"\n{self.message}")
+            return "\n".join(lines)
+        
+        # For optimization
+        if self.weights:
+            lines.append(f"\nOptimal Weights:")
+            for asset, weight in sorted(self.weights.items(), key=lambda x: -x[1]):
+                lines.append(f"  {asset}: {weight:.1%}")
         
         if self.expected_return:
             lines.append(f"\nExpected Return: {self.expected_return:.2%}")
@@ -351,8 +391,10 @@ class PortfolioResult:
             for warning in self.warnings:
                 lines.append(f"  - {warning}")
         
-        lines.append(f"\nMethod: {self.optimization_method}")
-        lines.append(f"Data Period: {self.data_period}")
+        if self.optimization_method:
+            lines.append(f"\nMethod: {self.optimization_method}")
+        if self.data_period:
+            lines.append(f"Data Period: {self.data_period}")
         
         return "\n".join(lines)
 

@@ -7,17 +7,26 @@ The Data Agent is responsible for:
 - Computing risk metrics
 - Providing data for optimization and backtesting
 
-It wraps the existing DataManager and adds quant-specific tools.
+ARCHITECTURE (Separation of Concerns):
+- DataAgent = Interface/Orchestrator
+- DataManager = Database operations (prices, fundamentals)
+- quant/ module = Pure calculations (covariance, returns, risk metrics)
+
+The Agent DELEGATES work to these components:
+- DB operations → DataManager
+- Calculations → quant/ module
+- NEVER direct yfinance calls
 
 Design Principles:
 - Hot Potato Principle: Return processed summaries, not raw data
 - All results include audit trails (dates, methods used)
 - Graceful handling of missing data
+- Database as the single source of truth
 """
 
 from typing import Any, Callable, Dict, List, Optional
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 from dataclasses import dataclass
 
 import pandas as pd
@@ -39,9 +48,21 @@ class DataAgentConfig(AgentConfig):
     default_period: str = "5Y"
     min_observations: int = 60
     
-    # Caching
-    cache_prices: bool = True
-    cache_ttl_minutes: int = 60
+    # Auto-fetch settings
+    auto_fetch_if_missing: bool = True
+    
+    # Period mappings (for date calculations)
+    period_days: Dict[str, int] = None
+    
+    def __post_init__(self):
+        if self.period_days is None:
+            self.period_days = {
+                "1Y": 365,
+                "2Y": 730,
+                "3Y": 1095,
+                "5Y": 1825,
+                "10Y": 3650,
+            }
 
 
 class DataAgent(BaseAgent):
@@ -49,11 +70,16 @@ class DataAgent(BaseAgent):
     Data Agent for fetching and processing market data.
     
     Capabilities:
-    - fetch_prices: Get historical prices for assets
+    - fetch_prices: Get historical prices for assets (via DataManager)
     - calculate_returns: Compute returns from prices
     - calculate_covariance: Estimate covariance matrix
     - get_risk_metrics: Compute risk metrics for assets/portfolios
-    - get_risk_free_rate: Fetch current risk-free rate
+    - get_risk_free_rate: Fetch current risk-free rate (from macro data)
+    
+    ARCHITECTURE:
+    - Uses DataManager for all database operations
+    - Uses quant/ module for all calculations
+    - No direct yfinance calls
     """
     
     def __init__(self, config: Optional[DataAgentConfig] = None):
@@ -65,10 +91,27 @@ class DataAgent(BaseAgent):
                 temperature=0.0,  # Deterministic
             )
         super().__init__(config)
+        self.config: DataAgentConfig = config
         
-        # Cache for prices (in-memory for session)
-        self._price_cache: Dict[str, pd.DataFrame] = {}
+        # Lazy-loaded components
+        self._data_manager = None
+        
+        # In-memory cache for processed data (not raw prices)
+        # This caches DataFrames AFTER they're loaded from DB
+        self._prices_df_cache: Dict[str, pd.DataFrame] = {}
         self._cache_timestamps: Dict[str, datetime] = {}
+    
+    # ==================== LAZY-LOADED COMPONENTS ====================
+    
+    @property
+    def data_manager(self):
+        """Lazy-load DataManager for database operations."""
+        if self._data_manager is None:
+            from portfolio_tool.data_manager import get_data_manager
+            self._data_manager = get_data_manager()
+        return self._data_manager
+    
+    # ==================== AGENT INTERFACE ====================
     
     @property
     def capabilities(self) -> List[str]:
@@ -128,6 +171,8 @@ Always include in your responses:
 - Method used for calculations
 """
     
+    # ==================== PROCESS METHOD ====================
+    
     async def process(self, state: AgentState) -> AgentState:
         """
         Process a data request.
@@ -159,7 +204,6 @@ Always include in your responses:
     
     async def _handle_fetch_data(self, task: PortfolioTask) -> PortfolioResult:
         """Handle a data fetch request."""
-        # Fetch prices for all assets in universe
         prices_result = self.fetch_prices_tool(
             tickers=",".join(task.universe),
             period=task.historical_period
@@ -181,16 +225,13 @@ Always include in your responses:
     
     async def _handle_calculate_risk(self, task: PortfolioTask) -> PortfolioResult:
         """Handle a risk calculation request."""
-        # Calculate risk metrics for the portfolio
         if task.current_weights:
-            # Portfolio risk
             metrics = self.get_risk_metrics_tool(
                 tickers=",".join(task.universe),
                 weights=json.dumps(task.current_weights),
                 period=task.historical_period
             )
         else:
-            # Individual asset risk
             metrics = self.get_risk_metrics_tool(
                 tickers=",".join(task.universe),
                 period=task.historical_period
@@ -224,7 +265,7 @@ Always include in your responses:
         cov_result = self.calculate_covariance_tool(
             tickers=",".join(task.universe),
             period=task.historical_period,
-            method="shrinkage"  # Default to shrinkage for stability
+            method="shrinkage"
         )
         
         if not cov_result.get("success"):
@@ -244,11 +285,11 @@ Always include in your responses:
             annualize=True
         )
         
-        # 4. Get risk-free rate
+        # 4. Get risk-free rate (from macro data in DB)
         rf_result = self.get_risk_free_rate_tool()
         risk_free_rate = rf_result.get("rate", 0.05)
         
-        # Store data in shared state for other agents
+        # Build result
         result = self.create_result(
             task_id=task.task_id,
             success=True,
@@ -269,7 +310,109 @@ Always include in your responses:
         
         return result
     
-    # ========== TOOLS ==========
+    # ==================== HELPER METHODS ====================
+    
+    def _get_prices_from_db(
+        self, 
+        tickers: List[str], 
+        start_date: date, 
+        end_date: date
+    ) -> Optional[pd.DataFrame]:
+        """
+        Get prices from database.
+        
+        Returns DataFrame with tickers as columns, dates as index.
+        Returns None if no data found.
+        """
+        try:
+            from portfolio_tool.database_setup import Asset, DailyPrice
+            
+            session = self.data_manager.session
+            
+            # Get all prices for these tickers in date range
+            prices_data = {}
+            
+            for ticker in tickers:
+                # Get asset
+                asset = session.query(Asset).filter(Asset.ticker == ticker).first()
+                if not asset:
+                    continue
+                
+                # Get prices
+                prices = session.query(DailyPrice).filter(
+                    DailyPrice.asset_id == asset.id,
+                    DailyPrice.date >= start_date,
+                    DailyPrice.date <= end_date
+                ).order_by(DailyPrice.date).all()
+                
+                if prices:
+                    prices_data[ticker] = {
+                        p.date: float(p.close) for p in prices
+                    }
+            
+            if not prices_data:
+                return None
+            
+            # Convert to DataFrame
+            df = pd.DataFrame(prices_data)
+            df.index = pd.to_datetime(df.index)
+            df = df.sort_index()
+            
+            return df
+            
+        except Exception as e:
+            self.log(f"Error getting prices from DB: {e}")
+            return None
+    
+    def _ensure_prices_in_db(
+        self, 
+        tickers: List[str], 
+        start_date: date, 
+        end_date: date
+    ) -> Dict[str, Any]:
+        """
+        Ensure prices are in database, fetching if needed.
+        
+        Returns status dict with success and any warnings.
+        """
+        warnings = []
+        
+        for ticker in tickers:
+            try:
+                # Get or create asset
+                asset = self.data_manager._get_or_create_asset(
+                    ticker=ticker,
+                    name=ticker,
+                    asset_class="equity"
+                )
+                
+                # Update prices
+                result = self.data_manager.update_prices_for_asset(
+                    asset=asset,
+                    start_date=start_date
+                )
+                
+                if not result.success:
+                    warnings.append(f"{ticker}: {result.error_message}")
+                elif result.affected_count == 0:
+                    warnings.append(f"{ticker}: No new data")
+                    
+            except Exception as e:
+                warnings.append(f"{ticker}: {str(e)}")
+        
+        return {
+            "success": len(warnings) < len(tickers),  # At least some succeeded
+            "warnings": warnings if warnings else None
+        }
+    
+    def _calculate_period_dates(self, period: str) -> tuple:
+        """Convert period string to start/end dates."""
+        end_date = date.today()
+        days = self.config.period_days.get(period.upper(), 1825)  # Default 5Y
+        start_date = end_date - timedelta(days=days)
+        return start_date, end_date
+    
+    # ==================== TOOL METHODS ====================
     
     def fetch_prices_tool(
         self,
@@ -280,75 +423,59 @@ Always include in your responses:
         """
         Fetch historical prices for given tickers.
         
+        Uses DataManager to fetch and persist prices to database.
+        
         Args:
             tickers: Comma-separated ticker symbols (e.g., "SPY,TLT,GLD")
-            period: Time period ("1Y", "3Y", "5Y", "10Y", "max")
-            interval: Data interval ("1d", "1wk", "1mo")
+            period: Time period ("1Y", "3Y", "5Y", "10Y")
+            interval: Data interval (only "1d" supported for DB)
             
         Returns:
             Dictionary with price data summary (NOT raw prices)
         """
         ticker_list = [t.strip().upper() for t in tickers.split(",")]
+        start_date, end_date = self._calculate_period_dates(period)
         
         try:
-            import yfinance as yf
+            # Step 1: Ensure prices are in database
+            if self.config.auto_fetch_if_missing:
+                fetch_status = self._ensure_prices_in_db(ticker_list, start_date, end_date)
+                if fetch_status.get("warnings"):
+                    self.log(f"Fetch warnings: {fetch_status['warnings']}")
             
-            # Calculate start date from period
-            end_date = datetime.now()
-            period_map = {
-                "1Y": 365,
-                "2Y": 730,
-                "3Y": 1095,
-                "5Y": 1825,
-                "10Y": 3650,
-            }
-            days = period_map.get(period.upper(), 1825)
-            start_date = end_date - timedelta(days=days)
+            # Step 2: Get prices from database
+            prices = self._get_prices_from_db(ticker_list, start_date, end_date)
             
-            # Fetch data
-            data = yf.download(
-                ticker_list,
-                start=start_date.strftime("%Y-%m-%d"),
-                end=end_date.strftime("%Y-%m-%d"),
-                interval=interval,
-                progress=False
-            )
-            
-            if data.empty:
+            if prices is None or prices.empty:
                 return {
                     "success": False,
                     "error": f"No data found for tickers: {ticker_list}"
                 }
             
-            # Extract close prices
-            if len(ticker_list) == 1:
-                prices = data["Close"].to_frame(ticker_list[0])
-            else:
-                prices = data["Close"]
-            
-            # Cache prices
+            # Step 3: Cache the DataFrame for subsequent calculations
             cache_key = f"{','.join(sorted(ticker_list))}_{period}"
-            self._price_cache[cache_key] = prices
+            self._prices_df_cache[cache_key] = prices
             self._cache_timestamps[cache_key] = datetime.now()
             
-            # Build summary (Hot Potato - don't return raw data)
+            # Step 4: Build summary (Hot Potato - don't return raw data)
             summary = {
                 "success": True,
                 "tickers": ticker_list,
                 "period": f"{prices.index[0].strftime('%Y-%m-%d')} to {prices.index[-1].strftime('%Y-%m-%d')}",
                 "num_observations": len(prices),
+                "data_source": "database",
                 "data_points_per_ticker": {
                     ticker: int(prices[ticker].notna().sum())
                     for ticker in prices.columns
                 },
                 "latest_prices": {
-                    ticker: float(prices[ticker].dropna().iloc[-1])
+                    ticker: round(float(prices[ticker].dropna().iloc[-1]), 2)
                     for ticker in prices.columns
                 },
                 "price_range": {
                     ticker: {
-                        "min": float(prices[ticker].min()),
-                        "max": float(prices[ticker].max()),
+                        "min": round(float(prices[ticker].min()), 2),
+                        "max": round(float(prices[ticker].max()), 2),
                     }
                     for ticker in prices.columns
                 }
@@ -360,6 +487,11 @@ Always include in your responses:
                 missing = prices[ticker].isna().sum()
                 if missing > 0:
                     warnings.append(f"{ticker}: {missing} missing values")
+            
+            # Check for tickers not found
+            missing_tickers = set(ticker_list) - set(prices.columns)
+            if missing_tickers:
+                warnings.append(f"No data for: {', '.join(missing_tickers)}")
             
             if warnings:
                 summary["warnings"] = warnings
@@ -392,17 +524,15 @@ Always include in your responses:
             Dictionary with return statistics
         """
         ticker_list = [t.strip().upper() for t in tickers.split(",")]
-        
-        # Check cache first
         cache_key = f"{','.join(sorted(ticker_list))}_{period}"
         
-        if cache_key not in self._price_cache:
-            # Fetch prices first
+        # Check cache first, fetch if needed
+        if cache_key not in self._prices_df_cache:
             fetch_result = self.fetch_prices_tool(tickers, period)
             if not fetch_result.get("success"):
                 return fetch_result
         
-        prices = self._price_cache[cache_key]
+        prices = self._prices_df_cache[cache_key]
         
         try:
             # Calculate returns
@@ -426,6 +556,10 @@ Always include in your responses:
                 annualized = mean_returns * TRADING_DAYS_PER_YEAR
                 result["annualized_returns"] = {
                     ticker: f"{annualized[ticker]:.2%}"
+                    for ticker in returns.columns
+                }
+                result["annualized_returns_raw"] = {
+                    ticker: round(float(annualized[ticker]), 6)
                     for ticker in returns.columns
                 }
             
@@ -472,29 +606,26 @@ Always include in your responses:
             Dictionary with covariance matrix and quality metrics
         """
         ticker_list = [t.strip().upper() for t in tickers.split(",")]
-        
-        # Check cache
         cache_key = f"{','.join(sorted(ticker_list))}_{period}"
         
-        if cache_key not in self._price_cache:
+        # Check cache first
+        if cache_key not in self._prices_df_cache:
             fetch_result = self.fetch_prices_tool(tickers, period)
             if not fetch_result.get("success"):
                 return fetch_result
         
-        prices = self._price_cache[cache_key]
+        prices = self._prices_df_cache[cache_key]
         
         try:
-            # Import from quant module
+            # Try to use quant module
             from portfolio_tool.quant.covariance import CovarianceEstimator, CovarianceMethod
             
-            # Calculate returns
             returns = prices.pct_change().dropna()
             
-            # Estimate covariance
             estimator = CovarianceEstimator(
                 method=CovarianceMethod(method),
                 annualize=True,
-                min_observations=60
+                min_observations=self.config.min_observations
             )
             
             result = estimator.estimate(returns)
@@ -505,13 +636,12 @@ Always include in your responses:
             # Fallback if quant module not available
             returns = prices.pct_change().dropna()
             
-            # Simple sample covariance
             cov_matrix = returns.cov() * TRADING_DAYS_PER_YEAR
             corr_matrix = returns.corr()
             
             vols = {
                 ticker: float(np.sqrt(cov_matrix.loc[ticker, ticker]))
-                for ticker in ticker_list
+                for ticker in ticker_list if ticker in cov_matrix.columns
             }
             
             return {
@@ -523,6 +653,7 @@ Always include in your responses:
                 "annualized_volatilities": {k: f"{v:.2%}" for k, v in vols.items()},
                 "num_observations": len(returns),
                 "estimation_period": f"{returns.index[0].strftime('%Y-%m-%d')} to {returns.index[-1].strftime('%Y-%m-%d')}",
+                "note": "Using fallback calculation (quant module not available)"
             }
         
         except Exception as e:
@@ -549,22 +680,24 @@ Always include in your responses:
             Dictionary with risk metrics
         """
         ticker_list = [t.strip().upper() for t in tickers.split(",")]
-        
-        # Check cache
         cache_key = f"{','.join(sorted(ticker_list))}_{period}"
         
-        if cache_key not in self._price_cache:
+        if cache_key not in self._prices_df_cache:
             fetch_result = self.fetch_prices_tool(tickers, period)
             if not fetch_result.get("success"):
                 return fetch_result
         
-        prices = self._price_cache[cache_key]
+        prices = self._prices_df_cache[cache_key]
         returns = prices.pct_change().dropna()
         
         try:
             from portfolio_tool.quant.risk_metrics import RiskMetricsCalculator
             
-            calc = RiskMetricsCalculator(risk_free_rate=0.05)
+            # Get risk-free rate from macro data
+            rf_result = self.get_risk_free_rate_tool()
+            risk_free_rate = rf_result.get("rate", 0.05)
+            
+            calc = RiskMetricsCalculator(risk_free_rate=risk_free_rate)
             
             if weights:
                 # Portfolio metrics
@@ -573,20 +706,24 @@ Always include in your responses:
                 portfolio_returns = (returns * w).sum(axis=1)
                 result = calc.calculate_all(portfolio_returns)
                 return {
+                    "success": True,
                     "type": "portfolio",
                     "weights": weight_dict,
+                    "risk_free_rate": risk_free_rate,
                     **result.to_dict()
                 }
             else:
                 # Individual asset metrics
                 results = {}
                 for ticker in ticker_list:
-                    asset_result = calc.calculate_all(returns[ticker])
-                    results[ticker] = asset_result.to_dict()
+                    if ticker in returns.columns:
+                        asset_result = calc.calculate_all(returns[ticker])
+                        results[ticker] = asset_result.to_dict()
                 
                 return {
                     "success": True,
                     "type": "individual",
+                    "risk_free_rate": risk_free_rate,
                     "metrics": results
                 }
                 
@@ -598,7 +735,7 @@ Always include in your responses:
                 "success": True,
                 "volatilities": {
                     ticker: f"{vol[ticker]:.2%}"
-                    for ticker in ticker_list
+                    for ticker in ticker_list if ticker in vol.index
                 },
                 "note": "Limited metrics - quant module not available"
             }
@@ -611,41 +748,57 @@ Always include in your responses:
     
     def get_risk_free_rate_tool(self) -> Dict[str, Any]:
         """
-        Get current risk-free rate (10Y Treasury or proxy).
+        Get current risk-free rate from macro data in database.
+        
+        Uses 10Y Treasury yield from MacroData table.
+        Falls back to default if not available.
         
         Returns:
             Dictionary with risk-free rate
         """
         try:
-            import yfinance as yf
+            # Try to get from macro data in database
+            latest = self.data_manager.get_latest_macro_values()
             
-            # Use 10Y Treasury yield as proxy
-            tnx = yf.Ticker("^TNX")
-            hist = tnx.history(period="5d")
+            if latest.get("success"):
+                indicators = latest.get("indicators", {})
+                
+                # Use 10Y Treasury
+                if "TNX_10Y" in indicators:
+                    rate = indicators["TNX_10Y"]["value"] / 100  # Convert from % to decimal
+                    return {
+                        "success": True,
+                        "rate": float(rate),
+                        "rate_formatted": f"{rate:.2%}",
+                        "source": "database (10Y Treasury)",
+                        "as_of": indicators["TNX_10Y"]["date"]
+                    }
+                
+                # Fallback to 3M if 10Y not available
+                if "IRX_3M" in indicators:
+                    rate = indicators["IRX_3M"]["value"] / 100
+                    return {
+                        "success": True,
+                        "rate": float(rate),
+                        "rate_formatted": f"{rate:.2%}",
+                        "source": "database (3M Treasury)",
+                        "as_of": indicators["IRX_3M"]["date"]
+                    }
             
-            if hist.empty:
-                return {
-                    "success": True,
-                    "rate": 0.05,  # Default 5%
-                    "source": "default",
-                    "note": "Using default rate - Treasury data unavailable"
-                }
-            
-            # TNX is quoted in percentage points
-            rate = hist["Close"].iloc[-1] / 100
-            
+            # If macro data not in DB, return default
             return {
                 "success": True,
-                "rate": float(rate),
-                "rate_formatted": f"{rate:.2%}",
-                "source": "10Y Treasury (^TNX)",
-                "as_of": hist.index[-1].strftime("%Y-%m-%d")
+                "rate": 0.05,
+                "rate_formatted": "5.00%",
+                "source": "default",
+                "note": "Macro data not available in database. Use MacroAgent to fetch."
             }
             
         except Exception as e:
             return {
                 "success": True,
                 "rate": 0.05,
+                "rate_formatted": "5.00%",
                 "source": "default",
                 "note": f"Using default rate - error: {str(e)}"
             }
@@ -659,6 +812,8 @@ Always include in your responses:
         """
         Calculate rolling volatility for regime detection.
         
+        Uses data from database.
+        
         Args:
             ticker: Single ticker symbol
             window: Rolling window in days
@@ -668,37 +823,57 @@ Always include in your responses:
             Dictionary with rolling volatility statistics
         """
         ticker = ticker.strip().upper()
+        start_date, end_date = self._calculate_period_dates(period)
         
         try:
-            import yfinance as yf
+            # Get prices from database
+            prices = self._get_prices_from_db([ticker], start_date, end_date)
             
-            # Fetch data
-            stock = yf.Ticker(ticker)
-            hist = stock.history(period=period)
-            
-            if hist.empty:
-                return {
-                    "success": False,
-                    "error": f"No data found for {ticker}"
-                }
+            if prices is None or prices.empty or ticker not in prices.columns:
+                # Try to fetch first
+                if self.config.auto_fetch_if_missing:
+                    self._ensure_prices_in_db([ticker], start_date, end_date)
+                    prices = self._get_prices_from_db([ticker], start_date, end_date)
+                
+                if prices is None or prices.empty:
+                    return {
+                        "success": False,
+                        "error": f"No data found for {ticker}"
+                    }
             
             # Calculate returns and rolling vol
-            returns = hist["Close"].pct_change().dropna()
+            returns = prices[ticker].pct_change().dropna()
             rolling_vol = returns.rolling(window=window).std() * np.sqrt(TRADING_DAYS_PER_YEAR)
             rolling_vol = rolling_vol.dropna()
+            
+            if len(rolling_vol) == 0:
+                return {
+                    "success": False,
+                    "error": f"Insufficient data for rolling calculation (need {window}+ observations)"
+                }
             
             current_vol = rolling_vol.iloc[-1]
             avg_vol = rolling_vol.mean()
             percentile = (rolling_vol < current_vol).sum() / len(rolling_vol) * 100
             
+            # Determine regime
+            if current_vol > avg_vol * 1.2:
+                vol_regime = "HIGH"
+            elif current_vol < avg_vol * 0.8:
+                vol_regime = "LOW"
+            else:
+                vol_regime = "NORMAL"
+            
             return {
                 "success": True,
                 "ticker": ticker,
                 "window": window,
+                "data_source": "database",
                 "current_volatility": f"{current_vol:.2%}",
+                "current_volatility_raw": round(float(current_vol), 6),
                 "average_volatility": f"{avg_vol:.2%}",
                 "percentile_1y": f"{percentile:.0f}th",
-                "vol_regime": "HIGH" if current_vol > avg_vol * 1.2 else "LOW" if current_vol < avg_vol * 0.8 else "NORMAL",
+                "vol_regime": vol_regime,
                 "min_volatility": f"{rolling_vol.min():.2%}",
                 "max_volatility": f"{rolling_vol.max():.2%}",
                 "period": f"{rolling_vol.index[0].strftime('%Y-%m-%d')} to {rolling_vol.index[-1].strftime('%Y-%m-%d')}"
@@ -711,7 +886,8 @@ Always include in your responses:
             }
 
 
-# Factory function for creating Data Agent
+# ==================== FACTORY FUNCTION ====================
+
 def create_data_agent(verbose: bool = False) -> DataAgent:
     """
     Factory function to create a configured Data Agent.

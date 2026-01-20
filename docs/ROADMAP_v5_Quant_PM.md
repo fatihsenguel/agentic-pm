@@ -694,10 +694,10 @@ class PortfolioResult:
 ## Phase 5.1: Foundation + Data Agent (Woche 1)
 
 ### Ziele:
-- [ ] Multi-Agent Grundstruktur
-- [ ] Data Agent mit Quant-fokussierten Tools
-- [ ] Covariance Matrix Berechnung
-- [ ] Risk Metrics (Volatility, Correlation)
+- [X] Multi-Agent Grundstruktur
+- [X] Data Agent mit Quant-fokussierten Tools
+- [X] Covariance Matrix Berechnung
+- [X] Risk Metrics (Volatility, Correlation)
 
 ### Deliverables:
 
@@ -850,10 +850,10 @@ class PortfolioConstraints:
 ## Phase 5.3: Backtest Agent + Prompt #3 (Woche 3)
 
 ### Ziele:
-- [ ] Backtest Engine (DETERMINISTIC, no LLM)
-- [ ] Performance Attribution
-- [ ] Strategy Comparison
-- [ ] End-to-End: Prompt #3 funktioniert
+- [X] Backtest Engine (DETERMINISTIC, no LLM)
+- [X] Performance Attribution
+- [X] Strategy Comparison
+- [X] End-to-End: Prompt #3 funktioniert
 
 ### Deliverables:
 
@@ -986,12 +986,11 @@ class Strategy:
 ## Phase 5.4: Macro/RAG Agent + Prompt #2 (Woche 4)
 
 ### Ziele:
-- [ ] RAG Pipeline für Fed Minutes
-- [ ] Sentiment Extraction
-- [ ] Regime Signal Generation
-- [ ] TAA Integration
-- [ ] End-to-End: Prompt #2 funktioniert
-
+- [X] RAG Pipeline für Fed Minutes
+- [X] Sentiment Extraction
+- [X] Regime Signal Generation
+- [X] TAA Integration
+- [X] End-to-End: Prompt #2 funktioniert
 ### Deliverables:
 
 ```
@@ -1198,6 +1197,3 @@ Week 1, Day 1:
 2. Implement `covariance.py` with shrinkage estimators
 3. Create `PortfolioTask` and `PortfolioResult` DTOs
 4. Write tests for covariance estimation
-
-Soll ich mit der Implementierung beginnen?
-
