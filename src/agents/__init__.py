@@ -111,6 +111,8 @@ from .macro_agent import (
     create_macro_agent,
 )
 
+from .rebalance_agent import RebalanceAgent, create_rebalance_agent
+
 # =============================================================================
 # VERSION & EXPORTS
 # =============================================================================
@@ -171,5 +173,9 @@ __all__ = [
 
     # === Phase 5.4: RAG ===
     "MacroAgent",
-   "create_macro_agent"
+    "create_macro_agent",
+
+   # == 5.5 ==
+   "RebalanceAgent", 
+   "create_rebalance_agent"
 ]
