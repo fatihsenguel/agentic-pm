@@ -1,9 +1,36 @@
 # src/agents/__init__.py
 # Purpose: Clean exports for the agents module
-# Updated: Phase 5.4 - Added Optimization Agent
+# Updated: Phase 6 - Multi-Agent System (Cleaned)
+#
+# REMOVED in Cleanup:
+#   - finance_agent (replaced by specialized agents)
+#   - cli.py (replaced by demos/multi_agent_cli.py)
+
+"""
+Agents Module for Quant Portfolio Manager.
+
+Multi-Agent Architecture:
+    ┌─────────────────────────────────────────┐
+    │         RiskManagerAgent                │
+    │           (Supervisor)                  │
+    └─────────────┬───────────────────────────┘
+                  │
+    ┌─────────────┼─────────────┬─────────────┐
+    ▼             ▼             ▼             ▼
+┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
+│  Data   │ │  Macro  │ │Rebalance│ │Backtest │
+│  Agent  │ │  Agent  │ │  Agent  │ │  Agent  │
+└─────────┘ └─────────┘ └─────────┘ └─────────┘
+
+Usage:
+    from agents import create_data_agent, create_macro_agent
+    
+    data_agent = create_data_agent(verbose=True)
+    result = data_agent.fetch_prices_tool(tickers="SPY,TLT", period="1Y")
+"""
 
 # =============================================================================
-# EXISTING EXPORTS (Phase 1-3: Single Agent)
+# CONFIGURATION & LLM SETUP
 # =============================================================================
 
 from .config import (
@@ -17,25 +44,24 @@ from .config import (
     ANTHROPIC_SONNET,
 )
 
+# =============================================================================
+# STATE MANAGEMENT
+# =============================================================================
+
 from .state import AgentState, trim_messages
 
+# =============================================================================
+# PROMPTS
+# =============================================================================
+
 from .prompts import (
-    FINANCE_AGENT_SYSTEM_PROMPT,
     build_system_prompt,
 )
 
-from .finance_agent import (
-    create_finance_agent,
-    chat,
-    run_single_query,
-)
-
-
 # =============================================================================
-# PHASE 5.1 EXPORTS (Multi-Agent Foundation)
+# PROTOCOLS - DTOs for Agent Communication
 # =============================================================================
 
-# Protocols - DTOs for agent communication
 from .protocols import (
     # Enums
     TaskType,
@@ -55,7 +81,10 @@ from .protocols import (
     RebalanceAnalysis,
 )
 
-# Base Agent classes
+# =============================================================================
+# BASE AGENT CLASSES
+# =============================================================================
+
 from .base_agent import (
     BaseAgent,
     SupervisorAgent,
@@ -65,14 +94,45 @@ from .base_agent import (
     AgentMessage,
 )
 
-# Data Agent
+# =============================================================================
+# SPECIALIZED AGENTS
+# =============================================================================
+
+# Data Agent - Market data, covariance, returns
 from .data_agent import (
     DataAgent,
     DataAgentConfig,
     create_data_agent,
 )
 
-# Risk Manager (Supervisor)
+# Macro Agent - VIX, yields, regime detection, TAA signals
+from .macro_agent import (
+    MacroAgent,
+    MacroAgentConfig,
+    create_macro_agent,
+)
+
+# Rebalance Agent - Drift analysis, trade generation (DETERMINISTIC)
+from .rebalance_agent import (
+    RebalanceAgent,
+    create_rebalance_agent,
+)
+
+# Optimization Agent - Mean-variance, risk parity
+from .optimization_agent import (
+    OptimizationAgent,
+    OptimizationAgentConfig,
+    create_optimization_agent,
+)
+
+# Backtest Agent - Historical simulation
+from .backtest_agent import (
+    BacktestAgent,
+    BacktestAgentConfig,
+    create_backtest_agent,
+)
+
+# Risk Manager Agent - SUPERVISOR (coordinates all other agents)
 from .risk_manager_agent import (
     RiskManagerAgent,
     RiskManagerConfig,
@@ -80,102 +140,81 @@ from .risk_manager_agent import (
 )
 
 # =============================================================================
-# PHASE 5.2 EXPORTS (Optimization)
-# =============================================================================
-
-from .optimization_agent import (
-    OptimizationAgent,
-    OptimizationAgentConfig,
-    create_optimization_agent,
-)
-
-# =============================================================================
-# PHASE 5.3 EXPORTS (BACKTESTS)
-# =============================================================================
-
-# Phase 5.3: Backtest Agent
-from .backtest_agent import (
-    BacktestAgent,
-    BacktestAgentConfig,
-    create_backtest_agent,
-)
-
-# =============================================================================
-# PHASE 5.3 EXPORTS (RAG)
-# =============================================================================
-
-# Phase 5.4: Macro Agent
-from .macro_agent import (
-    MacroAgent,
-    MacroAgentConfig,
-    create_macro_agent,
-)
-
-from .rebalance_agent import RebalanceAgent, create_rebalance_agent
-
-# =============================================================================
 # VERSION & EXPORTS
 # =============================================================================
-__version__ = "0.5.4"  # Updated for Phase 5.4
+__version__ = "0.6.0"  # Phase 6: Production-Ready Multi-Agent System
 
 __all__ = [
-    # === Phase 1-3: Single Agent ===
-    # Config
+    # === Configuration ===
     "ACTIVE_LLM_CONFIG",
     "AGENT_SETTINGS", 
     "get_llm",
-    # Agent
-    "create_finance_agent",
-    "chat",
-    "run_single_query",
-    # State (LangGraph)
+    "OPENAI_MINI",
+    "OPENAI_FULL",
+    "ANTHROPIC_HAIKU",
+    "ANTHROPIC_SONNET",
+    
+    # === State Management ===
     "AgentState",
     "trim_messages",
     
-    # === Phase 5.1: Multi-Agent Foundation ===
-    # Enums
+    # === Prompts ===
+    "build_system_prompt",
+    
+    # === Protocols (Enums) ===
     "TaskType",
     "OptimizationMethod",
     "RebalanceFrequency",
     "RegimeType",
-    # Core DTOs
+    
+    # === Protocols (Core DTOs) ===
     "PortfolioTask",
     "PortfolioResult", 
     "PortfolioConstraints",
-    # Supporting DTOs
+    
+    # === Protocols (Supporting DTOs) ===
     "TAARule",
     "BacktestMetrics",
     "RiskDecomposition",
     "CovarianceResult",
     "RegimeSignal",
     "RebalanceAnalysis",
-    # Base classes
+    
+    # === Base Classes ===
     "BaseAgent",
     "SupervisorAgent",
     "AgentConfig",
     "AgentRole",
     "MultiAgentState",
     "AgentMessage",
+    
+    # === Specialized Agents ===
     # Data Agent
     "DataAgent",
+    "DataAgentConfig",
     "create_data_agent",
-    # Risk Manager
-    "RiskManagerAgent",
-    "create_risk_manager",
     
-    # === Phase 5.2: Optimization ===
+    # Macro Agent
+    "MacroAgent",
+    "MacroAgentConfig",
+    "create_macro_agent",
+    
+    # Rebalance Agent
+    "RebalanceAgent", 
+    "create_rebalance_agent",
+    
+    # Optimization Agent
     "OptimizationAgent",
+    "OptimizationAgentConfig",
     "create_optimization_agent",
     
-    # === Phase 5.3: Backtest ===
+    # Backtest Agent
     "BacktestAgent",
+    "BacktestAgentConfig",
     "create_backtest_agent",
-
-    # === Phase 5.4: RAG ===
-    "MacroAgent",
-    "create_macro_agent",
-
-   # == 5.5 ==
-   "RebalanceAgent", 
-   "create_rebalance_agent"
+    
+    # Risk Manager (Supervisor)
+    "RiskManagerAgent",
+    "RiskManagerConfig",
+    "create_risk_manager",
 ]
