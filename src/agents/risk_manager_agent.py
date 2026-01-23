@@ -30,23 +30,7 @@ from .protocols import (
     RebalanceFrequency,
 )
 
-
-@dataclass
-class RiskManagerConfig(AgentConfig):
-    """Configuration for Risk Manager Agent."""
-    
-    # Default constraints if user doesn't specify
-    default_max_weight: float = 0.40  # 40% max per asset
-    default_min_weight: float = 0.05  # 5% min per asset  
-    default_max_volatility: float = 0.15  # 15% max portfolio vol
-    
-    # Validation thresholds
-    max_concentration_warning: float = 0.50  # Warn if any asset > 50%
-    min_diversification_assets: int = 3  # Warn if fewer assets
-    
-    # Risk limits
-    hard_max_volatility: float = 0.30  # Reject if > 30%
-    hard_max_drawdown: float = 0.40  # Reject if historical DD > 40%
+from config import config
 
 
 class RiskManagerAgent(SupervisorAgent):
@@ -68,19 +52,17 @@ class RiskManagerAgent(SupervisorAgent):
     
     def __init__(
         self, 
-        config: Optional[RiskManagerConfig] = None,
+        agent_config: Optional[AgentConfig] = None,
         sub_agents: Optional[List[BaseAgent]] = None
     ):
-        """Initialize Risk Manager."""
-        if config is None:
-            config = RiskManagerConfig(
+        if agent_config is None:
+            agent_config = AgentConfig(  # ← Just AgentConfig
                 name="RiskManager",
                 role=AgentRole.SUPERVISOR,
-                temperature=0.1,  # Slight variation for natural responses
+                temperature=0.1,
             )
         
-        super().__init__(config, sub_agents or [])
-        self.config: RiskManagerConfig = config
+        super().__init__(agent_config, sub_agents or [])
     
     @property
     def capabilities(self) -> List[str]:
@@ -275,7 +257,7 @@ Always structure responses with:
                 vol = vol / 100
             constraints.max_volatility = vol
         else:
-            constraints.max_volatility = self.config.default_max_volatility
+            constraints.max_volatility = config.risk.default_max_volatility
         
         # Look for weight constraints
         max_weight_match = re.search(r'max(?:imum)?\s*weight\s*(?:of|:)?\s*(\d+(?:\.\d+)?)\s*%?', message_lower)
@@ -285,9 +267,9 @@ Always structure responses with:
                 mw = mw / 100
             constraints.max_weight = mw
         else:
-            constraints.max_weight = self.config.default_max_weight
+            constraints.max_weight = config.risk.default_max_weight
         
-        constraints.min_weight = self.config.default_min_weight
+        constraints.min_weight = config.risk.default_min_weight
         
         # Detect optimization method preference
         opt_method = None
@@ -326,8 +308,8 @@ Always structure responses with:
         if constraints.max_volatility:
             if constraints.max_volatility < 0.05:
                 errors.append(f"Max volatility {constraints.max_volatility:.1%} is very low - may not find feasible solution")
-            if constraints.max_volatility > self.config.hard_max_volatility:
-                errors.append(f"Max volatility {constraints.max_volatility:.1%} exceeds hard limit of {self.config.hard_max_volatility:.1%}")
+            if constraints.max_volatility > config.risk.hard_max_volatility:
+                errors.append(f"Max volatility {constraints.max_volatility:.1%} exceeds hard limit of {config.risk.hard_max_volatility:.1%}")
         
         if constraints.max_weight and constraints.max_weight < 0.1:
             errors.append(f"Max weight {constraints.max_weight:.1%} is very restrictive")
@@ -457,12 +439,12 @@ Always structure responses with:
         
         # Check concentration
         max_weight = max(result.weights.values()) if result.weights else 0
-        if max_weight > self.config.max_concentration_warning:
+        if max_weight > config.risk.max_concentration_warning:
             warnings.append(f"⚠️ High concentration: {max_weight:.1%} in single asset")
         
         # Check diversification
         n_assets = len([w for w in result.weights.values() if w > 0.01])
-        if n_assets < self.config.min_diversification_assets:
+        if n_assets < config.risk.min_diversification_assets:
             warnings.append(f"⚠️ Limited diversification: only {n_assets} meaningful positions")
         
         # Check volatility constraint
@@ -591,8 +573,8 @@ Always structure responses with:
         
         errors = self._validate_constraints(constraints)
         
-        if num_assets < self.config.min_diversification_assets:
-            errors.append(f"Only {num_assets} assets - recommend at least {self.config.min_diversification_assets}")
+        if num_assets < config.risk.min_diversification_assets:
+            errors.append(f"Only {num_assets} assets - recommend at least {config.risk.min_diversification_assets}")
         
         return {
             "valid": len(errors) == 0,
@@ -628,7 +610,7 @@ Always structure responses with:
             "concentration_level": "HIGH" if hhi > 0.25 else "MODERATE" if hhi > 0.15 else "LOW",
             "warnings": [
                 f"High concentration in single asset ({max_weight:.1%})"
-            ] if max_weight > self.config.max_concentration_warning else []
+            ] if max_weight > config.risk.max_concentration_warning else []
         }
     
     def validate_optimization_result(
@@ -730,9 +712,9 @@ def create_risk_manager(
     Returns:
         Configured RiskManagerAgent
     """
-    config = RiskManagerConfig(
+    agent_config = AgentConfig(
         name="RiskManager",
         role=AgentRole.SUPERVISOR,
         verbose=verbose,
     )
-    return RiskManagerAgent(config, sub_agents)
+    return RiskManagerAgent(agent_config, sub_agents)

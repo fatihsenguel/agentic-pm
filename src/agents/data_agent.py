@@ -35,35 +35,7 @@ import numpy as np
 from .base_agent import BaseAgent, AgentConfig, AgentRole, AgentState
 from .protocols import PortfolioTask, PortfolioResult, CovarianceResult
 
-
-# Constants
-TRADING_DAYS_PER_YEAR = 252
-
-
-@dataclass
-class DataAgentConfig(AgentConfig):
-    """Configuration specific to the Data Agent."""
-    
-    # Data source settings
-    default_period: str = "5Y"
-    min_observations: int = 60
-    
-    # Auto-fetch settings
-    auto_fetch_if_missing: bool = True
-    
-    # Period mappings (for date calculations)
-    period_days: Dict[str, int] = None
-    
-    def __post_init__(self):
-        if self.period_days is None:
-            self.period_days = {
-                "1Y": 365,
-                "2Y": 730,
-                "3Y": 1095,
-                "5Y": 1825,
-                "10Y": 3650,
-            }
-
+from config import config
 
 class DataAgent(BaseAgent):
     """
@@ -82,16 +54,15 @@ class DataAgent(BaseAgent):
     - No direct yfinance calls
     """
     
-    def __init__(self, config: Optional[DataAgentConfig] = None):
+    def __init__(self, agent_config: Optional[AgentConfig] = None):
         """Initialize Data Agent."""
-        if config is None:
-            config = DataAgentConfig(
+        if agent_config is None:
+            agent_config = AgentConfig(
                 name="DataAgent",
                 role=AgentRole.DATA,
                 temperature=0.0,  # Deterministic
             )
-        super().__init__(config)
-        self.config: DataAgentConfig = config
+        super().__init__(agent_config)
         
         # Lazy-loaded components
         self._data_manager = None
@@ -265,7 +236,6 @@ Always include in your responses:
         cov_result = self.calculate_covariance_tool(
             tickers=",".join(task.universe),
             period=task.historical_period,
-            method="shrinkage"
         )
         
         if not cov_result.get("success"):
@@ -408,7 +378,7 @@ Always include in your responses:
     def _calculate_period_dates(self, period: str) -> tuple:
         """Convert period string to start/end dates."""
         end_date = date.today()
-        days = self.config.period_days.get(period.upper(), 1825)  # Default 5Y
+        days = config.data.period_days.get(period.upper(), 1825)  # Default 5Y
         start_date = end_date - timedelta(days=days)
         return start_date, end_date
     
@@ -438,7 +408,7 @@ Always include in your responses:
         
         try:
             # Step 1: Ensure prices are in database
-            if self.config.auto_fetch_if_missing:
+            if config.data.auto_fetch_if_missing:
                 fetch_status = self._ensure_prices_in_db(ticker_list, start_date, end_date)
                 if fetch_status.get("warnings"):
                     self.log(f"Fetch warnings: {fetch_status['warnings']}")
@@ -455,7 +425,8 @@ Always include in your responses:
             # Step 3: Cache the DataFrame for subsequent calculations
             cache_key = f"{','.join(sorted(ticker_list))}_{period}"
             self._prices_df_cache[cache_key] = prices
-            self._cache_timestamps[cache_key] = datetime.now()
+            self._cache_timestamps[cache_key] = datetime.now() # delete?
+            price_data_json = prices.to_json(orient="index", date_format="iso") # gemini fix
             
             # Step 4: Build summary (Hot Potato - don't return raw data)
             summary = {
@@ -478,7 +449,8 @@ Always include in your responses:
                         "max": round(float(prices[ticker].max()), 2),
                     }
                     for ticker in prices.columns
-                }
+                },
+                "price_data": price_data_json # gemini fix
             }
             
             # Check for data quality issues
@@ -553,7 +525,7 @@ Always include in your responses:
             # Per-ticker stats
             mean_returns = returns.mean()
             if annualize:
-                annualized = mean_returns * TRADING_DAYS_PER_YEAR
+                annualized = mean_returns * config.data.trading_days_per_year
                 result["annualized_returns"] = {
                     ticker: f"{annualized[ticker]:.2%}"
                     for ticker in returns.columns
@@ -591,8 +563,8 @@ Always include in your responses:
     def calculate_covariance_tool(
         self,
         tickers: str,
-        period: str = "5Y",
-        method: str = "shrinkage"
+        period: str = None,
+        method: str = None
     ) -> Dict[str, Any]:
         """
         Calculate covariance matrix for portfolio optimization.
@@ -605,6 +577,10 @@ Always include in your responses:
         Returns:
             Dictionary with covariance matrix and quality metrics
         """
+
+        period = period or config.data.default_period
+        method = method or config.data.default_covariance_method
+
         ticker_list = [t.strip().upper() for t in tickers.split(",")]
         cache_key = f"{','.join(sorted(ticker_list))}_{period}"
         
@@ -625,7 +601,7 @@ Always include in your responses:
             estimator = CovarianceEstimator(
                 method=CovarianceMethod(method),
                 annualize=True,
-                min_observations=self.config.min_observations
+                min_observations=config.data.min_observations
             )
             
             result = estimator.estimate(returns)
@@ -636,7 +612,7 @@ Always include in your responses:
             # Fallback if quant module not available
             returns = prices.pct_change().dropna()
             
-            cov_matrix = returns.cov() * TRADING_DAYS_PER_YEAR
+            cov_matrix = returns.cov() * config.data.trading_days_per_year
             corr_matrix = returns.corr()
             
             vols = {
@@ -729,7 +705,7 @@ Always include in your responses:
                 
         except ImportError:
             # Fallback
-            vol = returns.std() * np.sqrt(TRADING_DAYS_PER_YEAR)
+            vol = returns.std() * np.sqrt(config.data.trading_days_per_year)
             
             return {
                 "success": True,
@@ -831,7 +807,7 @@ Always include in your responses:
             
             if prices is None or prices.empty or ticker not in prices.columns:
                 # Try to fetch first
-                if self.config.auto_fetch_if_missing:
+                if config.data.auto_fetch_if_missing:
                     self._ensure_prices_in_db([ticker], start_date, end_date)
                     prices = self._get_prices_from_db([ticker], start_date, end_date)
                 
@@ -843,7 +819,7 @@ Always include in your responses:
             
             # Calculate returns and rolling vol
             returns = prices[ticker].pct_change().dropna()
-            rolling_vol = returns.rolling(window=window).std() * np.sqrt(TRADING_DAYS_PER_YEAR)
+            rolling_vol = returns.rolling(window=window).std() * np.sqrt(config.data.trading_days_per_year)
             rolling_vol = rolling_vol.dropna()
             
             if len(rolling_vol) == 0:
@@ -898,10 +874,10 @@ def create_data_agent(verbose: bool = False) -> DataAgent:
     Returns:
         Configured DataAgent instance
     """
-    config = DataAgentConfig(
+    agent_config = AgentConfig(
         name="DataAgent",
         role=AgentRole.DATA,
         verbose=verbose,
         temperature=0.0,
     )
-    return DataAgent(config)
+    return DataAgent(agent_config)

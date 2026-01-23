@@ -36,23 +36,7 @@ from agents.protocols import (
     RiskDecomposition,
     OptimizationMethod as ProtocolOptMethod,
 )
-
-
-@dataclass
-class OptimizationAgentConfig(AgentConfig):
-    """Configuration for Optimization Agent."""
-    
-    # Default optimization settings
-    default_method: str = "max_sharpe"
-    risk_free_rate: float = 0.05
-    
-    # Constraint defaults
-    default_min_weight: float = 0.0
-    default_max_weight: float = 0.40
-    
-    # Numerical settings
-    max_iterations: int = 1000
-    tolerance: float = 1e-10
+from config import config
 
 
 class OptimizationAgent(BaseAgent):
@@ -66,16 +50,15 @@ class OptimizationAgent(BaseAgent):
     - Method comparison (MV vs RP)
     """
     
-    def __init__(self, config: Optional[OptimizationAgentConfig] = None):
+    def __init__(self, agent_config: Optional[AgentConfig] = None):
         """Initialize Optimization Agent."""
-        if config is None:
-            config = OptimizationAgentConfig(
+        if agent_config is None:
+            agent_config = AgentConfig(
                 name="OptimizationAgent",
                 role=AgentRole.OPTIMIZATION,
                 temperature=0.0,
             )
-        super().__init__(config)
-        self.config: OptimizationAgentConfig = config
+        super().__init__(agent_config)
         
         # Lazy-load optimizers
         self._mv_optimizer = None
@@ -87,9 +70,9 @@ class OptimizationAgent(BaseAgent):
         if self._mv_optimizer is None:
             from portfolio_tool.optimization.mean_variance import MeanVarianceOptimizer
             self._mv_optimizer = MeanVarianceOptimizer(
-                risk_free_rate=self.config.risk_free_rate,
-                max_iterations=self.config.max_iterations,
-                tolerance=self.config.tolerance
+                risk_free_rate=config.optimization.risk_free_rate,
+                max_iterations=config.optimization.max_iterations,
+                tolerance=config.optimization.tolerance
             )
         return self._mv_optimizer
     
@@ -99,9 +82,9 @@ class OptimizationAgent(BaseAgent):
         if self._rp_optimizer is None:
             from portfolio_tool.optimization.risk_parity import RiskParityOptimizer
             self._rp_optimizer = RiskParityOptimizer(
-                risk_free_rate=self.config.risk_free_rate,
-                max_iterations=self.config.max_iterations,
-                tolerance=self.config.tolerance
+                risk_free_rate=config.optimization.risk_free_rate,
+                max_iterations=config.optimization.max_iterations,
+                tolerance=config.optimization.tolerance
             )
         return self._rp_optimizer
     
@@ -203,8 +186,8 @@ Always include:
         from portfolio_tool.optimization.constraints import PortfolioConstraints
         
         opt_constraints = PortfolioConstraints(
-            min_weight=task.constraints.min_weight or self.config.default_min_weight,
-            max_weight=task.constraints.max_weight or self.config.default_max_weight,
+            min_weight=task.constraints.min_weight or config.optimization.default_min_weight,
+            max_weight=task.constraints.max_weight or config.optimization.default_max_weight,
             max_volatility=task.constraints.max_volatility,
             long_only=task.constraints.long_only,
         )
@@ -454,7 +437,6 @@ Always include:
 
 
 def create_optimization_agent(
-    risk_free_rate: float = 0.05,
     verbose: bool = False
 ) -> OptimizationAgent:
     """
@@ -467,10 +449,9 @@ def create_optimization_agent(
     Returns:
         Configured OptimizationAgent
     """
-    config = OptimizationAgentConfig(
+    agent_config = AgentConfig(
         name="OptimizationAgent",
         role=AgentRole.OPTIMIZATION,
         verbose=verbose,
-        risk_free_rate=risk_free_rate,
     )
-    return OptimizationAgent(config)
+    return OptimizationAgent(agent_config)

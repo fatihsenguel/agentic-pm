@@ -1,0 +1,94 @@
+
+================================================================================
+CONFIGURATION VIOLATION REPORT
+================================================================================
+
+🔴 CRITICAL: DUPLICATE CONSTANTS
+--------------------------------------------------------------------------------
+
+'BACKTEST' defined in 3 places:
+  • src\agents\base_agent.py:32 = "backtest"      # Backtest Agent - strategy simulation
+  • src\agents\protocols.py:24 = "backtest"
+  • src\agents\schemas.py:20 = "backtest"
+  ⚠️  FIX: Move to config.py as config.data.backtest
+
+'CRISIS' defined in 2 places:
+  • src\agents\protocols.py:61 = "crisis"
+  • src\agents\schemas.py:206 = "crisis"
+  ⚠️  FIX: Move to config.py as config.data.crisis
+
+'MACRO_ANALYSIS' defined in 2 places:
+  • src\agents\protocols.py:29 = "macro_analysis"  # NEU für MacroAgent
+  • src\agents\schemas.py:18 = "macro_analysis"
+  ⚠️  FIX: Move to config.py as config.data.macro_analysis
+
+'NEUTRAL' defined in 2 places:
+  • src\agents\protocols.py:58 = "neutral"
+  • src\agents\schemas.py:205 = "neutral"
+  ⚠️  FIX: Move to config.py as config.data.neutral
+
+'OPTIMIZATION' defined in 2 places:
+  • src\agents\base_agent.py:30 = "optimization"  # Optimization Agent - portfolio optimization
+  • src\agents\schemas.py:17 = "optimization"
+  ⚠️  FIX: Move to config.py as config.data.optimization
+
+'RISK_OFF' defined in 2 places:
+  • src\agents\protocols.py:57 = "risk_off"
+  • src\agents\schemas.py:204 = "risk_off"
+  ⚠️  FIX: Move to config.py as config.data.risk_off
+
+'RISK_ON' defined in 2 places:
+  • src\agents\protocols.py:56 = "risk_on"
+  • src\agents\schemas.py:203 = "risk_on"
+  ⚠️  FIX: Move to config.py as config.data.risk_on
+
+'TRACING_AVAILABLE' defined in 4 places:
+  • src\agents\nodes copy.py:28 = True
+  • src\agents\nodes copy.py:30 = False
+  • src\agents\nodes.py:31 = True
+  • src\agents\nodes.py:33 = False
+  ⚠️  FIX: Move to config.py as config.data.tracing_available
+
+🟡 MEDIUM: HARDCODED TIME PERIODS
+--------------------------------------------------------------------------------
+
+src\agents\__init__.py:
+  Line 29: result = data_agent.fetch_prices_tool(tickers="SPY,TLT", period="1Y")
+
+src\agents\nodes copy.py:
+  Line 554: price_result = data_agent.fetch_prices_tool(tickers=tickers_str, perio
+
+src\agents\nodes.py:
+  Line 661: price_result = data_agent.fetch_prices_tool(tickers=tickers_str, perio
+
+src\agents\risk_manager_agent.py:
+  Line 286: period = "5Y"  # Default
+  Line 288: period = "10Y"
+  Line 290: period = "3Y"
+
+src\agents\router_prompts.py:
+  Line 96: → intent: "backtest", agents: [DataAgent, BacktestAgent], period: "5Y"
+
+🟡 MEDIUM: HARDCODED RATES/THRESHOLDS
+--------------------------------------------------------------------------------
+
+src\agents\nodes copy.py:
+  Line 581: drift_threshold=0.05,
+
+src\agents\nodes.py:
+  Line 688: drift_threshold=0.05,
+
+================================================================================
+SUMMARY
+================================================================================
+Duplicate Constants: 8
+Config Classes: 0
+Hardcoded Values: 10
+
+📋 RECOMMENDED ACTIONS:
+1. Move all constants to config.py
+2. Delete XxxConfig classes from individual agent files
+3. Replace hardcoded values with config.data.X references
+4. Run this script again to verify fixes
+
+================================================================================

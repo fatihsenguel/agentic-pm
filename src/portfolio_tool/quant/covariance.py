@@ -100,17 +100,39 @@ class CovarianceResult:
         if self.error_message:
             result["error_message"] = self.error_message
         
-        # Include correlation matrix as nested dict (limited to avoid huge output)
-        if self.correlation_matrix is not None and len(self.tickers) <= 10:
-            result["correlation_matrix"] = {
-                ticker: {
-                    t2: round(self.correlation_matrix.loc[ticker, t2], 3)
-                    for t2 in self.tickers
+        # FIX: Include BOTH covariance and correlation matrices (limited to avoid huge output)
+        if len(self.tickers) <= 10:
+            # Include covariance matrix
+            if self.covariance_matrix is not None:
+                result["covariance_matrix"] = {
+                    ticker: {
+                        t2: float(self.covariance_matrix.loc[ticker, t2])
+                        for t2 in self.tickers
+                    }
+                    for ticker in self.tickers
                 }
-                for ticker in self.tickers
-            }
+            
+            # Include correlation matrix
+            if self.correlation_matrix is not None:
+                result["correlation_matrix"] = {
+                    ticker: {
+                        t2: round(self.correlation_matrix.loc[ticker, t2], 3)
+                        for t2 in self.tickers
+                    }
+                    for ticker in self.tickers
+                }
         
         return result
+
+
+        # EXPLANATION:
+        # The fix adds the covariance_matrix to the to_dict() output.
+        # It uses the same pattern as correlation_matrix but converts to float (not rounded)
+        # since covariance values need more precision than correlations.
+        #
+        # This way, when data_agent.py calls result.to_dict(), it will get BOTH:
+        # - covariance_matrix (needed by OptimizationAgent)
+        # - correlation_matrix (nice to have for analysis)
     
     def get_covariance_as_nested_dict(self) -> Dict[str, Dict[str, float]]:
         """Get covariance matrix as nested dictionary."""

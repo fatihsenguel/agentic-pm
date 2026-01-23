@@ -27,6 +27,8 @@ from dataclasses import dataclass
 from .base_agent import BaseAgent, AgentConfig, AgentRole, AgentState
 from .protocols import PortfolioTask, PortfolioResult, RegimeType
 
+from config import config
+
 
 # ==================== ENUMS & DATA CLASSES ====================
 
@@ -117,28 +119,6 @@ class MacroSignal:
         ]
         return "\n".join(lines)
 
-
-@dataclass
-class MacroAgentConfig(AgentConfig):
-    """Configuration for Macro Agent."""
-    
-    # VIX thresholds
-    vix_low: float = 15.0
-    vix_elevated: float = 25.0
-    vix_crisis: float = 35.0
-    
-    # Sentiment thresholds
-    hawkish_threshold: float = 0.3
-    dovish_threshold: float = -0.3
-    
-    # Default equity adjustment magnitude
-    max_equity_adjustment: float = 0.15  # ±15%
-    
-    # Data settings
-    default_history_days: int = 30
-    auto_fetch_if_missing: bool = True
-
-
 # ==================== MACRO AGENT ====================
 
 class MacroAgent(BaseAgent):
@@ -159,16 +139,15 @@ class MacroAgent(BaseAgent):
     - Uses Fed Scraper for downloading minutes
     """
     
-    def __init__(self, config: Optional[MacroAgentConfig] = None):
+    def __init__(self, agent_config: Optional[AgentConfig] = None):
         """Initialize Macro Agent."""
-        if config is None:
-            config = MacroAgentConfig(
+        if agent_config is None:
+            agent_config = AgentConfig(
                 name="MacroAgent",
                 role=AgentRole.MACRO,
                 temperature=0.0,
             )
-        super().__init__(config)
-        self.config: MacroAgentConfig = config
+        super().__init__(agent_config)
         
         # Lazy-loaded components (Separation of Concerns)
         self._data_manager = None
@@ -392,10 +371,10 @@ Always provide structured results with:
             self.log(f"Database VIX fetch failed: {e}")
         
         # Auto-fetch if enabled
-        if self.config.auto_fetch_if_missing:
+        if config.macro.auto_fetch_if_missing:
             try:
                 self.log("Auto-fetching VIX data...")
-                update_result = self.data_manager.update_vix(days=self.config.default_history_days)
+                update_result = self.data_manager.update_vix(days=config.macro.default_history_days)
                 if update_result.success:
                     db_result = self.data_manager.get_vix_with_regime()
                     if db_result.get("success"):
@@ -443,10 +422,10 @@ Always provide structured results with:
             self.log(f"Database yield curve fetch failed: {e}")
         
         # Auto-fetch if enabled
-        if self.config.auto_fetch_if_missing:
+        if config.macro.auto_fetch_if_missing:
             try:
                 self.log("Auto-fetching Treasury yields...")
-                update_result = self.data_manager.update_treasury_yields(days=self.config.default_history_days)
+                update_result = self.data_manager.update_treasury_yields(days=config.macro.default_history_days)
                 if update_result.success:
                     db_result = self.data_manager.get_yield_curve_status()
                     if db_result.get("success"):
@@ -469,11 +448,11 @@ Always provide structured results with:
     
     def _classify_vix_regime(self, vix_level: float) -> str:
         """Classify VIX level into regime."""
-        if vix_level < self.config.vix_low:
+        if vix_level < config.macro.vix_low:
             return "low"
-        elif vix_level < self.config.vix_elevated:
+        elif vix_level < config.macro.vix_elevated:
             return "normal"
-        elif vix_level < self.config.vix_crisis:
+        elif vix_level < config.macro.vix_crisis:
             return "elevated"
         else:
             return "crisis"
@@ -547,9 +526,9 @@ Always provide structured results with:
         risk_on_signals = 0
         
         # Fed sentiment
-        if fed_sentiment > self.config.hawkish_threshold:
+        if fed_sentiment > config.macro.hawkish_threshold:
             risk_off_signals += 1
-        elif fed_sentiment < self.config.dovish_threshold:
+        elif fed_sentiment < config.macro.dovish_threshold:
             risk_on_signals += 1
         
         # VIX
@@ -598,7 +577,7 @@ Always provide structured results with:
         vix_regime: str
     ) -> tuple:
         """Determine risk stance and equity adjustment."""
-        max_adj = self.config.max_equity_adjustment
+        max_adj = config.macro.max_equity_adjustment
         
         if regime == MarketRegime.CRISIS:
             return "defensive", -max_adj
@@ -611,7 +590,7 @@ Always provide structured results with:
         
         elif regime == MarketRegime.RISK_ON:
             adj = max_adj * 0.5
-            if fed_sentiment < self.config.dovish_threshold:
+            if fed_sentiment < config.macro.dovish_threshold:
                 adj += max_adj * 0.2
             return "risk_on", adj
         
@@ -989,9 +968,9 @@ def create_macro_agent(verbose: bool = False) -> MacroAgent:
     Returns:
         Configured MacroAgent
     """
-    config = MacroAgentConfig(
+    agent_config = AgentConfig(
         name="MacroAgent",
         role=AgentRole.MACRO,
         verbose=verbose,
     )
-    return MacroAgent(config)
+    return MacroAgent(agent_config)

@@ -101,14 +101,12 @@ from .base_agent import (
 # Data Agent - Market data, covariance, returns
 from .data_agent import (
     DataAgent,
-    DataAgentConfig,
     create_data_agent,
 )
 
 # Macro Agent - VIX, yields, regime detection, TAA signals
 from .macro_agent import (
     MacroAgent,
-    MacroAgentConfig,
     create_macro_agent,
 )
 
@@ -121,21 +119,18 @@ from .rebalance_agent import (
 # Optimization Agent - Mean-variance, risk parity
 from .optimization_agent import (
     OptimizationAgent,
-    OptimizationAgentConfig,
     create_optimization_agent,
 )
 
 # Backtest Agent - Historical simulation
 from .backtest_agent import (
     BacktestAgent,
-    BacktestAgentConfig,
     create_backtest_agent,
 )
 
 # Risk Manager Agent - SUPERVISOR (coordinates all other agents)
 from .risk_manager_agent import (
     RiskManagerAgent,
-    RiskManagerConfig,
     create_risk_manager,
 )
 
@@ -191,12 +186,10 @@ __all__ = [
     # === Specialized Agents ===
     # Data Agent
     "DataAgent",
-    "DataAgentConfig",
     "create_data_agent",
     
     # Macro Agent
     "MacroAgent",
-    "MacroAgentConfig",
     "create_macro_agent",
     
     # Rebalance Agent
@@ -205,16 +198,13 @@ __all__ = [
     
     # Optimization Agent
     "OptimizationAgent",
-    "OptimizationAgentConfig",
     "create_optimization_agent",
     
     # Backtest Agent
     "BacktestAgent",
-    "BacktestAgentConfig",
     "create_backtest_agent",
     
     # Risk Manager (Supervisor)
     "RiskManagerAgent",
-    "RiskManagerConfig",
     "create_risk_manager",
 ]

@@ -1,21 +1,22 @@
-# portfolio_tool/provider_models.py
+# src/portfolio_tool/provider_models.py
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 """
-Definiert die standardisierten "Data Transfer Objects" (DTOs).
-JEDER Provider (yfinance, alphavantage, etc.) MUSS seine Rohdaten
-in DIESE Formate umwandeln, bevor er sie an den DataManager übergibt.
-
-NOTE: Felder die von externen APIs kommen können NaN/None sein,
-daher sind numerische Felder als Optional definiert.
+DTO Definitions (Data Transfer Objects).
+Contains both Provider DTOs (Raw) and Domain DTOs (Internal).
 """
+
+# =============================================================================
+# 1. PROVIDER DTOS (Raw data from External APIs)
+#    These match the structure returned by yfinance/APIs.
+# =============================================================================
 
 @dataclass
 class ProviderAssetInfo:
-    """Standardisiertes Format für Asset-Stammdaten."""
+    """Standardized format for Asset Metadata."""
     sector: Optional[str] = None
     industry: Optional[str] = None
     country: Optional[str] = None
@@ -24,35 +25,31 @@ class ProviderAssetInfo:
 
 @dataclass
 class ProviderPriceData:
-    """Standardisiertes Format für tägliche Kurse."""
+    """Standardized format for daily prices (Raw)."""
     date: date
     open: Optional[Decimal] = None
     high: Optional[Decimal] = None
     low: Optional[Decimal] = None
-    close: Decimal = None  # close ist required für viele Berechnungen
-    volume: Optional[int] = None  # Volume kann NaN sein bei manchen APIs
+    close: Decimal = None  
+    volume: Optional[int] = None
 
 @dataclass
 class ProviderDividendData:
-    """Standardisiertes Format für Dividenden."""
     ex_date: date
     amount: Decimal
 
 @dataclass
 class ProviderSplitData:
-    """Standardisiertes Format für Splits."""
     date: date
-    ratio_str: str  # z.B. "2:1"
+    ratio_str: str 
 
 @dataclass
 class ProviderSharesData:
-    """Standardisiertes Format für Aktienanzahl-Historie."""
     date: date
-    shares: Optional[int] = None  # Kann NaN sein
+    shares: Optional[int] = None
 
 @dataclass
 class ProviderFundamentalData:
-    """Standardisiertes Format für Snapshot-Fundamentaldaten."""
     market_cap: Optional[int] = None
     forward_pe: Optional[Decimal] = None
     beta: Optional[Decimal] = None
@@ -60,156 +57,118 @@ class ProviderFundamentalData:
 
 @dataclass
 class ProviderEarningsData:
-    """Standardisiertes Format für historische Quartalsberichte."""
     report_date: date
-    revenue: Optional[int] = None  # Kann NaN sein
-    basic_eps: Optional[Decimal] = None  # Kann NaN sein
+    revenue: Optional[int] = None
+    basic_eps: Optional[Decimal] = None
 
 @dataclass
 class ProviderFinancialStatement:
-    """
-    Standardisiertes Format für einen Finanzbericht (eine Periode).
-    Alle Felder sind optional, weil je nach Firma / Provider nicht alles da ist.
-    """
-    date: date                 # Periodenende
-    report_type: str           # "income", "balance_sheet", "cash_flow"
-    period_type: str           # "annual", "quarterly"
-    source: str                # z.B. "yfinance"
-
-    # Generische Kernfelder
+    date: date
+    report_type: str       
+    period_type: str       
+    source: str
     revenue: Optional[float] = None
     net_income: Optional[float] = None
     eps: Optional[float] = None
     free_cash_flow: Optional[float] = None
     total_assets: Optional[float] = None
     total_liabilities: Optional[float] = None
-
-    # Income Statement
-    cost_of_revenue: Optional[float] = None
-    research_and_development: Optional[float] = None
-    selling_general_and_administrative: Optional[float] = None
-    interest_expense: Optional[float] = None
-    income_tax_expense: Optional[float] = None
-
-    # Balance Sheet
-    cash_and_cash_equivalents: Optional[float] = None
-    accounts_receivable: Optional[float] = None
-    inventory: Optional[float] = None
-    property_plant_equipment: Optional[float] = None
-    accounts_payable: Optional[float] = None
-    current_debt: Optional[float] = None
-    long_term_debt: Optional[float] = None
-    common_stock: Optional[float] = None
-    retained_earnings: Optional[float] = None
-    accumulated_other_comprehensive_income: Optional[float] = None
-
-    # Cash Flow Statement
-    operating_cash_flow: Optional[float] = None
-    depreciation_and_amortization: Optional[float] = None
-    stock_based_compensation: Optional[float] = None
-    change_in_working_capital: Optional[float] = None
-    capital_expenditure: Optional[float] = None
-    dividends_paid: Optional[float] = None
-    issuance_of_debt: Optional[float] = None
-    repayment_of_debt: Optional[float] = None
-    issuance_of_stock: Optional[float] = None
-    repurchase_of_stock: Optional[float] = None
-
-    # kompletter Roh-Dump aus yfinance (eine Spalte der DataFrame)
     raw_json: Optional[Dict[str, Any]] = None
-
-
-# ==================== NEUE MACRO DTOs ====================
 
 @dataclass
 class ProviderMacroData:
-    """
-    Standardisiertes Format für Macro-Indikatoren.
-    
-    Wird verwendet für: VIX, Treasury Yields, USD Index, Gold
-    Analog zu ProviderPriceData, aber für Macro-Zeitreihen.
-    """
     date: date
-    indicator: str  # "VIX", "TNX_10Y", "TYX_30Y", "IRX_3M", "USD_INDEX", "GOLD"
+    indicator: str 
     value: float
     source: str = "yfinance"
 
-
 @dataclass
 class ProviderMacroSnapshot:
-    """
-    Standardisiertes Format für einen Macro-Snapshot (alle Indikatoren auf einmal).
-    
-    Analog zu ProviderFundamentalData - ein Snapshot, keine Zeitreihe.
-    """
     timestamp: datetime
     vix: Optional[float] = None
-    treasury_10y: Optional[float] = None  # ^TNX - Wert in % (z.B. 4.35 = 4.35%)
-    treasury_2y: Optional[float] = None   # 2YY=F
-    treasury_30y: Optional[float] = None  # ^TYX
-    treasury_3m: Optional[float] = None   # ^IRX
-    usd_index: Optional[float] = None     # DX-Y.NYB
-    gold_price: Optional[float] = None    # GLD oder GC=F
+    treasury_10y: Optional[float] = None
+    treasury_2y: Optional[float] = None
+    treasury_30y: Optional[float] = None
+    treasury_3m: Optional[float] = None
+    usd_index: Optional[float] = None
+    gold_price: Optional[float] = None
 
+# =============================================================================
+# 2. DOMAIN DTOS (Internal Contract)
+#    These are what DataAgent and Database expect.
+# =============================================================================
 
-# ==================== INDICATOR CONSTANTS ====================
+@dataclass
+class PriceData:
+    """
+    REQUIRED by DataAgent / Database.
+    This is the internal representation of a price record.
+    It INCLUDES the ticker, which ProviderPriceData often lacks.
+    """
+    ticker: str
+    date: date
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: int
+    adj_close: Optional[float] = None
+
+@dataclass
+class FinancialStatementData:
+    """REQUIRED by DataAgent."""
+    ticker: str
+    date: date
+    period: str
+    report_type: str
+    currency: str
+    data: Dict[str, Any]
+
+@dataclass
+class FundamentalData:
+    """REQUIRED by DataAgent."""
+    ticker: str
+    name: str
+    sector: Optional[str] = None
+    industry: Optional[str] = None
+    market_cap: Optional[int] = None
+    currency: str = "USD"
+    beta: Optional[float] = None
+    pe_ratio: Optional[float] = None
+
+# =============================================================================
+# 3. COMPATIBILITY ALIASES (Fixes ImportError)
+# =============================================================================
+
+# This fixes "cannot import name 'FinancialData'"
+FinancialData = FinancialStatementData
+
+# =============================================================================
+# 4. CONSTANTS
+# =============================================================================
 
 class MacroIndicators:
-    """
-    Standard Macro-Indikator Namen.
-    Verwende diese Konstanten für Konsistenz im gesamten Codebase.
-    """
-    # Volatility
     VIX = "VIX"
-    
-    # Treasury Yields (Werte als Prozent gespeichert, z.B. 4.5 = 4.5%)
     TREASURY_10Y = "TNX_10Y"
     TREASURY_2Y = "TNX_2Y"
     TREASURY_30Y = "TYX_30Y"
     TREASURY_3M = "IRX_3M"
-    
-    # Yield Curve (abgeleitet: 10Y - 2Y oder 10Y - 3M)
     YIELD_CURVE_SLOPE = "YIELD_CURVE_SLOPE"
-    
-    # Currency
     USD_INDEX = "USD_INDEX"
-    
-    # Commodities
     GOLD = "GOLD"
     
     @classmethod
     def all(cls) -> list:
-        """Alle Indikator-Namen."""
-        return [
-            cls.VIX,
-            cls.TREASURY_10Y,
-            cls.TREASURY_2Y,
-            cls.TREASURY_30Y,
-            cls.TREASURY_3M,
-            cls.USD_INDEX,
-            cls.GOLD
-        ]
-    
-    @classmethod
-    def yields(cls) -> list:
-        """Yield-bezogene Indikatoren."""
-        return [
-            cls.TREASURY_10Y,
-            cls.TREASURY_2Y,
-            cls.TREASURY_30Y,
-            cls.TREASURY_3M
-        ]
-
-
-# ==================== YAHOO TICKER MAPPINGS ====================
+        return [cls.VIX, cls.TREASURY_10Y, cls.TREASURY_2Y, cls.TREASURY_30Y, 
+                cls.TREASURY_3M, cls.USD_INDEX, cls.GOLD]
 
 MACRO_TICKER_MAP = {
     "VIX": "^VIX",
     "TNX_10Y": "^TNX",
     "TYX_30Y": "^TYX",
     "IRX_3M": "^IRX",
-    "TNX_2Y": "2YY=F",  # 2Y Futures
+    "TNX_2Y": "2YY=F",
     "USD_INDEX": "DX-Y.NYB",
-    "GOLD": "GLD",      # ETF (zuverlässiger als Futures)
+    "GOLD": "GLD",
     "GOLD_FUTURES": "GC=F",
 }

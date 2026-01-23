@@ -1,4 +1,4 @@
-# portfolio_tool/database_setup.py
+# src/portfolio_tool/database_setup.py
 import sys
 import os
 
@@ -398,6 +398,61 @@ class MacroData(Base):
         Index('ix_macro_indicator_date', 'indicator', 'date'),
     )
 
+class Portfolio(Base):
+    """
+    User portfolio - contains multiple asset holdings.
+    
+    Example:
+        Portfolio(name="Retirement 401k", currency="USD")
+    """
+    __tablename__ = 'portfolios'
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False, index=True)
+    description = Column(String(500), nullable=True)
+    currency = Column(String(10), nullable=False, default="USD")
+    cash_balance = Column(Float, nullable=False, default=0.0)
+    created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    
+    # Relationship to holdings
+    holdings = relationship('PortfolioHolding', back_populates='portfolio', cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f"<Portfolio(id={self.id}, name='{self.name}', holdings={len(self.holdings)})>"
+
+
+class PortfolioHolding(Base):
+    """
+    Individual holding within a portfolio.
+    
+    Example:
+        PortfolioHolding(portfolio_id=1, asset_id=5, quantity=100, average_price=450.0)
+        # Means: 100 shares of asset #5, bought at avg price $450
+    """
+    __tablename__ = 'portfolio_holdings'
+    
+    id = Column(Integer, primary_key=True)
+    portfolio_id = Column(Integer, ForeignKey('portfolios.id', ondelete='CASCADE'), nullable=False, index=True)
+    asset_id = Column(Integer, ForeignKey('assets.id', ondelete='CASCADE'), nullable=False, index=True)
+    quantity = Column(Float, nullable=False)
+    average_price = Column(Float, nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    
+    # Relationships
+    portfolio = relationship('Portfolio', back_populates='holdings')
+    asset = relationship('Asset')
+    
+    # Unique constraint: one holding per asset per portfolio
+    __table_args__ = (
+        UniqueConstraint('portfolio_id', 'asset_id', name='_portfolio_asset_uc'),
+    )
+    
+    def __repr__(self):
+        return f"<PortfolioHolding(portfolio_id={self.portfolio_id}, asset_id={self.asset_id}, qty={self.quantity})>"
+
+
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # --- 3. Session Management ---
@@ -406,3 +461,12 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 def get_session() -> Session:
     """Stellt eine neue DB-Session zur Verfügung."""
     return SessionLocal()
+
+def get_engine():
+    """
+    Accessor for the SQLAlchemy engine.
+    
+    Used by Pandas 'read_sql' and other direct connection needs.
+    This provides a consistent interface rather than importing the global 'engine' variable.
+    """
+    return engine

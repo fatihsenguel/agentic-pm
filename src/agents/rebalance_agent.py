@@ -29,18 +29,9 @@ from dataclasses import dataclass
 from .base_agent import BaseAgent, AgentConfig, AgentRole, AgentState
 from .protocols import PortfolioTask, PortfolioResult, TaskType
 
+import importlib
+from config import config
 
-@dataclass
-class RebalanceAgentConfig(AgentConfig):
-    """Configuration for Rebalance Agent."""
-    
-    # Default thresholds
-    default_drift_threshold: float = 5.0  # 5%
-    default_transaction_cost_bps: float = 10.0  # 0.10%
-    
-    # Tax settings
-    capital_gains_rate: float = 0.25  # 25%
-    consider_tax_impact: bool = True
 
 
 class RebalanceAgent(BaseAgent):
@@ -57,16 +48,15 @@ class RebalanceAgent(BaseAgent):
     - estimate_costs: Cost estimation
     """
     
-    def __init__(self, config: Optional[RebalanceAgentConfig] = None):
+    def __init__(self, agent_config: Optional[AgentConfig] = None):
         """Initialize Rebalance Agent."""
-        if config is None:
-            config = RebalanceAgentConfig(
+        if agent_config is None:
+            agent_config = AgentConfig(
                 name="RebalanceAgent",
                 role=AgentRole.DATA,  # Uses DATA role (could be separate REBALANCE role)
                 temperature=0.0,  # Deterministic
             )
-        super().__init__(config)
-        self.config: RebalanceAgentConfig = config
+        super().__init__(agent_config)
     
     @property
     def capabilities(self) -> List[str]:
@@ -245,9 +235,9 @@ SCOPE GUARDS:
         
         # Configure
         config = RebalanceConfig(
-            drift_threshold_percent=drift_threshold or self.config.default_drift_threshold,
-            transaction_cost_bps=self.config.default_transaction_cost_bps,
-            capital_gains_rate=self.config.capital_gains_rate,
+            drift_threshold_percent=drift_threshold or config.rebalance.default_drift_threshold,
+            transaction_cost_bps=config.rebalance.default_transaction_cost_bps,
+            capital_gains_rate=config.rebalance.capital_gains_rate,
         )
         
         # Delegate to pure math function
@@ -300,7 +290,7 @@ SCOPE GUARDS:
             max_drift = calculate_max_drift(drift)
             should_reb, recommendation = should_rebalance(
                 drift, 
-                self.config.default_drift_threshold
+                config.rebalance.default_drift_threshold
             )
             
             return {
@@ -309,7 +299,7 @@ SCOPE GUARDS:
                 "drift_formatted": {k: f"{v:+.2%}" for k, v in drift.items()},
                 "max_drift": max_drift,
                 "max_drift_formatted": f"{max_drift:.2%}",
-                "threshold": self.config.default_drift_threshold,
+                "threshold": config.rebalance.default_drift_threshold,
                 "should_rebalance": should_reb,
                 "recommendation": recommendation,
             }
@@ -347,7 +337,7 @@ SCOPE GUARDS:
         
         try:
             config = RebalanceConfig(
-                transaction_cost_bps=self.config.default_transaction_cost_bps,
+                transaction_cost_bps=config.rebalance.default_transaction_cost_bps,
             )
             
             trades = generate_trades(
@@ -397,7 +387,7 @@ SCOPE GUARDS:
             message = quick_drift_check(
                 current_weights=current_weights,
                 target_weights=target_weights,
-                threshold=self.config.default_drift_threshold
+                threshold=config.rebalance.default_drift_threshold
             )
             
             return {
@@ -425,10 +415,10 @@ def create_rebalance_agent(verbose: bool = False) -> RebalanceAgent:
     Returns:
         Configured RebalanceAgent
     """
-    config = RebalanceAgentConfig(
+    agent_config = AgentConfig(  
         name="RebalanceAgent",
         role=AgentRole.DATA,
         verbose=verbose,
         temperature=0.0,
     )
-    return RebalanceAgent(config)
+    return RebalanceAgent(agent_config)

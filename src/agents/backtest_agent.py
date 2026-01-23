@@ -22,6 +22,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 import numpy as np
+from io import StringIO
 
 import sys
 import os
@@ -35,17 +36,7 @@ from agents.protocols import (
     TAARule as ProtocolTAARule,
 )
 
-
-@dataclass
-class BacktestAgentConfig(AgentConfig):
-    """Configuration for Backtest Agent."""
-    
-    # Default backtest settings
-    default_initial_capital: float = 100_000
-    default_transaction_cost: float = 0.001  # 10 bps
-    
-    # Risk-free rate for Sharpe calculation
-    risk_free_rate: float = 0.05
+from config import config
 
 
 class BacktestAgent(BaseAgent):
@@ -62,16 +53,15 @@ class BacktestAgent(BaseAgent):
     All trading rules are defined BEFORE the simulation runs.
     """
     
-    def __init__(self, config: Optional[BacktestAgentConfig] = None):
+    def __init__(self, agent_config: Optional[AgentConfig] = None):
         """Initialize Backtest Agent."""
-        if config is None:
-            config = BacktestAgentConfig(
+        if agent_config is None:
+            agent_config = AgentConfig(
                 name="BacktestAgent",
                 role=AgentRole.BACKTEST,
                 temperature=0.0,
             )
-        super().__init__(config)
-        self.config: BacktestAgentConfig = config
+        super().__init__(agent_config)
         
         # Lazy-load engine
         self._engine = None
@@ -82,8 +72,8 @@ class BacktestAgent(BaseAgent):
         if self._engine is None:
             from portfolio_tool.backtest.engine import BacktestEngine
             self._engine = BacktestEngine(
-                transaction_cost=self.config.default_transaction_cost,
-                risk_free_rate=self.config.risk_free_rate
+                transaction_cost=config.backtest.default_transaction_cost,
+                risk_free_rate=config.backtest.risk_free_rate
             )
         return self._engine
     
@@ -192,7 +182,7 @@ SCOPE GUARDS:
         result = self.engine.run(
             strategy=strategy,
             price_data=price_data,
-            initial_capital=self.config.default_initial_capital,
+            initial_capital=config.backtest.default_initial_capital,
             signal_data=signal_data
         )
         
@@ -316,15 +306,32 @@ SCOPE GUARDS:
             ticker_list = [t.strip() for t in tickers.split(",")]
             weights_dict = json.loads(weights) if isinstance(weights, str) else weights
             
+
+            # GEMINI EDIT START
             # Parse price data
             if isinstance(price_data, str):
-                price_df = pd.DataFrame(json.loads(price_data))
+                # Using 'read_json' is safer for 'orient="index"' with dates
+                try:
+                    from io import StringIO
+                    json_io = StringIO(price_data)
+                    price_df = pd.read_json(json_io, orient='index')
+                except ValueError:
+                    # Fallback for standard JSON dict
+                    price_df = pd.DataFrame(json.loads(price_data))
             else:
                 price_df = pd.DataFrame(price_data)
             
-            # Ensure datetime index
+            # Ensure datetime index and sort
             if not isinstance(price_df.index, pd.DatetimeIndex):
-                price_df.index = pd.to_datetime(price_df.index)
+                try:
+                    # Try explicit mixed format inference
+                    price_df.index = pd.to_datetime(price_df.index, format='mixed')
+                except Exception:
+                    # Fallback to standard parser
+                    price_df.index = pd.to_datetime(price_df.index)
+            
+            price_df = price_df.sort_index()
+            # GEMINI EDIT END
             
             # Parse signal data if provided
             signal_df = None
@@ -373,8 +380,8 @@ SCOPE GUARDS:
             
             # Run backtest
             engine = BacktestEngine(
-                transaction_cost=self.config.default_transaction_cost,
-                risk_free_rate=self.config.risk_free_rate
+                transaction_cost=config.backtest.default_transaction_cost,
+                risk_free_rate=config.backtest.risk_free_rate
             )
             
             result = engine.run(
@@ -576,27 +583,22 @@ SCOPE GUARDS:
             }
 
 
-def create_backtest_agent(
-    transaction_cost: float = 0.001,
-    risk_free_rate: float = 0.05,
-    verbose: bool = False
-) -> BacktestAgent:
+def create_backtest_agent(verbose: bool = False) -> BacktestAgent:
     """
     Factory function to create configured Backtest Agent.
     
+    Transaction cost and risk-free rate are now in config.backtest.
+    
     Args:
-        transaction_cost: Transaction cost per trade (default: 10 bps)
-        risk_free_rate: Annual risk-free rate for Sharpe calculation
         verbose: Enable verbose logging
         
     Returns:
         Configured BacktestAgent
     """
-    config = BacktestAgentConfig(
+    agent_config = AgentConfig(
         name="BacktestAgent",
         role=AgentRole.BACKTEST,
         verbose=verbose,
-        default_transaction_cost=transaction_cost,
-        risk_free_rate=risk_free_rate,
+        temperature=0.0,
     )
-    return BacktestAgent(config)
+    return BacktestAgent(agent_config)
