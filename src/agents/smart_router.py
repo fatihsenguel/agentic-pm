@@ -26,6 +26,8 @@ from .validators import (
     ValidationResult
 )
 
+import logging
+logger = logging.getLogger(__name__)
 from config import config as app_config
 
 # =============================================================================
@@ -138,7 +140,8 @@ class SmartRouter:
         self,
         user_message: str,
         conversation_history: Optional[List[dict]] = None,
-        available_agents: Optional[List[str]] = None
+        available_agents: Optional[List[str]] = None,
+        portfolio_id: Optional[int] = None  # ⭐ NEW
     ) -> Tuple[RouterDecision, ValidationResult]:
         """
         Route a user message to the appropriate agent(s).
@@ -147,6 +150,7 @@ class SmartRouter:
             user_message: The user's request
             conversation_history: Previous conversation messages
             available_agents: List of currently available agents
+            portfolio_id: Optional portfolio ID to analyze (overrides tickers from LLM)
         
         Returns:
             Tuple of (RouterDecision, ValidationResult)
@@ -157,7 +161,6 @@ class SmartRouter:
         request_ctx = None
         agent_ctx = None
         if self.tracer:
-            # Correct API: tracer.trace_request() -> request_ctx.trace_agent()
             request_ctx = self.tracer.trace_request(user_input=user_message[:100])
             request_ctx.__enter__()
             agent_ctx = request_ctx.trace_agent("SmartRouter")
@@ -165,6 +168,21 @@ class SmartRouter:
             agent_ctx.log_thinking(f"Routing: {user_message[:100]}...")
         
         try:
+            # ⭐ NEW: Load portfolio tickers if portfolio_id provided
+            portfolio_tickers = None
+            if portfolio_id:
+                try:
+                    from portfolio_tool.portfolio_manager import PortfolioManager
+                    pm = PortfolioManager()
+                    portfolio_tickers = pm.get_portfolio_tickers(portfolio_id)
+                    if portfolio_tickers:
+                        logger.info(f"Loaded {len(portfolio_tickers)} tickers from portfolio {portfolio_id}: {portfolio_tickers}")
+                    else:
+                        logger.warning(f"Portfolio {portfolio_id} has no holdings")
+                except Exception as e:
+                    logger.error(f"Failed to load portfolio {portfolio_id}: {e}")
+                    # Continue without portfolio - LLM will extract tickers from message
+            
             # Build prompt
             prompt = build_router_prompt(
                 user_message=user_message,
@@ -178,6 +196,22 @@ class SmartRouter:
                 prompt=prompt,
                 user_message=user_message
             )
+            
+            # ⭐ RECOMMENDED: Smart ticker merging
+            if portfolio_tickers and decision:
+                llm_tickers = decision.parameters.tickers or []
+                
+                if llm_tickers:
+                    # User mentioned specific tickers - combine with portfolio
+                    combined = list(set(llm_tickers + portfolio_tickers))
+                    decision.parameters.tickers = combined
+                    logger.info(f"Mixed query: Combined {llm_tickers} + portfolio {portfolio_id} → {combined}")
+                else:
+                    # Pure portfolio query - use only portfolio tickers
+                    decision.parameters.tickers = portfolio_tickers
+                    logger.info(f"Portfolio query: Using portfolio {portfolio_id} tickers: {portfolio_tickers}")
+                
+                decision.parameters.portfolio_id = portfolio_id
             
             # Additional validation if enabled
             if self.config.validate_tickers and decision:

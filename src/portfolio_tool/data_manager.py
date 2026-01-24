@@ -901,6 +901,41 @@ class DataManager:
                 "success": False,
                 "error_message": str(e)
             }
+        
+    # ==================== PUBLIC FACADE (The missing piece) ====================
+
+    def fetch_price_data(
+        self, 
+        ticker: str, 
+        start_date: Optional[datetime | date] = None, 
+        end_date: Optional[datetime | date] = None
+    ) -> UpdateResult:
+        """
+        High-level entry point to fetch data for a ticker string.
+        
+        This makes the DataManager user-friendly by handling the
+        Asset object creation internally.
+        """
+        # 1. Normalize dates
+        if isinstance(start_date, datetime):
+            start_date = start_date.date()
+            
+        # 2. Ensure Asset Exists (The "Facade" magic)
+        # We assume Equity/USD as defaults, or let the provider enrich it later
+        asset = self._get_or_create_asset(ticker, name=ticker, asset_class="Equity")
+        
+        if not asset:
+            return UpdateResult(
+                success=False,
+                operation="fetch_price_data",
+                affected_count=0,
+                entities=[ticker],
+                entity_type="asset",
+                error_message=f"Could not create or find asset: {ticker}"
+            )
+            
+        # 3. Delegate to your existing strict logic
+        return self.update_prices_for_asset(asset, start_date=start_date)
 
 # Singleton instance
 _data_manager_instance = None

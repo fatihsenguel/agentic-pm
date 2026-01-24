@@ -130,8 +130,8 @@ class RebalanceConfig:
 @dataclass
 class BacktestConfig:
     default_period: str = "5Y"
-    default_rebalance_frequency: str = "monthly"
-    default_initial_capital: float = 100_000  # ← ADD
+    default_rebalance_frequency: str = "quarterly"
+    default_initial_capital: float = 100000  # ← ADD
     transaction_cost_bps: float = 10.0
     default_transaction_cost: float = 0.001  # ← ADD
     slippage_bps: float = 5.0
@@ -139,6 +139,8 @@ class BacktestConfig:
     rolling_window_days: int = 252
     risk_free_rate: float = 0.05  # ← ADD
     default_benchmark: str = "SPY"
+    min_initial_capital: float = 1000.0
+    max_initial_capital: float = 100_000_000.0
 
 
 @dataclass

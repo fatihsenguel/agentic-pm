@@ -256,18 +256,6 @@ Always include:
     ) -> Dict[str, Any]:
         """
         Optimize portfolio weights.
-        
-        Args:
-            tickers: Comma-separated ticker symbols
-            expected_returns: JSON dict of expected returns {"SPY": 0.08, ...}
-            covariance_matrix: JSON nested dict of covariance matrix
-            method: "max_sharpe", "min_volatility", "risk_parity"
-            max_volatility: Maximum portfolio volatility (optional)
-            min_weight: Minimum weight per asset
-            max_weight: Maximum weight per asset
-            
-        Returns:
-            Optimization result with weights and metrics
         """
         try:
             # Parse inputs
@@ -279,7 +267,7 @@ Always include:
             exp_ret = pd.Series(ret_dict)
             cov_mat = pd.DataFrame(cov_dict)
             
-            # Ensure same order
+            # Ensure same order (Crucial for matrix math alignment)
             exp_ret = exp_ret[ticker_list]
             cov_mat = cov_mat.loc[ticker_list, ticker_list]
             
@@ -301,7 +289,44 @@ Always include:
             else:  # max_sharpe
                 result = self.mv_optimizer.max_sharpe(exp_ret, cov_mat, constraints)
             
-            return result.to_dict()
+            # ✅ STRICT FIX: Convert Numpy types to Python Native types
+            # nodes.py strictly checks isinstance(x, float). Numpy floats fail this.
+            result_dict = result.to_dict()
+            
+            if "weights" in result_dict:
+                cleaned_weights = {}
+                for ticker, weight in result_dict["weights"].items():
+                    try:
+                        # Case 1: Already a float/int/numpy type
+                        if isinstance(weight, (int, float)):
+                            cleaned_weights[ticker] = float(weight)
+                        
+                        # Case 2: String with % (The error you saw: "40.00%")
+                        elif isinstance(weight, str) and "%" in weight:
+                            cleaned_weights[ticker] = float(weight.strip('%')) / 100.0
+                        
+                        # Case 3: Plain string number (e.g., "0.4")
+                        else:
+                            cleaned_weights[ticker] = float(weight)
+                    except ValueError:
+                        # Fallback: invalid format, keep as 0.0 to prevent crash
+                        cleaned_weights[ticker] = 0.0
+                
+                result_dict["weights"] = cleaned_weights
+            
+            # (Optional) Clean metrics too if they are strings
+            for metric in ['expected_return', 'expected_volatility', 'sharpe_ratio']:
+                if metric in result_dict:
+                    val = result_dict[metric]
+                    try:
+                        if isinstance(val, str) and "%" in val:
+                            result_dict[metric] = float(val.strip('%')) / 100.0
+                        else:
+                            result_dict[metric] = float(val)
+                    except ValueError:
+                        pass
+
+            return result_dict
             
         except Exception as e:
             return {

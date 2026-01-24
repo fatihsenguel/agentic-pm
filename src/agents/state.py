@@ -35,6 +35,9 @@ class AgentState(TypedDict):
     # Router decision (from Smart Router - Phase 6.1)
     router_decision: Optional[Dict[str, Any]]
     
+    portfolio_id: Optional[int]  # Which portfolio is being analyzed
+    portfolio_holdings: Optional[List[Dict[str, Any]]]  # Cached holdings data
+
     # Current execution context
     current_agent: Optional[str]
     execution_step: int
@@ -70,6 +73,7 @@ class AgentState(TypedDict):
 def create_initial_state(
     user_message: str,
     request_id: Optional[str] = None,
+    portfolio_id: Optional[int] = None,
 ) -> AgentState:
     """
     Create a fresh initial state for a new request.
@@ -98,6 +102,8 @@ def create_initial_state(
         final_response=None,
         requires_approval=False,
         approval_status=None,
+        portfolio_id=portfolio_id,
+        portfolio_holdings=None,
     )
 
 

@@ -216,22 +216,38 @@ SCOPE GUARDS:
             # Get from data manager if possible
             try:
                 from portfolio_tool.data_manager import get_data_manager
-                dm = get_data_manager()
+                from datetime import datetime
                 
+                dm = get_data_manager()
                 prices = {}
-                for ticker in set(current_weights.keys()) | set(target_weights.keys()):
+                
+                # Get specific tickers involved in the rebalance
+                involved_tickers = set(current_weights.keys()) | set(target_weights.keys())
+                
+                # Fetch REAL prices from DB
+                missing_prices = []
+                for ticker in involved_tickers:
                     if ticker == "CASH":
                         prices[ticker] = 1.0
                         continue
+                        
+                    # ✅ STRICT: Get the actual latest price
+                    latest_price = dm.get_latest_price(ticker)
+                    if latest_price:
+                        prices[ticker] = float(latest_price)
+                    else:
+                        missing_prices.append(ticker)
+                
+                # ✅ STRICT: Fail if data is missing
+                if missing_prices:
+                    raise ValueError(f"Cannot rebalance: Missing prices for {missing_prices}. Run DataAgent first.")
                     
-                    # Try to get latest price from DB
-                    # This is a simplified approach - in production, get real prices
-                    prices[ticker] = 100.0  # Default placeholder
-                    
-            except Exception:
-                # Use placeholder prices
-                prices = {t: 100.0 for t in set(current_weights.keys()) | set(target_weights.keys())}
-                prices["CASH"] = 1.0
+            except Exception as e:
+                # Don't mask the error with a placeholder
+                return {
+                    "success": False,
+                    "error": f"Price data retrieval failed: {str(e)}"
+                }
         
         # Configure
         config = RebalanceConfig(

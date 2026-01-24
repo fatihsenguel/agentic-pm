@@ -257,16 +257,7 @@ Always include in your responses:
         
         # 4. Get risk-free rate (from macro data in DB)
         rf_result = self.get_risk_free_rate_tool()
-        
-        # ✅ STRICT: Fail if risk-free rate is unavailable (no hardcoded default)
-        if not rf_result.get("success"):
-             return self.create_result(
-                task_id=task.task_id,
-                success=False,
-                error_message=f"Risk-free rate error: {rf_result.get('error')}"
-            )
-        
-        risk_free_rate = rf_result.get("rate")
+        risk_free_rate = rf_result.get("rate", 0.05)
         
         # Build result
         result = self.create_result(
@@ -434,10 +425,8 @@ Always include in your responses:
             # Step 3: Cache the DataFrame for subsequent calculations
             cache_key = f"{','.join(sorted(ticker_list))}_{period}"
             self._prices_df_cache[cache_key] = prices
-            self._cache_timestamps[cache_key] = datetime.now()
-            
-            # Create JSON for downstream tools (like BacktestAgent)
-            price_data_json = prices.to_json(orient="index", date_format="iso")
+            self._cache_timestamps[cache_key] = datetime.now() # delete?
+            price_data_json = prices.to_json(orient="index", date_format="iso") # gemini fix
             
             # Step 4: Build summary (Hot Potato - don't return raw data)
             summary = {
@@ -461,7 +450,7 @@ Always include in your responses:
                     }
                     for ticker in prices.columns
                 },
-                "price_data": price_data_json 
+                "price_data": price_data_json # gemini fix
             }
             
             # Check for data quality issues
@@ -541,7 +530,6 @@ Always include in your responses:
                     ticker: f"{annualized[ticker]:.2%}"
                     for ticker in returns.columns
                 }
-                # ✅ STRICT: Always return raw floats for calculation (Bank Standard)
                 result["annualized_returns_raw"] = {
                     ticker: round(float(annualized[ticker]), 6)
                     for ticker in returns.columns
@@ -639,8 +627,6 @@ Always include in your responses:
                 "covariance_matrix": cov_matrix.to_dict(),
                 "correlation_matrix": corr_matrix.to_dict(),
                 "annualized_volatilities": {k: f"{v:.2%}" for k, v in vols.items()},
-                # ✅ STRICT: Fallback MUST provide raw floats for math (Bank Standard)
-                "annualized_volatilities_raw": vols,
                 "num_observations": len(returns),
                 "estimation_period": f"{returns.index[0].strftime('%Y-%m-%d')} to {returns.index[-1].strftime('%Y-%m-%d')}",
                 "note": "Using fallback calculation (quant module not available)"
@@ -741,10 +727,10 @@ Always include in your responses:
         Get current risk-free rate from macro data in database.
         
         Uses 10Y Treasury yield from MacroData table.
-        FAIL SAFE: Fails if not in DB and no config default exists.
+        Falls back to default if not available.
         
         Returns:
-            Dictionary with risk-free rate or error.
+            Dictionary with risk-free rate
         """
         try:
             # Try to get from macro data in database
@@ -775,31 +761,22 @@ Always include in your responses:
                         "as_of": indicators["IRX_3M"]["date"]
                     }
             
-            # ✅ STRICT: Check config for manual override/default
-            # Never hardcode financial assumptions in code (Bank Standard)
-            default_rate = getattr(config.data, 'default_risk_free_rate', None)
-            
-            if default_rate is not None:
-                return {
-                    "success": True,
-                    "rate": float(default_rate),
-                    "rate_formatted": f"{default_rate:.2%}",
-                    "source": "config_fallback",
-                    "note": "Macro data missing, using configured default"
-                }
-
-            # ✅ STRICT: Fail loudly if no data available
+            # If macro data not in DB, return default
             return {
-                "success": False,
-                "error": "Risk-free rate unavailable in DB and no default configured.",
-                "fix": "Run MacroAgent to fetch Treasury yields or set 'default_risk_free_rate' in config."
+                "success": True,
+                "rate": 0.05,
+                "rate_formatted": "5.00%",
+                "source": "default",
+                "note": "Macro data not available in database. Use MacroAgent to fetch."
             }
             
         except Exception as e:
-            # If unexpected error, still allow config fallback if safe
             return {
-                 "success": False,
-                 "error": f"Error fetching risk-free rate: {str(e)}"
+                "success": True,
+                "rate": 0.05,
+                "rate_formatted": "5.00%",
+                "source": "default",
+                "note": f"Using default rate - error: {str(e)}"
             }
     
     def calculate_rolling_volatility_tool(

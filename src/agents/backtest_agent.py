@@ -270,139 +270,124 @@ SCOPE GUARDS:
     # ========== TOOLS ==========
     
     def run_backtest_tool(
-        self,
-        tickers: str,
-        weights: str,
-        price_data: str,
-        rebalance_frequency: str = "quarterly",
-        drift_threshold: float = 0.05,
-        taa_rules: Optional[str] = None,
-        initial_capital: float = 100_000,
-        signal_data: Optional[str] = None
-    ) -> Dict[str, Any]:
-        """
-        Run a backtest on a portfolio strategy.
-        
-        Args:
-            tickers: Comma-separated ticker symbols
-            weights: JSON dict of initial weights {"SPY": 0.6, "TLT": 0.4}
-            price_data: JSON dict of price data (or DataFrame as JSON)
-            rebalance_frequency: "daily", "weekly", "monthly", "quarterly", "annually", "never"
-            drift_threshold: Rebalance if any weight drifts more than this
-            taa_rules: JSON list of TAA rules (optional)
-            initial_capital: Starting capital
-            signal_data: JSON dict of signal data for TAA (optional)
-            
-        Returns:
-            Backtest results
-        """
-        try:
-            from portfolio_tool.backtest.strategies import (
-                Strategy, TAARule, RebalanceRule, RebalanceFrequency
-            )
-            from portfolio_tool.backtest.engine import BacktestEngine
-            
-            # Parse inputs
-            ticker_list = [t.strip() for t in tickers.split(",")]
-            weights_dict = json.loads(weights) if isinstance(weights, str) else weights
-            
-
-            # GEMINI EDIT START
-            # Parse price data
-            if isinstance(price_data, str):
-                # Using 'read_json' is safer for 'orient="index"' with dates
-                try:
-                    from io import StringIO
-                    json_io = StringIO(price_data)
-                    price_df = pd.read_json(json_io, orient='index')
-                except ValueError:
-                    # Fallback for standard JSON dict
-                    price_df = pd.DataFrame(json.loads(price_data))
-            else:
-                price_df = pd.DataFrame(price_data)
-            
-            # Ensure datetime index and sort
-            if not isinstance(price_df.index, pd.DatetimeIndex):
-                try:
-                    # Try explicit mixed format inference
-                    price_df.index = pd.to_datetime(price_df.index, format='mixed')
-                except Exception:
-                    # Fallback to standard parser
-                    price_df.index = pd.to_datetime(price_df.index)
-            
-            price_df = price_df.sort_index()
-            # GEMINI EDIT END
-            
-            # Parse signal data if provided
-            signal_df = None
-            if signal_data:
-                if isinstance(signal_data, str):
-                    signal_df = pd.DataFrame(json.loads(signal_data))
+            self,
+            tickers: str,
+            weights: str,
+            price_data: str,
+            rebalance_frequency: str = "quarterly",
+            drift_threshold: float = 0.05,
+            taa_rules: Optional[str] = None,
+            initial_capital: float = 100_000,
+            signal_data: Optional[str] = None
+        ) -> Dict[str, Any]:
+            """
+            Run a backtest on a portfolio strategy.
+            """
+            try:
+                from portfolio_tool.backtest.strategies import (
+                    Strategy, TAARule, RebalanceRule, RebalanceFrequency
+                )
+                from portfolio_tool.backtest.engine import BacktestEngine
+                
+                # Parse inputs
+                ticker_list = [t.strip() for t in tickers.split(",")]
+                weights_dict = json.loads(weights) if isinstance(weights, str) else weights
+                
+                # GEMINI EDIT START: Robust Data Parsing
+                # Handle 'orient="index"' JSON which is safer for dates
+                if isinstance(price_data, str):
+                    try:
+                        from io import StringIO
+                        json_io = StringIO(price_data)
+                        price_df = pd.read_json(json_io, orient='index')
+                    except ValueError:
+                        # Fallback for standard JSON dict
+                        price_df = pd.DataFrame(json.loads(price_data))
                 else:
-                    signal_df = pd.DataFrame(signal_data)
-                if not isinstance(signal_df.index, pd.DatetimeIndex):
-                    signal_df.index = pd.to_datetime(signal_df.index)
-            
-            # Parse rebalance frequency
-            freq_map = {
-                "daily": RebalanceFrequency.DAILY,
-                "weekly": RebalanceFrequency.WEEKLY,
-                "monthly": RebalanceFrequency.MONTHLY,
-                "quarterly": RebalanceFrequency.QUARTERLY,
-                "annually": RebalanceFrequency.ANNUALLY,
-                "never": RebalanceFrequency.NEVER,
-            }
-            rebal_freq = freq_map.get(rebalance_frequency.lower(), RebalanceFrequency.QUARTERLY)
-            
-            # Parse TAA rules
-            strategy_taa_rules = []
-            if taa_rules:
-                rules_list = json.loads(taa_rules) if isinstance(taa_rules, str) else taa_rules
-                for rule in rules_list:
-                    strategy_taa_rules.append(TAARule(
-                        name=rule["name"],
-                        indicator=rule["indicator"],
-                        operator=rule["operator"],
-                        threshold=rule["threshold"],
-                        target_weights=rule["target_weights"],
-                    ))
-            
-            # Build strategy
-            strategy = Strategy(
-                name="Backtest Strategy",
-                initial_weights=weights_dict,
-                rebalance_rule=RebalanceRule(
-                    frequency=rebal_freq,
-                    drift_threshold=drift_threshold
-                ),
-                taa_rules=strategy_taa_rules,
-            )
-            
-            # Run backtest
-            engine = BacktestEngine(
-                transaction_cost=config.backtest.default_transaction_cost,
-                risk_free_rate=config.backtest.risk_free_rate
-            )
-            
-            result = engine.run(
-                strategy=strategy,
-                price_data=price_df,
-                initial_capital=initial_capital,
-                signal_data=signal_df
-            )
-            
-            return {
-                "success": True,
-                **result.to_dict(),
-                "summary": result.to_summary()
-            }
-            
-        except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
-    
+                    price_df = pd.DataFrame(price_data)
+                
+                # Ensure datetime index and sort
+                if not isinstance(price_df.index, pd.DatetimeIndex):
+                    try:
+                        # Try explicit mixed format inference
+                        price_df.index = pd.to_datetime(price_df.index, format='mixed')
+                    except Exception:
+                        # Fallback to standard parser
+                        price_df.index = pd.to_datetime(price_df.index)
+                
+                price_df = price_df.sort_index()
+                # GEMINI EDIT END
+                
+                # Parse signal data if provided
+                signal_df = None
+                if signal_data:
+                    if isinstance(signal_data, str):
+                        signal_df = pd.DataFrame(json.loads(signal_data))
+                    else:
+                        signal_df = pd.DataFrame(signal_data)
+                    if not isinstance(signal_df.index, pd.DatetimeIndex):
+                        signal_df.index = pd.to_datetime(signal_df.index)
+                
+                # Parse rebalance frequency
+                freq_map = {
+                    "daily": RebalanceFrequency.DAILY,
+                    "weekly": RebalanceFrequency.WEEKLY,
+                    "monthly": RebalanceFrequency.MONTHLY,
+                    "quarterly": RebalanceFrequency.QUARTERLY,
+                    "annually": RebalanceFrequency.ANNUALLY,
+                    "never": RebalanceFrequency.NEVER,
+                }
+                rebal_freq = freq_map.get(rebalance_frequency.lower(), RebalanceFrequency.QUARTERLY)
+                
+                # Parse TAA rules
+                strategy_taa_rules = []
+                if taa_rules:
+                    rules_list = json.loads(taa_rules) if isinstance(taa_rules, str) else taa_rules
+                    for rule in rules_list:
+                        strategy_taa_rules.append(TAARule(
+                            name=rule["name"],
+                            indicator=rule["indicator"],
+                            operator=rule["operator"],
+                            threshold=rule["threshold"],
+                            target_weights=rule["target_weights"],
+                        ))
+                
+                # Build strategy
+                strategy = Strategy(
+                    name="Backtest Strategy",
+                    initial_weights=weights_dict,
+                    rebalance_rule=RebalanceRule(
+                        frequency=rebal_freq,
+                        drift_threshold=drift_threshold
+                    ),
+                    taa_rules=strategy_taa_rules,
+                )
+                
+                # Run backtest
+                engine = BacktestEngine(
+                    transaction_cost=config.backtest.default_transaction_cost,
+                    risk_free_rate=config.backtest.risk_free_rate
+                )
+                
+                result = engine.run(
+                    strategy=strategy,
+                    price_data=price_df,
+                    initial_capital=initial_capital,
+                    signal_data=signal_df
+                )
+                
+                return {
+                    "success": True,
+                    **result.to_dict(),
+                    "summary": result.to_summary()
+                }
+                
+            except Exception as e:
+                return {
+                    "success": False,
+                    "error": str(e)
+                }
+        
     def compare_strategies_tool(
         self,
         strategies: str,

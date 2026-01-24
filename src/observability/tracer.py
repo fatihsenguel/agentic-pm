@@ -620,6 +620,30 @@ class Tracer:
         
         return RequestTraceContext(self, request_id, user_input)
     
+    def get_current_request(self):
+        """
+        Get the current request context helper.
+        
+        Returns an object that allows starting agent traces 
+        linked to the current active request.
+        """
+        # If no request is running (e.g. during unit tests), return None
+        if self._current_trace is None:
+            return None
+            
+        # Helper class to allow calling trace_agent() on the current request
+        # We define this locally to capture the tracer instance and request_id
+        class CurrentRequestProxy:
+            def __init__(self, tracer_instance, request_id):
+                self.tracer = tracer_instance
+                self.request_id = request_id
+                
+            def trace_agent(self, agent_name: str) -> 'AgentTrace':
+                # Delegates to the existing AgentTrace context manager
+                return AgentTrace(self.tracer, self.request_id, agent_name)
+                
+        return CurrentRequestProxy(self, self._current_trace.request_id)
+    
     def _emit_event(
         self,
         event_type: TraceEventType,
