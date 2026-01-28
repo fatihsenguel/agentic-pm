@@ -417,7 +417,8 @@ class Portfolio(Base):
     
     # Relationship to holdings
     holdings = relationship('PortfolioHolding', back_populates='portfolio', cascade='all, delete-orphan')
-    
+    decision_logs = relationship('DecisionLog', back_populates='portfolio', cascade='all, delete-orphan')
+
     def __repr__(self):
         return f"<Portfolio(id={self.id}, name='{self.name}', holdings={len(self.holdings)})>"
 
@@ -451,6 +452,149 @@ class PortfolioHolding(Base):
     
     def __repr__(self):
         return f"<PortfolioHolding(portfolio_id={self.portfolio_id}, asset_id={self.asset_id}, qty={self.quantity})>"
+
+
+class DecisionLog(Base):
+    """
+    Audit trail of all PM decisions.
+    
+    Every portfolio decision (HOLD, TILT, REBALANCE, HEDGE) is logged here
+    for auditability and analysis.
+    
+    Example:
+        DecisionLog(
+            portfolio_id=1,
+            decision_type="HOLD",
+            confidence=0.85,
+            rationale="Portfolio drift within tolerance",
+            trigger="user_request"
+        )
+    """
+    __tablename__ = 'decision_logs'
+    
+    id = Column(Integer, primary_key=True)
+    timestamp = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    portfolio_id = Column(Integer, ForeignKey('portfolios.id', ondelete='CASCADE'), nullable=True, index=True)
+    
+    # Decision details
+    decision_type = Column(String(20), nullable=False)  # HOLD, TILT, REBALANCE, HEDGE
+    confidence = Column(Float, nullable=False)
+    rationale = Column(String(1000), nullable=True)
+    trigger = Column(String(50), nullable=False)  # "user_request", "drift_threshold", "macro_change", "scheduled"
+    
+    # Risk context at time of decision
+    risk_status = Column(String(20), nullable=True)  # ACCEPTABLE, ELEVATED, CRITICAL
+    key_risks = Column(JSON, nullable=True)  # List of risk factors
+    
+    # Portfolio state at time of decision
+    current_weights = Column(JSON, nullable=True)  # {"SPY": 0.4, "TLT": 0.3, ...}
+    proposed_weights = Column(JSON, nullable=True)  # Target weights if action recommended
+    max_drift = Column(Float, nullable=True)
+    
+    # Macro context
+    macro_regime = Column(String(20), nullable=True)  # "neutral", "risk_off", "crisis"
+    vix_level = Column(Float, nullable=True)
+    
+    # Execution tracking
+    trade_required = Column(Boolean, nullable=False, default=False)
+    executed = Column(Boolean, nullable=False, default=False)
+    execution_timestamp = Column(DateTime, nullable=True)
+    
+    # User/session tracking
+    request_id = Column(String(50), nullable=True)  # Links to the original request
+    user_query = Column(String(500), nullable=True)  # What the user asked
+    
+    # Relationship to portfolio
+    portfolio = relationship('Portfolio')
+    
+    __table_args__ = (
+        Index('ix_decision_portfolio', 'portfolio_id'),
+        Index('ix_decision_timestamp', 'timestamp'),
+        Index('ix_decision_type', 'decision_type'),
+    )
+    
+    def __repr__(self):
+        return f"<DecisionLog(id={self.id}, portfolio={self.portfolio_id}, decision='{self.decision_type}', confidence={self.confidence})>"
+
+
+class Document(Base):
+    """
+    Tracks all documents ingested into the RAG system.
+    
+    Phase: 6.7 - RAG Integration
+    
+    Purpose:
+    - Deduplication via content_hash (don't re-index same document)
+    - Metadata storage for filtering (ticker, doc_type, date)
+    - Status tracking for processing pipeline
+    - Links to ChromaDB collection
+    
+    Example:
+        Document(
+            filename="NVDA_Q3_2024_Earnings.pdf",
+            doc_type="earnings",
+            ticker="NVDA",
+            source="user_upload",
+            content_hash="abc123...",
+            status="processed",
+            chunk_count=42
+        )
+    """
+    __tablename__ = 'documents'
+    
+    id = Column(Integer, primary_key=True)
+    
+    # -------------------------------------------------------------------------
+    # IDENTIFICATION
+    # -------------------------------------------------------------------------
+    filename = Column(String(255), nullable=False)
+    doc_type = Column(String(50), nullable=False)  # earnings, 10k, 10q, fed_minutes, research, news, memo, other
+    ticker = Column(String(20), nullable=True, index=True)  # Related security (NULL for macro docs)
+    source = Column(String(50), nullable=False)  # sec_edgar, federal_reserve, user_upload, news_api, manual
+    
+    # -------------------------------------------------------------------------
+    # CONTENT TRACKING
+    # -------------------------------------------------------------------------
+    content_hash = Column(String(64), unique=True, nullable=False)  # SHA256 for deduplication
+    chunk_count = Column(Integer, default=0)
+    total_tokens = Column(Integer, default=0)
+    page_count = Column(Integer, default=0)
+    
+    # -------------------------------------------------------------------------
+    # DATES
+    # -------------------------------------------------------------------------
+    document_date = Column(Date, nullable=True)  # Date OF the document content
+    upload_date = Column(DateTime, default=datetime.datetime.utcnow)  # When we received it
+    processed_date = Column(DateTime, nullable=True)  # When processing completed
+    
+    # -------------------------------------------------------------------------
+    # STATUS
+    # -------------------------------------------------------------------------
+    status = Column(String(20), default="pending")  # pending, processing, processed, failed
+    error_message = Column(String(500), nullable=True)
+    
+    # -------------------------------------------------------------------------
+    # VECTOR STORE REFERENCE
+    # -------------------------------------------------------------------------
+    collection_name = Column(String(100), default="portfolio_documents")
+    
+    # -------------------------------------------------------------------------
+    # EXTRACTED METADATA
+    # -------------------------------------------------------------------------
+    sections = Column(JSON, nullable=True)  # List of section headers found
+    
+    __table_args__ = (
+        # Indexes for common query patterns
+        Index('ix_doc_ticker', 'ticker'),
+        Index('ix_doc_type', 'doc_type'),
+        Index('ix_doc_ticker_type', 'ticker', 'doc_type'),
+        Index('ix_doc_date', 'document_date'),
+        Index('ix_doc_status', 'status'),
+        Index('ix_doc_upload', 'upload_date'),
+    )
+    
+    def __repr__(self):
+        return f"<Document(id={self.id}, filename='{self.filename}', ticker='{self.ticker}', status='{self.status}')>"
 
 
 

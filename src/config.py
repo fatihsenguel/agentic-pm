@@ -185,6 +185,60 @@ class FeatureFlags:
 
 
 @dataclass
+class RAGConfig:
+    """
+    Configuration for RAG (Retrieval-Augmented Generation) pipeline.
+    
+    Phase: 6.7 - RAG Integration
+    
+    Controls:
+    - Embedding model selection (OpenAI vs local fallback)
+    - ChromaDB storage location
+    - Chunking parameters
+    - Search behavior
+    """
+    
+    # -------------------------------------------------------------------------
+    # EMBEDDINGS
+    # -------------------------------------------------------------------------
+    # Primary: OpenAI text-embedding-3-small (best quality)
+    embedding_model: str = "text-embedding-3-small"
+    embedding_dimensions: int = 1536
+    
+    # Fallback: Local sentence-transformers (no API needed)
+    use_local_fallback: bool = True
+    local_embedding_model: str = "all-MiniLM-L6-v2"
+    local_embedding_dimensions: int = 384
+    
+    # -------------------------------------------------------------------------
+    # VECTOR STORE (ChromaDB)
+    # -------------------------------------------------------------------------
+    chroma_persist_dir: str = "data/chroma"
+    collection_name: str = "portfolio_documents"
+    
+    # -------------------------------------------------------------------------
+    # CHUNKING
+    # -------------------------------------------------------------------------
+    chunk_size: int = 1000          # Target tokens per chunk
+    chunk_overlap: int = 100        # Overlap for context continuity
+    min_chunk_size: int = 50        # Minimum chunk size
+    respect_sections: bool = True   # Section-aware chunking
+    
+    # -------------------------------------------------------------------------
+    # SEARCH
+    # -------------------------------------------------------------------------
+    default_top_k: int = 5                  # Default number of results
+    relevance_threshold: float = 0.7        # Minimum similarity score (0-1)
+    max_context_tokens: int = 4000          # Max tokens to include in context
+    
+    # -------------------------------------------------------------------------
+    # DOCUMENT STORAGE
+    # -------------------------------------------------------------------------
+    documents_dir: str = "data/documents"   # Where uploaded docs are cached
+    max_document_size_mb: float = 50.0      # Max file size to process
+    supported_extensions: tuple = (".pdf", ".txt", ".md")
+
+@dataclass
 class AppConfig:
     """Main application configuration."""
     
@@ -201,6 +255,8 @@ class AppConfig:
     debug: bool = field(default_factory=lambda: os.getenv("DEBUG", "false").lower() == "true")
     log_level: str = field(default_factory=lambda: os.getenv("LOG_LEVEL", "INFO"))
 
+    # rag
+    rag: RAGConfig = field(default_factory=RAGConfig)
 
 # Singleton instance
 config = AppConfig()

@@ -1,0 +1,143 @@
+Apple Inc.
+Form 10-K Annual Report (Excerpts)
+Fiscal Year 2024
+
+================================================================================
+ITEM 1A. RISK FACTORS
+================================================================================
+
+RISKS RELATING TO BUSINESS AND INDUSTRY
+
+1. SUPPLY CHAIN AND MANUFACTURING RISKS
+
+The Company's products are manufactured by outsourcing partners, primarily 
+located in Asia. A significant concentration of manufacturing occurs in China. 
+The Company has various forms of arrangements with suppliers, which may 
+include providing financial support and making equipment available. Disruptions 
+to manufacturing operations due to natural disasters, public health issues, 
+geopolitical tensions, or other factors could materially impact product 
+availability and financial results.
+
+Specific concerns include:
+- Over 90% of iPhone production occurs in China
+- Taiwan Semiconductor (TSMC) is sole supplier of advanced chips
+- Geopolitical tensions between U.S. and China present ongoing risks
+- COVID-19 demonstrated vulnerability of concentrated manufacturing
+
+2. PRODUCT TRANSITION AND DEMAND RISKS
+
+The Company has historically experienced different levels of demand for its 
+products during transition periods. If new products are not accepted by 
+customers, or if the Company fails to accurately forecast demand, it may 
+experience excess inventory or supply shortages.
+
+Key product cycle risks:
+- iPhone replacement cycles lengthening (now 4+ years average)
+- Services growth dependent on installed base expansion
+- Vision Pro adoption slower than internal projections
+- Increasing smartphone competition in emerging markets
+
+3. COMPETITIVE ENVIRONMENT
+
+The markets for the Company's products and services are highly competitive. 
+The Company faces substantial competition in all areas of its business, 
+including from companies that have greater technical, marketing, financial, 
+or other resources.
+
+Competitive threats include:
+- Samsung and Chinese OEMs in smartphones
+- Google in services and operating systems
+- Microsoft in enterprise and productivity
+- Meta and emerging players in AR/VR
+
+4. REGULATORY AND LEGAL RISKS
+
+The Company is subject to various legal proceedings, claims, investigations, 
+and regulatory oversight worldwide. Changes in laws and regulations could 
+materially impact operations.
+
+Current regulatory concerns:
+- EU Digital Markets Act compliance costs
+- App Store practices under antitrust scrutiny (Epic Games, DOJ)
+- Privacy regulations affecting advertising revenue
+- Right-to-repair legislation impacting service margins
+
+5. FOREIGN EXCHANGE AND MACROECONOMIC RISKS
+
+The Company's operations and performance depend significantly on worldwide 
+economic conditions. A strong U.S. dollar negatively impacts international 
+revenue when translated. Economic downturns could reduce consumer spending 
+on premium devices.
+
+================================================================================
+ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS
+================================================================================
+
+FINANCIAL PERFORMANCE SUMMARY
+
+Total Net Revenue: $383.3 billion
+- Products: $298.1 billion (down 4% YoY)
+- Services: $85.2 billion (up 14% YoY)
+
+Gross Margin: 44.1% (up from 43.3%)
+- Products: 36.5%
+- Services: 70.8%
+
+Net Income: $97.0 billion
+EPS: $6.13 (diluted)
+
+Cash and Marketable Securities: $162.1 billion
+Long-term Debt: $95.3 billion
+
+SEGMENT PERFORMANCE
+
+Americas: $162.6 billion (42% of revenue)
+Europe: $94.3 billion (25% of revenue)
+Greater China: $72.6 billion (19% of revenue)
+Japan: $24.9 billion (7% of revenue)
+Rest of Asia Pacific: $28.9 billion (7% of revenue)
+
+Note: Greater China revenue declined 8% year-over-year due to increased 
+competition from Huawei and other domestic brands following easing of 
+U.S. chip restrictions.
+
+SERVICES BUSINESS
+
+Services revenue reached record levels, driven by:
+- App Store: Strong developer ecosystem (>1.8 million apps)
+- Apple Music: 100+ million subscribers
+- iCloud: Storage upgrades driving revenue
+- AppleCare: High attach rates on premium devices
+- Advertising: Search Ads growth despite privacy changes
+
+Services gross margin of 70.8% significantly exceeds products margin, 
+supporting overall profitability as product mix shifts.
+
+================================================================================
+CAPITAL ALLOCATION
+================================================================================
+
+Share Repurchases: $77.6 billion during fiscal year
+Dividends: $14.9 billion paid to shareholders
+Capital Return Program: Over $700 billion returned since 2012
+
+The Board authorized an additional $90 billion for share repurchases.
+Quarterly dividend of $0.24 per share.
+
+================================================================================
+FORWARD OUTLOOK
+================================================================================
+
+Management expects:
+- Continued iPhone cycle maturity
+- Services to grow double-digits annually
+- Vision Pro to be investment year, not profit contributor
+- India manufacturing expansion to reduce China concentration
+- Generative AI features driving upgrade cycles
+
+Key capital expenditure areas:
+- Data center infrastructure for AI services
+- Manufacturing diversification (India, Vietnam)
+- Research and development facilities
+
+================================================================================

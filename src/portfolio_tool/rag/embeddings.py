@@ -1,301 +1,429 @@
+# src/portfolio_tool/rag/embeddings.py
 """
-Embedding and Similarity Search for RAG Pipeline.
+Embedding Service for RAG Pipeline.
 
-Provides:
-- Text embedding (using sentence-transformers or OpenAI)
-- In-memory vector storage
-- Similarity search
+Phase: 6.7 - RAG Integration (Phase 2: Vector Store)
 
-For production, consider using:
-- ChromaDB
-- Pinecone
-- Weaviate
-- FAISS
+PURPOSE:
+Generate vector embeddings for document chunks:
+- Primary: OpenAI text-embedding-3-small (best quality, uses existing OPENAI_API_KEY)
+- Fallback: sentence-transformers all-MiniLM-L6-v2 (local, no API needed)
 
-This implementation uses a simple in-memory store for portability.
+DESIGN PRINCIPLES:
+- Lazy loading: Models loaded only when first used
+- Automatic fallback: If OpenAI fails, falls back to local
+- Batching: Process multiple texts efficiently
+- Caching: Optional embedding cache to avoid redundant API calls
+
+USAGE:
+    from portfolio_tool.rag.embeddings import EmbeddingService
+    
+    # Auto-selects best available provider
+    service = EmbeddingService()
+    
+    # Embed a single query
+    vector = service.embed_query("What is NVIDIA's revenue?")
+    
+    # Embed multiple documents (batched)
+    vectors = service.embed_documents(["chunk 1", "chunk 2", "chunk 3"])
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple
-import numpy as np
+import os
+import logging
+from abc import ABC, abstractmethod
+from typing import List, Optional, Dict, Any
+from dataclasses import dataclass
 
-from .chunker import Chunk
+logger = logging.getLogger(__name__)
 
+
+# =============================================================================
+# CONFIGURATION
+# =============================================================================
 
 @dataclass
-class EmbeddingResult:
-    """Result from similarity search."""
-    chunk: Chunk
-    score: float  # Similarity score (higher = more similar)
-    rank: int
+class EmbeddingConfig:
+    """Configuration for embedding service."""
+    # OpenAI settings
+    openai_model: str = "text-embedding-3-small"
+    openai_dimensions: int = 1536
+    openai_batch_size: int = 100  # Max texts per API call
     
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "rank": self.rank,
-            "score": f"{self.score:.4f}",
-            "chunk_id": self.chunk.chunk_id,
-            "section": self.chunk.section,
-            "text_preview": self.chunk.text[:200] + "..." if len(self.chunk.text) > 200 else self.chunk.text,
-        }
+    # Local fallback settings
+    local_model: str = "all-MiniLM-L6-v2"
+    local_dimensions: int = 384
+    
+    # Behavior
+    prefer_local: bool = False  # Set True to always use local
+    auto_fallback: bool = True  # Fallback to local if OpenAI fails
 
 
-class EmbeddingStore:
+# =============================================================================
+# ABSTRACT BASE
+# =============================================================================
+
+class BaseEmbeddingProvider(ABC):
+    """Abstract base class for embedding providers."""
+    
+    @property
+    @abstractmethod
+    def dimensions(self) -> int:
+        """Return embedding dimensions."""
+        pass
+    
+    @property
+    @abstractmethod
+    def model_name(self) -> str:
+        """Return model identifier."""
+        pass
+    
+    @abstractmethod
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """Embed multiple documents."""
+        pass
+    
+    @abstractmethod
+    def embed_query(self, text: str) -> List[float]:
+        """Embed a single query."""
+        pass
+
+
+# =============================================================================
+# OPENAI PROVIDER
+# =============================================================================
+
+class OpenAIEmbeddingProvider(BaseEmbeddingProvider):
     """
-    Simple in-memory embedding store.
+    OpenAI embedding provider using text-embedding-3-small.
     
-    Stores chunks with their embeddings for similarity search.
+    Uses the same OPENAI_API_KEY as your LLM.
+    """
     
-    Example:
-        store = EmbeddingStore()
-        store.add_chunks(chunks)
-        results = store.search("inflation concerns", top_k=5)
+    def __init__(self, config: EmbeddingConfig):
+        self.config = config
+        self._client = None
+    
+    @property
+    def dimensions(self) -> int:
+        return self.config.openai_dimensions
+    
+    @property
+    def model_name(self) -> str:
+        return self.config.openai_model
+    
+    @property
+    def client(self):
+        """Lazy-load OpenAI client."""
+        if self._client is None:
+            try:
+                from openai import OpenAI
+                self._client = OpenAI()  # Uses OPENAI_API_KEY env var
+                logger.info("OpenAI client initialized for embeddings")
+            except ImportError:
+                raise ImportError(
+                    "OpenAI package not installed. "
+                    "Install with: pip install openai"
+                )
+            except Exception as e:
+                raise RuntimeError(f"Failed to initialize OpenAI client: {e}")
+        return self._client
+    
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """
+        Embed multiple documents with batching.
+        
+        Args:
+            texts: List of text strings to embed
+            
+        Returns:
+            List of embedding vectors
+        """
+        if not texts:
+            return []
+        
+        all_embeddings = []
+        
+        # Process in batches
+        for i in range(0, len(texts), self.config.openai_batch_size):
+            batch = texts[i:i + self.config.openai_batch_size]
+            
+            # Clean texts (OpenAI doesn't like empty strings)
+            batch = [t if t.strip() else " " for t in batch]
+            
+            try:
+                response = self.client.embeddings.create(
+                    model=self.config.openai_model,
+                    input=batch,
+                )
+                
+                # Extract embeddings in order
+                batch_embeddings = [item.embedding for item in response.data]
+                all_embeddings.extend(batch_embeddings)
+                
+            except Exception as e:
+                logger.error(f"OpenAI embedding error: {e}")
+                raise
+        
+        return all_embeddings
+    
+    def embed_query(self, text: str) -> List[float]:
+        """Embed a single query."""
+        result = self.embed_documents([text])
+        return result[0] if result else []
+
+
+# =============================================================================
+# LOCAL PROVIDER (SENTENCE-TRANSFORMERS)
+# =============================================================================
+
+class LocalEmbeddingProvider(BaseEmbeddingProvider):
+    """
+    Local embedding provider using sentence-transformers.
+    
+    No API key needed, runs entirely on CPU/GPU.
+    Quality is ~90% of OpenAI for most use cases.
+    """
+    
+    def __init__(self, config: EmbeddingConfig):
+        self.config = config
+        self._model = None
+    
+    @property
+    def dimensions(self) -> int:
+        return self.config.local_dimensions
+    
+    @property
+    def model_name(self) -> str:
+        return self.config.local_model
+    
+    @property
+    def model(self):
+        """Lazy-load sentence-transformers model."""
+        if self._model is None:
+            try:
+                from sentence_transformers import SentenceTransformer
+                logger.info(f"Loading local embedding model: {self.config.local_model}")
+                self._model = SentenceTransformer(self.config.local_model)
+                logger.info("Local embedding model loaded successfully")
+            except ImportError:
+                raise ImportError(
+                    "sentence-transformers not installed. "
+                    "Install with: pip install sentence-transformers"
+                )
+        return self._model
+    
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """Embed multiple documents."""
+        if not texts:
+            return []
+        
+        # sentence-transformers handles batching internally
+        embeddings = self.model.encode(
+            texts,
+            convert_to_numpy=True,
+            show_progress_bar=len(texts) > 100,
+        )
+        
+        # Convert to list of lists
+        return embeddings.tolist()
+    
+    def embed_query(self, text: str) -> List[float]:
+        """Embed a single query."""
+        embedding = self.model.encode(text, convert_to_numpy=True)
+        return embedding.tolist()
+
+
+# =============================================================================
+# MAIN EMBEDDING SERVICE
+# =============================================================================
+
+class EmbeddingService:
+    """
+    Main embedding service with automatic provider selection and fallback.
+    
+    Usage:
+        # Auto-selects best available provider
+        service = EmbeddingService()
+        
+        # Force local only
+        service = EmbeddingService(prefer_local=True)
+        
+        # Embed documents
+        vectors = service.embed_documents(["text1", "text2"])
+        
+        # Embed query
+        query_vector = service.embed_query("search query")
     """
     
     def __init__(
         self,
-        embedding_function: Optional[Callable[[str], List[float]]] = None,
-        embedding_dim: int = 384
+        config: Optional[EmbeddingConfig] = None,
+        prefer_local: bool = False,
     ):
         """
-        Initialize embedding store.
+        Initialize embedding service.
         
         Args:
-            embedding_function: Function to embed text. If None, uses simple TF-IDF.
-            embedding_dim: Dimension of embeddings (only used with custom function)
+            config: Embedding configuration (optional)
+            prefer_local: If True, always use local model
         """
-        self.embedding_function = embedding_function or self._default_embedding
-        self.embedding_dim = embedding_dim
+        self.config = config or EmbeddingConfig()
+        if prefer_local:
+            self.config.prefer_local = True
         
-        # Storage
-        self.chunks: List[Chunk] = []
-        self.embeddings: List[np.ndarray] = []
+        self._provider: Optional[BaseEmbeddingProvider] = None
+        self._fallback_provider: Optional[BaseEmbeddingProvider] = None
+    
+    @property
+    def provider(self) -> BaseEmbeddingProvider:
+        """Get or initialize the embedding provider."""
+        if self._provider is None:
+            self._provider = self._initialize_provider()
+        return self._provider
+    
+    @property
+    def dimensions(self) -> int:
+        """Return embedding dimensions of current provider."""
+        return self.provider.dimensions
+    
+    @property
+    def model_name(self) -> str:
+        """Return model name of current provider."""
+        return self.provider.model_name
+    
+    def _initialize_provider(self) -> BaseEmbeddingProvider:
+        """Initialize the best available provider."""
         
-        # For TF-IDF
-        self._vocabulary: Dict[str, int] = {}
-        self._idf: Optional[np.ndarray] = None
-    
-    def add_chunks(self, chunks: List[Chunk]) -> None:
-        """Add chunks to the store."""
-        for chunk in chunks:
-            embedding = self.embedding_function(chunk.text)
-            self.chunks.append(chunk)
-            self.embeddings.append(np.array(embedding))
+        # If prefer_local, go straight to local
+        if self.config.prefer_local:
+            logger.info("Using local embedding provider (prefer_local=True)")
+            return LocalEmbeddingProvider(self.config)
         
-        # Rebuild IDF for TF-IDF
-        if self.embedding_function == self._default_embedding:
-            self._build_idf()
+        # Try OpenAI first
+        if self._has_openai_key():
+            try:
+                provider = OpenAIEmbeddingProvider(self.config)
+                # Test the connection
+                _ = provider.client
+                logger.info(f"Using OpenAI embedding provider: {provider.model_name}")
+                return provider
+            except Exception as e:
+                logger.warning(f"OpenAI initialization failed: {e}")
+                if self.config.auto_fallback:
+                    logger.info("Falling back to local embedding provider")
+                else:
+                    raise
+        
+        # Fallback to local
+        logger.info("Using local embedding provider (no OpenAI key or fallback)")
+        return LocalEmbeddingProvider(self.config)
     
-    def add_chunk(self, chunk: Chunk) -> None:
-        """Add a single chunk."""
-        self.add_chunks([chunk])
+    def _has_openai_key(self) -> bool:
+        """Check if OpenAI API key is available."""
+        return bool(os.environ.get("OPENAI_API_KEY"))
     
-    def search(
-        self,
-        query: str,
-        top_k: int = 5,
-        filter_section: Optional[str] = None
-    ) -> List[EmbeddingResult]:
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """
-        Search for similar chunks.
+        Embed multiple documents.
         
         Args:
-            query: Search query
-            top_k: Number of results to return
-            filter_section: Only return chunks from this section
+            texts: List of text strings
             
         Returns:
-            List of EmbeddingResult ordered by similarity
+            List of embedding vectors
         """
-        if not self.chunks:
-            return []
+        try:
+            return self.provider.embed_documents(texts)
+        except Exception as e:
+            # Try fallback if available and auto_fallback enabled
+            if self.config.auto_fallback and not isinstance(self.provider, LocalEmbeddingProvider):
+                logger.warning(f"Primary provider failed: {e}, trying fallback")
+                if self._fallback_provider is None:
+                    self._fallback_provider = LocalEmbeddingProvider(self.config)
+                return self._fallback_provider.embed_documents(texts)
+            raise
+    
+    def embed_query(self, text: str) -> List[float]:
+        """
+        Embed a single query.
         
-        # Embed query
-        query_embedding = np.array(self.embedding_function(query))
-        
-        # Calculate similarities
-        results = []
-        
-        for i, (chunk, embedding) in enumerate(zip(self.chunks, self.embeddings)):
-            # Apply section filter
-            if filter_section and chunk.section != filter_section:
-                continue
+        Args:
+            text: Query text
             
-            # Cosine similarity
-            score = self._cosine_similarity(query_embedding, embedding)
-            results.append((chunk, score))
-        
-        # Sort by score (descending)
-        results.sort(key=lambda x: -x[1])
-        
-        # Return top_k
-        return [
-            EmbeddingResult(chunk=chunk, score=score, rank=i+1)
-            for i, (chunk, score) in enumerate(results[:top_k])
-        ]
-    
-    def search_by_section(
-        self,
-        query: str,
-        sections: List[str],
-        top_k_per_section: int = 2
-    ) -> Dict[str, List[EmbeddingResult]]:
+        Returns:
+            Embedding vector
         """
-        Search within specific sections.
-        
-        Returns dict of section -> results.
-        """
-        results = {}
-        
-        for section in sections:
-            section_results = self.search(
-                query, 
-                top_k=top_k_per_section,
-                filter_section=section
-            )
-            if section_results:
-                results[section] = section_results
-        
-        return results
+        try:
+            return self.provider.embed_query(text)
+        except Exception as e:
+            if self.config.auto_fallback and not isinstance(self.provider, LocalEmbeddingProvider):
+                logger.warning(f"Primary provider failed: {e}, trying fallback")
+                if self._fallback_provider is None:
+                    self._fallback_provider = LocalEmbeddingProvider(self.config)
+                return self._fallback_provider.embed_query(text)
+            raise
     
-    def get_all_chunks(self) -> List[Chunk]:
-        """Get all stored chunks."""
-        return self.chunks.copy()
-    
-    def clear(self) -> None:
-        """Clear all stored data."""
-        self.chunks = []
-        self.embeddings = []
-        self._vocabulary = {}
-        self._idf = None
-    
-    def _default_embedding(self, text: str) -> List[float]:
-        """
-        Simple TF-IDF based embedding.
-        
-        For production, use sentence-transformers or OpenAI embeddings.
-        """
-        # Tokenize
-        tokens = self._tokenize(text)
-        
-        # Build vocabulary if needed
-        for token in tokens:
-            if token not in self._vocabulary:
-                self._vocabulary[token] = len(self._vocabulary)
-        
-        # Calculate TF
-        tf = np.zeros(len(self._vocabulary))
-        for token in tokens:
-            if token in self._vocabulary:
-                tf[self._vocabulary[token]] += 1
-        
-        # Normalize
-        if tf.sum() > 0:
-            tf = tf / tf.sum()
-        
-        # Apply IDF if available
-        if self._idf is not None and len(self._idf) == len(tf):
-            tf = tf * self._idf
-        
-        return tf.tolist()
-    
-    def _build_idf(self) -> None:
-        """Build IDF weights from stored documents."""
-        if not self.chunks:
-            return
-        
-        n_docs = len(self.chunks)
-        doc_freq = np.zeros(len(self._vocabulary))
-        
-        for chunk in self.chunks:
-            tokens = set(self._tokenize(chunk.text))
-            for token in tokens:
-                if token in self._vocabulary:
-                    doc_freq[self._vocabulary[token]] += 1
-        
-        # IDF = log(N / df)
-        self._idf = np.log(n_docs / (doc_freq + 1)) + 1
-    
-    def _tokenize(self, text: str) -> List[str]:
-        """Simple tokenization."""
-        import re
-        # Lowercase and split on non-alphanumeric
-        text = text.lower()
-        tokens = re.findall(r'\b\w+\b', text)
-        
-        # Remove stopwords
-        stopwords = {
-            'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
-            'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been',
-            'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
-            'could', 'should', 'may', 'might', 'must', 'shall', 'can', 'this',
-            'that', 'these', 'those', 'it', 'its', 'they', 'their', 'them',
+    def get_provider_info(self) -> Dict[str, Any]:
+        """Get information about current provider."""
+        return {
+            "provider_type": type(self.provider).__name__,
+            "model_name": self.provider.model_name,
+            "dimensions": self.provider.dimensions,
+            "has_fallback": self._fallback_provider is not None,
         }
-        
-        return [t for t in tokens if t not in stopwords and len(t) > 2]
-    
-    def _cosine_similarity(self, a: np.ndarray, b: np.ndarray) -> float:
-        """Calculate cosine similarity."""
-        # Handle different lengths (vocabulary growth)
-        min_len = min(len(a), len(b))
-        a = a[:min_len]
-        b = b[:min_len]
-        
-        dot = np.dot(a, b)
-        norm_a = np.linalg.norm(a)
-        norm_b = np.linalg.norm(b)
-        
-        if norm_a == 0 or norm_b == 0:
-            return 0.0
-        
-        return float(dot / (norm_a * norm_b))
 
 
-def create_embedding_store(
-    use_sentence_transformers: bool = False,
-    model_name: str = "all-MiniLM-L6-v2"
-) -> EmbeddingStore:
+# =============================================================================
+# CONVENIENCE FUNCTIONS
+# =============================================================================
+
+# Module-level singleton for convenience
+_default_service: Optional[EmbeddingService] = None
+
+
+def get_embedding_service(prefer_local: bool = False) -> EmbeddingService:
     """
-    Create an embedding store with optional sentence-transformers.
+    Get or create the default embedding service.
     
     Args:
-        use_sentence_transformers: Use sentence-transformers for embeddings
-        model_name: Model name for sentence-transformers
+        prefer_local: If True, use local model
         
     Returns:
-        Configured EmbeddingStore
+        EmbeddingService instance
     """
-    if use_sentence_transformers:
-        try:
-            from sentence_transformers import SentenceTransformer
-            
-            model = SentenceTransformer(model_name)
-            
-            def embed_fn(text: str) -> List[float]:
-                embedding = model.encode(text)
-                return embedding.tolist()
-            
-            return EmbeddingStore(
-                embedding_function=embed_fn,
-                embedding_dim=model.get_sentence_embedding_dimension()
-            )
-            
-        except ImportError:
-            print("sentence-transformers not installed, using TF-IDF fallback")
+    global _default_service
     
-    # Default: TF-IDF based
-    return EmbeddingStore()
+    if _default_service is None or (prefer_local and not _default_service.config.prefer_local):
+        _default_service = EmbeddingService(prefer_local=prefer_local)
+    
+    return _default_service
 
 
-def similarity_search(
-    query: str,
-    chunks: List[Chunk],
-    top_k: int = 5
-) -> List[EmbeddingResult]:
+def embed_texts(texts: List[str], prefer_local: bool = False) -> List[List[float]]:
     """
-    Convenience function for one-off similarity search.
+    Convenience function to embed multiple texts.
     
-    Creates a temporary store, adds chunks, and searches.
+    Args:
+        texts: List of text strings
+        prefer_local: If True, use local model
+        
+    Returns:
+        List of embedding vectors
     """
-    store = EmbeddingStore()
-    store.add_chunks(chunks)
-    return store.search(query, top_k=top_k)
+    service = get_embedding_service(prefer_local=prefer_local)
+    return service.embed_documents(texts)
+
+
+def embed_query(text: str, prefer_local: bool = False) -> List[float]:
+    """
+    Convenience function to embed a query.
+    
+    Args:
+        text: Query text
+        prefer_local: If True, use local model
+        
+    Returns:
+        Embedding vector
+    """
+    service = get_embedding_service(prefer_local=prefer_local)
+    return service.embed_query(text)

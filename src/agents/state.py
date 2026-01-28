@@ -3,7 +3,7 @@
 # Principle: Minimal state - only what's needed for the graph to function
 # Updated: Phase 6.2 - Full multi-agent state management
 
-from typing import TypedDict, Annotated, Sequence, Optional, Dict, Any, List
+from typing import TypedDict, Annotated, Sequence, Optional, Dict, Any, List, Union
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 from langgraph.graph.message import add_messages
 from datetime import datetime
@@ -159,11 +159,26 @@ def add_warning(state: AgentState, warning: str) -> Dict[str, Any]:
     return {"warnings": warnings}
 
 
-def set_final_response(state: AgentState, response: str) -> Dict[str, Any]:
-    """Set the final response to send to user."""
+def set_final_response(state: AgentState, response: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
+    """Set the final response to send to user.
+    
+    Args:
+        state: Current agent state
+        response: Either a string message or an AgentResponse dict
+    """
+    # If response is a dict (AgentResponse), extract summary for the message
+    if isinstance(response, dict):
+        # Try to get human-readable summary from AgentResponse structure
+        summary = response.get("data", {}).get("summary", "") if isinstance(response.get("data"), dict) else ""
+        if not summary:
+            summary = response.get("error", "") or str(response)
+        message_content = summary
+    else:
+        message_content = response
+    
     return {
-        "final_response": response,
-        "messages": [AIMessage(content=response)],
+        "final_response": response,  # Keep full response (dict or string)
+        "messages": [AIMessage(content=message_content)],  # Message needs string
     }
 
 

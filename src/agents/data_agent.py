@@ -35,6 +35,14 @@ import numpy as np
 from .base_agent import BaseAgent, AgentConfig, AgentRole, AgentState
 from .protocols import PortfolioTask, PortfolioResult, CovarianceResult
 
+from portfolio_tool.tools.data_tools import (
+    list_tracked_assets, 
+    fetch_stock_prices, 
+    fetch_fundamentals,
+    get_asset_info
+)
+from agents.schemas import AgentResponse
+
 from config import config
 
 class DataAgent(BaseAgent):
@@ -95,6 +103,9 @@ class DataAgent(BaseAgent):
             "get_risk_free_rate",
             "get_correlation_matrix",
             "calculate_rolling_volatility",
+            "list_assets",
+            "update_database",
+            "get_asset_details"
         ]
     
     def get_tools(self) -> List[Callable]:
@@ -146,30 +157,57 @@ Always include in your responses:
     
     async def process(self, state: AgentState) -> AgentState:
         """
-        Process a data request.
+        Process a data request and return a strict AgentResponse.
         
-        This is called by LangGraph when delegated to by the supervisor.
+        PATCHED: Phase 6.5 - Fixed to properly handle state dict
         """
-        task = state.current_task
+        # 1. Get the router decision from state
+        decision = state.get("router_decision", {})
+        intent = decision.get("intent", "unknown")
+        parameters = decision.get("parameters", {})
         
-        if task is None:
-            state.add_message("assistant", "No task provided to Data Agent")
-            return state
+        self.log(f"Processing intent: {intent}")
         
-        self.log(f"Processing task: {task.task_type.value}")
+        # 2. Execute Logic based on intent
+        try:
+            if intent == "data_management":
+                # Admin operations (list, update, get_info)
+                result_data = await self._handle_data_management(state)
+            elif intent in ["data_fetch", "optimization", "rebalancing", "backtest"]:
+                # Data fetching for analysis
+                result_data = await self._handle_market_data(state)
+            else:
+                result_data = {
+                    "success": False, 
+                    "error": f"Unknown intent for DataAgent: {intent}"
+                }
+        except Exception as e:
+            result_data = {
+                "success": False, 
+                "error": f"Critical Error in DataAgent: {str(e)}"
+            }
+
+        # 3. Create Strict AgentResponse
+        response = AgentResponse(
+            success=result_data.get("success", False),
+            agent_name="DataAgent",
+            data=result_data,
+            error=result_data.get("error"),
+            warnings=result_data.get("warnings", [])
+        )
+
+        # 4. Update State
+        sub_results = state.get("sub_results") or {}
+        sub_results["DataAgent"] = response.model_dump()
         
-        # Based on task type, execute appropriate tools
-        if task.task_type.value == "fetch_data":
-            result = await self._handle_fetch_data(task)
-        elif task.task_type.value == "calculate_risk":
-            result = await self._handle_calculate_risk(task)
+        if isinstance(state, dict):
+            state["sub_results"] = sub_results
         else:
-            # For optimization tasks, prepare all required data
-            result = await self._prepare_optimization_data(task)
-        
-        # Store result in state
-        state.add_sub_result(self.name, result)
-        state.add_message("assistant", result.to_summary())
+            state.sub_results = sub_results
+
+        # 5. Log summary (removed broken state.add_message call)
+        summary_msg = result_data.get("message") or result_data.get("reasoning") or "Data processed."
+        self.log(f"Complete: {summary_msg}")
         
         return state
     
@@ -884,6 +922,151 @@ Always include in your responses:
                 "error": str(e)
             }
 
+
+    async def _handle_data_management(self, state: AgentState) -> Dict[str, Any]:
+        """
+        Handle Admin/Data Management requests (List, Update, Info).
+        Uses tools from src/portfolio_tool/tools/data_tools.py
+        
+        PATCHED: Phase 6.5 - Fixed to accept state dict instead of PortfolioTask
+        
+        Args:
+            state: AgentState dict containing router_decision with parameters
+            
+        Returns:
+            Dict with success, message, and data
+        """
+        # Extract parameters from state (not from PortfolioTask)
+        decision = state.get("router_decision", {})
+        parameters = decision.get("parameters", {})
+        
+        command = parameters.get("command", "list_assets")
+        tickers = parameters.get("tickers", [])
+        portfolio_id = parameters.get("portfolio_id") or state.get("portfolio_id")
+        
+        # If portfolio_id provided but no tickers, load from portfolio
+        if portfolio_id and not tickers:
+            try:
+                from portfolio_tool.portfolio_manager import PortfolioManager
+                pm = PortfolioManager()
+                tickers = pm.get_portfolio_tickers(portfolio_id)
+            except Exception as e:
+                self.log(f"Could not load portfolio {portfolio_id}: {e}")
+        
+        self.log(f"Data Management: command={command}, tickers={tickers}")
+        
+        try:
+            # =================================================================
+            # COMMAND: list_assets
+            # =================================================================
+            if command == "list_assets":
+                tool_result = list_tracked_assets.invoke({})
+                
+                if tool_result.get("success"):
+                    assets = tool_result.get("assets", [])
+                    return {
+                        "success": True,
+                        "message": f"Found {len(assets)} tracked assets in the database.",
+                        "assets": assets,
+                        "count": len(assets)
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": tool_result.get("error", "Failed to list assets")
+                    }
+            
+            # =================================================================
+            # COMMAND: get_info
+            # =================================================================
+            elif command == "get_info":
+                if not tickers:
+                    return {
+                        "success": False,
+                        "error": "No ticker specified for get_info command."
+                    }
+                
+                ticker = tickers[0]
+                tool_result = get_asset_info.invoke(ticker)
+                
+                if tool_result.get("success"):
+                    return {
+                        "success": True,
+                        "message": f"Retrieved info for {ticker}.",
+                        "asset_info": tool_result
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": tool_result.get("error", f"Failed to get info for {ticker}")
+                    }
+            
+            # =================================================================
+            # COMMAND: update_prices / fetch_prices
+            # =================================================================
+            elif command in ["update_prices", "fetch_prices"]:
+                if not tickers:
+                    return {
+                        "success": False,
+                        "error": "No tickers specified for price update."
+                    }
+                
+                ticker_str = ",".join(tickers)
+                tool_result = fetch_stock_prices.invoke({"ticker": ticker_str})
+                
+                if tool_result.get("success"):
+                    return {
+                        "success": True,
+                        "message": f"Successfully updated prices for {len(tickers)} ticker(s): {ticker_str}",
+                        "tickers_updated": tickers,
+                        "details": tool_result
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": tool_result.get("error", f"Failed to update prices for {ticker_str}")
+                    }
+            
+            # =================================================================
+            # COMMAND: fetch_fundamentals
+            # =================================================================
+            elif command == "fetch_fundamentals":
+                if not tickers:
+                    return {
+                        "success": False,
+                        "error": "No ticker specified for fetch_fundamentals command."
+                    }
+                
+                ticker = tickers[0]
+                tool_result = fetch_fundamentals.invoke(ticker)
+                
+                if tool_result.get("success"):
+                    return {
+                        "success": True,
+                        "message": f"Successfully fetched fundamentals for {ticker}.",
+                        "fundamentals": tool_result
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": tool_result.get("error", f"Failed to fetch fundamentals for {ticker}")
+                    }
+            
+            # =================================================================
+            # UNKNOWN COMMAND
+            # =================================================================
+            else:
+                return {
+                    "success": False,
+                    "error": f"Unknown data management command: {command}. "
+                            f"Valid: list_assets, update_prices, get_info, fetch_fundamentals"
+                }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Data Management Error: {str(e)}"
+            }
 
 # ==================== FACTORY FUNCTION ====================
 

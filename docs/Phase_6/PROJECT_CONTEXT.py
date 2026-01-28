@@ -1,33 +1,60 @@
 """
-🚀 PROJECT CONTEXT: QUANT PORTFOLIO MANAGER
-============================================
+🚀 PROJECT CONTEXT: PM DECISION SUPPORT SYSTEM
+==============================================
 Multi-Agent System for Institutional Portfolio Management
 
 PURPOSE: This file contains everything an LLM needs to understand the project.
-         Upload this + ROADMAP + tree when starting a new chat.
+         Upload this when starting a new chat. The LLM should be able to continue
+         development without additional context.
 
-LAST UPDATED: Phase 6.2 Complete (LangGraph + Config Refactoring)
-VERSION: 0.6.2
-DATE: January 23, 2026
+LAST UPDATED: Phase 6.6 Complete (Decision Engine, Dual-Intent, Decision Logging)
+VERSION: 0.7.0
+DATE: January 25, 2026
 
 =============================================================================
-SECTION 1: ARCHITECTURE OVERVIEW
+SECTION 1: PROJECT IDENTITY
+=============================================================================
+
+WHAT THIS IS:
+    A PM Decision Support System that thinks like an institutional portfolio manager.
+    NOT just an optimizer - a system that evaluates "should we act?" before "how?"
+
+KEY DIFFERENTIATORS:
+    1. HOLD is a valid decision - System explicitly evaluates "do nothing" as optimal
+    2. Risk-First Assessment - Evaluates risk BEFORE recommending action
+    3. No Action Bias - Information queries never get trade recommendations
+    4. Auditable Decisions - Every decision logged with rationale and confidence
+    5. PM-style Output - Looks like what a real PM reads, not raw JSON
+
+TARGET USERS:
+    - Portfolio Managers at banks/asset managers
+    - Quant analysts needing decision support
+    - Interview demonstration for finance + AI roles
+
+=============================================================================
+SECTION 2: ARCHITECTURE OVERVIEW
 =============================================================================
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                              USER REQUEST                                    │
+│                 (includes Conversation History/Memory)                       │
 └─────────────────────────────────────────┬───────────────────────────────────┘
                                           │
                                           ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         🎯 SMART ROUTER (LLM-based)                          │
-│           Intent Detection → Parameter Extraction → Agent Selection          │
+│                    🎯 SMART ROUTER (LLM + Pydantic)                          │
+│                                                                              │
+│   DUAL-INTENT SYSTEM (Phase 6.6):                                           │
+│   ├── QueryIntent: WHY user asks (information, decision, operational)       │
+│   └── ExecutionIntent: WHAT to run (optimization, macro_analysis, etc.)     │
+│                                                                              │
+│   This prevents action bias: "What's VIX?" → info only, no trade recs       │
 └─────────────────────────────────────────┬───────────────────────────────────┘
                                           │
                                           ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                    📊 LANGGRAPH STATE MACHINE (Phase 6.2)                    │
-│        Flow: Router → Dispatcher → [Agents] → Synthesizer → Response        │
+│                    📊 LANGGRAPH STATE MACHINE                                │
+│        Flow: Router → Dispatcher → [Agents] → Decision Engine → Synthesizer │
 └───────────┬─────────────────┬─────────────────┬─────────────────┬───────────┘
             │                 │                 │                 │
             ▼                 ▼                 ▼                 ▼
@@ -38,6 +65,15 @@ SECTION 1: ARCHITECTURE OVERVIEW
           │                 │                 │                 │
           ▼                 ▼                 ▼                 ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
+│                         🧠 DECISION ENGINE (Phase 6.6)                       │
+│                                                                              │
+│   1. RiskAssessment: Evaluate CURRENT portfolio (before any action)         │
+│   2. PMDecisionSummary: HOLD / TILT / REBALANCE / HEDGE                     │
+│   3. DecisionLog: Persist to database for audit trail                       │
+└─────────────────────────────────────────┬───────────────────────────────────┘
+                                          │
+                                          ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
 │                              TOOL LAYER                                      │
 │         (data_tools, macro_tools, optimization_tools, rebalance_tools)       │
 │                   ⚠️ DETERMINISTIC - NO LLM MATH! ⚠️                         │
@@ -45,33 +81,22 @@ SECTION 1: ARCHITECTURE OVERVIEW
                                           │
                                           ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           SERVICE LAYER                                      │
-│                  (DataManager, QuotaManager, MetricsCalculator)              │
-└─────────────────────────────────────────┬───────────────────────────────────┘
-                                          │
-                                          ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           PROVIDER LAYER                                     │
-│                         (YFinanceProvider)                                   │
-└─────────────────────────────────────────┬───────────────────────────────────┘
-                                          │
-                                          ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
 │                              SQLite DB                                       │
-│      (daily_prices, macro_data, assets, portfolios, portfolio_holdings)     │
+│   daily_prices, macro_data, assets, portfolios, holdings, decision_logs     │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 =============================================================================
-SECTION 2: DESIGN PRINCIPLES (CRITICAL - MUST FOLLOW!)
+SECTION 3: DESIGN PRINCIPLES (CRITICAL - MUST FOLLOW!)
 =============================================================================
 
 1. SEPARATION OF CONCERNS (SoC):
    ├── Config           → ONLY configuration values (single source of truth)
    ├── DataManager      → ONLY CRUD/DB operations
-   ├── MetricsCalc      → ONLY math computations  
    ├── Provider         → ONLY external API calls
    ├── Tools            → ONLY agent interface (thin wrapper)
-   └── Agent            → ONLY orchestration & decisions
+   ├── Schemas          → ONLY data contracts & validation (Pydantic)
+   ├── DecisionEngine   → ONLY PM decision logic (risk assessment, decision)
+   └── Agent            → ONLY orchestration & LLM interaction
 
 2. HOT POTATO PRINCIPLE (🥔):
    ├── LLMs NEVER receive raw data (no DataFrames, no 1000-row CSVs!)
@@ -84,577 +109,475 @@ SECTION 2: DESIGN PRINCIPLES (CRITICAL - MUST FOLLOW!)
    └── ❌ NO duplicate XxxAgentConfig classes - use centralized config!
 
 4. IDEMPOTENT OPERATIONS:
-   └── All DB writes: INSERT ... ON CONFLICT (ticker, date) DO UPDATE
-       Safe to retry. No duplicates.
+   └── All DB writes: INSERT ... ON CONFLICT DO UPDATE (safe to retry)
 
 5. DETERMINISTIC MATH:
    ├── Rebalancing = Pure scipy/numpy (NO LLM!)
    ├── Optimization = Pure scipy/numpy (NO LLM!)
-   ├── Covariance = Pure numpy/pandas (NO LLM!)
+   ├── Decision Engine = Pure Python logic (NO LLM!)
    └── Same inputs ALWAYS produce same outputs (auditable)
 
-6. AGENT-READY RESPONSES:
-   └── All tools return: {"success": bool, "data": {...}, "error": Optional[str]}
+6. STRICT TYPING:
+   ├── All Router outputs must pass `RouterDecision` schema
+   ├── All Agent outputs must pass `AgentResponse` schema
+   ├── All Decisions must pass `PMDecisionSummary` schema
+   └── No "magic strings" or hallucinations allowed
 
-7. SESSION ISOLATION:
-   └── DataManager and QuotaManager use SEPARATE DB sessions (no SQLite locks)
+7. RISK-FIRST WORKFLOW:
+   ├── Assess CURRENT portfolio risk before considering changes
+   ├── HOLD is a valid, well-reasoned decision
+   └── Never assume action is required
 
-8. CONFIGURATION HIERARCHY:
-   ├── AgentConfig = Agent IDENTITY (name, role, temperature, verbose)
-   └── config.xxx = Business LOGIC (thresholds, rates, constraints)
-   
-   Example:
-       AgentConfig(name="DataAgent", role=AgentRole.DATA)  # Identity
-       config.data.default_period = "3Y"                   # Business logic
-
-=============================================================================
-SECTION 3: CONFIGURATION SYSTEM (Phase 6.2 - CRITICAL!)
-=============================================================================
-
-⚠️ NEVER create XxxAgentConfig classes! Use centralized config instead.
-
-File: src/config.py (SINGLE SOURCE OF TRUTH)
-
-Structure:
-    @dataclass
-    class AppConfig:
-        data: DataConfig                    # Data fetching & covariance
-        macro: MacroConfig                  # VIX thresholds, yield curve
-        optimization: OptimizationConfig    # Risk-free rate, max weights
-        rebalance: RebalanceConfig          # Drift threshold, transaction costs
-        backtest: BacktestConfig            # Initial capital, slippage
-        risk: RiskManagerConfig             # VaR, concentration limits
-        api: APIConfig                      # Rate limits, timeouts
-        features: FeatureFlags              # Observability, tracing
-    
-    config = AppConfig()  # Singleton
-
-Usage Examples:
-
-    # In any agent:
-    from config import config
-    
-    # Data settings:
-    period = config.data.default_period                    # "3Y"
-    method = config.data.default_covariance_method         # "sample"
-    trading_days = config.data.trading_days_per_year       # 252
-    
-    # Macro settings:
-    if vix > config.macro.vix_elevated:                    # 25.0
-        regime = "elevated"
-    
-    # Optimization settings:
-    max_weight = config.optimization.default_max_weight    # 0.40
-    risk_free = config.optimization.risk_free_rate         # 0.05
-    
-    # Rebalance settings:
-    threshold = config.rebalance.default_drift_threshold   # 5.0%
-    tax_rate = config.rebalance.capital_gains_rate         # 0.25
-    
-    # Feature flags:
-    if config.features.tracing_enabled:
-        tracer = get_tracer()
-
-Key Settings by Config Section:
-
-DataConfig:
-    - default_period: "3Y"
-    - default_covariance_method: "sample"  # Changed from "shrinkage" (Phase 6.2)
-    - trading_days_per_year: 252
-    - min_observations: 60
-    - default_risk_free_rate: 0.05
-
-MacroConfig:
-    - vix_low: 15.0
-    - vix_elevated: 25.0
-    - vix_high: 35.0
-    - vix_crisis: 40.0
-    - yield_curve_flat: 10.0 (bps)
-    - hawkish_threshold: 0.25
-    - dovish_threshold: -0.25
-
-OptimizationConfig:
-    - default_method: "max_sharpe"
-    - risk_free_rate: 0.05
-    - default_max_weight: 0.40
-    - default_min_weight: 0.0
-    - tolerance: 1e-10
-
-RebalanceConfig:
-    - default_drift_threshold: 5.0%
-    - default_transaction_cost_bps: 10.0
-    - capital_gains_rate: 0.25
-
-BacktestConfig:
-    - default_initial_capital: 100000
-    - default_period: "5Y"
-    - transaction_cost_bps: 10.0
-    - risk_free_rate: 0.05
-
-RiskManagerConfig:
-    - var_confidence_level: 0.95
-    - max_concentration: 0.30
-    - min_diversification_assets: 5
-
-FeatureFlags:
-    - tracing_enabled: bool (from env: ENABLE_TRACING)
-    - observability_enabled: bool (from env: ENABLE_OBSERVABILITY)
+8. STATELESS BACKEND:
+   ├── The Graph is stateless
+   └── Session history managed by client and injected per request
 
 =============================================================================
-SECTION 4: COVARIANCE ESTIMATION (Phase 6.2 - FIXED!)
+SECTION 4: DUAL-INTENT SYSTEM (Phase 6.6)
 =============================================================================
 
-ISSUE DISCOVERED: Ledoit-Wolf shrinkage was hitting 100% intensity, forcing all
-correlations to zero. This broke portfolio optimization.
+The Router classifies TWO independent intents:
 
-ROOT CAUSE: 
-    - Only 3 assets (SPY, TLT, GLD)
-    - 1254 observations available
-    - 418:1 observation-to-asset ratio (excellent!)
-    - Shrinkage algorithm too conservative for this scenario
+QUERY INTENT (Why is the user asking?):
+┌────────────────┬─────────────────────────────────────────────────────────┐
+│ Intent         │ Description                                             │
+├────────────────┼─────────────────────────────────────────────────────────┤
+│ operational    │ Admin tasks: list portfolios, show holdings, CRUD       │
+│ information    │ Factual queries: "What's VIX?", "Show me SPY price"     │
+│ analysis       │ Explanatory: "Why did my portfolio underperform?"       │
+│ decision       │ Action-oriented: "Should I rebalance?", "Optimize..."   │
+│ clarification  │ Ambiguous query needing more info                       │
+│ unknown        │ Cannot determine intent                                 │
+└────────────────┴─────────────────────────────────────────────────────────┘
 
-SOLUTION:
-    Changed default method from "shrinkage" to "sample" covariance.
-    
-    Why this works:
-    - With 400+ observations per asset, sample covariance is reliable
-    - Rule of thumb: Need 50:1 ratio, we have 418:1
-    - Sample covariance gives REAL correlations:
-        SPY-TLT: 10.4% (slightly positive)
-        SPY-GLD: 6.9% (slightly positive)  
-        TLT-GLD: 20.2% (moderately positive)
+EXECUTION INTENT (What agents to run?):
+┌────────────────────┬─────────────────────────────────────────────────────┐
+│ Intent             │ Agents Triggered                                    │
+├────────────────────┼─────────────────────────────────────────────────────┤
+│ optimization       │ DataAgent → OptimizationAgent                       │
+│ macro_analysis     │ MacroAgent                                          │
+│ rebalancing        │ DataAgent → RebalanceAgent                          │
+│ backtest           │ DataAgent → BacktestAgent                           │
+│ data_fetch         │ DataAgent                                           │
+│ risk_analysis      │ DataAgent → RiskAnalysisAgent                       │
+│ data_management    │ DataAgent (admin commands)                          │
+│ portfolio_mgmt     │ DataAgent (portfolio CRUD)                          │
+└────────────────────┴─────────────────────────────────────────────────────┘
 
-Available Methods:
-    1. "sample" - Standard covariance (good for 3-10 assets, 200+ obs)
-    2. "shrinkage" - Ledoit-Wolf (good for 20+ assets, limited data)
-    3. "exponential" - EWMA (good for dynamic/recent emphasis)
-
-Configuration:
-    File: src/config.py
-    Setting: config.data.default_covariance_method = "sample"
-    
-    Changed in 3 locations:
-    - src/config.py (default value)
-    - src/agents/data_agent.py (tool defaults)
-    - src/agents/nodes.py (function calls)
+CRITICAL RULE:
+- Decision Summaries (HOLD/TILT/REBALANCE/HEDGE) are ONLY generated 
+  when query_intent == "decision"
+- Information/operational queries get data only, no trade recommendations
+- This prevents action bias
 
 =============================================================================
-SECTION 5: PROTOCOLS & DATA STRUCTURES
+SECTION 5: DECISION ENGINE (Phase 6.6)
 =============================================================================
-"""
 
-from typing import List, Dict, Optional, Any, Callable, Protocol
-from enum import Enum
-from dataclasses import dataclass, field
-from datetime import date, datetime
+File: src/agents/decision_engine.py
+Schemas: src/agents/decision_schemas.py
 
-# ─────────────────────────────────────────────────────────────────────────────
-# ENUMS
-# ─────────────────────────────────────────────────────────────────────────────
+DECISION TYPES:
+┌────────────┬──────────────────────────────────────────────────────────────┐
+│ Type       │ When Used                                                    │
+├────────────┼──────────────────────────────────────────────────────────────┤
+│ HOLD       │ Risk acceptable, drift low, no action needed (85% conf)      │
+│ TILT       │ Minor tactical adjustment, moderate drift (65-75% conf)      │
+│ REBALANCE  │ Structural change needed, high drift/risk (75-95% conf)      │
+│ HEDGE      │ Crisis regime, defensive action needed (85% conf)            │
+└────────────┴──────────────────────────────────────────────────────────────┘
 
-class TaskType(Enum):
-    """What the user wants to do."""
-    OPTIMIZATION = "optimization"       # Create optimal portfolio
-    BACKTEST = "backtest"               # Historical simulation
-    MACRO_ANALYSIS = "macro_analysis"   # Macro environment check
-    REBALANCE = "rebalance"             # Drift analysis & trades
+RISK STATUS:
+┌────────────┬──────────────────────────────────────────────────────────────┐
+│ Status     │ Triggers                                                     │
+├────────────┼──────────────────────────────────────────────────────────────┤
+│ ACCEPTABLE │ All checks pass, no breaches                                 │
+│ ELEVATED   │ 1-2 breaches (concentration, under-diversification)          │
+│ CRITICAL   │ 3+ breaches, requires immediate attention                    │
+└────────────┴──────────────────────────────────────────────────────────────┘
 
-class OptimizationMethod(Enum):
-    """Portfolio optimization algorithms."""
-    MEAN_VARIANCE = "mean_variance"     # Markowitz
-    MIN_VARIANCE = "min_variance"       # Minimum volatility
-    MAX_SHARPE = "max_sharpe"           # Maximum Sharpe ratio
-    RISK_PARITY = "risk_parity"         # Equal risk contribution
+DECISION PRIORITY (7-tier):
+1. CRITICAL risk → REBALANCE (95% confidence)
+2. Crisis macro regime → HEDGE (85%)
+3. ELEVATED risk + drift → REBALANCE (80%)
+4. Risk-off + elevated → TILT (75%)
+5. High drift (>1.5x threshold) → REBALANCE (75%)
+6. Moderate drift → TILT (65%)
+7. All else → HOLD (85%)
 
-class RegimeType(Enum):
-    """Market regime classification."""
-    RISK_ON = "risk_on"         # VIX < 15, positive slope
-    RISK_OFF = "risk_off"       # VIX > 25
-    NEUTRAL = "neutral"         # Normal conditions
-    CRISIS = "crisis"           # VIX > 35, inverted yield curve
+KEY FUNCTIONS:
+- assess_portfolio_risk(weights, config) → RiskAssessment
+- assess_decision_needed(drift, regime, risk, config) → PMDecisionSummary
+- run_decision_assessment(...) → (RiskAssessment, PMDecisionSummary)
+- should_generate_decision_summary(query_intent) → bool
 
-class RebalanceFrequency(Enum):
-    """How often to rebalance."""
-    DAILY = "daily"
-    WEEKLY = "weekly"
-    MONTHLY = "monthly"
-    QUARTERLY = "quarterly"
-
-# ─────────────────────────────────────────────────────────────────────────────
-# CORE DTOs (Data Transfer Objects)
-# ─────────────────────────────────────────────────────────────────────────────
-
-@dataclass
-class PortfolioConstraints:
-    """Investment constraints for optimization."""
-    min_weight: float = 0.0          # Minimum per asset (e.g., 0.05 = 5%)
-    max_weight: float = 1.0          # Maximum per asset (e.g., 0.40 = 40%)
-    max_volatility: Optional[float] = None  # Portfolio vol cap (e.g., 0.15)
-    max_drawdown: Optional[float] = None    # Max acceptable drawdown
-    long_only: bool = True           # No short selling
-
-@dataclass
-class PortfolioTask:
-    """Request object passed between agents."""
-    task_id: str
-    task_type: TaskType
-    universe: List[str]              # ["SPY", "TLT", "GLD"]
-    constraints: PortfolioConstraints
-    current_weights: Optional[Dict[str, float]] = None  # For rebalancing
-    target_weights: Optional[Dict[str, float]] = None
-    historical_period: str = "3Y"    # Changed from "5Y" in Phase 6.2
-    optimization_method: Optional[OptimizationMethod] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-@dataclass  
-class PortfolioResult:
-    """Response object from agents. MUST be summary, not raw data!"""
-    success: bool
-    agent_name: str
-    task_id: str
-    
-    # Result type and data
-    result_type: str                 # "optimization", "backtest", etc.
-    data: Dict[str, Any]             # Structured result data
-    
-    # Metrics (already calculated, not raw data!)
-    message: str = ""                # Summary message
-    reasoning: str = ""              # Why this result
-    warnings: List[str] = field(default_factory=list)
-    
-    # Timestamp for compliance
-    timestamp: datetime = field(default_factory=datetime.now)
-
-@dataclass
-class RegimeSignal:
-    """Output from MacroAgent regime analysis."""
-    regime: RegimeType
-    vix_level: float
-    vix_regime: str                  # "low", "normal", "elevated", "high"
-    yield_curve_slope: float         # 10Y - 3M spread
-    yield_curve_status: str          # "normal", "flat", "inverted"
-    
-    # Tactical adjustment
-    equity_adjustment: float         # e.g., -0.10 = reduce equity 10%
-    confidence: float                # 0.0 to 1.0
-    rationale: List[str]             # Human-readable reasons
-
-"""
 =============================================================================
 SECTION 6: DATABASE SCHEMA
 =============================================================================
-SQLite with SQLAlchemy ORM. All tables use UPSERT for idempotency.
 
-NEW IN PHASE 6.2: Portfolio Management Tables
-"""
+TABLES:
+┌─────────────────────┬────────────────────────────────────────────────────┐
+│ Table               │ Purpose                                            │
+├─────────────────────┼────────────────────────────────────────────────────┤
+│ assets              │ Tracked securities (ticker, name, asset_class)     │
+│ daily_prices        │ OHLCV history (asset_id, date, close, volume)      │
+│ macro_data          │ VIX, yields, etc. (indicator, date, value)         │
+│ portfolios          │ User portfolios (name, description, cash_balance)  │
+│ portfolio_holdings  │ Positions (portfolio_id, asset_id, quantity, price)│
+│ decision_logs       │ Audit trail (decision_type, confidence, rationale) │
+│ financial_statements│ Income, balance sheet, cash flow data              │
+│ quarterly_earnings  │ EPS, revenue by quarter                            │
+└─────────────────────┴────────────────────────────────────────────────────┘
 
-# Core tables
-class Asset:
-    """Stock/ETF master data."""
-    # Columns: id, ticker (unique), name, asset_type, sector, currency
+DECISION_LOGS TABLE (Phase 6.6):
+    id, timestamp, portfolio_id
+    decision_type (HOLD/TILT/REBALANCE/HEDGE)
+    confidence (0.0-1.0)
+    rationale (text)
+    trigger (user_request, drift_threshold, macro_change)
+    risk_status (ACCEPTABLE/ELEVATED/CRITICAL)
+    key_risks (JSON array)
+    current_weights, proposed_weights (JSON)
+    max_drift, macro_regime, vix_level
+    trade_required, executed, execution_timestamp
+    request_id, user_query
 
-class DailyPrice:
-    """Historical OHLCV data."""
-    # Columns: id, asset_id (FK), date, open, high, low, close, volume
-    # Unique: (asset_id, date)
-
-class MacroData:
-    """Macro indicators (VIX, yields, etc.)."""
-    # Columns: id, indicator, date, value
-    # Unique: (indicator, date)
-
-# NEW: Portfolio Management (Phase 6.2)
-class Portfolio:
-    """User portfolio definition."""
-    # Columns: id, name, description, currency, cash_balance, created_at, updated_at
-    # Example: Portfolio(name="Retirement 401k", currency="USD")
-
-class PortfolioHolding:
-    """Individual positions in a portfolio."""
-    # Columns: id, portfolio_id (FK), asset_id (FK), quantity, average_price
-    # Unique: (portfolio_id, asset_id)
-    # Example: PortfolioHolding(portfolio_id=1, asset_id=5, quantity=100, avg_price=450.0)
-
-"""
-Usage Example:
-
-    from portfolio_tool.portfolio_manager import PortfolioManager
-    
-    pm = PortfolioManager()
-    
-    # Create portfolio
-    portfolio_id = pm.create_portfolio("My 401k", currency="USD")
-    
-    # Add holdings
-    pm.add_holding(portfolio_id, "SPY", quantity=100, avg_price=450.0)
-    pm.add_holding(portfolio_id, "TLT", quantity=50, avg_price=88.0)
-    pm.add_holding(portfolio_id, "GLD", quantity=20, avg_price=185.0)
-    
-    # Get holdings
-    holdings = pm.get_holdings(portfolio_id)
-    tickers = pm.get_portfolio_tickers(portfolio_id)  # ["SPY", "TLT", "GLD"]
-    
-    # Update/Delete
-    pm.update_holding(holding_id, quantity=150)
-    pm.delete_holding(holding_id)
-
-⚠️ STATUS: Tables created, not yet integrated into agents (Phase 6.5)
-"""
-
-"""
 =============================================================================
-SECTION 7: LANGGRAPH STATE MACHINE (Phase 6.2)
-=============================================================================
-
-Architecture:
-    User Input
-        ↓
-    Router (LLM-based intent detection)
-        ↓
-    Dispatcher (Routes to appropriate agents)
-        ↓
-    Agent(s) Execute (Data → Macro → Optimization → etc.)
-        ↓
-    Synthesizer (Combines results into natural language)
-        ↓
-    Response to User
-
-Key Features:
-    ✅ Smart routing based on natural language intent
-    ✅ Multi-agent chains (e.g., Data → Optimization)
-    ✅ Parallel execution where possible
-    ✅ Automatic result synthesis
-    ✅ Error handling and recovery
-
-State Structure:
-    @dataclass
-    class AgentState:
-        messages: List[dict]              # Conversation history
-        router_decision: Optional[dict]   # Router output
-        agent_results: Dict[str, Any]     # Results from each agent
-        shared_data: Dict[str, Any]       # Data passed between agents
-        current_agent: Optional[str]      # Active agent
-        error: Optional[str]              # Error message if any
-
-Example Flow:
-
-    User: "Optimiere mein Portfolio mit SPY, TLT, GLD bei maximal 15% Volatilität"
-    
-    Router → Detects: OPTIMIZATION intent
-          → Extracts: tickers=["SPY","TLT","GLD"], max_volatility=0.15
-          → Plans: DataAgent → OptimizationAgent
-    
-    DataAgent → Fetches prices (3 years)
-             → Calculates covariance matrix (sample method)
-             → Calculates expected returns
-             → Stores in shared_data
-    
-    OptimizationAgent → Reads shared_data (returns, covariance)
-                     → Runs scipy optimization
-                     → Returns: {"SPY": 0.40, "TLT": 0.20, "GLD": 0.40}
-    
-    Synthesizer → Formats: "📊 Optimal Allocation: SPY 40%, TLT 20%, GLD 40%
-                           Expected Return: 20.83%, Volatility: 10.34%"
-
-Performance:
-    - Router: 2-7 seconds (LLM-based)
-    - Data fetching: ~1.5s per ticker
-    - Optimization: ~0.1s (fast!)
-    - Total: 3-8 seconds end-to-end
-
-Demo Results (Phase 6.2):
-    ✅ Macro Analysis: VIX 15.64 (normal), Yield Curve normal
-    ✅ Portfolio Optimization: SPY 40%, GLD 40%, TLT 20% (Sharpe 1.531)
-    ✅ Combined Analysis: Macro + Rebalancing advice
-    ✅ Backtest: 38.93% return, 11.65% CAGR, Sharpe 0.59
-"""
-
-"""
-=============================================================================
-SECTION 8: FILE STRUCTURE
+SECTION 7: FILE STRUCTURE
 =============================================================================
 
 src/
-├── config.py                    # ⭐ NEW: Centralized configuration
+├── config.py                    # Centralized configuration (thresholds, etc.)
 │
 ├── agents/
-│   ├── __init__.py              # Exports (cleaned up - no XxxAgentConfig!)
-│   ├── base_agent.py            # BaseAgent, SupervisorAgent, AgentConfig
-│   ├── config.py                # LLM configuration (OpenAI, Anthropic)
-│   ├── protocols.py             # DTOs and Enums
-│   ├── state.py                 # LangGraph state definition
-│   ├── prompts.py               # System prompts
-│   │
-│   ├── smart_router.py          # ⭐ Phase 6.1: LLM-based intent detection
-│   ├── router_prompts.py        # Router system prompts
-│   │
-│   ├── nodes.py                 # ⭐ Phase 6.2: LangGraph node functions
-│   ├── graph.py                 # ⭐ Phase 6.2: LangGraph workflow definition
-│   │
-│   ├── data_agent.py            # DataAgent (refactored - uses config.data)
-│   ├── macro_agent.py           # MacroAgent (refactored - uses config.macro)
-│   ├── optimization_agent.py    # OptimizationAgent (refactored)
-│   ├── rebalance_agent.py       # RebalanceAgent (refactored)
-│   ├── backtest_agent.py        # BacktestAgent (refactored)
-│   └── risk_manager_agent.py    # Supervisor (refactored)
-│
-├── observability/               # Phase 6.3 (partially implemented)
 │   ├── __init__.py
-│   ├── tracer.py                # Request/agent/tool tracing
-│   └── token_counter.py         # Token usage tracking
+│   ├── state.py                 # AgentState TypedDict for LangGraph
+│   ├── schemas.py               # Pydantic schemas (RouterDecision, etc.)
+│   ├── validators.py            # Input validation logic
+│   │
+│   ├── smart_router.py          # LLM-based intent detection
+│   ├── router_prompts.py        # System prompts with few-shot examples
+│   │
+│   ├── nodes.py                 # All agent node functions + synthesizer
+│   ├── graph.py                 # LangGraph definition
+│   │
+│   ├── decision_engine.py       # ⭐ Phase 6.6: PM decision logic
+│   ├── decision_schemas.py      # ⭐ Phase 6.6: Decision data structures
+│   ├── decision_logger.py       # ⭐ Phase 6.6: Decision persistence
+│   │
+│   ├── data_agent.py            # Data fetching and calculation
+│   ├── macro_agent.py           # Macro environment analysis
+│   ├── optimization_agent.py    # Portfolio optimization
+│   ├── rebalance_agent.py       # Drift analysis and trade calculation
+│   └── backtest_agent.py        # Historical simulation
+│
+├── observability/
+│   ├── tracer.py                # Request tracing
+│   └── token_counter.py         # LLM token tracking
 │
 └── portfolio_tool/
-    ├── data_manager.py          # Database CRUD operations
     ├── database_setup.py        # SQLAlchemy models
-    ├── portfolio_manager.py     # ⭐ NEW: Portfolio CRUD (not integrated yet)
+    ├── data_manager.py          # Database CRUD operations
+    ├── portfolio_manager.py     # Portfolio CRUD operations
     │
     ├── tools/
-    │   ├── data_tools.py        # Price, covariance tools
-    │   ├── macro_tools.py       # VIX, regime tools
-    │   ├── optimization_tools.py # Mean-variance, risk parity
-    │   └── rebalance_tools.py   # PURE MATH rebalancing
+    │   ├── data_tools.py        # Data/admin tool wrappers
+    │   ├── macro_tools.py       # Macro data tools
+    │   ├── optimization_tools.py# Optimization tools
+    │   ├── rebalance_tools.py   # Rebalancing tools
+    │   └── portfolio_tools.py   # Portfolio management tools
     │
-    ├── providers/
-    │   └── yfinance_provider.py  # Yahoo Finance API
-    │
-    ├── quant/
-    │   ├── covariance.py        # Covariance estimators (sample, shrinkage, EWMA)
-    │   ├── risk_metrics.py      # VaR, Sharpe, etc.
-    │   └── returns.py           # Return calculations
-    │
-    └── optimization/
-        ├── mean_variance.py     # Markowitz optimization
-        └── risk_parity.py       # Equal risk contribution
+    └── providers/
+        └── yfinance_provider.py # YFinance API wrapper
+
+scripts/
+├── seed_database.py             # ⭐ Realistic data seeder
 
 demos/
-├── langgraph_demo.py            # ⭐ Phase 6.2 demo (4/4 tests passing!)
-└── multi_agent_cli.py           # Old CLI (deprecated)
+├── langgraph_demo.py            # Interactive CLI demo
 
 tests/
-├── test_shrinkage.py            # ⭐ Covariance diagnostic tool
-├── test_all_configs.py          # ⭐ Config validation tests
-└── violation_detector.py        # ⭐ DRY/SoC violation scanner
+├── test_phase66_comprehensive.py # ⭐ 40-test comprehensive suite
+├── test_decision_engine.py      # Decision engine unit tests
+├── conftest.py                  # Pytest configuration
+└── ...
 
 =============================================================================
-SECTION 9: CURRENT STATUS & ROADMAP
+SECTION 8: CONFIGURATION (src/config.py)
 =============================================================================
 
-COMPLETED:
-✅ Phase 5.1-5.4: All core agents (Data, Macro, Optimization, Backtest)
-✅ Phase 5.5: Rebalancing (pure math, deterministic)
-✅ Phase 6.1: Smart Router (LLM-based intent detection)
-✅ Phase 6.2: LangGraph State Machine + Config Refactoring
-    - LangGraph workflow (Router → Dispatcher → Agents → Synthesizer)
-    - Centralized config.py (single source of truth)
-    - Removed all XxxAgentConfig classes (DRY principle)
-    - Fixed covariance shrinkage (changed to sample method)
-    - Added Portfolio/PortfolioHolding tables
-    - All demos working (4/4 tests passing!)
+Key configuration sections:
 
-IN PROGRESS:
-⏳ Phase 6.5: Portfolio Management (4-5h)
-    - Integrate portfolio_manager.py
-    - Remove hardcoded ["SPY", "TLT", "GLD"]
-    - Add portfolio selection to router
-    - Update agents to use real portfolio data
+@dataclass
+class DataConfig:
+    default_period: str = "3Y"           # Historical data lookback
+    min_observations: int = 252          # Minimum for calculations
 
-TODO:
-⬜ Phase 6.3: Observability (4-5h)
-⬜ Phase 6.4: Token Management (3-4h)
-⬜ Phase 6.6: RAG Pipeline (6-8h)
-⬜ Phase 6.7: Chainlit UI (4-6h)
-⬜ Phase 6.8: Error Handling (3-4h)
-⬜ Phase 6.9: Data Scheduling (3-4h)
-⬜ Phase 6.10: Testing & Docs (4-6h)
-⬜ Phase 6.11: Human-in-the-Loop (3-4h)
-⬜ Phase 6.12: Guardrails (3-4h)
+@dataclass  
+class MacroConfig:
+    vix_elevated: float = 25.0           # Risk-off threshold
+    vix_crisis: float = 35.0             # Crisis threshold
+    yield_curve_inverted: float = 0.0    # Inversion threshold
 
-CURRENT WORKING DIRECTORY: E:\Programming\AGENTIC_FINANCE
+@dataclass
+class OptimizationConfig:
+    default_method: str = "max_sharpe"   # Optimization method
+    default_min_weight: float = 0.0      # Min weight per asset
+    default_max_weight: float = 0.40     # Max weight per asset (40%)
+    risk_free_rate: float = 0.05         # For Sharpe calculation
+
+@dataclass
+class RebalanceConfig:
+    default_drift_threshold: float = 5.0 # % drift before rebalance
+
+@dataclass
+class RiskConfig:
+    max_concentration: float = 0.30      # Max 30% in single asset
+    min_diversification_assets: int = 5  # Minimum 5 positions
 
 =============================================================================
-SECTION 10: HOW TO HELP
+SECTION 9: CURRENT STATUS
 =============================================================================
 
-When implementing new features:
+✅ COMPLETED:
+├── Phase 5.x: Core Agents (Data, Macro, Optimization, Rebalance, Backtest)
+├── Phase 6.1: Smart Router (LLM-based intent detection)
+├── Phase 6.2: LangGraph State Machine (dynamic routing, streaming)
+├── Phase 6.12: Guardrails & Schemas (strict typing)
+├── Phase 6.3: Basic Observability (tracing)
+├── Phase 6.5: Portfolio Management (admin tools wired to router)
+└── Phase 6.6: Decision Engine
+    ├── Dual-Intent System (QueryIntent + ExecutionIntent)
+    ├── Risk Assessment (runs BEFORE optimization)
+    ├── PM Decision Summary (HOLD/TILT/REBALANCE/HEDGE)
+    ├── Decision Logging (full audit trail)
+    ├── Response Formatting (PM-style output)
+    └── 40/40 Tests Passing
 
-1. ALWAYS check which layer you're working in (Agent? Tool? DataManager?)
+⏳ NEXT: Phase 6.7 - RAG Integration (see Section 11)
 
-2. CONFIGURATION:
-   - NEVER create XxxAgentConfig classes
-   - ALWAYS use config.xxx for business logic
-   - AgentConfig is ONLY for agent identity (name, role, temperature)
+=============================================================================
+SECTION 10: KNOWN LIMITATIONS
+=============================================================================
 
-3. DATA HANDLING:
-   - NEVER pass raw DataFrames to agents - aggregate first!
-   - ALWAYS return structured responses: {"success": bool, "data": {...}}
+1. NO RAG: Cannot read PDFs, earnings reports, or news articles
+2. NO TRADE EXECUTION: Recommendations only, no broker integration
+3. NO AUTHENTICATION: Single user, no multi-tenancy
+4. NO ALERTS: Cannot schedule "alert me when drift > 5%"
+5. LIMITED MACRO: Only VIX + yields, no Fed speeches or news
 
-4. MATH/CALCULATIONS:
-   - Use scipy/numpy, NOT LLM
-   - Keep deterministic (same inputs = same outputs)
+=============================================================================
+SECTION 11: RAG INTEGRATION ROADMAP (Phase 6.7)
+=============================================================================
 
-5. DATABASE:
-   - Use UPSERT pattern (ON CONFLICT DO UPDATE)
-   - Session isolation (separate sessions for concurrent operations)
+GOAL: RAG should SYNERGIZE with Decision Engine, not be standalone.
+      Documents feed into risk assessment and decision rationale.
 
-6. COVARIANCE:
-   - Default method: "sample" (good for <10 assets, 200+ observations)
-   - Use "shrinkage" only for 20+ assets or limited data
-   - Use "exponential" for dynamic/recent emphasis
+ARCHITECTURE:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              USER QUERY                                      │
+│   "Given NVDA's earnings report, should I increase my position?"            │
+└─────────────────────────────────────────┬───────────────────────────────────┘
+                                          │
+          ┌───────────────────────────────┼───────────────────────────────┐
+          ▼                               ▼                               ▼
+    ┌──────────┐                   ┌──────────┐                    ┌──────────┐
+    │   RAG    │                   │   Data   │                    │  Macro   │
+    │  Agent   │                   │  Agent   │                    │  Agent   │
+    │          │                   │          │                    │          │
+    │ • Search │                   │ • Prices │                    │ • VIX    │
+    │ • Extract│                   │ • Cov    │                    │ • Yields │
+    │ • Cite   │                   │ • Returns│                    │ • Regime │
+    └────┬─────┘                   └────┬─────┘                    └────┬─────┘
+         │                              │                               │
+         └──────────────────────────────┼───────────────────────────────┘
+                                        │
+                                        ▼
+              ┌─────────────────────────────────────────────┐
+              │           🧠 DECISION ENGINE                │
+              │                                             │
+              │  Inputs:                                    │
+              │  • Current weights (from holdings)          │
+              │  • Target weights (from optimization)       │
+              │  • Macro regime (from MacroAgent)           │
+              │  • Document insights (from RAG Agent) ← NEW │
+              │                                             │
+              │  Output:                                    │
+              │  • PMDecisionSummary with citations         │
+              └─────────────────────────────────────────────┘
 
-7. TICKER VALIDATION:
-   - Always validate before fetching
-   - Do NOT invent tickers (e.g., "GPTCOIN", "MSFT2")
-   - If unsure, ask the user
+IMPLEMENTATION PHASES:
 
-8. ERROR HANDLING:
-   - Always use try/except
-   - Return {"success": False, "error": str(e)}
-   - Never let exceptions bubble up to LLM
+Phase 1: Document Ingestion (2 hours)
+├── src/portfolio_tool/rag/document_loader.py
+├── src/portfolio_tool/rag/chunker.py
+└── Capabilities: Load PDFs, smart chunking by section
 
-Example - Adding a Config Value:
+Phase 2: Vector Store (1.5 hours)
+├── src/portfolio_tool/rag/vector_store.py
+├── src/portfolio_tool/rag/embeddings.py
+└── Capabilities: ChromaDB storage, metadata filtering
 
-    # 1. Add to config.py:
-    @dataclass
-    class DataConfig:
-        new_setting: float = 0.10
+Phase 3: RAG Agent (2 hours)
+├── src/agents/rag_agent.py
+├── src/portfolio_tool/tools/rag_tools.py
+└── Capabilities: search_documents(), summarize_earnings(), extract_risk_factors()
+
+Phase 4: Decision Engine Integration (1.5 hours)
+├── Update decision_engine.py to accept document_insights
+├── Update synthesizer to show citations
+└── Capabilities: Document-backed rationale in decisions
+
+NEW DATABASE TABLES:
+├── documents (id, filename, doc_type, ticker, upload_date, content_hash)
+└── document_chunks (id, document_id, chunk_index, content, embedding_id)
+
+=============================================================================
+SECTION 12: TARGET INTERVIEW PROMPTS
+=============================================================================
+
+These prompts demonstrate the SYNERGY between RAG and Decision Engine:
+
+PROMPT 1 - Document-Informed Decision:
+"I just uploaded NVIDIA's Q3 2024 earnings report. 
+Given this new information, should I increase my position in the Growth Tech portfolio?"
+
+Expected: Decision with earnings metrics, risk factors FROM THE FILING, citations
+
+PROMPT 2 - Multi-Source Risk Assessment:
+"I'm worried about my Dividend Income portfolio given recent Fed commentary. 
+Search my documents for anything about interest rate sensitivity 
+and tell me if I should hedge."
+
+Expected: Combines macro data + document search + portfolio analysis
+
+PROMPT 3 - The "Do Nothing" with Evidence:
+"The market dropped 3% today. My All-Weather portfolio is down 1.5%. 
+Should I make any changes? Check if any of my holdings have news."
+
+Expected: HOLD decision with evidence that portfolio is working as designed
+
+=============================================================================
+SECTION 13: WORKING WITH THIS PROJECT
+=============================================================================
+
+RUNNING THE DEMO:
+    python demos/langgraph_demo.py
     
-    # 2. Use in agent:
-    from config import config
-    
-    value = config.data.new_setting
+    Commands:
+    • /debug - Toggle debug mode
+    • /portfolio <id> - Switch portfolio context
+    • exit - Quit
 
-Example - Using Portfolio Manager:
+RUNNING TESTS:
+    python tests/test_phase66_comprehensive.py
+    python tests/test_phase66_comprehensive.py --test decision  # Specific category
 
-    from portfolio_tool.portfolio_manager import PortfolioManager
-    
-    pm = PortfolioManager()
-    portfolio_id = pm.create_portfolio("My Portfolio")
-    pm.add_holding(portfolio_id, "SPY", quantity=100, avg_price=450.0)
-    tickers = pm.get_portfolio_tickers(portfolio_id)
+SEEDING DATABASE:
+    python scripts/seed_database.py              # Full seed with prices
+    python scripts/seed_database.py --skip-prices # Quick seed
 
-=============================================================================
-SECTION 11: KNOWN ISSUES & LIMITATIONS
-=============================================================================
+KEY ENVIRONMENT VARIABLES:
+    ANTHROPIC_API_KEY - Required for Claude LLM
+    USE_MOCK_QUOTA=True - Skip API quota tracking in tests
 
-CURRENT LIMITATIONS:
-1. Hardcoded tickers ["SPY", "TLT", "GLD"] in demos (Phase 6.5 will fix)
-2. Mock data in RebalanceAgent output (trades are simulated)
-3. No user authentication (single-user system for now)
-4. Observability partially implemented (tracers exist but not integrated)
-5. No UI yet (CLI only, Chainlit coming in Phase 6.7)
-
-FIXED IN PHASE 6.2:
-✅ Covariance shrinkage at 100% → Changed to sample method
-✅ Duplicate config classes → Centralized in config.py
-✅ Hardcoded business logic → Moved to config.py
-✅ No agent orchestration → Added LangGraph state machine
+COMMON ISSUES:
+    "No portfolio specified" → Use /portfolio 1 or specify portfolio in query
+    "No covariance matrix" → DataAgent must run before OptimizationAgent
+    "DecisionLog not found" → Run: python -c "from portfolio_tool.database_setup import Base, engine; Base.metadata.create_all(engine)"
 
 =============================================================================
 END OF PROJECT CONTEXT
 =============================================================================
-
-For questions or clarifications, refer to:
-- ROADMAP.md (high-level plan)
-- Individual agent files (detailed implementation)
-- demos/langgraph_demo.py (working examples)
 """
+
+from typing import List, Dict, Optional, Any
+from enum import Enum
+from dataclasses import dataclass
+from datetime import date, datetime
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ENUMS (Keep in sync with actual implementation)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class QueryIntent(str, Enum):
+    """Why is the user asking? (Phase 6.6)"""
+    OPERATIONAL = "operational"       # Admin: list, show, create
+    INFORMATION = "information"       # Factual: What's VIX?
+    ANALYSIS = "analysis"             # Explanatory: Why did X happen?
+    DECISION = "decision"             # Action: Should I rebalance?
+    CLARIFICATION = "clarification"   # Ambiguous query
+    UNKNOWN = "unknown"
+
+class ExecutionIntent(str, Enum):
+    """What agents to run? (Phase 6.6)"""
+    OPTIMIZATION = "optimization"
+    MACRO_ANALYSIS = "macro_analysis"
+    REBALANCING = "rebalancing"
+    BACKTEST = "backtest"
+    DATA_FETCH = "data_fetch"
+    RISK_ANALYSIS = "risk_analysis"
+    DATA_MANAGEMENT = "data_management"
+    PORTFOLIO_MGMT = "portfolio_mgmt"
+    CLARIFICATION_NEEDED = "clarification_needed"
+    UNKNOWN = "unknown"
+
+class DecisionType(str, Enum):
+    """PM-style decision types (Phase 6.6)"""
+    HOLD = "hold"           # No action warranted
+    TILT = "tilt"           # Minor tactical adjustment
+    REBALANCE = "rebalance" # Structural portfolio change
+    HEDGE = "hedge"         # Defensive action for crisis
+
+class RiskStatus(str, Enum):
+    """Portfolio risk status (Phase 6.6)"""
+    ACCEPTABLE = "acceptable"   # All checks pass
+    ELEVATED = "elevated"       # 1-2 breaches
+    CRITICAL = "critical"       # 3+ breaches
+
+class OptimizationMethod(str, Enum):
+    """Portfolio optimization algorithms."""
+    MEAN_VARIANCE = "mean_variance"
+    MIN_VARIANCE = "min_variance"
+    MAX_SHARPE = "max_sharpe"
+    RISK_PARITY = "risk_parity"
+
+class RegimeType(str, Enum):
+    """Market regime classification."""
+    RISK_ON = "risk_on"     # VIX < 15
+    RISK_OFF = "risk_off"   # VIX > 25
+    NEUTRAL = "neutral"     # Normal
+    CRISIS = "crisis"       # VIX > 35
+
+# ─────────────────────────────────────────────────────────────────────────────
+# KEY DATA STRUCTURES
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass
+class PMDecisionSummary:
+    """
+    Executive summary for every portfolio decision.
+    This is what a PM actually sees and acts on.
+    """
+    decision: DecisionType
+    confidence: float                    # 0.0 - 1.0
+    rationale: str                       # Human-readable explanation
+    key_risks: List[str]                 # Top risk factors
+    trade_required: bool                 # Explicit yes/no
+    trigger: str                         # What prompted this assessment
+
+@dataclass
+class RiskAssessment:
+    """Structured risk evaluation - runs BEFORE optimization."""
+    status: RiskStatus
+    hhi_score: float                     # Concentration (0-1)
+    drivers: List[str]                   # Risk drivers
+    breaches: List[str]                  # Limit breaches
+
+@dataclass
+class PortfolioConstraints:
+    """Investment constraints for optimization."""
+    min_weight: float = 0.0
+    max_weight: float = 0.40
+    max_volatility: Optional[float] = None
+    long_only: bool = True

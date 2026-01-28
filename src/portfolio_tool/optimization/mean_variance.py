@@ -32,6 +32,32 @@ from .constraints import (
 )
 
 
+###############################################################################
+# HELPERS
+###############################################################################
+
+def _handle_solver_error(result, context="Optimization"):
+    """
+    Translates SciPy solver errors into human-readable explanations.
+    """
+    raw_msg = str(getattr(result, "message", "Unknown error"))
+    status = getattr(result, "status", -1)
+    
+    # Common SciPy SLSQP failure modes
+    if status in [8, 9] or "Positive directional derivative" in raw_msg:
+        return (
+            f"Impossible Constraints: The solver could not find ANY portfolio that meets your requirements. "
+            f"Likely cause: Your constraints (e.g., Max Volatility) are stricter than what the market allows."
+        )
+    elif "Iteration limit reached" in raw_msg:
+        return "Solver timed out. The problem is too complex or constraints are conflicting."
+    elif "Inequality constraints incompatible" in raw_msg:
+        return "Conflicting Constraints: You asked for things that cannot be true at the same time."
+        
+    return f"{context} failed: {raw_msg} (Status {status})"
+
+###############################################################################
+
 class MeanVarianceOptimizer(OptimizerInterface):
     """
     Mean-Variance (Markowitz) Portfolio Optimizer.
@@ -157,7 +183,10 @@ class MeanVarianceOptimizer(OptimizerInterface):
         
         # Check result
         if not result.success:
-            warnings.append(f"Optimizer warning: {result.message}")
+            # ✅ FIX: Use helper to get human-readable error
+            error_msg = _handle_solver_error(result, "Max Sharpe")
+            warnings.append(error_msg)
+            # Optional: You can explicitly mark this as a critical failure in your logs here if needed
         
         # Clean up small weights
         weights = self._clean_weights(result.x)
@@ -231,7 +260,8 @@ class MeanVarianceOptimizer(OptimizerInterface):
         )
         
         if not result.success:
-            warnings.append(f"Optimizer warning: {result.message}")
+            error_msg = _handle_solver_error(result, "Min Volatility")
+            warnings.append(error_msg)
         
         weights = self._clean_weights(result.x)
         
@@ -306,7 +336,8 @@ class MeanVarianceOptimizer(OptimizerInterface):
         )
         
         if not result.success:
-            warnings.append(f"Optimizer warning: {result.message}")
+            error_msg = _handle_solver_error(result, "Target Return")
+            warnings.append(error_msg)
         
         weights = self._clean_weights(result.x)
         active = constraints.get_active_constraints_description() if constraints else []
@@ -370,7 +401,8 @@ class MeanVarianceOptimizer(OptimizerInterface):
         )
         
         if not result.success:
-            warnings.append(f"Optimizer warning: {result.message}")
+            error_msg = _handle_solver_error(result, "Target Volatility")
+            warnings.append(error_msg)
         
         weights = self._clean_weights(result.x)
         active = constraints.get_active_constraints_description() if constraints else []

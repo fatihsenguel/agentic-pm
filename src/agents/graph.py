@@ -16,6 +16,7 @@ from .nodes import (
     rebalance_agent_node,
     backtest_agent_node,
     synthesizer_node,
+    rag_agent_node, 
 )
 
 import logging
@@ -71,6 +72,7 @@ def route_next_step(state: AgentState) -> Literal[
     "RebalanceAgent", 
     "BacktestAgent", 
     "synthesizer",
+    "RAGAgent",
     "end"
 ]:
     """
@@ -119,7 +121,8 @@ def build_graph() -> StateGraph:
     graph.add_node("OptimizationAgent", optimization_agent_node)
     graph.add_node("RebalanceAgent", rebalance_agent_node)
     graph.add_node("BacktestAgent", backtest_agent_node)
-    
+    graph.add_node("RAGAgent", rag_agent_node)
+
     # Output Node
     graph.add_node("synthesizer", synthesizer_node)
     
@@ -137,6 +140,7 @@ def build_graph() -> StateGraph:
         "RebalanceAgent": "RebalanceAgent",
         "BacktestAgent": "BacktestAgent",
         "synthesizer": "synthesizer",
+        "RAGAgent": "RAGAgent",
         "end": END
     }
     
@@ -147,7 +151,7 @@ def build_graph() -> StateGraph:
     # This allows any agent to transition to any other agent if the plan says so
     agent_nodes = [
         "DataAgent", "MacroAgent", "OptimizationAgent", 
-        "RebalanceAgent", "BacktestAgent"
+        "RebalanceAgent", "BacktestAgent", "RAGAgent"
     ]
     
     for node in agent_nodes:
