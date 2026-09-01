@@ -387,7 +387,18 @@ Always include in your responses:
     def _calculate_period_dates(self, period: str) -> tuple:
         """Convert period string to start/end dates."""
         end_date = date.today()
-        days = config.data.period_days.get(period.upper(), 1825)  # Default 5Y
+
+        # No caller preference -> config decides (policy stays in config)
+        period = period or config.data.default_period
+
+        # Unknown period is a caller error, not something to silently guess at
+        if period.upper() not in config.data.period_days:
+            raise ValueError(
+                f"Unknown period '{period}'. "
+                f"Valid periods: {sorted(config.data.period_days)}"
+            )
+
+        days = config.data.period_days[period.upper()]
         start_date = end_date - timedelta(days=days)
         return start_date, end_date
     

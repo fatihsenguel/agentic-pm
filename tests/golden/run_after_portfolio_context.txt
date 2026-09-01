@@ -1,0 +1,434 @@
+Portfolio context error: No portfolio specified and no tickers found in query.
+Please either:
+  1. Specify a portfolio: create_initial_state(..., portfolio_id=X)
+  2. Include tickers in query: 'Analyze SPY and TLT'
+
+Cannot proceed without knowing which assets to analyze.
+Unexpected DataAgent error:
+Traceback (most recent call last):
+  File "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/src/agents/nodes.py", line 357, in data_agent_node
+    price_result = agent.fetch_prices_tool(
+  File "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/src/agents/data_agent.py", line 416, in fetch_prices_tool
+    start_date, end_date = self._calculate_period_dates(period)
+  File "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/src/agents/data_agent.py", line 390, in _calculate_period_dates
+    days = config.data.period_days.get(period.upper(), 1825)  # Default 5Y
+AttributeError: 'NoneType' object has no attribute 'upper'
+
+Unexpected DataAgent error:
+Traceback (most recent call last):
+  File "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/src/agents/nodes.py", line 357, in data_agent_node
+    price_result = agent.fetch_prices_tool(
+  File "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/src/agents/data_agent.py", line 416, in fetch_prices_tool
+    start_date, end_date = self._calculate_period_dates(period)
+  File "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/src/agents/data_agent.py", line 390, in _calculate_period_dates
+    days = config.data.period_days.get(period.upper(), 1825)  # Default 5Y
+AttributeError: 'NoneType' object has no attribute 'upper'
+
+Portfolio 1 specified but holdings not loaded
+RebalanceAgent error: Portfolio specified but holdings not loaded.
+DataAgent must load portfolio holdings first.
+Unexpected DataAgent error:
+Traceback (most recent call last):
+  File "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/src/agents/nodes.py", line 357, in data_agent_node
+    price_result = agent.fetch_prices_tool(
+  File "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/src/agents/data_agent.py", line 416, in fetch_prices_tool
+    start_date, end_date = self._calculate_period_dates(period)
+  File "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/src/agents/data_agent.py", line 390, in _calculate_period_dates
+    days = config.data.period_days.get(period.upper(), 1825)  # Default 5Y
+AttributeError: 'NoneType' object has no attribute 'upper'
+
+======================================================================
+QUERY: What is the current market regime?   (portfolio_id=None)
+======================================================================
+
+🚀 Request started: 99862ae2...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (2524ms)[0m
+
+✅ Request complete (2524ms)
+DEBUG: Verbinde mit DB unter sqlite:////Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/data/portfolio.db
+DEBUG [QuotaManager]: Initialisiert für 'yfinance', Run ID 9999, Limit 2000
+[Provider] YFinanceProvider initialisiert mit 60 Aufrufen/Minute Limit.
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 267/2000
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 268/2000
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 269/2000
+... 63 Zeilen in macro_data importiert (Upsert in 1 Batches).
+FINAL: ⚠️ Some issues occurred during analysis:
+  - MacroAgent error: Yield curve data missing from snapshot
+
+🌍 **MACRO ENVIRONMENT ANALYSIS**
+
+PLAN: ['MacroAgent']
+SUB_RESULTS keys: ['MacroAgent']
+ERRORS: ['MacroAgent error: Yield curve data missing from snapshot']
+
+======================================================================
+QUERY: Get me the last 1 year of prices for SPY and TLT   (portfolio_id=None)
+======================================================================
+
+🚀 Request started: 7bcebed0...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (1772ms)[0m
+
+✅ Request complete (1772ms)
+
+================================================================================
+DATA AGENT - Fetching market data
+================================================================================
+  Tickers: ['SPY', 'TLT']
+  Period: 1Y
+  Portfolio ID: None
+  Fetching prices...
+Asset gefunden: SPDR S&P 500 ETF
+... prüfe Preise für SPY
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 270/2000
+   [Provider] Rufe yf.Ticker(SPY).history(start=2025-09-01, end=2026-09-01) auf...
+... 251 Zeilen in daily_prices importiert (Upsert in 1 Batches).
+Asset gefunden: iShares 20+ Year Treasury Bond ETF
+... prüfe Preise für TLT
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 271/2000
+   [Provider] Rufe yf.Ticker(TLT).history(start=2025-09-01, end=2026-09-01) auf...
+... 251 Zeilen in daily_prices importiert (Upsert in 1 Batches).
+  Calculating covariance...
+  Calculating returns...
+  ✓ Data loaded successfully
+  ✓ Expected returns: ['SPY', 'TLT']
+FINAL: Analysis complete. See details below:
+
+DataAgent: ✓
+PLAN: ['DataAgent']
+SUB_RESULTS keys: ['DataAgent']
+ERRORS: []
+
+======================================================================
+QUERY: Optimize a portfolio of SPY, TLT and GLD for maximum Sharpe ratio   (portfolio_id=None)
+======================================================================
+
+🚀 Request started: 88e09837...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (3581ms)[0m
+
+✅ Request complete (3581ms)
+
+================================================================================
+DATA AGENT - Fetching market data
+================================================================================
+  Tickers: ['SPY', 'TLT', 'GLD']
+  Period: 3Y
+  Portfolio ID: None
+  Fetching prices...
+Asset gefunden: SPDR S&P 500 ETF
+... prüfe Preise für SPY
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 272/2000
+   [Provider] Rufe yf.Ticker(SPY).history(start=2023-09-02, end=2026-09-01) auf...
+... 750 Zeilen in daily_prices importiert (Upsert in 2 Batches).
+Asset gefunden: iShares 20+ Year Treasury Bond ETF
+... prüfe Preise für TLT
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 273/2000
+   [Provider] Rufe yf.Ticker(TLT).history(start=2023-09-02, end=2026-09-01) auf...
+... 750 Zeilen in daily_prices importiert (Upsert in 2 Batches).
+Asset gefunden: SPDR Gold Shares
+... prüfe Preise für GLD
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 274/2000
+   [Provider] Rufe yf.Ticker(GLD).history(start=2023-09-02, end=2026-09-01) auf...
+... 750 Zeilen in daily_prices importiert (Upsert in 2 Batches).
+  Calculating covariance...
+  Calculating returns...
+  ✓ Data loaded successfully
+  ✓ Expected returns: ['SPY', 'TLT', 'GLD']
+  ✓ Matrix alignment validated: 3 tickers
+  [DEBUG] Optimizing for tickers: ['SPY', 'TLT', 'GLD']
+FINAL: 📊 **PORTFOLIO OPTIMIZATION RESULTS**
+
+**Optimal Allocation:**
+  • SPY: 40.0%
+  • GLD: 40.0%
+  • TLT: 20.0%
+
+**Expected Metrics:**
+  • Return: 20.38%
+  • Volatility: 12.07%
+  • Sharpe Ratio: 1.27
+PLAN: ['DataAgent', 'OptimizationAgent']
+SUB_RESULTS keys: ['DataAgent', 'OptimizationAgent']
+ERRORS: []
+
+======================================================================
+QUERY: Update the data for all asset classes   (portfolio_id=None)
+======================================================================
+
+🚀 Request started: 6c370998...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (3030ms)[0m
+
+✅ Request complete (3030ms)
+
+================================================================================
+DATA AGENT - Fetching market data
+================================================================================
+FINAL: ⚠️ Some issues occurred during analysis:
+  - DataAgent: No portfolio specified and no tickers found in query.
+Please either:
+  1. Specify a portfolio: create_initial_state(..., portfolio_id=X)
+  2. Include tickers in query: 'Analyze SPY and TLT'
+
+Cannot proceed without knowing which assets to analyze.
+
+Analysis complete. See details below:
+
+DataAgent: ✗
+PLAN: ['DataAgent']
+SUB_RESULTS keys: ['DataAgent']
+ERRORS: ["DataAgent: No portfolio specified and no tickers found in query.\nPlease either:\n  1. Specify a portfolio: create_initial_state(..., portfolio_id=X)\n  2. Include tickers in query: 'Analyze SPY and TLT'\n\nCannot proceed without knowing which assets to analyze."]
+
+======================================================================
+QUERY: What is my current allocation by asset class?   (portfolio_id=1)
+======================================================================
+
+🚀 Request started: 5dda4f39...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (2964ms)[0m
+
+✅ Request complete (2964ms)
+
+================================================================================
+DATA AGENT - Fetching market data
+================================================================================
+  Tickers: ['SPY', 'TLT', 'GLD']
+  Period: None
+  Portfolio ID: 1
+  Fetching prices...
+FINAL: ⚠️ Some issues occurred during analysis:
+  - DataAgent unexpected error: 'NoneType' object has no attribute 'upper'
+
+Analysis complete. See details below:
+
+DataAgent: ✗
+PLAN: ['DataAgent']
+SUB_RESULTS keys: ['DataAgent']
+ERRORS: ["DataAgent unexpected error: 'NoneType' object has no attribute 'upper'"]
+
+======================================================================
+QUERY: What is my volatility over the past twelve months?   (portfolio_id=1)
+======================================================================
+
+🚀 Request started: fae688c3...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (2039ms)[0m
+
+✅ Request complete (2039ms)
+
+================================================================================
+DATA AGENT - Fetching market data
+================================================================================
+  Tickers: ['SPY', 'TLT', 'GLD']
+  Period: 12M
+  Portfolio ID: 1
+  Fetching prices...
+Asset gefunden: SPDR S&P 500 ETF
+... prüfe Preise für SPY
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 275/2000
+   [Provider] Rufe yf.Ticker(SPY).history(start=2021-09-02, end=2026-09-01) auf...
+... 1253 Zeilen in daily_prices importiert (Upsert in 3 Batches).
+Asset gefunden: iShares 20+ Year Treasury Bond ETF
+... prüfe Preise für TLT
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 276/2000
+   [Provider] Rufe yf.Ticker(TLT).history(start=2021-09-02, end=2026-09-01) auf...
+... 1253 Zeilen in daily_prices importiert (Upsert in 3 Batches).
+Asset gefunden: SPDR Gold Shares
+... prüfe Preise für GLD
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 277/2000
+   [Provider] Rufe yf.Ticker(GLD).history(start=2021-09-02, end=2026-09-01) auf...
+... 1253 Zeilen in daily_prices importiert (Upsert in 3 Batches).
+  Calculating covariance...
+  Calculating returns...
+  ✓ Data loaded successfully
+  ✓ Expected returns: ['SPY', 'TLT', 'GLD']
+FINAL: Analysis complete. See details below:
+
+DataAgent: ✓
+PLAN: ['DataAgent']
+SUB_RESULTS keys: ['DataAgent']
+ERRORS: []
+
+======================================================================
+QUERY: How has SPY performed since I bought it?   (portfolio_id=1)
+======================================================================
+
+🚀 Request started: aedf04a8...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (3149ms)[0m
+
+✅ Request complete (3149ms)
+
+================================================================================
+DATA AGENT - Fetching market data
+================================================================================
+  Tickers: ['SPY', 'TLT', 'GLD']
+  Period: 3Y
+  Portfolio ID: 1
+  Fetching prices...
+Asset gefunden: SPDR S&P 500 ETF
+... prüfe Preise für SPY
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 278/2000
+   [Provider] Rufe yf.Ticker(SPY).history(start=2023-09-02, end=2026-09-01) auf...
+... 750 Zeilen in daily_prices importiert (Upsert in 2 Batches).
+Asset gefunden: iShares 20+ Year Treasury Bond ETF
+... prüfe Preise für TLT
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 279/2000
+   [Provider] Rufe yf.Ticker(TLT).history(start=2023-09-02, end=2026-09-01) auf...
+... 750 Zeilen in daily_prices importiert (Upsert in 2 Batches).
+Asset gefunden: SPDR Gold Shares
+... prüfe Preise für GLD
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 280/2000
+   [Provider] Rufe yf.Ticker(GLD).history(start=2023-09-02, end=2026-09-01) auf...
+... 750 Zeilen in daily_prices importiert (Upsert in 2 Batches).
+  Calculating covariance...
+  Calculating returns...
+  ✓ Data loaded successfully
+  ✓ Expected returns: ['SPY', 'TLT', 'GLD']
+FINAL: Analysis complete. See details below:
+
+DataAgent: ✓
+PLAN: ['DataAgent']
+SUB_RESULTS keys: ['DataAgent']
+ERRORS: []
+
+======================================================================
+QUERY: Should I rebalance my portfolio?   (portfolio_id=1)
+======================================================================
+
+🚀 Request started: 521b8871...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (3474ms)[0m
+
+✅ Request complete (3475ms)
+
+================================================================================
+DATA AGENT - Fetching market data
+================================================================================
+  Tickers: ['SPY', 'TLT', 'GLD']
+  Period: None
+  Portfolio ID: 1
+  Fetching prices...
+FINAL: ⚠️ Some issues occurred during analysis:
+  - DataAgent unexpected error: 'NoneType' object has no attribute 'upper'
+  - RebalanceAgent: Portfolio specified but holdings not loaded.
+DataAgent must load portfolio holdings first.
+
+⚖️ **REBALANCING ANALYSIS**
+
+PLAN: ['DataAgent', 'RebalanceAgent']
+SUB_RESULTS keys: ['DataAgent', 'RebalanceAgent']
+ERRORS: ["DataAgent unexpected error: 'NoneType' object has no attribute 'upper'", 'RebalanceAgent: Portfolio specified but holdings not loaded.\nDataAgent must load portfolio holdings first.']
+
+======================================================================
+QUERY: What is the risk of my portfolio?   (portfolio_id=1)
+======================================================================
+
+🚀 Request started: 3e3927d8...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (2964ms)[0m
+
+✅ Request complete (2964ms)
+
+================================================================================
+DATA AGENT - Fetching market data
+================================================================================
+  Tickers: ['SPY', 'TLT', 'GLD']
+  Period: 3Y
+  Portfolio ID: 1
+  Fetching prices...
+Asset gefunden: SPDR S&P 500 ETF
+... prüfe Preise für SPY
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 281/2000
+   [Provider] Rufe yf.Ticker(SPY).history(start=2023-09-02, end=2026-09-01) auf...
+... 750 Zeilen in daily_prices importiert (Upsert in 2 Batches).
+Asset gefunden: iShares 20+ Year Treasury Bond ETF
+... prüfe Preise für TLT
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 282/2000
+   [Provider] Rufe yf.Ticker(TLT).history(start=2023-09-02, end=2026-09-01) auf...
+... 750 Zeilen in daily_prices importiert (Upsert in 2 Batches).
+Asset gefunden: SPDR Gold Shares
+... prüfe Preise für GLD
+DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für daily_yfinance_2026-09-01: 283/2000
+   [Provider] Rufe yf.Ticker(GLD).history(start=2023-09-02, end=2026-09-01) auf...
+... 750 Zeilen in daily_prices importiert (Upsert in 2 Batches).
+  Calculating covariance...
+  Calculating returns...
+  ✓ Data loaded successfully
+  ✓ Expected returns: ['SPY', 'TLT', 'GLD']
+FINAL: Analysis complete. See details below:
+
+DataAgent: ✓
+PLAN: ['DataAgent']
+SUB_RESULTS keys: ['DataAgent']
+ERRORS: []
+
+======================================================================
+QUERY: What positions do I hold in the Technology sector?   (portfolio_id=2)
+======================================================================
+
+🚀 Request started: 5eabe5da...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (2818ms)[0m
+
+✅ Request complete (2819ms)
+
+================================================================================
+DATA AGENT - Fetching market data
+================================================================================
+  Tickers: ['AAPL', 'MSFT']
+  Period: None
+  Portfolio ID: 2
+  Fetching prices...
+FINAL: ⚠️ Some issues occurred during analysis:
+  - DataAgent unexpected error: 'NoneType' object has no attribute 'upper'
+
+Analysis complete. See details below:
+
+DataAgent: ✗
+PLAN: ['DataAgent']
+SUB_RESULTS keys: ['DataAgent']
+ERRORS: ["DataAgent unexpected error: 'NoneType' object has no attribute 'upper'"]
+
+======================================================================
+QUERY: Analyze ZZZZFAKE for me   (portfolio_id=None)
+======================================================================
+
+🚀 Request started: 794422fa...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (3067ms)[0m
+
+✅ Request complete (3068ms)
+FINAL: Could you provide a valid ticker symbol (e.g., SPY, TLT, GLD)? Also, what type of analysis would you like: price data, risk metrics, portfolio optimization, or macro analysis?
+PLAN: []
+SUB_RESULTS keys: []
+ERRORS: []
+
+======================================================================
+QUERY: help   (portfolio_id=None)
+======================================================================
+
+🚀 Request started: 130a0c97...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (1837ms)[0m
+
+✅ Request complete (1838ms)
+FINAL: What would you like to do? Please choose one: (1) Optimize a portfolio, (2) Analyze market conditions, (3) Rebalance an existing portfolio, (4) Backtest a strategy, or (5) Fetch market data?
+PLAN: []
+SUB_RESULTS keys: []
+ERRORS: []
+

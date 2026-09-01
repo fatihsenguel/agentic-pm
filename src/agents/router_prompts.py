@@ -70,7 +70,7 @@ You MUST respond with valid JSON matching this schema:
 
 EXTRACTION RULES:
 - Tickers: Extract uppercase 1-5 letter symbols (SPY, TLT, GLD, etc.)
-- Periods: Extract time periods (5Y, 3M, 30D) - default to "3Y" if not specified
+- Periods: MUST be exactly one of: "1Y", "2Y", "3Y", "5Y", "10Y". Map natural language to the nearest valid value (e.g. "twelve months"/"past year" -> "1Y", "since 2021" -> "5Y"). Use null if the user gave no timeframe - do not guess.
 - Volatility: Extract percentages mentioned with "volatility" (12% vol → 0.12)
 - Portfolio Value: Extract amounts (€100,000 → 100000)
 

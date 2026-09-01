@@ -158,17 +158,24 @@ def get_cost_basis(holdings: Optional[List[Dict]]) -> Dict[str, float]:
     }
 
 
-def cache_portfolio_holdings(state: "AgentState", holdings: List[Dict]) -> None:
+def cache_portfolio_holdings(state: "AgentState", holdings: List[Dict]) -> Dict[str, Any]:
     """
-    Cache portfolio holdings in state to avoid repeated DB calls.
-    
+    Build a state update carrying portfolio holdings to downstream agents.
+
+    LangGraph merges what a node RETURNS; mutating `state` in place does not
+    propagate. The caller must spread this dict into its return value.
+
     Args:
         state: Current agent state
         holdings: Holdings loaded from portfolio manager
+
+    Returns:
+        State update dict, empty if there are no holdings.
     """
-    if holdings:
-        state["portfolio_holdings"] = holdings
-        logger.debug(f"Cached {len(holdings)} holdings in state")
+    if not holdings:
+        return {}
+    logger.debug(f"Caching {len(holdings)} holdings in state")
+    return {"portfolio_holdings": holdings}
 
 
 def validate_portfolio_context(state: "AgentState") -> bool:
@@ -332,9 +339,8 @@ async def data_agent_node(state: AgentState) -> Dict[str, Any]:
                 **add_error(state, f"DataAgent: {str(e)}"),
             }
         
-        # Cache holdings if loaded
-        if holdings:
-            cache_portfolio_holdings(state, holdings)
+        # Cache holdings if loaded (spread into the return below)
+        holdings_update = cache_portfolio_holdings(state, holdings)
         
         # Get period from router decision
         router_decision = state.get("router_decision") or {}
@@ -460,6 +466,7 @@ async def data_agent_node(state: AgentState) -> Dict[str, Any]:
             
             return {
                 **mark_agent_complete(state, "DataAgent", result),
+                **holdings_update,
                 "shared_data": {**state.get("shared_data", {}), **shared_updates},
             }
         
