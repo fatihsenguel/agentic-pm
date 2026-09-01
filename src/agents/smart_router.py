@@ -187,7 +187,14 @@ class SmartRouter:
                 user_message=user_message,
                 conversation_history=conversation_history,
                 include_examples=self.config.include_examples,
-                available_agents=available_agents
+                available_agents=available_agents,
+                portfolio_context=(
+                    f"The user has an active portfolio (id={portfolio_id}) holding: "
+                    f"{', '.join(portfolio_tickers)}. When the user says 'my portfolio', "
+                    f"'my holdings', 'my allocation', 'my risk' or 'my volatility', they "
+                    f"mean these tickers. You already have this data - never ask the user "
+                    f"to provide their holdings."
+                ) if portfolio_tickers else None
             )
             
             # Call LLM

@@ -213,7 +213,8 @@ def build_router_prompt(
     user_message: str,
     conversation_history: Optional[List[dict]] = None,
     include_examples: bool = True,
-    available_agents: Optional[List[str]] = None
+    available_agents: Optional[List[str]] = None,
+    portfolio_context: Optional[str] = None
 ) -> str:
     """
     Build the complete router prompt.
@@ -245,6 +246,11 @@ def build_router_prompt(
             content = msg.get("content", "")[:200]  # Truncate long messages
             parts.append(f"- {role}: {content}")
     
+    # Add portfolio context if provided
+    if portfolio_context:
+        parts.append("\nPORTFOLIO CONTEXT:")
+        parts.append(portfolio_context)
+
     # Add the current request
     parts.append(f"\nCURRENT REQUEST:")
     parts.append(f"User: \"{user_message}\"")
