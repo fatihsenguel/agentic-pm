@@ -38,3 +38,13 @@ return -> assert swap. Expect genuine failures to surface once it does.
 
 Same pattern was fixed in test_all_configs.py::test_no_self_config_references
 (now asserts, and anchors paths to the repo root so it works from any cwd).
+
+## RAG parked on wip/rag-early
+The early RAG attempt (chunker, document_loader, embeddings, fed_scraper,
+sentiment) was removed from baseline-v1 and parked on branch wip/rag-early.
+It could not run: the [rag] extra is uninstalled and this commit has no
+vector_store.py. A fuller version exists on master (b327e80) — prefer that one.
+
+RAG is NOT needed for the IPS work. A self-authored IPS is structured data
+(targets, limits, allowed instruments) checked deterministically. RAG becomes
+relevant for equity research: 10-K filings, earnings transcripts, CEO commentary.

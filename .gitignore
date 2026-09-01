@@ -38,3 +38,7 @@ Thumbs.db
 "@ | Out-File -FilePath .gitignore -Encoding UTF8data/portfolio.db
 data/*.db
 data/*.db.backup
+data/chroma/
+*.egg-info/
+data/chroma/
+*.egg-info/
