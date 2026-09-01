@@ -1,28 +1,30 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "agentic-finance"
 version = "0.1.0"
 description = "Multi-agent financial analysis"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.11"
 
-# All your dependencies in one place
 dependencies = [
-    "sqlalchemy>=2.0.0",
-    "pandas>=2.0.0",
-    "yfinance>=0.2.0",
+    "sqlalchemy>=2.0", "alembic", "pandas>=2.0", "numpy", "scipy", "yfinance",
+    "langchain-core", "langchain-anthropic", "langchain-openai", "langgraph",
+    "pydantic>=2", "python-dotenv", "tomli", "requests",
+    "beautifulsoup4", "rich", "fastapi", "uvicorn",
 ]
 
-# Optional dependency groups
 [project.optional-dependencies]
-agents = [
-    "langchain>=0.2.0",
-    "langgraph>=0.2.0",
-]
-dev = [
-    "pytest>=7.4.0",
-    "black>=23.0.0",
-]
+rag = ["sentence-transformers", "pypdf", "PyPDF2", "pdfplumber", "PyMuPDF"]
+dev = ["pytest>=7.4", "pytest-asyncio", "black>=23"]
 
-# Tool configurations
+[tool.setuptools]
+py-modules = ["config"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.black]
 line-length = 100
 

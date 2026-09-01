@@ -6,7 +6,6 @@ Tools are the interface between AI agents and the business logic.
 
 Available Tools:
     - data_tools: Market data operations
-        - fetch_prices_tool
         - calculate_covariance_tool
         - calculate_returns_tool
         - get_risk_free_rate_tool
@@ -43,40 +42,43 @@ Design Principle - Hot Potato:
 
 # Data Tools
 from .data_tools import (
-    fetch_prices_tool,
-    calculate_covariance_tool,
-    calculate_returns_tool,
-    get_risk_free_rate_tool,
-    get_latest_prices_tool,
+    ALL_DATA_TOOLS,
+    FETCH_TOOLS,
+    READ_TOOLS,
+    fetch_stock_prices,
+    fetch_financial_statements,
+    fetch_fundamentals,
+    fetch_earnings_history,
+    get_asset_info,
+    list_tracked_assets,
+    get_latest_price,
+    query_financial_data,
 )
 
 # Macro Tools
 from .macro_tools import (
-    fetch_macro_data_tool,
-    get_macro_snapshot_tool,
-    assess_regime_tool,
-    generate_taa_signal_tool,
+    get_macro_tools,
+    fetch_macro_data,
+    fetch_fed_minutes,
+    get_macro_snapshot,
+    get_market_regime,
+    get_vix_analysis,
+    get_yield_curve_analysis,
+    list_available_fed_minutes,
 )
 
 # Rebalance Tools (Pure Math - Deterministic)
 from .rebalance_tools import (
-    # Main analysis function
     analyze_rebalance,
-    
-    # Individual functions
     calculate_drift,
     should_rebalance,
     generate_trades,
     calculate_rebalance_costs,
     calculate_break_even_drift,
-    
-    # Agent-ready wrappers
     analyze_rebalance_tool,
     calculate_drift_tool,
     generate_trade_list_tool,
     quick_drift_check,
-    
-    # Data classes
     RebalanceConfig,
     Position,
     Portfolio,
@@ -86,42 +88,14 @@ from .rebalance_tools import (
 
 # Analytics Tools
 from .analytics_tools import (
-    calculate_portfolio_metrics,
-    calculate_risk_metrics,
+    ALL_ANALYTICS_TOOLS,
+    RISK_TOOLS,
+    PERFORMANCE_TOOLS,
+    calculate_returns,
+    calculate_volatility,
+    calculate_sharpe_ratio,
+    calculate_max_drawdown,
+    get_price_statistics,
 )
 
-__all__ = [
-    # Data Tools
-    "fetch_prices_tool",
-    "calculate_covariance_tool",
-    "calculate_returns_tool",
-    "get_risk_free_rate_tool",
-    "get_latest_prices_tool",
-    
-    # Macro Tools
-    "fetch_macro_data_tool",
-    "get_macro_snapshot_tool",
-    "assess_regime_tool",
-    "generate_taa_signal_tool",
-    
-    # Rebalance Tools
-    "analyze_rebalance",
-    "calculate_drift",
-    "should_rebalance",
-    "generate_trades",
-    "calculate_rebalance_costs",
-    "calculate_break_even_drift",
-    "analyze_rebalance_tool",
-    "calculate_drift_tool",
-    "generate_trade_list_tool",
-    "quick_drift_check",
-    "RebalanceConfig",
-    "Position",
-    "Portfolio",
-    "Trade",
-    "RebalanceResult",
-    
-    # Analytics Tools
-    "calculate_portfolio_metrics",
-    "calculate_risk_metrics",
-]
+__all__ = [n for n in dir() if not n.startswith("_")]
