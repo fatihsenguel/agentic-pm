@@ -48,3 +48,35 @@ vector_store.py. A fuller version exists on master (b327e80) — prefer that one
 RAG is NOT needed for the IPS work. A self-authored IPS is structured data
 (targets, limits, allowed instruments) checked deterministically. RAG becomes
 relevant for equity research: 10-K filings, earnings transcripts, CEO commentary.
+
+## CORRECTION: rag/ was restored, parking was wrong
+The parking note above was based on a wrong assumption. None of the five modules
+in src/portfolio_tool/rag/ need heavy dependencies:
+  fed_scraper.py    -> requests, bs4        (installed)
+  document_loader.py-> stdlib only
+  chunker.py        -> stdlib + document_loader
+  sentiment.py      -> stdlib + document_loader, chunker
+  embeddings.py     -> numpy                (installed)
+Nothing imports sentence_transformers, torch or chromadb. Those belong to the
+LATER RAG work on master (b327e80), not to this code.
+
+MacroAgent and macro_tools have six LAZY imports of these modules (inside
+functions, so removing them broke nothing at import time and tests stayed green):
+  macro_agent.py:171,179,771,821
+  macro_tools.py:456,515
+Deleting rag/ silently killed fetch_fed_minutes and list_available_fed_minutes.
+Caught only because VS Code flagged unresolved imports.
+
+OPEN DECISION (do not act without deciding):
+- Is the Fed-minutes capability wanted at all? It is a macro signal; the stated
+  priority is IPS-driven portfolio management first, equity research second.
+- Is this hand-rolled stack (own chunker + own cosine similarity) the right
+  foundation, or should it be replaced by a real vector store? master's later
+  RAG version has vector_store.py + chromadb.
+- Is sentiment.py reusable for 10-K / earnings-call work, or would that be
+  built differently?
+- NONE OF IT IS VERIFIED. fetch_fed_minutes has not been run since January and
+  scrapes live Fed HTML with January-era selectors. Test before judging.
+
+The golden set has NO macro-document coverage, which is why this was invisible.
+Add a Fed-minutes query once the decision is made.
