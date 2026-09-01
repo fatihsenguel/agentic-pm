@@ -26,7 +26,10 @@ A **personal portfolio management and equity research assistant**, driven by the
 ### Design principles the owner holds (stated explicitly)
 
 - Strict modularity
-- "Hot potato" — a component that can't handle something hands it back rather than guessing
+- **"Hot potato" — agents never see raw data.** Tools return summaries and structured
+  results; raw arrays (prices, covariance matrices) move through `shared_data`, never
+  into an LLM's context. See the docstring in `src/portfolio_tool/tools/__init__.py`:
+  tools must return summaries, "not raw data arrays".
 - Strict separation of concerns — policy lives in config, not in code
 - **Long-term correctness over short-term working output.** The owner explicitly rejected a quick fix during this session because it would encode a wrong financial model. Honour this.
 
@@ -198,11 +201,20 @@ Also: untracked `data/portfolio.db`; fixed `test_no_self_config_references` to a
 
 ### Rules that emerged
 
-1. **`grep -rn "Name" src/ tests/` before deleting any symbol.** A name imported elsewhere is not dead code even when its value is stale.
-2. One deletion per commit; verify against tests and the golden set.
-3. macOS `sed` needs `-i ''`.
-4. Generated LLM-context documents rot faster than code. Regenerate, never patch.
-5. When patching a file blind, use `assert s.count(old) == 1` before writing.
+1. **`grep -rn "Name" src/ tests/` before deleting any symbol OR module.** A name imported
+   elsewhere is not dead code even when its value is stale. This must include **lazy imports
+   inside functions** — a module can import fine and still be broken at runtime. Checking
+   "what does nothing import?" is not the same as "what imports this?" Do both.
+2. **Never infer a module's dependencies, purpose, or safety from its name — grep it.**
+   `src/portfolio_tool/rag/` was deleted on the assumption that a folder called "rag" needed
+   heavy ML dependencies. It needed `requests`, `bs4` and `numpy`. Every wrong call in this
+   session came from inferring instead of checking.
+3. One deletion per commit; verify against tests and the golden set.
+4. macOS `sed` needs `-i ''`.
+5. Generated LLM-context documents rot faster than code. Regenerate, never patch.
+6. When patching a file blind, use `assert s.count(old) == 1` before writing.
+7. Watch VS Code's unresolved-import warnings after any deletion. Pylance caught
+   the broken MacroAgent imports that both the test suite and the golden set missed.
 
 ---
 
@@ -298,3 +310,31 @@ grep -rn "SymbolName" src/ tests/ | grep -v __pycache__
 - RAG is not needed for the IPS work. A self-authored IPS is structured data
   (targets, limits, allowed instruments) checked deterministically. RAG becomes
   relevant for equity research: 10-K filings, earnings transcripts, CEO commentary.
+
+---
+
+## Correction (end of session)
+
+**`src/portfolio_tool/rag/` was deleted and then restored.** The parking decision was
+based on a wrong assumption. None of the five modules need heavy dependencies:
+`fed_scraper` needs requests + bs4, `document_loader` and `chunker` are stdlib,
+`sentiment` needs only those two, `embeddings` needs numpy. Nothing imports
+sentence_transformers, torch or chromadb — those belong to the *later* RAG work on
+`master` (b327e80).
+
+MacroAgent and macro_tools have **six lazy imports** of these modules
+(`macro_agent.py:171,179,771,821`, `macro_tools.py:456,515`). Because they sit inside
+functions, deleting `rag/` broke nothing at import time and all 91 tests stayed green —
+it silently killed `fetch_fed_minutes` and `list_available_fed_minutes` at runtime.
+Only VS Code's Pylance warnings caught it.
+
+**Open decision for the next session** — see `tests/golden/KNOWN_GAPS.md` for the full
+list of questions. In short: is the Fed-minutes capability wanted, is this hand-rolled
+stack (own chunker, own cosine similarity) the right foundation versus a real vector
+store, and is any of it still functional after seven months of Fed site changes? None
+of it has been run since January.
+
+Net lines removed is therefore ~10,500, not the ~12,700 in the `baseline-v1-clean`
+tag message.
+
+The golden set has **no macro-document coverage**, which is why this was invisible.
