@@ -26,3 +26,15 @@ compares current price against average_price to produce P&L.
 "Allocation by asset class" and "positions in sector X" have data (Asset carries
 asset_class, sector, industry, country) but no agent reads holdings as positions
 rather than as a ticker list.
+
+## tests/test_portfolio_integration.py does not actually assert
+Written as a standalone script: every test function returns True/False and a
+main() tallies them. pytest ignores return values, so all its tests pass
+unconditionally regardless of outcome. 18 return statements, several marked
+"Skip, not fail" / "Don't fail on expected exceptions".
+
+Fixing means rewriting the file with real assertions, not a mechanical
+return -> assert swap. Expect genuine failures to surface once it does.
+
+Same pattern was fixed in test_all_configs.py::test_no_self_config_references
+(now asserts, and anchors paths to the repo root so it works from any cwd).

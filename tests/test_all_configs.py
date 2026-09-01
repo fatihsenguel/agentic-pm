@@ -132,30 +132,28 @@ def test_no_self_config_references():
     """Test that agents use config, not self.config."""
     print("\nTesting for self.config violations...")
     
-    import os
+    from pathlib import Path
+
     violations = []
-    
+    agents_dir = Path(__file__).parent.parent / "src" / "agents"
+
     agent_files = [
-        'src/agents/data_agent.py',
-        'src/agents/macro_agent.py',
-        'src/agents/optimization_agent.py',
-        'src/agents/rebalance_agent.py',
+        agents_dir / "data_agent.py",
+        agents_dir / "macro_agent.py",
+        agents_dir / "optimization_agent.py",
+        agents_dir / "rebalance_agent.py",
     ]
-    
+
     for filepath in agent_files:
-        if os.path.exists(filepath):
-            with open(filepath, 'r') as f:
-                content = f.read()
-                if 'self.config.' in content:
-                    violations.append(filepath)
-    
-    if violations:
-        print(f"❌ Found self.config in: {violations}")
-        print("   (Should use config.xxx instead)")
-        return False
-    else:
-        print("✅ No self.config violations found")
-        return True
+        assert filepath.exists(), f"Expected agent file missing: {filepath}"
+        if "self.config." in filepath.read_text():
+            violations.append(filepath.name)
+
+    assert not violations, (
+        f"Found self.config in {violations}. "
+        "Agents must read the global config, not carry their own."
+    )
+    print("✅ No self.config violations found")
 
 
 if __name__ == "__main__":
