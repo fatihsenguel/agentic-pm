@@ -319,6 +319,7 @@ Always provide structured results with:
         
         # ===== STEP 6: Create Result =====
         result = PortfolioResult(
+            agent_name=self.name,
             task_id=task.task_id,
             success=True,
             result_type="macro_analysis",
@@ -577,7 +578,7 @@ Always provide structured results with:
         vix_regime: str
     ) -> tuple:
         """Determine risk stance and equity adjustment."""
-        max_adj = config.macro.max_equity_adjustment
+        max_adj = config.macro.max_equity_adjust
         
         if regime == MarketRegime.CRISIS:
             return "defensive", -max_adj

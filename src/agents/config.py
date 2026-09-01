@@ -68,6 +68,15 @@ ANTHROPIC_HAIKU = LLMConfig(
     max_tokens=1024,
 )
 
+# TODO: update to a current Sonnet model id when a stronger model is needed.
+# Points at Haiku for now so the name resolves and agents/__init__.py imports.
+ANTHROPIC_SONNET = LLMConfig(
+    provider="anthropic",
+    model="claude-haiku-4-5-20251001",
+    temperature=0.1,
+    max_tokens=2048,
+)
+
 
 
 # =============================================================================
