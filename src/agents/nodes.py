@@ -289,7 +289,7 @@ def _decision_to_dict(decision) -> Dict[str, Any]:
             "rebalance_threshold": decision.parameters.rebalance_threshold,
             "portfolio_id": decision.parameters.portfolio_id,
         },
-        "execution_plan": decision.execution_plan,
+        "execution_order": decision.execution_order,
     }
 
 
