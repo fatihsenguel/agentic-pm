@@ -6,7 +6,7 @@ project_root = os.path.dirname(script_dir)
 sys.path.insert(0, project_root)
 
 # Importiere unsere neuen Komponenten
-from portfolio_tool.database_setup import get_session, Asset
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.database_setup import get_session, Asset
 from portfolio_tool.analytics.calculator import MetricsCalculator
 
 def main_metrics_update():

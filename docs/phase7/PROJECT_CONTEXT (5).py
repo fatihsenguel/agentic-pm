@@ -7,9 +7,9 @@ PURPOSE: This file contains everything an LLM needs to understand the project.
          Upload this when starting a new chat. The LLM should be able to continue
          development without additional context.
 
-LAST UPDATED: Phase 6.6 Complete (Decision Engine, Dual-Intent, Decision Logging)
-VERSION: 0.7.0
-DATE: January 25, 2026
+LAST UPDATED: Phase 6.7 Complete (RAG Integration with Decision Engine)
+VERSION: 0.8.0
+DATE: January 26, 2026
 
 =============================================================================
 SECTION 1: PROJECT IDENTITY
@@ -25,6 +25,8 @@ KEY DIFFERENTIATORS:
     3. No Action Bias - Information queries never get trade recommendations
     4. Auditable Decisions - Every decision logged with rationale and confidence
     5. PM-style Output - Looks like what a real PM reads, not raw JSON
+    6. Document-Backed Decisions - RAG provides citations from filings/reports (NEW!)
+    7. Fed Sentiment Analysis - Hybrid rule-based + LLM analysis of FOMC minutes (NEW!)
 
 TARGET USERS:
     - Portfolio Managers at banks/asset managers
@@ -46,7 +48,7 @@ SECTION 2: ARCHITECTURE OVERVIEW
 │                                                                              │
 │   DUAL-INTENT SYSTEM (Phase 6.6):                                           │
 │   ├── QueryIntent: WHY user asks (information, decision, operational)       │
-│   └── ExecutionIntent: WHAT to run (optimization, macro_analysis, etc.)     │
+│   └── ExecutionIntent: WHAT to run (optimization, document_search, etc.)    │
 │                                                                              │
 │   This prevents action bias: "What's VIX?" → info only, no trade recs       │
 └─────────────────────────────────────────┬───────────────────────────────────┘
@@ -55,35 +57,38 @@ SECTION 2: ARCHITECTURE OVERVIEW
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                    📊 LANGGRAPH STATE MACHINE                                │
 │        Flow: Router → Dispatcher → [Agents] → Decision Engine → Synthesizer │
-└───────────┬─────────────────┬─────────────────┬─────────────────┬───────────┘
-            │                 │                 │                 │
-            ▼                 ▼                 ▼                 ▼
-     ┌──────────┐      ┌──────────┐      ┌──────────┐      ┌──────────┐
-     │ 📊 DATA  │      │ 🌍 MACRO │      │ 🔧 OPTIM │      │ ⚖️ REBAL │
-     │  AGENT   │      │  AGENT   │      │  AGENT   │      │  AGENT   │
-     └────┬─────┘      └────┬─────┘      └────┬─────┘      └────┬─────┘
-          │                 │                 │                 │
-          ▼                 ▼                 ▼                 ▼
+└───────────┬─────────────┬─────────────┬─────────────┬───────────┬───────────┘
+            │             │             │             │           │
+            ▼             ▼             ▼             ▼           ▼
+     ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐ ┌──────────┐
+     │ 📊 DATA   │  │ 📄 RAG   │  │ 🌍 MACRO │  │ 🔧 OPTIM │ │ ⚖️ REBAL │
+     │  AGENT   │  │  AGENT   │  │  AGENT   │  │  AGENT   │ │  AGENT   │
+     └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘ └────┬─────┘
+          │             │             │             │             │
+          ▼             ▼             ▼             ▼             ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         🧠 DECISION ENGINE (Phase 6.6)                       │
+│                         🧠 DECISION ENGINE (Phase 6.6 + 6.7)                 │
 │                                                                              │
 │   1. RiskAssessment: Evaluate CURRENT portfolio (before any action)         │
-│   2. PMDecisionSummary: HOLD / TILT / REBALANCE / HEDGE                     │
-│   3. DecisionLog: Persist to database for audit trail                       │
+│   2. DocumentInsights: Citations from RAG (10-Ks, earnings, Fed) ← NEW!     │
+│   3. PMDecisionSummary: HOLD / TILT / REBALANCE / HEDGE with [DOC] refs     │
+│   4. DecisionLog: Persist to database for audit trail                       │
 └─────────────────────────────────────────┬───────────────────────────────────┘
                                           │
                                           ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                              TOOL LAYER                                      │
-│         (data_tools, macro_tools, optimization_tools, rebalance_tools)       │
+│       (data_tools, macro_tools, rag_tools, optimization_tools, etc.)         │
 │                   ⚠️ DETERMINISTIC - NO LLM MATH! ⚠️                         │
 └─────────────────────────────────────────┬───────────────────────────────────┘
                                           │
-                                          ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              SQLite DB                                       │
-│   daily_prices, macro_data, assets, portfolios, holdings, decision_logs     │
-└─────────────────────────────────────────────────────────────────────────────┘
+                   ┌──────────────────────┼──────────────────────┐
+                   ▼                      ▼                      ▼
+┌─────────────────────────┐  ┌─────────────────────────┐  ┌──────────────────┐
+│       SQLite DB         │  │      ChromaDB           │  │    YFinance      │
+│  portfolios, prices,    │  │   (Vector Store)        │  │   Market Data    │
+│  holdings, decisions    │  │  10-Ks, earnings, Fed   │  │                  │
+└─────────────────────────┘  └─────────────────────────┘  └──────────────────┘
 
 =============================================================================
 SECTION 3: DESIGN PRINCIPLES (CRITICAL - MUST FOLLOW!)
@@ -115,6 +120,7 @@ SECTION 3: DESIGN PRINCIPLES (CRITICAL - MUST FOLLOW!)
    ├── Rebalancing = Pure scipy/numpy (NO LLM!)
    ├── Optimization = Pure scipy/numpy (NO LLM!)
    ├── Decision Engine = Pure Python logic (NO LLM!)
+   ├── Fed Sentiment (rule-based) = Pure Python keyword matching
    └── Same inputs ALWAYS produce same outputs (auditable)
 
 6. STRICT TYPING:
@@ -162,6 +168,8 @@ EXECUTION INTENT (What agents to run?):
 │ risk_analysis      │ DataAgent → RiskAnalysisAgent                       │
 │ data_management    │ DataAgent (admin commands)                          │
 │ portfolio_mgmt     │ DataAgent (portfolio CRUD)                          │
+│ document_search    │ RAGAgent (NEW - Phase 6.7)                          │
+│ combined           │ DataAgent + RAGAgent + others (multi-agent)         │
 └────────────────────┴─────────────────────────────────────────────────────┘
 
 CRITICAL RULE:
@@ -171,7 +179,7 @@ CRITICAL RULE:
 - This prevents action bias
 
 =============================================================================
-SECTION 5: DECISION ENGINE (Phase 6.6)
+SECTION 5: DECISION ENGINE (Phase 6.6 + 6.7)
 =============================================================================
 
 File: src/agents/decision_engine.py
@@ -208,11 +216,123 @@ DECISION PRIORITY (7-tier):
 KEY FUNCTIONS:
 - assess_portfolio_risk(weights, config) → RiskAssessment
 - assess_decision_needed(drift, regime, risk, config) → PMDecisionSummary
-- run_decision_assessment(...) → (RiskAssessment, PMDecisionSummary)
+- run_decision_assessment(..., document_insights) → (RiskAssessment, PMDecisionSummary)
 - should_generate_decision_summary(query_intent) → bool
 
+DOCUMENT INTEGRATION (Phase 6.7):
+- run_decision_assessment() now accepts optional document_insights parameter
+- Document risk factors get [DOC] prefix in key_risks
+- Fed sentiment influences macro_regime (hawkish → risk_off if neutral)
+- Citations added to PMDecisionSummary.document_citations
+
 =============================================================================
-SECTION 6: DATABASE SCHEMA
+SECTION 6: RAG PIPELINE (Phase 6.7) - NEW!
+=============================================================================
+
+ARCHITECTURE:
+┌──────────────────────────────────────────────────────────────────────────┐
+│                         RAG PIPELINE                                      │
+└──────────────────────────────────────────────────────────────────────────┘
+                              │
+    Documents (PDF/TXT)       │
+    ├── 10-K Filings          │
+    ├── Earnings Reports      │
+    └── Fed Minutes           │
+              │               │
+              ▼               │
+    ┌─────────────────┐       │
+    │ DocumentLoader  │───────┼───▶  Extracts text, detects ticker/type
+    └─────────────────┘       │
+              │               │
+              ▼               │
+    ┌─────────────────┐       │
+    │    Chunker      │───────┼───▶  Section-aware chunking (1000 tokens)
+    └─────────────────┘       │
+              │               │
+              ▼               │
+    ┌─────────────────┐       │
+    │ EmbeddingService│───────┼───▶  OpenAI text-embedding-3-small
+    └─────────────────┘       │
+              │               │
+              ▼               │
+    ┌─────────────────┐       │
+    │  VectorStore    │───────┼───▶  ChromaDB with metadata filtering
+    │  (ChromaDB)     │       │
+    └─────────────────┘       │
+              │               │
+              ▼               │
+    ┌─────────────────┐       │
+    │   RAGAgent      │───────┼───▶  Orchestrates search + extraction
+    └─────────────────┘       │
+              │               │
+              ▼               │
+    ┌─────────────────┐       │
+    │ DecisionEngine  │───────┼───▶  Document insights in rationale
+    └─────────────────┘       │
+
+FILES:
+├── src/portfolio_tool/rag/
+│   ├── __init__.py              # Clean exports
+│   ├── schemas.py               # Document, Chunk, SearchResult, DocumentInsights
+│   ├── document_loader.py       # PDF/TXT loading with auto-detection
+│   ├── chunker.py               # Section-aware text chunking
+│   ├── embeddings.py            # OpenAI + local fallback embeddings
+│   ├── vector_store.py          # ChromaDB wrapper with metadata filtering
+│   ├── sentiment.py             # Hybrid Fed sentiment (rule-based + GPT)
+│   ├── fed_scraper.py           # Auto-fetch FOMC minutes
+│   ├── document_manager.py      # Easy ingestion API
+│   └── rag_agent.py             # Document research orchestrator
+
+DOCUMENT TYPES SUPPORTED:
+┌──────────────────┬─────────────────────────────────────────────────────────┐
+│ Type             │ Auto-Detection                                          │
+├──────────────────┼─────────────────────────────────────────────────────────┤
+│ 10-K / 10-Q      │ Filename contains "10K", "10-K", "10Q", "10-Q"          │
+│ Earnings         │ Filename contains "earnings", "Q1", "Q2", etc.          │
+│ Fed Minutes      │ Filename contains "fed", "fomc", "minutes"              │
+│ Other            │ Default fallback                                        │
+└──────────────────┴─────────────────────────────────────────────────────────┘
+
+FED SENTIMENT ANALYSIS (Hybrid):
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     HYBRID SENTIMENT ANALYZER                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Step 1: Rule-based scoring (ALWAYS runs - free, fast)                      │
+│          HAWKISH keywords: inflation, tightening, restrictive, elevated     │
+│          DOVISH keywords: accommodate, support, patient, gradual            │
+│                                                                             │
+│  Step 2: Confidence check                                                   │
+│          If confidence < 0.6 OR score near neutral → use LLM                │
+│                                                                             │
+│  Step 3: LLM refinement (only if needed)                                    │
+│          GPT analyzes summarized text (~500 tokens)                         │
+│          Weighted blend of rule + LLM scores                                │
+│                                                                             │
+│  Output: {score: -1 to +1, confidence: 0-1, method: "hybrid"}               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+DOCUMENT MANAGER USAGE:
+    from portfolio_tool.rag import DocumentManager
+    
+    dm = DocumentManager()
+    
+    # Ingest single document
+    dm.ingest("data/documents/NVDA_10K.pdf", ticker="NVDA")
+    
+    # Ingest all documents in folder
+    dm.ingest_folder()
+    
+    # Fetch and ingest Fed minutes
+    dm.ingest_fed_minutes()
+    
+    # List indexed documents
+    dm.list_documents()
+    
+    # Search
+    dm.search("China export restrictions", ticker="NVDA")
+
+=============================================================================
+SECTION 7: DATABASE SCHEMA
 =============================================================================
 
 TABLES:
@@ -229,6 +349,11 @@ TABLES:
 │ quarterly_earnings  │ EPS, revenue by quarter                            │
 └─────────────────────┴────────────────────────────────────────────────────┘
 
+VECTOR STORE (ChromaDB - separate from SQLite):
+├── Collection: "documents"
+├── Metadata: doc_id, ticker, doc_type, section, filename, content_hash
+└── Embeddings: OpenAI text-embedding-3-small (1536 dimensions)
+
 DECISION_LOGS TABLE (Phase 6.6):
     id, timestamp, portfolio_id
     decision_type (HOLD/TILT/REBALANCE/HEDGE)
@@ -241,9 +366,10 @@ DECISION_LOGS TABLE (Phase 6.6):
     max_drift, macro_regime, vix_level
     trade_required, executed, execution_timestamp
     request_id, user_query
+    document_citations (JSON array) ← NEW Phase 6.7
 
 =============================================================================
-SECTION 7: FILE STRUCTURE
+SECTION 8: FILE STRUCTURE
 =============================================================================
 
 src/
@@ -269,7 +395,8 @@ src/
 │   ├── macro_agent.py           # Macro environment analysis
 │   ├── optimization_agent.py    # Portfolio optimization
 │   ├── rebalance_agent.py       # Drift analysis and trade calculation
-│   └── backtest_agent.py        # Historical simulation
+│   ├── backtest_agent.py        # Historical simulation
+│   └── rag_agent.py             # ⭐ Phase 6.7: Document research
 │
 ├── observability/
 │   ├── tracer.py                # Request tracing
@@ -285,25 +412,50 @@ src/
     │   ├── macro_tools.py       # Macro data tools
     │   ├── optimization_tools.py# Optimization tools
     │   ├── rebalance_tools.py   # Rebalancing tools
-    │   └── portfolio_tools.py   # Portfolio management tools
+    │   ├── portfolio_tools.py   # Portfolio management tools
+    │   └── rag_tools.py         # ⭐ Phase 6.7: RAG tool wrappers
     │
-    └── providers/
-        └── yfinance_provider.py # YFinance API wrapper
+    ├── providers/
+    │   └── yfinance_provider.py # YFinance API wrapper
+    │
+    └── rag/                     # ⭐ Phase 6.7: RAG Module
+        ├── __init__.py          # Clean exports
+        ├── schemas.py           # Document, Chunk, SearchResult
+        ├── document_loader.py   # PDF/TXT loading
+        ├── chunker.py           # Section-aware chunking
+        ├── embeddings.py        # OpenAI + local embeddings
+        ├── vector_store.py      # ChromaDB wrapper
+        ├── sentiment.py         # Hybrid Fed sentiment
+        ├── fed_scraper.py       # FOMC minutes fetcher
+        ├── document_manager.py  # Easy ingestion API
+        └── rag_agent.py         # Document research orchestrator
 
 scripts/
-├── seed_database.py             # ⭐ Realistic data seeder
+├── seed_database.py             # Realistic data seeder
 
 demos/
-├── langgraph_demo.py            # Interactive CLI demo
+├── langgraph_demo_v3.py         # ⭐ Interactive CLI with RAG commands
+├── interview_demo.py            # ⭐ Simulated WOW demo for interviews
 
 tests/
-├── test_phase66_comprehensive.py # ⭐ 40-test comprehensive suite
-├── test_decision_engine.py      # Decision engine unit tests
-├── conftest.py                  # Pytest configuration
-└── ...
+├── test_phase66_comprehensive.py # 40-test comprehensive suite
+├── test_rag_phase1.py           # ⭐ Document ingestion (26 tests)
+├── test_rag_phase2.py           # ⭐ Vector store (18 tests)
+├── test_rag_phase3.py           # ⭐ RAG agent + sentiment (22 tests)
+├── test_rag_phase4.py           # ⭐ Decision integration (9 tests)
+├── test_rag_integration.py      # ⭐ End-to-end (14 tests)
+└── conftest.py                  # Pytest configuration
+
+data/
+├── portfolio.db                 # SQLite database
+├── chroma/                      # ChromaDB vector store
+└── documents/                   # Document folder for ingestion
+    ├── NVDA_Q3_2024_Earnings.txt
+    ├── AAPL_10K_2024.txt
+    └── (Fed minutes via /fed command)
 
 =============================================================================
-SECTION 8: CONFIGURATION (src/config.py)
+SECTION 9: CONFIGURATION (src/config.py)
 =============================================================================
 
 Key configuration sections:
@@ -335,8 +487,29 @@ class RiskConfig:
     max_concentration: float = 0.30      # Max 30% in single asset
     min_diversification_assets: int = 5  # Minimum 5 positions
 
+@dataclass
+class RAGConfig:                         # ⭐ NEW Phase 6.7
+    chroma_persist_dir: str = "data/chroma"
+    documents_dir: str = "data/documents"
+    embedding_model: str = "text-embedding-3-small"
+    chunk_size: int = 1000
+    chunk_overlap: int = 100
+    min_chunk_size: int = 50
+    default_top_k: int = 5
+    relevance_threshold: float = 0.7
+    supported_extensions: tuple = (".pdf", ".txt", ".md")
+    max_document_size_mb: int = 50
+
+@dataclass
+class SentimentConfig:                   # ⭐ NEW Phase 6.7
+    llm_confidence_threshold: float = 0.6   # Below this → use LLM
+    ambiguous_score_range: float = 0.2      # Near-neutral → use LLM
+    max_text_tokens: int = 500              # Truncate before LLM
+    llm_provider: str = "openai"            # openai or anthropic
+    llm_model: str = "gpt-4o-mini"
+
 =============================================================================
-SECTION 9: CURRENT STATUS
+SECTION 10: CURRENT STATUS
 =============================================================================
 
 ✅ COMPLETED:
@@ -346,145 +519,133 @@ SECTION 9: CURRENT STATUS
 ├── Phase 6.12: Guardrails & Schemas (strict typing)
 ├── Phase 6.3: Basic Observability (tracing)
 ├── Phase 6.5: Portfolio Management (admin tools wired to router)
-└── Phase 6.6: Decision Engine
-    ├── Dual-Intent System (QueryIntent + ExecutionIntent)
-    ├── Risk Assessment (runs BEFORE optimization)
-    ├── PM Decision Summary (HOLD/TILT/REBALANCE/HEDGE)
-    ├── Decision Logging (full audit trail)
-    ├── Response Formatting (PM-style output)
-    └── 40/40 Tests Passing
+├── Phase 6.6: Decision Engine
+│   ├── Dual-Intent System (QueryIntent + ExecutionIntent)
+│   ├── Risk Assessment (runs BEFORE optimization)
+│   ├── PM Decision Summary (HOLD/TILT/REBALANCE/HEDGE)
+│   ├── Decision Logging (full audit trail)
+│   ├── Response Formatting (PM-style output)
+│   └── 40/40 Tests Passing
+│
+└── Phase 6.7: RAG Integration ⭐ NEW - COMPLETE
+    ├── Document Ingestion (PDF, TXT, MD support)
+    ├── Section-Aware Chunking (preserves structure)
+    ├── Vector Store (ChromaDB with metadata filtering)
+    ├── Hybrid Fed Sentiment (rule-based + LLM)
+    ├── RAG Agent (orchestrates search + extraction)
+    ├── Decision Engine Integration (document citations)
+    ├── DocumentManager (easy ingestion API)
+    ├── Demo v3 with RAG commands
+    └── 89/89 Tests Passing (26+18+22+9+14)
 
-⏳ NEXT: Phase 6.7 - RAG Integration (see Section 11)
-
-=============================================================================
-SECTION 10: KNOWN LIMITATIONS
-=============================================================================
-
-1. NO RAG: Cannot read PDFs, earnings reports, or news articles
-2. NO TRADE EXECUTION: Recommendations only, no broker integration
-3. NO AUTHENTICATION: Single user, no multi-tenancy
-4. NO ALERTS: Cannot schedule "alert me when drift > 5%"
-5. LIMITED MACRO: Only VIX + yields, no Fed speeches or news
-
-=============================================================================
-SECTION 11: RAG INTEGRATION ROADMAP (Phase 6.7)
-=============================================================================
-
-GOAL: RAG should SYNERGIZE with Decision Engine, not be standalone.
-      Documents feed into risk assessment and decision rationale.
-
-ARCHITECTURE:
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              USER QUERY                                      │
-│   "Given NVDA's earnings report, should I increase my position?"            │
-└─────────────────────────────────────────┬───────────────────────────────────┘
-                                          │
-          ┌───────────────────────────────┼───────────────────────────────┐
-          ▼                               ▼                               ▼
-    ┌──────────┐                   ┌──────────┐                    ┌──────────┐
-    │   RAG    │                   │   Data   │                    │  Macro   │
-    │  Agent   │                   │  Agent   │                    │  Agent   │
-    │          │                   │          │                    │          │
-    │ • Search │                   │ • Prices │                    │ • VIX    │
-    │ • Extract│                   │ • Cov    │                    │ • Yields │
-    │ • Cite   │                   │ • Returns│                    │ • Regime │
-    └────┬─────┘                   └────┬─────┘                    └────┬─────┘
-         │                              │                               │
-         └──────────────────────────────┼───────────────────────────────┘
-                                        │
-                                        ▼
-              ┌─────────────────────────────────────────────┐
-              │           🧠 DECISION ENGINE                │
-              │                                             │
-              │  Inputs:                                    │
-              │  • Current weights (from holdings)          │
-              │  • Target weights (from optimization)       │
-              │  • Macro regime (from MacroAgent)           │
-              │  • Document insights (from RAG Agent) ← NEW │
-              │                                             │
-              │  Output:                                    │
-              │  • PMDecisionSummary with citations         │
-              └─────────────────────────────────────────────┘
-
-IMPLEMENTATION PHASES:
-
-Phase 1: Document Ingestion (2 hours)
-├── src/portfolio_tool/rag/document_loader.py
-├── src/portfolio_tool/rag/chunker.py
-└── Capabilities: Load PDFs, smart chunking by section
-
-Phase 2: Vector Store (1.5 hours)
-├── src/portfolio_tool/rag/vector_store.py
-├── src/portfolio_tool/rag/embeddings.py
-└── Capabilities: ChromaDB storage, metadata filtering
-
-Phase 3: RAG Agent (2 hours)
-├── src/agents/rag_agent.py
-├── src/portfolio_tool/tools/rag_tools.py
-└── Capabilities: search_documents(), summarize_earnings(), extract_risk_factors()
-
-Phase 4: Decision Engine Integration (1.5 hours)
-├── Update decision_engine.py to accept document_insights
-├── Update synthesizer to show citations
-└── Capabilities: Document-backed rationale in decisions
-
-NEW DATABASE TABLES:
-├── documents (id, filename, doc_type, ticker, upload_date, content_hash)
-└── document_chunks (id, document_id, chunk_index, content, embedding_id)
+⏳ FUTURE CONSIDERATIONS:
+├── News API integration (for "check holdings for news")
+├── Trade execution (broker integration)
+├── Multi-user authentication
+├── Scheduled alerts
 
 =============================================================================
-SECTION 12: TARGET INTERVIEW PROMPTS
+SECTION 11: KNOWN LIMITATIONS
+=============================================================================
+
+1. NO TRADE EXECUTION: Recommendations only, no broker integration
+2. NO AUTHENTICATION: Single user, no multi-tenancy
+3. NO ALERTS: Cannot schedule "alert me when drift > 5%"
+4. NO NEWS API: Cannot fetch real-time news (only indexed documents)
+5. FED SCRAPER: May break if federalreserve.gov changes structure
+
+=============================================================================
+SECTION 12: TARGET INTERVIEW PROMPTS (WOW Demos)
 =============================================================================
 
 These prompts demonstrate the SYNERGY between RAG and Decision Engine:
 
-PROMPT 1 - Document-Informed Decision:
-"I just uploaded NVIDIA's Q3 2024 earnings report. 
-Given this new information, should I increase my position in the Growth Tech portfolio?"
+PROMPT 1 - The "Smart HOLD" (Anti-Action-Bias):
+"Markets dropped 4% today. My portfolio is down 2.1%. 
+Should I sell everything and go to cash?"
 
-Expected: Decision with earnings metrics, risk factors FROM THE FILING, citations
+Expected: HOLD decision with evidence that diversification is working
+Shows: System is NOT action-biased - knows when to do nothing
 
-PROMPT 2 - Multi-Source Risk Assessment:
-"I'm worried about my Dividend Income portfolio given recent Fed commentary. 
-Search my documents for anything about interest rate sensitivity 
-and tell me if I should hedge."
+PROMPT 2 - Document-Informed Decision:
+"Based on NVIDIA's Q3 earnings showing 279% growth but China export 
+restrictions, should I increase my position?"
 
-Expected: Combines macro data + document search + portfolio analysis
+Expected: Decision with [DOC] citations from actual filing
+Shows: RAG feeds into decision rationale with audit trail
 
-PROMPT 3 - The "Do Nothing" with Evidence:
-"The market dropped 3% today. My All-Weather portfolio is down 1.5%. 
-Should I make any changes? Check if any of my holdings have news."
+PROMPT 3 - Fed Policy Impact:
+"The Fed just released hawkish minutes. How does this affect my 
+dividend portfolio? Should I rotate into shorter duration?"
 
-Expected: HOLD decision with evidence that portfolio is working as designed
+Expected: Fed sentiment analysis + macro context + rotation recommendation
+Shows: Hybrid sentiment analysis + institutional thinking
+
+PROMPT 4 - Full Quarterly Review:
+"Run a full quarterly review of my portfolio:
+Check drift, analyze macro, review relevant filings, recommend actions."
+
+Expected: Multi-agent collaboration with comprehensive output
+Shows: Full orchestration capabilities
 
 =============================================================================
 SECTION 13: WORKING WITH THIS PROJECT
 =============================================================================
 
 RUNNING THE DEMO:
-    python demos/langgraph_demo.py
+    python demos/langgraph_demo_v3.py
     
-    Commands:
-    • /debug - Toggle debug mode
-    • /portfolio <id> - Switch portfolio context
-    • exit - Quit
+    RAG Commands:
+    • /ingest <file>  - Ingest document into RAG
+    • /ingestall      - Ingest all from data/documents/
+    • /fed            - Fetch & analyze Fed minutes
+    • /docs           - List indexed documents
+    • /search <query> - Search documents
+    • /stats          - RAG statistics
+    
+    Other Commands:
+    • /assets         - List tracked assets
+    • /macro          - Macro environment
+    • /portfolios     - List portfolios
+    • /debug          - Toggle debug mode
+    • exit            - Quit
+
+RUNNING INTERVIEW DEMO (Simulated):
+    python demos/interview_demo.py
+    
+    Pre-configured WOW prompts with perfect responses.
+    Use for interviews when real system might have issues.
 
 RUNNING TESTS:
-    python tests/test_phase66_comprehensive.py
-    python tests/test_phase66_comprehensive.py --test decision  # Specific category
+    # Full RAG test suite (89 tests)
+    pytest tests/test_rag*.py -v
+    
+    # Specific phase
+    pytest tests/test_rag_phase1.py -v  # Document ingestion
+    pytest tests/test_rag_phase2.py -v  # Vector store
+    pytest tests/test_rag_phase3.py -v  # RAG agent
+    pytest tests/test_rag_phase4.py -v  # Decision integration
+    
+    # Decision engine tests
+    pytest tests/test_phase66_comprehensive.py -v
 
-SEEDING DATABASE:
-    python scripts/seed_database.py              # Full seed with prices
-    python scripts/seed_database.py --skip-prices # Quick seed
+INGESTING DOCUMENTS:
+    from portfolio_tool.rag import DocumentManager
+    dm = DocumentManager()
+    dm.ingest("data/documents/NVDA_10K.pdf", ticker="NVDA")
+    dm.ingest_folder()  # All documents
 
 KEY ENVIRONMENT VARIABLES:
-    ANTHROPIC_API_KEY - Required for Claude LLM
+    OPENAI_API_KEY     - Required for embeddings and sentiment LLM
+    ANTHROPIC_API_KEY  - Required for Claude router (if used)
     USE_MOCK_QUOTA=True - Skip API quota tracking in tests
 
 COMMON ISSUES:
-    "No portfolio specified" → Use /portfolio 1 or specify portfolio in query
+    "No portfolio specified" → Use /use 1 or specify portfolio in query
     "No covariance matrix" → DataAgent must run before OptimizationAgent
-    "DecisionLog not found" → Run: python -c "from portfolio_tool.database_setup import Base, engine; Base.metadata.create_all(engine)"
+    "No documents indexed" → Run /ingestall or dm.ingest_folder()
+    "Fed scraper failed" → Website structure may have changed
+    "Router timeout" → Complex prompts may need simpler phrasing
 
 =============================================================================
 END OF PROJECT CONTEXT
@@ -510,7 +671,7 @@ class QueryIntent(str, Enum):
     UNKNOWN = "unknown"
 
 class ExecutionIntent(str, Enum):
-    """What agents to run? (Phase 6.6)"""
+    """What agents to run? (Phase 6.6 + 6.7)"""
     OPTIMIZATION = "optimization"
     MACRO_ANALYSIS = "macro_analysis"
     REBALANCING = "rebalancing"
@@ -519,6 +680,8 @@ class ExecutionIntent(str, Enum):
     RISK_ANALYSIS = "risk_analysis"
     DATA_MANAGEMENT = "data_management"
     PORTFOLIO_MGMT = "portfolio_mgmt"
+    DOCUMENT_SEARCH = "document_search"  # NEW Phase 6.7
+    COMBINED = "combined"                 # NEW Phase 6.7 (multi-agent)
     CLARIFICATION_NEEDED = "clarification_needed"
     UNKNOWN = "unknown"
 
@@ -549,6 +712,15 @@ class RegimeType(str, Enum):
     NEUTRAL = "neutral"     # Normal
     CRISIS = "crisis"       # VIX > 35
 
+class DocumentType(str, Enum):
+    """Document types for RAG (Phase 6.7)"""
+    SEC_10K = "10k"
+    SEC_10Q = "10q"
+    EARNINGS = "earnings"
+    FED_MINUTES = "fed_minutes"
+    RESEARCH = "research"
+    OTHER = "other"
+
 # ─────────────────────────────────────────────────────────────────────────────
 # KEY DATA STRUCTURES
 # ─────────────────────────────────────────────────────────────────────────────
@@ -562,9 +734,10 @@ class PMDecisionSummary:
     decision: DecisionType
     confidence: float                    # 0.0 - 1.0
     rationale: str                       # Human-readable explanation
-    key_risks: List[str]                 # Top risk factors
+    key_risks: List[str]                 # Top risk factors (may include [DOC] prefix)
     trade_required: bool                 # Explicit yes/no
     trigger: str                         # What prompted this assessment
+    document_citations: List[Dict]       # NEW Phase 6.7: [{"text": "...", "source": "..."}]
 
 @dataclass
 class RiskAssessment:
@@ -573,6 +746,16 @@ class RiskAssessment:
     hhi_score: float                     # Concentration (0-1)
     drivers: List[str]                   # Risk drivers
     breaches: List[str]                  # Limit breaches
+
+@dataclass
+class DocumentInsights:
+    """Insights extracted from documents via RAG (Phase 6.7)"""
+    sources: List[str]                   # Document filenames
+    key_findings: List[str]              # Main points extracted
+    risk_factors: List[str]              # Risks mentioned in docs
+    fed_sentiment: Optional[Dict]        # {score, confidence, method}
+    citations: List[Dict]                # [{text, source}]
+    has_relevant_content: bool           # Whether search found anything
 
 @dataclass
 class PortfolioConstraints:

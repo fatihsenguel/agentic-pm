@@ -28,15 +28,15 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from agents.base_agent import BaseAgent, AgentConfig, AgentRole, AgentState
-from agents.protocols import (
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.base_agent import BaseAgent, AgentConfig, AgentRole, AgentState
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.protocols import (
     PortfolioTask,
     PortfolioResult,
     PortfolioConstraints as ProtocolConstraints,
     RiskDecomposition,
     OptimizationMethod as ProtocolOptMethod,
 )
-from config import config
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.config import config
 
 
 class OptimizationAgent(BaseAgent):
@@ -68,7 +68,7 @@ class OptimizationAgent(BaseAgent):
     def mv_optimizer(self):
         """Lazy-load Mean-Variance optimizer."""
         if self._mv_optimizer is None:
-            from portfolio_tool.optimization.mean_variance import MeanVarianceOptimizer
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.optimization.mean_variance import MeanVarianceOptimizer
             self._mv_optimizer = MeanVarianceOptimizer(
                 risk_free_rate=config.optimization.risk_free_rate,
                 max_iterations=config.optimization.max_iterations,
@@ -80,7 +80,7 @@ class OptimizationAgent(BaseAgent):
     def rp_optimizer(self):
         """Lazy-load Risk Parity optimizer."""
         if self._rp_optimizer is None:
-            from portfolio_tool.optimization.risk_parity import RiskParityOptimizer
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.optimization.risk_parity import RiskParityOptimizer
             self._rp_optimizer = RiskParityOptimizer(
                 risk_free_rate=config.optimization.risk_free_rate,
                 max_iterations=config.optimization.max_iterations,
@@ -183,7 +183,7 @@ Always include:
             expected_returns = pd.Series(ret_dict)
         
         # Convert protocol constraints to optimization constraints
-        from portfolio_tool.optimization.constraints import PortfolioConstraints
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.optimization.constraints import PortfolioConstraints
         
         opt_constraints = PortfolioConstraints(
             min_weight=task.constraints.min_weight or config.optimization.default_min_weight,
@@ -272,7 +272,7 @@ Always include:
             cov_mat = cov_mat.loc[ticker_list, ticker_list]
             
             # Create constraints
-            from portfolio_tool.optimization.constraints import PortfolioConstraints
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.optimization.constraints import PortfolioConstraints
             
             constraints = PortfolioConstraints(
                 min_weight=min_weight,
@@ -357,7 +357,7 @@ Always include:
             exp_ret = pd.Series(ret_dict)[ticker_list]
             cov_mat = pd.DataFrame(cov_dict).loc[ticker_list, ticker_list]
             
-            from portfolio_tool.optimization.constraints import PortfolioConstraints
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.optimization.constraints import PortfolioConstraints
             
             constraints = PortfolioConstraints(
                 min_weight=min_weight,
@@ -411,7 +411,7 @@ Always include:
             exp_ret = pd.Series(ret_dict)[ticker_list]
             cov_mat = pd.DataFrame(cov_dict).loc[ticker_list, ticker_list]
             
-            from portfolio_tool.optimization.constraints import PortfolioConstraints
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.optimization.constraints import PortfolioConstraints
             
             constraints = PortfolioConstraints(
                 min_weight=min_weight,

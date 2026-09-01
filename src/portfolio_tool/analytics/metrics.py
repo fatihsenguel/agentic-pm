@@ -25,7 +25,7 @@ from decimal import Decimal
 import pandas as pd
 from sqlalchemy import func
 
-from portfolio_tool.database_setup import get_session, DailyPrice, Asset
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.database_setup import get_session, DailyPrice, Asset
 
 
 class MetricsCalculator:

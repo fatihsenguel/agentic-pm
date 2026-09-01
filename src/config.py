@@ -239,6 +239,50 @@ class RAGConfig:
     supported_extensions: tuple = (".pdf", ".txt", ".md")
 
 @dataclass
+class ComplianceConfig:
+    """Compliance checking configuration. Phase 7.0"""
+    
+    # Default constraints
+    default_max_equity: float = 0.80
+    default_max_fixed_income: float = 0.80
+    default_min_cash: float = 0.02
+    default_max_single_issuer: float = 0.10
+    default_concentration_exemptions: tuple = (
+        "asset_subclass:government_bond",
+        "asset_subclass:money_market",
+    )
+    
+    # Tolerance settings
+    allocation_tolerance: float = 0.05
+    concentration_tolerance: float = 0.02
+    liquidity_tolerance: float = 0.01
+    warning_threshold: float = 0.90
+    
+    # Severity classification
+    non_compliant_breach_count: int = 1
+    critical_auto_escalate: bool = True
+    esg_breach_severity: str = "critical"
+    allocation_breach_severity: str = "high"
+    concentration_breach_severity: str = "high"
+    liquidity_breach_severity: str = "medium"
+    
+    # ESG screening
+    esg_enabled: bool = True
+    esg_zero_tolerance: bool = True
+    esg_revenue_threshold: float = 0.05
+    default_esg_categories: tuple = ("tobacco", "thermal_coal", "controversial_weapons")
+    
+    # Run settings
+    run_id_prefix: str = "COMP"
+    max_recommendations: int = 5
+    persist_breaches: bool = True
+    
+    # Display
+    display_currency: str = "USD"
+    display_currency_symbol: str = "$"
+
+
+@dataclass
 class AppConfig:
     """Main application configuration."""
     
@@ -257,9 +301,12 @@ class AppConfig:
 
     # rag
     rag: RAGConfig = field(default_factory=RAGConfig)
+    compliance: ComplianceConfig = field(default_factory=ComplianceConfig)
+
 
 # Singleton instance
 config = AppConfig()
+
 
 
 # Helper function for testing

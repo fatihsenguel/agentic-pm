@@ -44,6 +44,11 @@ class Asset(Base):
     quarterly_earnings = relationship('QuarterlyEarnings', back_populates='asset', cascade='all, delete-orphan')
     financial_statements = relationship('FinancialStatement', back_populates='asset', cascade='all, delete-orphan')
     
+    isin = Column(String(12), nullable=True, unique=True, index=True)
+    asset_subclass = Column(String(50), nullable=True, index=True)
+    is_esg_excluded = Column(Boolean, default=False, index=True)
+
+
     def __repr__(self):
         return f"<Asset(id={self.id}, ticker='{self.ticker}', name='{self.name}')>"
     
@@ -188,6 +193,46 @@ class PipelineRunStatus(enum.Enum):
     RUNNING = "RUNNING"
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
+
+# =============================================================================
+# PHASE 7.0: COMPLIANCE ENUMS
+# =============================================================================
+
+class IPSConstraintType(enum.Enum):
+    """Types of IPS constraints."""
+    ALLOCATION = "allocation"         # Asset class min/max
+    CONCENTRATION = "concentration"   # Single issuer limit
+    LIQUIDITY = "liquidity"           # Cash minimums
+    SECTOR = "sector"                 # Sector limits
+    DURATION = "duration"             # Bond duration limits
+    CREDIT = "credit"                 # Credit quality minimums
+    ESG = "esg"                       # ESG exclusions
+    GEOGRAPHY = "geography"           # Country/region limits
+    CURRENCY = "currency"             # Currency exposure limits
+
+
+class ESGCategory(enum.Enum):
+    """ESG exclusion categories."""
+    TOBACCO = "tobacco"
+    THERMAL_COAL = "thermal_coal"
+    WEAPONS = "weapons"
+    CONTROVERSIAL_WEAPONS = "controversial_weapons"
+    GAMBLING = "gambling"
+    ADULT_ENTERTAINMENT = "adult_entertainment"
+    NUCLEAR = "nuclear"
+    PALM_OIL = "palm_oil"
+    PRIVATE_PRISONS = "private_prisons"
+    ANIMAL_TESTING = "animal_testing"
+    OTHER = "other"
+
+
+class BreachSeverity(enum.Enum):
+    """Severity levels for compliance breaches."""
+    CRITICAL = "critical"   # 🔴 Immediate action required
+    HIGH = "high"           # 🟠 Action required within 24-48h
+    MEDIUM = "medium"       # 🟡 Review in next rebalance
+    LOW = "low"             # ℹ️ Informational only
+
 
 class PipelineRun(Base):
     """
@@ -398,6 +443,192 @@ class MacroData(Base):
         Index('ix_macro_indicator_date', 'indicator', 'date'),
     )
 
+# =============================================================================
+# PHASE 7.0: COMPLIANCE MODELS
+# =============================================================================
+
+class Client(Base):
+    """
+    Represents an investment client (individual, trust, institution).
+    Phase: 7.0 - Compliance Schema Foundation
+    """
+    __tablename__ = 'clients'
+    
+    id = Column(Integer, primary_key=True)
+    client_id = Column(String(50), unique=True, nullable=False, index=True)
+    name = Column(String(200), nullable=False)
+    client_type = Column(String(50), nullable=False)
+    risk_profile = Column(String(50), nullable=False, default="moderate")
+    tax_status = Column(String(50), nullable=True)
+    jurisdiction = Column(String(50), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, 
+                       onupdate=datetime.datetime.utcnow)
+    is_active = Column(Boolean, default=True, index=True)
+    
+    # Relationships
+    portfolios = relationship('Portfolio', back_populates='client')
+    ips_constraints = relationship('ClientIPS', back_populates='client', 
+                                   cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f"<Client(client_id='{self.client_id}', name='{self.name}')>"
+
+
+class ClientIPS(Base):
+    """
+    Investment Policy Statement constraints for a client.
+    Phase: 7.0 - Compliance Schema Foundation
+    """
+    __tablename__ = 'client_ips'
+    
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey('clients.id', ondelete='CASCADE'), 
+                       nullable=False, index=True)
+    
+    # Constraint identification
+    constraint_type = Column(Enum(IPSConstraintType), nullable=False, index=True)
+    constraint_name = Column(String(100), nullable=False)
+    
+    # Target specification
+    asset_class = Column(String(50), nullable=True)
+    sector = Column(String(50), nullable=True)
+    
+    # Numeric limits
+    min_weight = Column(Float, nullable=True)
+    max_weight = Column(Float, nullable=True)
+    target_weight = Column(Float, nullable=True)
+    tolerance = Column(Float, nullable=True, default=0.05)
+    
+    # Complex rules
+    rule_json = Column(JSON, nullable=True)
+    exemptions = Column(JSON, nullable=True)
+    
+    # Severity
+    breach_severity = Column(String(20), default="high")
+    
+    # Validity
+    effective_date = Column(Date, nullable=False)
+    expiry_date = Column(Date, nullable=True)
+    is_active = Column(Boolean, default=True, index=True)
+    
+    # Source tracking
+    source_document = Column(String(255), nullable=True)
+    
+    # Metadata
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow,
+                       onupdate=datetime.datetime.utcnow)
+    
+    # Relationship
+    client = relationship('Client', back_populates='ips_constraints')
+    
+    __table_args__ = (
+        Index('ix_ips_client_type', 'client_id', 'constraint_type'),
+    )
+    
+    def __repr__(self):
+        return f"<ClientIPS(client_id={self.client_id}, name='{self.constraint_name}')>"
+
+
+class ESGExclusion(Base):
+    """
+    ESG exclusion list - securities that fail ESG screening.
+    Phase: 7.0 - Compliance Schema Foundation
+    """
+    __tablename__ = 'esg_exclusions'
+    
+    id = Column(Integer, primary_key=True)
+    
+    # Security identification (ticker fallback for YFinance compatibility)
+    isin = Column(String(12), nullable=True, index=True)
+    ticker = Column(String(20), nullable=True, index=True)
+    company_name = Column(String(200), nullable=False)
+    
+    # Exclusion details
+    category = Column(Enum(ESGCategory), nullable=False, index=True)
+    subcategory = Column(String(100), nullable=True)
+    reason = Column(String(500), nullable=False)
+    
+    # Source and validity
+    source = Column(String(100), nullable=False)
+    effective_date = Column(Date, nullable=False, default=datetime.date.today)
+    expiry_date = Column(Date, nullable=True)
+    is_active = Column(Boolean, default=True, index=True)
+    
+    # Threshold (for partial involvement screening)
+    revenue_threshold = Column(Float, nullable=True)
+    
+    # Metadata
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow,
+                       onupdate=datetime.datetime.utcnow)
+    
+    __table_args__ = (
+        Index('ix_esg_isin_active', 'isin', 'is_active'),
+        Index('ix_esg_ticker_active', 'ticker', 'is_active'),
+    )
+    
+    def __repr__(self):
+        return f"<ESGExclusion(company='{self.company_name}', category='{self.category.value}')>"
+
+
+class ComplianceBreach(Base):
+    """
+    Audit log of all compliance breaches.
+    Phase: 7.0 - Compliance Schema Foundation
+    """
+    __tablename__ = 'compliance_breaches'
+    
+    id = Column(Integer, primary_key=True)
+    
+    # What portfolio and constraint?
+    portfolio_id = Column(Integer, ForeignKey('portfolios.id', ondelete='CASCADE'),
+                         nullable=False, index=True)
+    constraint_id = Column(Integer, ForeignKey('client_ips.id', ondelete='SET NULL'),
+                          nullable=True, index=True)
+    
+    # Breach classification
+    breach_type = Column(String(50), nullable=False)
+    severity = Column(Enum(BreachSeverity), nullable=False, index=True)
+    
+    # Breach details
+    current_value = Column(Float, nullable=False)
+    limit_value = Column(Float, nullable=False)
+    
+    # What's involved
+    ticker = Column(String(20), nullable=True)
+    isin = Column(String(12), nullable=True)
+    asset_class = Column(String(50), nullable=True)
+    
+    # Human-readable
+    description = Column(String(500), nullable=False)
+    recommended_action = Column(String(500), nullable=True)
+    
+    # Timing
+    detected_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, index=True)
+    
+    # Resolution tracking
+    resolved = Column(Boolean, default=False, index=True)
+    resolved_at = Column(DateTime, nullable=True)
+    resolution_note = Column(String(500), nullable=True)
+    
+    # Compliance run reference
+    compliance_run_id = Column(String(50), nullable=True, index=True)
+    
+    # Relationships
+    portfolio = relationship('Portfolio')
+    constraint = relationship('ClientIPS')
+    
+    __table_args__ = (
+        Index('ix_breach_portfolio_date', 'portfolio_id', 'detected_at'),
+        Index('ix_breach_unresolved', 'portfolio_id', 'resolved'),
+    )
+    
+    def __repr__(self):
+        return f"<ComplianceBreach(type='{self.breach_type}', severity='{self.severity.value}')>"
+
+
 class Portfolio(Base):
     """
     User portfolio - contains multiple asset holdings.
@@ -414,10 +645,14 @@ class Portfolio(Base):
     cash_balance = Column(Float, nullable=False, default=0.0)
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
-    
+    client_id = Column(Integer, ForeignKey('clients.id', ondelete='SET NULL'), nullable=True, index=True)
+
+
+
     # Relationship to holdings
     holdings = relationship('PortfolioHolding', back_populates='portfolio', cascade='all, delete-orphan')
     decision_logs = relationship('DecisionLog', back_populates='portfolio', cascade='all, delete-orphan')
+    client = relationship('Client', back_populates='portfolios')
 
     def __repr__(self):
         return f"<Portfolio(id={self.id}, name='{self.name}', holdings={len(self.holdings)})>"
@@ -507,6 +742,9 @@ class DecisionLog(Base):
     # Relationship to portfolio
     portfolio = relationship('Portfolio')
     
+    compliance_status = Column(String(20), nullable=True, index=True)
+    compliance_breaches = Column(JSON, nullable=True)
+
     __table_args__ = (
         Index('ix_decision_portfolio', 'portfolio_id'),
         Index('ix_decision_timestamp', 'timestamp'),

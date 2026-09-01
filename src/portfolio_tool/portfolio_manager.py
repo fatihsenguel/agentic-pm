@@ -48,7 +48,7 @@ from typing import List, Dict, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
 
-from portfolio_tool.database_setup import (
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.database_setup import (
     SessionLocal, 
     Portfolio, 
     PortfolioHolding,
@@ -679,8 +679,8 @@ def ensure_asset_exists_helper(ticker: str) -> bool:
     Raises:
         Exception if data fetch fails
     """
-    from portfolio_tool.database_setup import SessionLocal, Asset
-    from portfolio_tool.data_manager import DataManager
+    from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.database_setup import SessionLocal, Asset
+    from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.data_manager import DataManager
     from datetime import datetime, timedelta
     
     # Check if exists

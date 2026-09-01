@@ -66,7 +66,7 @@ def search_documents(
             - error: Error message if failed
     """
     try:
-        from portfolio_tool.rag import VectorStore, VectorStoreConfig
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag import VectorStore, VectorStoreConfig
         
         # Build filters
         filters = {}
@@ -156,7 +156,7 @@ def get_document_insights(
             - sentiment: Overall document sentiment
     """
     try:
-        from portfolio_tool.rag import (
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag import (
             VectorStore, DocumentInsights, create_empty_insights
         )
         
@@ -280,7 +280,7 @@ def get_fed_sentiment(
             - error/warning: If any issues
     """
     try:
-        from portfolio_tool.rag.sentiment import FedSentimentAnalyzer, SentimentConfig
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag.sentiment import FedSentimentAnalyzer, SentimentConfig
         
         config = SentimentConfig(llm_enabled=use_llm)
         analyzer = FedSentimentAnalyzer(config)
@@ -326,8 +326,8 @@ def analyze_fed_minutes(
         Dict with meeting info + sentiment analysis
     """
     try:
-        from portfolio_tool.rag.fed_scraper import FedMinutesScraper, DownloadStatus
-        from portfolio_tool.rag.sentiment import FedSentimentAnalyzer, SentimentConfig
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag.fed_scraper import FedMinutesScraper, DownloadStatus
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag.sentiment import FedSentimentAnalyzer, SentimentConfig
         
         scraper = FedMinutesScraper()
         
@@ -401,7 +401,7 @@ def ingest_document(
             - error: Error message if failed
     """
     try:
-        from portfolio_tool.rag import (
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag import (
             DocumentLoader, Chunker, VectorStore,
             DocumentType
         )
@@ -470,7 +470,7 @@ def list_indexed_documents() -> Dict[str, Any]:
             - count: Total document count
     """
     try:
-        from portfolio_tool.rag import VectorStore
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag import VectorStore
         
         store = VectorStore()
         documents = store.list_documents()
@@ -505,7 +505,7 @@ def get_vector_store_stats() -> Dict[str, Any]:
         Dict with store stats (chunk count, tickers, doc types, etc.)
     """
     try:
-        from portfolio_tool.rag import VectorStore
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag import VectorStore
         
         store = VectorStore()
         stats = store.get_stats()

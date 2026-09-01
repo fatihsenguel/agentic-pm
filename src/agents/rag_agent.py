@@ -109,7 +109,7 @@ class RAGAgent:
             config: Agent configuration (uses defaults if not provided)
         """
         self.config = config or RAGAgentConfig()
-    
+
     def research(
         self,
         query: str,
@@ -265,7 +265,7 @@ class RAGAgent:
         - One per ticker (if multiple)
         - General search if no specific tickers
         """
-        from portfolio_tool.tools.rag_tools import search_documents
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.tools.rag_tools import search_documents
         
         all_results = []
         seen_content = set()  # Dedup
@@ -329,7 +329,7 @@ class RAGAgent:
         
         Builds DocumentInsights-compatible structure.
         """
-        from portfolio_tool.rag import DocumentInsights, create_empty_insights
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag import DocumentInsights, create_empty_insights
         
         if not search_results:
             empty = create_empty_insights(query)
@@ -500,7 +500,7 @@ class RAGAgent:
     def _analyze_fed_sentiment(self) -> Optional[Dict[str, Any]]:
         """Analyze latest Fed minutes sentiment."""
         try:
-            from portfolio_tool.tools.rag_tools import analyze_fed_minutes
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.tools.rag_tools import analyze_fed_minutes
             
             result = analyze_fed_minutes(use_llm=self.config.fed_sentiment_use_llm)
             
@@ -514,6 +514,20 @@ class RAGAgent:
             logger.warning(f"Fed sentiment analysis error: {e}")
             return None
 
+        
+    def create_rag_agent(config: Optional[RAGAgentConfig] = None) -> "RAGAgent":
+            """
+            Factory function to create a RAG Agent.
+            
+            Matches the pattern of other agents for consistency.
+            
+            Args:
+                config: Optional configuration
+                
+            Returns:
+                Configured RAGAgent instance
+            """
+            return RAGAgent(config=config)
 
 # =============================================================================
 # CONVENIENCE FUNCTIONS

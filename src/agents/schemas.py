@@ -50,6 +50,7 @@ class ExecutionIntent(str, Enum):
     PORTFOLIO_MGMT = "portfolio_mgmt"    # Admin: list/create/update portfolios
     CLARIFICATION_NEEDED = "clarification_needed"  # Router needs more info
     DOCUMENT_SEARCH = "document_search"
+    COMPLIANCE_CHECK = "compliance_check"  # <-- ADD THIS
     UNKNOWN = "unknown"                  # Fallback
 
 
@@ -71,6 +72,7 @@ class AgentName(str, Enum):
     # Fallback for router logic
     ROUTER = "Router"
     RAG_AGENT = "RAGAgent"
+    COMPLIANCE_AGENT = "ComplianceAgent"  
 
 
 class TradeAction(str, Enum):

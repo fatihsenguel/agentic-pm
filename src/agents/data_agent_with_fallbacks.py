@@ -35,7 +35,7 @@ import numpy as np
 from .base_agent import BaseAgent, AgentConfig, AgentRole, AgentState
 from .protocols import PortfolioTask, PortfolioResult, CovarianceResult
 
-from config import config
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.config import config
 
 class DataAgent(BaseAgent):
     """
@@ -78,7 +78,7 @@ class DataAgent(BaseAgent):
     def data_manager(self):
         """Lazy-load DataManager for database operations."""
         if self._data_manager is None:
-            from portfolio_tool.data_manager import get_data_manager
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.data_manager import get_data_manager
             self._data_manager = get_data_manager()
         return self._data_manager
     
@@ -295,7 +295,7 @@ Always include in your responses:
         Returns None if no data found.
         """
         try:
-            from portfolio_tool.database_setup import Asset, DailyPrice
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.database_setup import Asset, DailyPrice
             
             session = self.data_manager.session
             
@@ -594,7 +594,7 @@ Always include in your responses:
         
         try:
             # Try to use quant module
-            from portfolio_tool.quant.covariance import CovarianceEstimator, CovarianceMethod
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.quant.covariance import CovarianceEstimator, CovarianceMethod
             
             returns = prices.pct_change().dropna()
             
@@ -667,7 +667,7 @@ Always include in your responses:
         returns = prices.pct_change().dropna()
         
         try:
-            from portfolio_tool.quant.risk_metrics import RiskMetricsCalculator
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.quant.risk_metrics import RiskMetricsCalculator
             
             # Get risk-free rate from macro data
             rf_result = self.get_risk_free_rate_tool()

@@ -57,9 +57,9 @@ from .decision_schemas import (
 
 # Import config - adjust path as needed
 try:
-    from src.config import config as app_config, AppConfig
+    from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.config import config as app_config, AppConfig
 except ImportError:
-    from config import config as app_config, AppConfig
+    from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.config import config as app_config, AppConfig
 
 
 def calculate_hhi(weights: Dict[str, float]) -> float:

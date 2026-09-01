@@ -33,7 +33,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
-from portfolio_tool.database_setup import (
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.database_setup import (
     SessionLocal, 
     Portfolio, 
     PortfolioHolding,

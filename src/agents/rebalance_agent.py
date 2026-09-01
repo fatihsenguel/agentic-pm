@@ -30,7 +30,7 @@ from .base_agent import BaseAgent, AgentConfig, AgentRole, AgentState
 from .protocols import PortfolioTask, PortfolioResult, TaskType
 
 import importlib
-from config import config
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.config import config
 
 
 
@@ -206,7 +206,7 @@ SCOPE GUARDS:
             Complete rebalancing analysis
         """
         # Import the pure math module
-        from portfolio_tool.tools.rebalance_tools import (
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.tools.rebalance_tools import (
             analyze_rebalance,
             RebalanceConfig
         )
@@ -215,7 +215,7 @@ SCOPE GUARDS:
         if prices is None or not prices:
             # Get from data manager if possible
             try:
-                from portfolio_tool.data_manager import get_data_manager
+                from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.data_manager import get_data_manager
                 from datetime import datetime
                 
                 dm = get_data_manager()
@@ -295,7 +295,7 @@ SCOPE GUARDS:
         Returns:
             Drift analysis
         """
-        from portfolio_tool.tools.rebalance_tools import (
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.tools.rebalance_tools import (
             calculate_drift,
             calculate_max_drift,
             should_rebalance
@@ -345,7 +345,7 @@ SCOPE GUARDS:
         Returns:
             Trade list with costs
         """
-        from portfolio_tool.tools.rebalance_tools import (
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.tools.rebalance_tools import (
             generate_trades,
             calculate_rebalance_costs,
             RebalanceConfig
@@ -397,7 +397,7 @@ SCOPE GUARDS:
         Returns:
             Simple status message
         """
-        from portfolio_tool.tools.rebalance_tools import quick_drift_check
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.tools.rebalance_tools import quick_drift_check
         
         try:
             message = quick_drift_check(

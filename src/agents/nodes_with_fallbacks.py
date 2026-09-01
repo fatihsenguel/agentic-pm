@@ -9,7 +9,7 @@
 # - NO silent failures
 # - Clear error messages with actionable solutions
 
-from config import config
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.config import config
 import logging
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ from .state import (
 
 # Import observability
 try:
-    from observability import get_tracer
+    from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.observability import get_tracer
     TRACING_AVAILABLE = True
 except ImportError:
     TRACING_AVAILABLE = False
@@ -105,7 +105,7 @@ def load_portfolio_context(state: "AgentState") -> Tuple[List[str], Optional[Lis
     
     # Portfolio specified - load from database
     try:
-        from portfolio_tool.portfolio_manager import PortfolioManager
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.portfolio_manager import PortfolioManager
         pm = PortfolioManager()
         
         # Check if holdings already cached in state
@@ -1178,7 +1178,7 @@ class AgentTraceHelper:
         self._entered = False
     
     def __enter__(self):
-        from observability.tracer import AgentTrace
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.observability.tracer import AgentTrace
         self._trace = AgentTrace(self.tracer, self.request_id, self.agent_name)
         self._trace.__enter__()
         self._entered = True

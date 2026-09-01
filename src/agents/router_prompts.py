@@ -43,6 +43,13 @@ You DO NOT execute tasks - you only route them.
    - *COMBINED USE:* For decision queries with document context, combine with DataAgent/OptimizationAgent
    - *KEYWORDS:* 10-K, 10-Q, filing, annual report, earnings, Fed minutes, FOMC, "according to"
 
+7. **ComplianceAgent**: Checks portfolio against IPS (Investment Policy Statement) constraints.
+- Use for: "Check compliance", "IPS check", "ESG violations?", "Am I within limits?"
+- *CHECKS:* Allocation limits, concentration limits, liquidity minimums, ESG exclusions
+- *CLIENT-AWARE:* Loads constraints specific to the client's IPS
+- *KEYWORDS:* compliance, IPS, policy, ESG, restrictions, limits, breach, allocation
+- *NO DEPENDENCY:* Can run independently (loads portfolio data internally)
+
 ## DUAL INTENT CLASSIFICATION (CRITICAL!)
 
 You MUST classify BOTH intents for every request:
@@ -68,6 +75,7 @@ Information and analysis queries should NOT suggest trades or actions.
 - `risk_analysis`: Risk assessment
 - `clarification_needed`: Cannot proceed without more info
 - `document_search`: Search indexed documents for context (10-Ks, earnings, Fed)
+- `compliance_check`: IPS compliance verification (allocation, concentration, ESG)
 
 ### OUTPUT FORMAT (STRICT JSON)
 You MUST return a single valid JSON object:
@@ -135,6 +143,11 @@ You MUST return a single valid JSON object:
 | "Based on the filing, should I buy?"   | decision      | document_search     |
 | "Fed minutes sentiment"                | information   | document_search     |
 | "Analyze NVDA with its latest 10-K"    | decision      | combined            |
+| "Check compliance for my portfolio"   | decision      | compliance_check    |
+| "Are there any IPS violations?"       | information   | compliance_check    |
+| "Is BTI allowed under our ESG policy?"| information   | compliance_check    |
+| "Run IPS check for client 8821-X"     | decision      | compliance_check    |
+| "Any concentration breaches?"         | information   | compliance_check    |
 
 ### CRITICAL RULES
 1. **Dependency Rule:** If the user wants Optimization or Rebalancing, you MUST schedule `DataAgent` first.
@@ -845,6 +858,230 @@ ROUTER_FEW_SHOT_EXAMPLES = [
         }
     },
     # =========================================================================
+    # COMPLIANCE CHECK EXAMPLES
+    # =========================================================================
+    {
+        "user": "Check IPS compliance for my portfolio",
+        "response": {
+            "query_intent": "decision",
+            "execution_intent": "compliance_check",
+            "confidence": 0.98,
+            "agents_needed": [
+                {"agent": "ComplianceAgent", "task_description": "Run full IPS compliance check", "priority": 1}
+            ],
+            "execution_order": ["ComplianceAgent"],
+            "parameters": {
+                "tickers": [],
+                "period": None,
+                "max_volatility": None,
+                "target_return": None,
+                "portfolio_id": 1,
+                "command": "compliance_check",
+                "report_type": None,
+                "data_type": None,
+                "limit": None,
+                "portfolio_name": None
+            },
+            "is_multi_step": False,
+            "requires_confirmation": False,
+            "reasoning": "User wants IPS compliance check - DECISION query, route to ComplianceAgent."
+        }
+    },
+    {
+        "user": "Are there any ESG violations in my portfolio?",
+        "response": {
+            "query_intent": "information",
+            "execution_intent": "compliance_check",
+            "confidence": 0.95,
+            "agents_needed": [
+                {"agent": "ComplianceAgent", "task_description": "Check ESG compliance", "priority": 1}
+            ],
+            "execution_order": ["ComplianceAgent"],
+            "parameters": {
+                "tickers": [],
+                "period": None,
+                "max_volatility": None,
+                "target_return": None,
+                "portfolio_id": 1,
+                "command": "esg_check",
+                "report_type": None,
+                "data_type": None,
+                "limit": None,
+                "portfolio_name": None
+            },
+            "is_multi_step": False,
+            "requires_confirmation": False,
+            "reasoning": "User asking about ESG status - INFORMATION query about compliance."
+        }
+    },
+    {
+        "user": "Is BTI allowed under our ESG policy?",
+        "response": {
+            "query_intent": "information",
+            "execution_intent": "compliance_check",
+            "confidence": 0.95,
+            "agents_needed": [
+                {"agent": "ComplianceAgent", "task_description": "Check if BTI is ESG compliant", "priority": 1}
+            ],
+            "execution_order": ["ComplianceAgent"],
+            "parameters": {
+                "tickers": ["BTI"],
+                "period": None,
+                "max_volatility": None,
+                "target_return": None,
+                "portfolio_id": 1,
+                "command": "security_check",
+                "report_type": None,
+                "data_type": None,
+                "limit": None,
+                "portfolio_name": None
+            },
+            "is_multi_step": False,
+            "requires_confirmation": False,
+            "reasoning": "User asking about specific security ESG status - INFORMATION query."
+        }
+    },
+    {
+        "user": "Run IPS check for Client Account #8821-X",
+        "response": {
+            "query_intent": "decision",
+            "execution_intent": "compliance_check",
+            "confidence": 0.98,
+            "agents_needed": [
+                {"agent": "ComplianceAgent", "task_description": "Run IPS compliance for client 8821-X", "priority": 1}
+            ],
+            "execution_order": ["ComplianceAgent"],
+            "parameters": {
+                "tickers": [],
+                "period": None,
+                "max_volatility": None,
+                "target_return": None,
+                "portfolio_id": 1,
+                "command": "compliance_check",
+                "client_id": "8821-X",
+                "report_type": None,
+                "data_type": None,
+                "limit": None,
+                "portfolio_name": None
+            },
+            "is_multi_step": False,
+            "requires_confirmation": False,
+            "reasoning": "User wants compliance check for specific client - DECISION query."
+        }
+    },
+    {
+        "user": "Check if I'm within my allocation limits",
+        "response": {
+            "query_intent": "information",
+            "execution_intent": "compliance_check",
+            "confidence": 0.92,
+            "agents_needed": [
+                {"agent": "ComplianceAgent", "task_description": "Check allocation compliance", "priority": 1}
+            ],
+            "execution_order": ["ComplianceAgent"],
+            "parameters": {
+                "tickers": [],
+                "period": None,
+                "max_volatility": None,
+                "target_return": None,
+                "portfolio_id": 1,
+                "command": "allocation_check",
+                "report_type": None,
+                "data_type": None,
+                "limit": None,
+                "portfolio_name": None
+            },
+            "is_multi_step": False,
+            "requires_confirmation": False,
+            "reasoning": "User asking about allocation limits - INFORMATION query."
+        }
+    },
+    {
+        "user": "Any concentration breaches in portfolio 1?",
+        "response": {
+            "query_intent": "information",
+            "execution_intent": "compliance_check",
+            "confidence": 0.95,
+            "agents_needed": [
+                {"agent": "ComplianceAgent", "task_description": "Check concentration limits", "priority": 1}
+            ],
+            "execution_order": ["ComplianceAgent"],
+            "parameters": {
+                "tickers": [],
+                "period": None,
+                "max_volatility": None,
+                "target_return": None,
+                "portfolio_id": 1,
+                "command": "concentration_check",
+                "report_type": None,
+                "data_type": None,
+                "limit": None,
+                "portfolio_name": None
+            },
+            "is_multi_step": False,
+            "requires_confirmation": False,
+            "reasoning": "User asking about concentration status - INFORMATION query."
+        }
+    },
+    {
+        "user": "Generate a compliance report for the Anders Family Trust",
+        "response": {
+            "query_intent": "decision",
+            "execution_intent": "compliance_check",
+            "confidence": 0.98,
+            "agents_needed": [
+                {"agent": "ComplianceAgent", "task_description": "Generate full compliance report for Anders Family Trust", "priority": 1}
+            ],
+            "execution_order": ["ComplianceAgent"],
+            "parameters": {
+                "tickers": [],
+                "period": None,
+                "max_volatility": None,
+                "target_return": None,
+                "portfolio_id": 1,
+                "command": "compliance_report",
+                "client_id": "8821-X",
+                "report_type": None,
+                "data_type": None,
+                "limit": None,
+                "portfolio_name": "Anders Family Trust"
+            },
+            "is_multi_step": False,
+            "requires_confirmation": False,
+            "reasoning": "User wants formal compliance report - DECISION query."
+        }
+    },
+    # Combined: Optimize with compliance check
+    {
+        "user": "Optimize my portfolio but make sure it stays compliant",
+        "response": {
+            "query_intent": "decision",
+            "execution_intent": "optimization",
+            "confidence": 0.90,
+            "agents_needed": [
+                {"agent": "DataAgent", "task_description": "Fetch portfolio data", "priority": 1},
+                {"agent": "ComplianceAgent", "task_description": "Check current compliance status", "priority": 2},
+                {"agent": "OptimizationAgent", "task_description": "Optimize with compliance constraints", "priority": 3}
+            ],
+            "execution_order": ["DataAgent", "ComplianceAgent", "OptimizationAgent"],
+            "parameters": {
+                "tickers": [],
+                "period": "3Y",
+                "max_volatility": None,
+                "target_return": None,
+                "portfolio_id": 1,
+                "command": None,
+                "report_type": None,
+                "data_type": None,
+                "limit": None,
+                "portfolio_name": None
+            },
+            "is_multi_step": True,
+            "requires_confirmation": False,
+            "reasoning": "User wants compliant optimization - run compliance check first, then optimize."
+        }
+    },
+    # =========================================================================
     # PORTFOLIO MANAGEMENT EXAMPLES (query_intent: operational)
     # =========================================================================
     {
@@ -1167,7 +1404,7 @@ ERROR: {error}
 Please fix and return ONLY valid JSON matching this schema:
 {{
   "query_intent": "operational|information|analysis|decision|clarification",
-  "execution_intent": "optimization|macro_analysis|rebalancing|backtest|data_fetch|data_management|portfolio_mgmt|risk_analysis|clarification_needed",
+  "execution_intent": "optimization|macro_analysis|rebalancing|backtest|data_fetch|data_management|portfolio_mgmt|risk_analysis|compliance_check|clarification_needed",
   "confidence": 0.0-1.0,
   "agents_needed": [{{"agent": "AgentName", "task_description": "...", "priority": 1}}],
   "execution_order": ["AgentName"],

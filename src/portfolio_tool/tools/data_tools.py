@@ -16,7 +16,7 @@ import threading
 from langchain_core.tools import tool
 
 # Internal modules
-from portfolio_tool.database_setup import (
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.database_setup import (
     get_session, 
     Asset, 
     DailyPrice, 
@@ -24,9 +24,9 @@ from portfolio_tool.database_setup import (
     QuarterlyEarnings,
     FinancialStatement,
 )
-from portfolio_tool.data_manager import DataManager
-from portfolio_tool.providers.yfinance_provider import YFinanceProvider
-from portfolio_tool.services.quota_manager import DatabaseQuotaManager, MockQuotaManager
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.data_manager import DataManager
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.providers.yfinance_provider import YFinanceProvider
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.services.quota_manager import DatabaseQuotaManager, MockQuotaManager
 
 from sqlalchemy import func, desc
 

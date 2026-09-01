@@ -27,7 +27,7 @@ from dataclasses import dataclass
 from .base_agent import BaseAgent, AgentConfig, AgentRole, AgentState
 from .protocols import PortfolioTask, PortfolioResult, RegimeType
 
-from config import config
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.config import config
 
 
 # ==================== ENUMS & DATA CLASSES ====================
@@ -160,7 +160,7 @@ class MacroAgent(BaseAgent):
     def data_manager(self):
         """Lazy-load DataManager for database operations."""
         if self._data_manager is None:
-            from portfolio_tool.data_manager import get_data_manager
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.data_manager import get_data_manager
             self._data_manager = get_data_manager()
         return self._data_manager
     
@@ -168,7 +168,7 @@ class MacroAgent(BaseAgent):
     def sentiment_analyzer(self):
         """Lazy-load sentiment analyzer from RAG pipeline."""
         if self._sentiment_analyzer is None:
-            from portfolio_tool.rag.sentiment import FedSentimentAnalyzer
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag.sentiment import FedSentimentAnalyzer
             self._sentiment_analyzer = FedSentimentAnalyzer()
         return self._sentiment_analyzer
     
@@ -176,7 +176,7 @@ class MacroAgent(BaseAgent):
     def fed_scraper(self):
         """Lazy-load Fed Minutes scraper."""
         if self._fed_scraper is None:
-            from portfolio_tool.rag.fed_scraper import FedMinutesScraper
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag.fed_scraper import FedMinutesScraper
             self._fed_scraper = FedMinutesScraper()
         return self._fed_scraper
     
@@ -767,7 +767,7 @@ Always provide structured results with:
             {success, meeting_date, content_preview, content_length}
         """
         try:
-            from portfolio_tool.rag.fed_scraper import DownloadStatus
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag.fed_scraper import DownloadStatus
             
             if date_spec.lower() == "latest":
                 doc = self.fed_scraper.get_latest_minutes()
@@ -817,7 +817,7 @@ Always provide structured results with:
             {success, score, classification, confidence, key_themes}
         """
         try:
-            from portfolio_tool.rag.document_loader import Document
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag.document_loader import Document
             
             doc = Document(content=text, source=source, doc_type="fed_minutes")
             result = self.sentiment_analyzer.analyze(doc)

@@ -95,7 +95,7 @@ class DocumentManager:
     def config(self):
         """Lazy load config."""
         if self._config is None:
-            from config import config as app_config
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.config import config as app_config
             self._config = app_config.rag
         return self._config
     
@@ -110,7 +110,7 @@ class DocumentManager:
     def vector_store(self):
         """Lazy load vector store."""
         if self._vector_store is None:
-            from portfolio_tool.rag import VectorStore
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag import VectorStore
             self._vector_store = VectorStore()
         return self._vector_store
     
@@ -118,7 +118,7 @@ class DocumentManager:
     def loader(self):
         """Lazy load document loader."""
         if self._loader is None:
-            from portfolio_tool.rag import DocumentLoader
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag import DocumentLoader
             self._loader = DocumentLoader()
         return self._loader
     
@@ -126,7 +126,7 @@ class DocumentManager:
     def chunker(self):
         """Lazy load chunker."""
         if self._chunker is None:
-            from portfolio_tool.rag import Chunker
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag import Chunker
             self._chunker = Chunker(
                 chunk_size=self.config.chunk_size,
                 chunk_overlap=self.config.chunk_overlap,
@@ -192,7 +192,7 @@ class DocumentManager:
             
             # Override doc_type if provided
             if doc_type:
-                from portfolio_tool.rag import DocumentType
+                from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag import DocumentType
                 try:
                     doc.doc_type = DocumentType(doc_type)
                 except ValueError:
@@ -306,7 +306,7 @@ class DocumentManager:
             IngestionResult
         """
         try:
-            from portfolio_tool.rag.fed_scraper import FedMinutesScraper, DownloadStatus
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag.fed_scraper import FedMinutesScraper, DownloadStatus
             
             scraper = FedMinutesScraper()
             

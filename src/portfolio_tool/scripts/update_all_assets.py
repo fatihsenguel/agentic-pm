@@ -11,16 +11,16 @@ sys.path.insert(0, project_root)
 
 # (1) NEUE IMPORTE für Logging, Quota und Status
 # Diese funktionieren, weil 'project_root' (der Ordner über 'portfolio_tool') im Pfad ist
-from portfolio_tool.database_setup import ( 
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.database_setup import ( 
     get_session, Asset, PipelineRun, 
     PipelineRunStatus, func
 )
-from portfolio_tool.data_manager import DataManager
-from portfolio_tool.providers.base import DataProviderInterface
-from portfolio_tool.providers.yfinance_provider import YFinanceProvider
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.data_manager import DataManager
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.providers.base import DataProviderInterface
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.providers.yfinance_provider import YFinanceProvider
 
 # (WICHTIG) Der neue Service, den wir injizieren - KORRIGIERT
-from portfolio_tool.services.quota_manager import DatabaseQuotaManager
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.services.quota_manager import DatabaseQuotaManager
 
 # --- (2) KONFIGURATION (angepasst) ---
 STOCKS_TO_TRACK = [

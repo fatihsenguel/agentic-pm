@@ -28,15 +28,15 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from agents.base_agent import BaseAgent, AgentConfig, AgentRole, AgentState
-from agents.protocols import (
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.base_agent import BaseAgent, AgentConfig, AgentRole, AgentState
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.protocols import (
     PortfolioTask,
     PortfolioResult,
     BacktestMetrics,
     TAARule as ProtocolTAARule,
 )
 
-from config import config
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.config import config
 
 
 class BacktestAgent(BaseAgent):
@@ -70,7 +70,7 @@ class BacktestAgent(BaseAgent):
     def engine(self):
         """Lazy-load BacktestEngine."""
         if self._engine is None:
-            from portfolio_tool.backtest.engine import BacktestEngine
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.backtest.engine import BacktestEngine
             self._engine = BacktestEngine(
                 transaction_cost=config.backtest.default_transaction_cost,
                 risk_free_rate=config.backtest.risk_free_rate
@@ -196,7 +196,7 @@ SCOPE GUARDS:
     
     def _build_strategy_from_task(self, task: PortfolioTask):
         """Build Strategy object from PortfolioTask."""
-        from portfolio_tool.backtest.strategies import (
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.backtest.strategies import (
             Strategy, TAARule, RebalanceRule, RebalanceFrequency
         )
         
@@ -284,10 +284,10 @@ SCOPE GUARDS:
             Run a backtest on a portfolio strategy.
             """
             try:
-                from portfolio_tool.backtest.strategies import (
+                from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.backtest.strategies import (
                     Strategy, TAARule, RebalanceRule, RebalanceFrequency
                 )
-                from portfolio_tool.backtest.engine import BacktestEngine
+                from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.backtest.engine import BacktestEngine
                 
                 # Parse inputs
                 ticker_list = [t.strip() for t in tickers.split(",")]
@@ -408,10 +408,10 @@ SCOPE GUARDS:
             Comparison results
         """
         try:
-            from portfolio_tool.backtest.strategies import (
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.backtest.strategies import (
                 Strategy, TAARule, RebalanceRule, RebalanceFrequency
             )
-            from portfolio_tool.backtest.reports import compare_strategies, format_comparison_table
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.backtest.reports import compare_strategies, format_comparison_table
             
             # Parse inputs
             strategies_list = json.loads(strategies) if isinstance(strategies, str) else strategies

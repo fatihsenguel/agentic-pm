@@ -960,9 +960,9 @@ def get_data_manager() -> 'DataManager':
     global _data_manager_instance
     
     if _data_manager_instance is None:
-        from portfolio_tool.database_setup import get_session
-        from portfolio_tool.providers.yfinance_provider import YFinanceProvider
-        from portfolio_tool.services.quota_manager import DatabaseQuotaManager
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.database_setup import get_session
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.providers.yfinance_provider import YFinanceProvider
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.services.quota_manager import DatabaseQuotaManager
         
         # Create session
         session = get_session()

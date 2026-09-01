@@ -18,7 +18,7 @@ from ..provider_models import (
 # (1) WIR BEHALTEN SimpleRateLimiter für die FREQUENZ, safe_int und float für unsave int,float conversation fixes
 from .utils import SimpleRateLimiter, safe_float, safe_int, safe_decimal
 # (2) WIR IMPORTIEREN den NEUEN Manager für das VOLUMEN/LOGGIN
-from portfolio_tool.services.quota_manager import DatabaseQuotaManager
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.services.quota_manager import DatabaseQuotaManager
 
 import logging
 logger = logging.getLogger(__name__)

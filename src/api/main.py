@@ -16,7 +16,7 @@ sys.path.insert(0, project_root)
 
 # (2) Importiere jetzt unsere Projekt-Module
 try:
-    from portfolio_tool.database_setup import get_session, Asset, DailyPrice
+    from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.database_setup import get_session, Asset, DailyPrice
 except ImportError:
     print("FEHLER: Konnte 'portfolio_tool' nicht importieren.")
     print("Stelle sicher, dass 'api/main.py' im Root-Verzeichnis des Projekts liegt.")

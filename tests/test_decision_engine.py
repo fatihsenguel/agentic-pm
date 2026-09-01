@@ -31,7 +31,7 @@ from agents.decision_engine import (
     calculate_hhi,
     should_generate_decision_summary
 )
-from src.config import config
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.config import config
 
 
 class TestHHICalculation:

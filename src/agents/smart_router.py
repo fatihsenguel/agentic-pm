@@ -28,7 +28,7 @@ from .validators import (
 
 import logging
 logger = logging.getLogger(__name__)
-from config import config as app_config
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.config import config as app_config
 
 # =============================================================================
 # ROUTER CONFIGURATION
@@ -119,7 +119,7 @@ class SmartRouter:
         """Lazy load tracer."""
         if self._tracer is None and app_config.features.observability_enabled and self.config.enable_tracing:
             try:
-                from observability import get_tracer
+                from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.observability import get_tracer
                 self._tracer = get_tracer()
             except ImportError:
                 self._tracer = None
@@ -130,7 +130,7 @@ class SmartRouter:
         """Lazy load token counter."""
         if self._token_counter is None and app_config.features.observability_enabled and self.config.enable_tracing:
             try:
-                from observability import get_token_counter
+                from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.observability import get_token_counter
                 self._token_counter = get_token_counter()
             except ImportError:
                 self._token_counter = None
@@ -172,7 +172,7 @@ class SmartRouter:
             portfolio_tickers = None
             if portfolio_id:
                 try:
-                    from portfolio_tool.portfolio_manager import PortfolioManager
+                    from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.portfolio_manager import PortfolioManager
                     pm = PortfolioManager()
                     portfolio_tickers = pm.get_portfolio_tickers(portfolio_id)
                     if portfolio_tickers:

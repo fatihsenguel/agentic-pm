@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from datetime import date
 from typing import List, Dict, Optional
-from portfolio_tool.provider_models import (
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.provider_models import (
     ProviderAssetInfo, ProviderPriceData, ProviderDividendData,
     ProviderSplitData, ProviderSharesData,
     ProviderFundamentalData, ProviderEarningsData, ProviderFinancialStatement,

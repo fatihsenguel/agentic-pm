@@ -10,14 +10,14 @@
 # - NO silent failures
 # - Clear error messages with actionable solutions
 
-from config import config
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.config import config
 import logging
 logger = logging.getLogger(__name__)
 
 from typing import Dict, Any, Optional, Literal, List, Tuple
 from langchain_core.messages import AIMessage, HumanMessage
 
-from portfolio_tool.tools.data_tools import (
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.tools.data_tools import (
     fetch_stock_prices, 
     list_tracked_assets, 
     get_asset_info, 
@@ -27,9 +27,9 @@ from portfolio_tool.tools.data_tools import (
     get_latest_price,
     query_financial_data,
 )
-from portfolio_tool.portfolio_manager import PortfolioManager
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.portfolio_manager import PortfolioManager
 
-from portfolio_tool.tools.portfolio_tools import (
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.tools.portfolio_tools import (
     list_portfolios,
     get_portfolio_details,
     get_portfolio_holdings,
@@ -42,7 +42,10 @@ from portfolio_tool.tools.portfolio_tools import (
     find_portfolio_by_name,
 )
 
-from agents.schemas import AgentResponse, QueryIntent
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.compliance_agent import ComplianceAgent
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.decision_schemas import ComplianceStatus, ComplianceReport
+
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.schemas import AgentResponse, QueryIntent
 from .state import (
     AgentState,
     set_router_decision,
@@ -71,7 +74,7 @@ from .decision_schemas import DecisionType, RiskStatus
 
 # Import observability
 try:
-    from observability import get_tracer
+    from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.observability import get_tracer
     TRACING_AVAILABLE = True
 except ImportError:
     TRACING_AVAILABLE = False
@@ -129,7 +132,7 @@ def load_portfolio_context(state: "AgentState") -> Tuple[List[str], Optional[Lis
         return tickers, None
     
     # Portfolio specified - load from database
-    from portfolio_tool.portfolio_manager import PortfolioManager
+    from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.portfolio_manager import PortfolioManager
     pm = PortfolioManager()
     
     # Check cache first
@@ -1064,7 +1067,7 @@ async def _handle_data_fetch_node(state: AgentState, parameters: Dict[str, Any])
     portfolio_name = parameters.get("portfolio_name")
     
     if portfolio_name and not portfolio_id:
-        from portfolio_tool.tools.portfolio_tools import find_portfolio_by_name
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.tools.portfolio_tools import find_portfolio_by_name
         search_result = find_portfolio_by_name.func(portfolio_name)
         if search_result.get("success") and search_result.get("matches"):
             matches = search_result["matches"]
@@ -1098,7 +1101,7 @@ async def _handle_data_fetch_node(state: AgentState, parameters: Dict[str, Any])
     except PortfolioContextError as e:
         # If no tickers from context, try loading from portfolio_id in parameters
         if portfolio_id:
-            from portfolio_tool.tools.portfolio_tools import get_portfolio_holdings
+            from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.tools.portfolio_tools import get_portfolio_holdings
             holdings_result = get_portfolio_holdings.func(portfolio_id)
             if holdings_result.get("success"):
                 tickers = holdings_result.get("tickers", [])
@@ -1770,7 +1773,7 @@ async def rag_agent_node(state: AgentState) -> Dict[str, Any]:
         }
         
         # Import and run RAG Agent
-        from agents.rag_agent import RAGAgent
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.rag_agent import RAGAgent
         
         agent = RAGAgent()
         insights = agent.research(
@@ -1830,6 +1833,203 @@ async def rag_agent_node(state: AgentState) -> Dict[str, Any]:
                 "has_document_context": False,
             }),
             **add_warning(state, f"RAGAgent: {str(e)}"),
+        }
+    
+    finally:
+        if agent_ctx:
+            agent_ctx.__exit__(None, None, None)
+
+async def compliance_agent_node(state: "AgentState") -> Dict[str, Any]:
+    """
+    Compliance Agent node - checks portfolio against IPS constraints.
+    
+    Phase: 7.3 - Router & Graph Integration
+    
+    Handles:
+    - Full compliance check (all constraints)
+    - ESG screening
+    - Allocation limit checks
+    - Concentration limit checks
+    - Single security screening
+    
+    Commands (from router):
+    - compliance_check: Full IPS compliance check
+    - esg_check: ESG-only screening
+    - allocation_check: Allocation limits only
+    - concentration_check: Concentration limits only
+    - security_check: Single security ESG check
+    """
+    from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.compliance_agent import ComplianceAgent
+    from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.decision_schemas import ComplianceStatus
+    from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.esg_screener import check_security_esg
+    
+    tracer = get_tracer()
+    agent_ctx = None
+    
+    try:
+        # Tracing setup
+        if tracer and hasattr(tracer, "get_current_request"):
+            req = tracer.get_current_request()
+            if req:
+                agent_ctx = req.trace_agent("ComplianceAgent")
+                agent_ctx.__enter__()
+    except Exception as e:
+        logger.warning(f"Tracing failed in ComplianceAgent (ignoring): {e}")
+    
+    try:
+        print("\n" + "="*80)
+        print(f"{GREEN}COMPLIANCE AGENT - IPS Compliance Check{RESET}")
+        print("="*80)
+        
+        # Get parameters from router decision
+        router_decision = state.get("router_decision") or {}
+        parameters = router_decision.get("parameters", {})
+        command = parameters.get("command", "compliance_check")
+        portfolio_id = parameters.get("portfolio_id") or state.get("portfolio_id")
+        client_id = parameters.get("client_id")
+        tickers = parameters.get("tickers", [])
+        
+        print(f"  Command: {command}")
+        print(f"  Portfolio ID: {portfolio_id}")
+        print(f"  Client ID: {client_id}")
+        
+        # =====================================================================
+        # BRANCH 1: Single Security ESG Check
+        # =====================================================================
+        if command == "security_check" and tickers:
+            ticker = tickers[0] if isinstance(tickers, list) else tickers
+            print(f"  Checking security: {ticker}")
+            
+            result = check_security_esg(ticker=ticker)
+            
+            if result["excluded"]:
+                response = {
+                    "success": True,
+                    "command": "security_check",
+                    "ticker": ticker,
+                    "allowed": False,
+                    "category": result["category"],
+                    "reason": result["reason"],
+                    "company_name": result.get("company_name"),
+                    "message": f"❌ {ticker} is NOT allowed - {result['category'].replace('_', ' ').title()} exclusion: {result['reason']}"
+                }
+            else:
+                response = {
+                    "success": True,
+                    "command": "security_check",
+                    "ticker": ticker,
+                    "allowed": True,
+                    "message": f"✅ {ticker} is allowed under current ESG policy"
+                }
+            
+            print(f"  Result: {'Excluded' if result['excluded'] else 'Allowed'}")
+            
+            return {
+                **mark_agent_complete(state, "ComplianceAgent", response),
+            }
+        
+        # =====================================================================
+        # BRANCH 2: Full Portfolio Compliance Check
+        # =====================================================================
+        if not portfolio_id:
+            return {
+                **mark_agent_complete(state, "ComplianceAgent", {
+                    "success": False,
+                    "error": "No portfolio specified. Please provide portfolio_id."
+                }),
+                **add_error(state, "ComplianceAgent: No portfolio specified"),
+            }
+        
+        # Initialize compliance agent
+        agent = ComplianceAgent()
+        
+        try:
+            # Run compliance check
+            report = agent.run_compliance_check(
+                portfolio_id=portfolio_id,
+                client_id=client_id,
+                include_passing=(command == "compliance_report")  # Full report includes passing
+            )
+            
+            # Build response
+            response = {
+                "success": True,
+                "command": command,
+                "portfolio_id": report.portfolio_id,
+                "portfolio_name": report.portfolio_name,
+                "client_id": report.client_id,
+                "client_name": report.client_name,
+                "compliance_run_id": report.compliance_run_id,
+                "status": report.status.value,
+                "is_compliant": report.status == ComplianceStatus.COMPLIANT,
+                "total_aum": report.total_aum,
+                "num_positions": report.num_positions,
+                "num_breaches": report.num_breaches,
+                "num_critical": report.num_critical,
+                "num_warnings": len(report.warnings),
+                "allocation": report.allocation,
+                "breaches": [
+                    {
+                        "type": b.constraint_type.value,
+                        "name": b.constraint_name,
+                        "severity": b.severity.value if b.severity else None,
+                        "ticker": b.ticker,
+                        "asset_class": b.asset_class,
+                        "current_value": b.current_value,
+                        "limit_value": b.limit_value,
+                        "message": b.message,
+                        "action": b.action
+                    }
+                    for b in report.breaches
+                ],
+                "warnings": [
+                    {
+                        "type": w.constraint_type.value,
+                        "name": w.constraint_name,
+                        "message": w.message
+                    }
+                    for w in report.warnings
+                ],
+                "recommendations": report.recommendations,
+                "remediation_trades": [
+                    {
+                        "action": t.action,
+                        "ticker": t.ticker,
+                        "shares": t.shares,
+                        "estimated_value": t.estimated_value,
+                        "reason": t.reason,
+                        "priority": t.priority
+                    }
+                    for t in report.remediation_trades
+                ],
+                # Store formatted report for synthesizer
+                "formatted_report": report.format_full_report(),
+                "formatted_summary": report.format_summary()
+            }
+            
+            # Log summary
+            print(f"  Status: {report.status.value.upper()}")
+            print(f"  Breaches: {report.num_breaches} ({report.num_critical} critical)")
+            print(f"  Total AUM: ${report.total_aum:,.2f}")
+            
+        finally:
+            agent.close()
+        
+        return {
+            **mark_agent_complete(state, "ComplianceAgent", response),
+        }
+    
+    except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        logger.error(f"ComplianceAgent error:\n{error_detail}")
+        
+        return {
+            **mark_agent_complete(state, "ComplianceAgent", {
+                "success": False,
+                "error": str(e)
+            }),
+            **add_error(state, f"ComplianceAgent: {str(e)}"),
         }
     
     finally:
@@ -1987,7 +2187,10 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
                 lines.extend(_format_rebalance_response(sub_results, include_recommendation=(query_intent == "decision")))
             if "OptimizationAgent" in sub_results:
                 lines.extend(_format_optimization_response(sub_results, include_recommendation=(query_intent == "decision")))
-
+        
+        elif execution_intent == "compliance_check":
+            lines.extend(_format_compliance_response(sub_results, include_recommendation=(query_intent == "decision")))
+        
         else:
             lines.append("Analysis complete. Component status:")
             for agent, result in sub_results.items():
@@ -2004,7 +2207,10 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             if doc_lines:
                 lines.append("")
                 lines.extend(doc_lines)
-                
+
+        if "ComplianceAgent" in sub_results and execution_intent != "compliance_check":
+            lines.append("")
+            lines.extend(_format_compliance_response(sub_results, include_recommendation=(query_intent == "decision")))
 
         # =====================================================================
         # 6. Construct Strict Output (AgentResponse)
@@ -2504,6 +2710,97 @@ def _format_document_insights(sub_results: Dict) -> List[str]:
     
     return lines
 
+def _format_compliance_response(sub_results: Dict, include_recommendation: bool = True) -> List[str]:
+    """
+    Format compliance check results.
+    
+    Phase: 7.3 - Router & Graph Integration
+    """
+    lines = ["📋 **COMPLIANCE REPORT**", ""]
+    
+    compliance = sub_results.get("ComplianceAgent", {})
+    
+    if not compliance.get("success"):
+        error = compliance.get("error", "Unknown error")
+        lines.append(f"⚠️ Compliance check failed: {error}")
+        return lines
+    
+    # Single security check
+    if compliance.get("command") == "security_check":
+        ticker = compliance.get("ticker", "Unknown")
+        if compliance.get("allowed"):
+            lines.append(f"✅ **{ticker}** is allowed under current ESG policy")
+        else:
+            category = compliance.get("category", "").replace("_", " ").title()
+            reason = compliance.get("reason", "")
+            lines.append(f"❌ **{ticker}** is NOT allowed")
+            lines.append(f"   Category: {category}")
+            lines.append(f"   Reason: {reason}")
+        return lines
+    
+    # Full compliance report
+    status = compliance.get("status", "unknown")
+    status_emoji = {
+        "compliant": "✅ COMPLIANT",
+        "warning": "⚠️ WARNING",
+        "non_compliant": "🔴 NON-COMPLIANT"
+    }
+    
+    lines.append(f"**Portfolio:** {compliance.get('portfolio_name', 'N/A')}")
+    lines.append(f"**Client:** {compliance.get('client_name', 'N/A')} ({compliance.get('client_id', 'N/A')})")
+    lines.append(f"**Status:** {status_emoji.get(status, status.upper())}")
+    lines.append("")
+    
+    # Summary metrics
+    lines.append(f"**Total AUM:** ${compliance.get('total_aum', 0):,.2f}")
+    lines.append(f"**Positions:** {compliance.get('num_positions', 0)}")
+    lines.append(f"**Breaches:** {compliance.get('num_breaches', 0)} ({compliance.get('num_critical', 0)} critical)")
+    lines.append("")
+    
+    # Allocation
+    allocation = compliance.get("allocation", {})
+    if allocation:
+        lines.append("**Asset Allocation:**")
+        for asset_class, weight in sorted(allocation.items(), key=lambda x: -x[1]):
+            lines.append(f"  • {asset_class.title()}: {weight:.1%}")
+        lines.append("")
+    
+    # Breaches
+    breaches = compliance.get("breaches", [])
+    if breaches:
+        lines.append("**Breaches:**")
+        severity_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "ℹ️"}
+        
+        for b in breaches[:5]:  # Limit to 5 for readability
+            sev = severity_emoji.get(b.get("severity", ""), "")
+            ticker_or_class = b.get("ticker") or b.get("asset_class") or "N/A"
+            lines.append(f"  {sev} [{b.get('type', 'N/A').upper()}] {ticker_or_class}: {b.get('message', '')}")
+        
+        if len(breaches) > 5:
+            lines.append(f"  ... and {len(breaches) - 5} more")
+        lines.append("")
+    
+    # Remediation trades (only for DECISION queries)
+    if include_recommendation:
+        trades = compliance.get("remediation_trades", [])
+        if trades:
+            lines.append("**Recommended Trades:**")
+            for t in trades[:4]:
+                action = t.get("action", "")
+                ticker = t.get("ticker", "")
+                shares = t.get("shares")
+                value = t.get("estimated_value", 0)
+                
+                if shares:
+                    lines.append(f"  • {action} {shares:.0f} shares of {ticker} (~${value:,.0f})")
+                else:
+                    lines.append(f"  • {action} {ticker} (~${value:,.0f})")
+            lines.append("")
+    
+    # Run ID for audit
+    lines.append(f"*Run ID: {compliance.get('compliance_run_id', 'N/A')}*")
+    
+    return lines
 
 # =============================================================================
 # HELPER CLASS FOR TRACING
@@ -2519,7 +2816,7 @@ class AgentTraceHelper:
         self._entered = False
     
     def __enter__(self):
-        from observability.tracer import AgentTrace
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.observability.tracer import AgentTrace
         self._trace = AgentTrace(self.tracer, self.request_id, self.agent_name)
         self._trace.__enter__()
         self._entered = True

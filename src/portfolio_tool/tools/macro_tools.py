@@ -28,7 +28,7 @@ def _get_data_manager():
     Holt DataManager Instance.
     Gleicher Pattern wie in data_tools.py.
     """
-    from portfolio_tool.data_manager import get_data_manager
+    from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.data_manager import get_data_manager
     return get_data_manager()
 
 
@@ -453,7 +453,7 @@ def fetch_fed_minutes(date_spec: str = "latest") -> Dict[str, Any]:
         }
     """
     try:
-        from portfolio_tool.rag.fed_scraper import FedMinutesScraper, DownloadStatus
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag.fed_scraper import FedMinutesScraper, DownloadStatus
         
         scraper = FedMinutesScraper()
         
@@ -512,7 +512,7 @@ def list_available_fed_minutes(year: Optional[int] = None) -> Dict[str, Any]:
         }
     """
     try:
-        from portfolio_tool.rag.fed_scraper import FedMinutesScraper
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.rag.fed_scraper import FedMinutesScraper
         
         scraper = FedMinutesScraper()
         minutes = scraper.list_available_minutes(year=year)

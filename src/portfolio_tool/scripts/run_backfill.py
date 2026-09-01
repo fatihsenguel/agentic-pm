@@ -10,16 +10,16 @@ sys.path.insert(0, project_root)
 
 import datetime
 
-from portfolio_tool.database_setup import (
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.database_setup import (
     get_session,
     Asset,
     PipelineRun,
     PipelineRunStatus,
     func,
 )
-from portfolio_tool.data_manager import DataManager
-from portfolio_tool.providers.yfinance_provider import YFinanceProvider
-from portfolio_tool.services.quota_manager import DatabaseQuotaManager
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.data_manager import DataManager
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.providers.yfinance_provider import YFinanceProvider
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.services.quota_manager import DatabaseQuotaManager
 
 # Konfiguration für den Backfill-Run
 PROVIDER_NAME = "yfinance"

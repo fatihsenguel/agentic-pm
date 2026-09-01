@@ -10,7 +10,7 @@
 from typing import Dict, Any, Optional, List
 from langchain_core.tools import tool
 
-from portfolio_tool.portfolio_manager import PortfolioManager
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.portfolio_manager import PortfolioManager
 
 
 # =============================================================================

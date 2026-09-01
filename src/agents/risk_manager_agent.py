@@ -30,7 +30,7 @@ from .protocols import (
     RebalanceFrequency,
 )
 
-from config import config
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.agents.config import config
 
 
 class RiskManagerAgent(SupervisorAgent):

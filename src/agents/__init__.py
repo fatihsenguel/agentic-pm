@@ -134,6 +134,18 @@ from .risk_manager_agent import (
     create_risk_manager,
 )
 
+from .compliance_agent import (
+    ComplianceAgent,
+    run_compliance_check,
+    check_portfolio_compliance,
+)
+
+from .rag_agent import (
+    RAGAgent,
+    RAGAgentConfig,
+    research_documents,
+)
+
 # =============================================================================
 # VERSION & EXPORTS
 # =============================================================================
@@ -207,4 +219,12 @@ __all__ = [
     # Risk Manager (Supervisor)
     "RiskManagerAgent",
     "create_risk_manager",
+
+    "ComplianceAgent",
+    "run_compliance_check",
+    "check_portfolio_compliance",
+
+    "RAGAgent",
+    "RAGAgentConfig",
+    "research_documents",
 ]

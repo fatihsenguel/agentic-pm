@@ -15,7 +15,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 
-from portfolio_tool.database_setup import (
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.database_setup import (
     ApiQuota, 
     ApiCallLog, 
     PipelineRun,

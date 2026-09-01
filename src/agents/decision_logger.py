@@ -54,7 +54,7 @@ def log_decision(
         decision_log_id if successful, None if failed
     """
     try:
-        from portfolio_tool.database_setup import get_session, DecisionLog
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.database_setup import get_session, DecisionLog
         
         session = get_session()
         
@@ -164,7 +164,7 @@ def get_decision_history(
         List of decision log dicts, most recent first
     """
     try:
-        from portfolio_tool.database_setup import get_session, DecisionLog
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.database_setup import get_session, DecisionLog
         
         session = get_session()
         
@@ -220,7 +220,7 @@ def mark_decision_executed(decision_log_id: int) -> bool:
         True if successful, False otherwise
     """
     try:
-        from portfolio_tool.database_setup import get_session, DecisionLog
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.database_setup import get_session, DecisionLog
         
         session = get_session()
         
@@ -253,7 +253,7 @@ def get_decision_stats(portfolio_id: Optional[int] = None, days: int = 30) -> Di
         Dict with decision counts, execution rates, etc.
     """
     try:
-        from portfolio_tool.database_setup import get_session, DecisionLog
+        from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.database_setup import get_session, DecisionLog
         from datetime import timedelta
         
         session = get_session()

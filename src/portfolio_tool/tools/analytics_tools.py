@@ -15,7 +15,7 @@ Design Principles:
 from typing import Dict, Any, List, Optional
 from langchain_core.tools import tool
 
-from portfolio_tool.analytics.metrics import MetricsCalculator
+from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src.portfolio_tool.analytics.metrics import MetricsCalculator
 
 
 # =============================================================================
