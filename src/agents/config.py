@@ -63,7 +63,7 @@ OPENAI_FULL = LLMConfig(
 # Claude alternatives (for future - won't error on import)
 ANTHROPIC_HAIKU = LLMConfig(
     provider="anthropic",
-    model="claude-3-5-haiku-20241022",
+    model="claude-haiku-4-5-20251001",
     temperature=0.1,
     max_tokens=1024,
 )
@@ -80,8 +80,7 @@ ANTHROPIC_SONNET = LLMConfig(
 # ACTIVE CONFIGURATION (change this one line to switch models)
 # =============================================================================
 
-ACTIVE_LLM_CONFIG = OPENAI_MINI
-
+ACTIVE_LLM_CONFIG = ANTHROPIC_HAIKU
 
 # =============================================================================
 # AGENT BEHAVIOR SETTINGS

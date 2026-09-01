@@ -38,7 +38,7 @@ from config import config as app_config
 class RouterConfig:
     """Configuration for the Smart Router."""
     # Use stronger model for routing decisions (GPT-4o instead of GPT-4o-mini)
-    use_stronger_model: bool = True
+    use_stronger_model: bool = False
     
     # Max retries for parsing failures
     max_retries: int = 2
@@ -101,16 +101,15 @@ class SmartRouter:
         """Lazy load LLM to avoid import-time API key validation."""
         if self._llm is None:
             if self.config.use_stronger_model:
-                # Use GPT-4o for routing (more accurate)
-                from langchain_openai import ChatOpenAI
-                self._llm = ChatOpenAI(
-                    model=OPENAI_FULL.model,
-                    temperature=0.0,  # Deterministic for routing
+                from agents.config import ANTHROPIC_SONNET
+                from langchain_anthropic import ChatAnthropic
+                self._llm = ChatAnthropic(
+                    model=ANTHROPIC_SONNET.model,
+                    temperature=0.0,
                     max_tokens=1024,
-                    api_key=OPENAI_FULL.api_key,
+                    api_key=ANTHROPIC_SONNET.api_key,
                 )
             else:
-                # Use default model from config
                 self._llm = get_llm()
         return self._llm
     
