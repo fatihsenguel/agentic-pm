@@ -1,0 +1,485 @@
+.....................FFFFFFFFF......................F.F............F.... [ 65%]
+..F.......FF..........................                                   [100%]
+==================================== ERRORS ====================================
+_________________ ERROR collecting tests/test_router_simple.py _________________
+tests/test_router_simple.py:31: in <module>
+    asyncio.run(test())
+/opt/homebrew/Cellar/python@3.10/3.10.21/Frameworks/Python.framework/Versions/3.10/lib/python3.10/asyncio/runners.py:44: in run
+    return loop.run_until_complete(main)
+/opt/homebrew/Cellar/python@3.10/3.10.21/Frameworks/Python.framework/Versions/3.10/lib/python3.10/asyncio/base_events.py:649: in run_until_complete
+    return future.result()
+tests/test_router_simple.py:24: in test
+    print(f"✓ Decision tickers: {decision.parameters.tickers}")
+E   AttributeError: 'NoneType' object has no attribute 'parameters'
+------------------------------- Captured stdout --------------------------------
+Testing Router with portfolio_id...
+✓ Demo portfolio: 1
+✓ Router accepted portfolio_id
+=================================== FAILURES ===================================
+_________ TestGraphStructure.test_should_continue_or_end_with_response _________
+
+self = <test_langgraph.TestGraphStructure object at 0x10e825fc0>
+
+    def test_should_continue_or_end_with_response(self):
+        """Test routing when final response is set."""
+>       from agents.graph import should_continue_or_end
+E       ImportError: cannot import name 'should_continue_or_end' from 'agents.graph' (/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/tests/../src/agents/graph.py)
+
+tests/test_langgraph.py:153: ImportError
+__________ TestGraphStructure.test_should_continue_or_end_with_agents __________
+
+self = <test_langgraph.TestGraphStructure object at 0x115aeef20>
+
+    def test_should_continue_or_end_with_agents(self):
+        """Test routing when agents remain."""
+>       from agents.graph import should_continue_or_end
+E       ImportError: cannot import name 'should_continue_or_end' from 'agents.graph' (/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/tests/../src/agents/graph.py)
+
+tests/test_langgraph.py:164: ImportError
+___________ TestGraphStructure.test_should_continue_or_end_complete ____________
+
+self = <test_langgraph.TestGraphStructure object at 0x115b3f790>
+
+    def test_should_continue_or_end_complete(self):
+        """Test routing when all agents done."""
+>       from agents.graph import should_continue_or_end
+E       ImportError: cannot import name 'should_continue_or_end' from 'agents.graph' (/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/tests/../src/agents/graph.py)
+
+tests/test_langgraph.py:175: ImportError
+____________________ TestGraphStructure.test_route_to_agent ____________________
+
+self = <test_langgraph.TestGraphStructure object at 0x115b3caf0>
+
+    def test_route_to_agent(self):
+        """Test routing to specific agents."""
+>       from agents.graph import route_to_agent
+E       ImportError: cannot import name 'route_to_agent' from 'agents.graph' (/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/tests/../src/agents/graph.py)
+
+tests/test_langgraph.py:186: ImportError
+________________________ TestNodes.test_dispatcher_node ________________________
+
+self = <test_langgraph.TestNodes object at 0x115b3e860>
+
+    @pytest.mark.asyncio
+    async def test_dispatcher_node(self):
+        """Test dispatcher node."""
+>       from agents.nodes import agent_dispatcher_node
+E       ImportError: cannot import name 'agent_dispatcher_node' from 'agents.nodes' (/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/tests/../src/agents/nodes.py)
+
+tests/test_langgraph.py:213: ImportError
+_____________________ TestNodes.test_dispatcher_node_empty _____________________
+
+self = <test_langgraph.TestNodes object at 0x115b3de40>
+
+    @pytest.mark.asyncio
+    async def test_dispatcher_node_empty(self):
+        """Test dispatcher with no agents."""
+>       from agents.nodes import agent_dispatcher_node
+E       ImportError: cannot import name 'agent_dispatcher_node' from 'agents.nodes' (/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/tests/../src/agents/nodes.py)
+
+tests/test_langgraph.py:225: ImportError
+___________________ TestIntegration.test_simple_macro_query ____________________
+
+self = <test_langgraph.TestIntegration object at 0x115b3ded0>
+
+    @pytest.mark.asyncio
+    async def test_simple_macro_query(self):
+        """Test a simple macro analysis query through the graph."""
+        from agents.graph import run_agent_graph
+    
+        result = await run_agent_graph("Wie ist die aktuelle Marktlage?")
+    
+        # Should have completed
+        assert result.get("final_response") is not None
+    
+        # Should have used MacroAgent
+        sub_results = result.get("sub_results", {})
+>       assert "MacroAgent" in sub_results
+E       AssertionError: assert 'MacroAgent' in {}
+
+tests/test_langgraph.py:254: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+🚀 Request started: 02eb0c13...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (5936ms)[0m
+
+✅ Request complete (5936ms)
+____________________ TestIntegration.test_multi_step_query _____________________
+
+self = <test_langgraph.TestIntegration object at 0x115b3ffd0>
+
+    @pytest.mark.asyncio
+    async def test_multi_step_query(self):
+        """Test a multi-step optimization query."""
+        from agents.graph import run_agent_graph
+    
+        result = await run_agent_graph(
+            "Optimiere mein Portfolio mit SPY und TLT"
+        )
+    
+        assert result.get("final_response") is not None
+    
+        # Should have used DataAgent and OptimizationAgent
+        sub_results = result.get("sub_results", {})
+>       assert "DataAgent" in sub_results or "OptimizationAgent" in sub_results
+E       AssertionError: assert ('DataAgent' in {} or 'OptimizationAgent' in {})
+
+tests/test_langgraph.py:269: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+🚀 Request started: e9a3c2d8...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (5582ms)[0m
+
+✅ Request complete (5583ms)
+___________________ TestIntegration.test_clarification_query ___________________
+
+self = <test_langgraph.TestIntegration object at 0x11890c370>
+
+    @pytest.mark.asyncio
+    async def test_clarification_query(self):
+        """Test an ambiguous query that needs clarification."""
+        from agents.graph import run_agent_graph
+    
+        result = await run_agent_graph("Portfolio")
+    
+        # Should ask for clarification
+        assert result.get("final_response") is not None
+        # Clarification messages typically contain a question
+        response = result.get("final_response", "")
+>       assert "?" in response or "clarif" in response.lower() or "möchten" in response.lower()
+E       assert ('?' in "⚠️ Some issues occurred during analysis:\n  - Router error: 'NoneType' object has no attribute 'intent'\n\nAnalysis complete. See details below:" or 'clarif' in "⚠️ some issues occurred during analysis:\n  - router error: 'nonetype' object has no attribute 'intent'\n\nanalysis complete. see details below:" or 'möchten' in "⚠️ some issues occurred during analysis:\n  - router error: 'nonetype' object has no attribute 'intent'\n\nanalysis complete. see details below:")
+E        +  where "⚠️ some issues occurred during analysis:\n  - router error: 'nonetype' object has no attribute 'intent'\n\nanalysis complete. see details below:" = <built-in method lower of str object at 0x11bae29e0>()
+E        +    where <built-in method lower of str object at 0x11bae29e0> = "⚠️ Some issues occurred during analysis:\n  - Router error: 'NoneType' object has no attribute 'intent'\n\nAnalysis complete. See details below:".lower
+E        +  and   "⚠️ some issues occurred during analysis:\n  - router error: 'nonetype' object has no attribute 'intent'\n\nanalysis complete. see details below:" = <built-in method lower of str object at 0x11bae29e0>()
+E        +    where <built-in method lower of str object at 0x11bae29e0> = "⚠️ Some issues occurred during analysis:\n  - Router error: 'NoneType' object has no attribute 'intent'\n\nAnalysis complete. See details below:".lower
+
+tests/test_langgraph.py:282: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+🚀 Request started: bd537c40...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (5508ms)[0m
+
+✅ Request complete (5508ms)
+_________________ TestMacroAgentTools.test_assess_regime_tool __________________
+
+self = <test_phase5_4_integration.TestMacroAgentTools object at 0x11890fbb0>
+
+    def test_assess_regime_tool(self):
+        """Test regime assessment."""
+        from agents.macro_agent import create_macro_agent
+    
+        agent = create_macro_agent()
+    
+        # Test with manual values
+        result = agent.assess_regime_tool(
+            vix_level=28.0,
+            fed_sentiment=0.4,
+            yield_curve_slope=-0.3
+        )
+    
+        print(f"Regime Assessment: {result}")
+    
+>       assert result.get("success")
+E       assert False
+E        +  where False = <built-in method get of dict object at 0x11cda90c0>('success')
+E        +    where <built-in method get of dict object at 0x11cda90c0> = {'success': False, 'error': "'MacroConfig' object has no attribute 'max_equity_adjustment'"}.get
+
+tests/test_phase5_4_integration.py:291: AssertionError
+----------------------------- Captured stdout call -----------------------------
+Regime Assessment: {'success': False, 'error': "'MacroConfig' object has no attribute 'max_equity_adjustment'"}
+__________________ TestAgentInteraction.test_shared_data_flow __________________
+
+self = <test_phase5_4_integration.TestAgentInteraction object at 0x11890c550>
+
+    def test_shared_data_flow(self):
+        """Test that MacroAgent updates shared_data correctly."""
+        import asyncio
+        from agents.macro_agent import create_macro_agent
+        from agents.base_agent import AgentState
+        from agents.protocols import PortfolioTask, TaskType
+    
+        async def run_test():
+            agent = create_macro_agent()
+    
+            # Create state
+            state = AgentState()
+            state.current_task = PortfolioTask(
+                task_id="test_macro_flow",
+                task_type=TaskType.MACRO_ANALYSIS,
+                universe=[]
+            )
+    
+            # Process
+            result_state = await agent.process(state)
+    
+            # Check shared_data
+            shared = result_state.shared_data
+    
+            print(f"Shared Data Keys: {list(shared.keys())}")
+    
+            expected_keys = ["vix_level", "market_regime", "macro_signal"]
+            for key in expected_keys:
+                if key in shared:
+                    print(f"✅ {key}: {shared[key]}")
+                else:
+                    print(f"⚠️ {key}: missing")
+    
+            return shared
+    
+>       shared = asyncio.run(run_test())
+
+tests/test_phase5_4_integration.py:349: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/opt/homebrew/Cellar/python@3.10/3.10.21/Frameworks/Python.framework/Versions/3.10/lib/python3.10/asyncio/runners.py:44: in run
+    return loop.run_until_complete(main)
+/opt/homebrew/Cellar/python@3.10/3.10.21/Frameworks/Python.framework/Versions/3.10/lib/python3.10/asyncio/base_events.py:649: in run_until_complete
+    return future.result()
+tests/test_phase5_4_integration.py:333: in run_test
+    result_state = await agent.process(state)
+src/agents/macro_agent.py:304: in process
+    signal = self._generate_signal(
+src/agents/macro_agent.py:495: in _generate_signal
+    risk_stance, equity_adjustment = self._determine_risk_stance(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = MacroAgent(name='MacroAgent', role=macro)
+regime = <RegimeType.RECOVERY: 'recovery'>, fed_sentiment = 0.0
+vix_regime = 'low'
+
+    def _determine_risk_stance(
+        self,
+        regime: MarketRegime,
+        fed_sentiment: float,
+        vix_regime: str
+    ) -> tuple:
+        """Determine risk stance and equity adjustment."""
+>       max_adj = config.macro.max_equity_adjustment
+E       AttributeError: 'MacroConfig' object has no attribute 'max_equity_adjustment'. Did you mean: 'max_equity_adjust'?
+
+src/agents/macro_agent.py:580: AttributeError
+_____________________________ test_rebalance_agent _____________________________
+
+    def test_rebalance_agent():
+        """Test RebalanceAgent integration."""
+        print("\n" + "=" * 60)
+        print("TEST 6: RebalanceAgent Integration")
+        print("=" * 60)
+    
+        try:
+            from agents.rebalance_agent import create_rebalance_agent
+    
+            agent = create_rebalance_agent(verbose=True)
+    
+            print(f"\nAgent: {agent.name}")
+            print(f"Tools: {[t.__name__ for t in agent.get_tools()]}")
+    
+            # Test drift check
+            result = agent.calculate_drift_tool(
+                current_weights={"SPY": 0.65, "TLT": 0.25, "GLD": 0.10},
+                target_weights={"SPY": 0.60, "TLT": 0.30, "GLD": 0.10}
+            )
+    
+            print(f"\nDrift Check Result:")
+            print(f"   Success: {result['success']}")
+            print(f"   Max Drift: {result['max_drift_formatted']}")
+            print(f"   Should Rebalance: {result['should_rebalance']}")
+    
+            assert result["success"] == True
+    
+            # Test full analysis
+>           full_result = agent.analyze_rebalance_tool(
+                current_weights={"SPY": 0.65, "TLT": 0.25, "GLD": 0.10},
+                target_weights={"SPY": 0.60, "TLT": 0.30, "GLD": 0.10},
+                portfolio_value=100000,
+                prices={"SPY": 450, "TLT": 95, "GLD": 180}
+            )
+
+tests/test_rebalance.py:249: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = RebalanceAgent(name='RebalanceAgent', role=data)
+current_weights = {'SPY': 0.65, 'TLT': 0.25, 'GLD': 0.1}
+target_weights = {'SPY': 0.6, 'TLT': 0.3, 'GLD': 0.1}, portfolio_value = 100000
+prices = {'SPY': 450, 'TLT': 95, 'GLD': 180}, drift_threshold = None
+
+    def analyze_rebalance_tool(
+        self,
+        current_weights: Dict[str, float],
+        target_weights: Dict[str, float],
+        portfolio_value: float = 100000,
+        prices: Optional[Dict[str, float]] = None,
+        drift_threshold: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        """
+        Perform complete rebalancing analysis.
+    
+        ⚠️ Delegates to rebalance_tools.py - NO calculations here.
+    
+        Args:
+            current_weights: Current portfolio weights
+            target_weights: Target/optimal weights
+            portfolio_value: Total portfolio value
+            prices: Current prices (optional, uses defaults if not provided)
+            drift_threshold: Custom drift threshold (optional)
+    
+        Returns:
+            Complete rebalancing analysis
+        """
+        # Import the pure math module
+        from portfolio_tool.tools.rebalance_tools import (
+            analyze_rebalance,
+            RebalanceConfig
+        )
+    
+        # Use default prices if not provided
+        if prices is None or not prices:
+            # Get from data manager if possible
+            try:
+                from portfolio_tool.data_manager import get_data_manager
+                from datetime import datetime
+    
+                dm = get_data_manager()
+                prices = {}
+    
+                # Get specific tickers involved in the rebalance
+                involved_tickers = set(current_weights.keys()) | set(target_weights.keys())
+    
+                # Fetch REAL prices from DB
+                missing_prices = []
+                for ticker in involved_tickers:
+                    if ticker == "CASH":
+                        prices[ticker] = 1.0
+                        continue
+    
+                    # ✅ STRICT: Get the actual latest price
+                    latest_price = dm.get_latest_price(ticker)
+                    if latest_price:
+                        prices[ticker] = float(latest_price)
+                    else:
+                        missing_prices.append(ticker)
+    
+                # ✅ STRICT: Fail if data is missing
+                if missing_prices:
+                    raise ValueError(f"Cannot rebalance: Missing prices for {missing_prices}. Run DataAgent first.")
+    
+            except Exception as e:
+                # Don't mask the error with a placeholder
+                return {
+                    "success": False,
+                    "error": f"Price data retrieval failed: {str(e)}"
+                }
+    
+        # Configure
+        config = RebalanceConfig(
+>           drift_threshold_percent=drift_threshold or config.rebalance.default_drift_threshold,
+            transaction_cost_bps=config.rebalance.default_transaction_cost_bps,
+            capital_gains_rate=config.rebalance.capital_gains_rate,
+        )
+E       UnboundLocalError: local variable 'config' referenced before assignment
+
+src/agents/rebalance_agent.py:254: UnboundLocalError
+----------------------------- Captured stdout call -----------------------------
+
+============================================================
+TEST 6: RebalanceAgent Integration
+============================================================
+
+Agent: RebalanceAgent
+Tools: ['analyze_rebalance_tool', 'calculate_drift_tool', 'generate_trades_tool', 'quick_drift_check_tool']
+
+Drift Check Result:
+   Success: True
+   Max Drift: 5.00%
+   Should Rebalance: True
+___________ TestRouterDecision.test_clarification_requires_question ____________
+
+self = <test_smart_router.TestRouterDecision object at 0x11cbc5270>
+
+    def test_clarification_requires_question(self):
+        """Test that clarification_needed intent requires question."""
+        data = {
+            "intent": "clarification_needed",
+            "confidence": 0.3,
+            "agents_needed": [],
+            "execution_order": [],
+            "parameters": {},
+            "reasoning": "Unclear request",
+            "clarification_question": None,  # Missing!
+        }
+    
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_smart_router.py:126: Failed
+______________ TestPortfolioWeights.test_weights_must_sum_to_one _______________
+
+self = <test_smart_router.TestPortfolioWeights object at 0x11cbc7910>
+
+    def test_weights_must_sum_to_one(self):
+        """Test that weights must sum to ~1.0."""
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_smart_router.py:181: Failed
+_____________ TestPortfolioWeights.test_negative_weights_rejected ______________
+
+self = <test_smart_router.TestPortfolioWeights object at 0x11cbc7550>
+
+    def test_negative_weights_rejected(self):
+        """Test that negative weights are rejected."""
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_smart_router.py:186: Failed
+=============================== warnings summary ===============================
+src/agents/schemas.py:50
+  /Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/tests/../src/agents/schemas.py:50: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class AgentTask(BaseModel):
+
+src/agents/schemas.py:84
+  /Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/tests/../src/agents/schemas.py:84: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class RouterDecision(BaseModel):
+
+tests/test_all_configs.py::test_no_self_config_references
+  /Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/.venv/lib/python3.10/site-packages/_pytest/python.py:171: PytestReturnNotNoneWarning: Test functions should return None, but tests/test_all_configs.py::test_no_self_config_references returned <class 'bool'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+tests/test_portfolio_integration.py::test_1_portfolio_crud
+  /Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/.venv/lib/python3.10/site-packages/_pytest/python.py:171: PytestReturnNotNoneWarning: Test functions should return None, but tests/test_portfolio_integration.py::test_1_portfolio_crud returned <class 'bool'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+tests/test_portfolio_integration.py::test_3_state_portfolio_context
+  /Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/.venv/lib/python3.10/site-packages/_pytest/python.py:171: PytestReturnNotNoneWarning: Test functions should return None, but tests/test_portfolio_integration.py::test_3_state_portfolio_context returned <class 'bool'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_langgraph.py::TestGraphStructure::test_should_continue_or_end_with_response
+FAILED tests/test_langgraph.py::TestGraphStructure::test_should_continue_or_end_with_agents
+FAILED tests/test_langgraph.py::TestGraphStructure::test_should_continue_or_end_complete
+FAILED tests/test_langgraph.py::TestGraphStructure::test_route_to_agent - Imp...
+FAILED tests/test_langgraph.py::TestNodes::test_dispatcher_node - ImportError...
+FAILED tests/test_langgraph.py::TestNodes::test_dispatcher_node_empty - Impor...
+FAILED tests/test_langgraph.py::TestIntegration::test_simple_macro_query - As...
+FAILED tests/test_langgraph.py::TestIntegration::test_multi_step_query - Asse...
+FAILED tests/test_langgraph.py::TestIntegration::test_clarification_query - a...
+FAILED tests/test_phase5_4_integration.py::TestMacroAgentTools::test_assess_regime_tool
+FAILED tests/test_phase5_4_integration.py::TestAgentInteraction::test_shared_data_flow
+FAILED tests/test_rebalance.py::test_rebalance_agent - UnboundLocalError: loc...
+FAILED tests/test_smart_router.py::TestRouterDecision::test_clarification_requires_question
+FAILED tests/test_smart_router.py::TestPortfolioWeights::test_weights_must_sum_to_one
+FAILED tests/test_smart_router.py::TestPortfolioWeights::test_negative_weights_rejected
+ERROR tests/test_router_simple.py - AttributeError: 'NoneType' object has no ...
+15 failed, 95 passed, 5 warnings, 1 error in 68.65s (0:01:08)
