@@ -250,7 +250,7 @@ SCOPE GUARDS:
                 }
         
         # Configure
-        config = RebalanceConfig(
+        rebalance_config = RebalanceConfig(
             drift_threshold_percent=drift_threshold or config.rebalance.default_drift_threshold,
             transaction_cost_bps=config.rebalance.default_transaction_cost_bps,
             capital_gains_rate=config.rebalance.capital_gains_rate,
@@ -263,7 +263,7 @@ SCOPE GUARDS:
                 target_weights=target_weights,
                 portfolio_value=portfolio_value,
                 prices=prices,
-                config=config,
+                config=rebalance_config,
             )
             
             return {
