@@ -36,3 +36,5 @@ Thumbs.db
 # Logs
 *.log
 "@ | Out-File -FilePath .gitignore -Encoding UTF8data/portfolio.db
+data/*.db
+data/*.db.backup
