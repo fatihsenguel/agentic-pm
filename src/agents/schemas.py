@@ -148,8 +148,9 @@ class RouterDecision(BaseModel):
     def validate_clarification(self) -> 'RouterDecision':
         """If clarification needed, must have question."""
         if self.intent == IntentType.CLARIFICATION_NEEDED and not self.clarification_question:
-            # Provide default question
-            self.clarification_question = "Could you please clarify your request? I need to know which assets to analyze."
+            raise ValueError(
+                "clarification_question is required when intent is clarification_needed"
+            )
         return self
 
 
