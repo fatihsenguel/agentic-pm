@@ -1,24 +1,9 @@
-.....................FFFFFFFFF......................F.F............F.... [ 65%]
-..F.......FF..........................                                   [100%]
-==================================== ERRORS ====================================
-_________________ ERROR collecting tests/test_router_simple.py _________________
-tests/test_router_simple.py:31: in <module>
-    asyncio.run(test())
-/opt/homebrew/Cellar/python@3.10/3.10.21/Frameworks/Python.framework/Versions/3.10/lib/python3.10/asyncio/runners.py:44: in run
-    return loop.run_until_complete(main)
-/opt/homebrew/Cellar/python@3.10/3.10.21/Frameworks/Python.framework/Versions/3.10/lib/python3.10/asyncio/base_events.py:649: in run_until_complete
-    return future.result()
-tests/test_router_simple.py:24: in test
-    print(f"✓ Decision tickers: {decision.parameters.tickers}")
-E   AttributeError: 'NoneType' object has no attribute 'parameters'
-------------------------------- Captured stdout --------------------------------
-Testing Router with portfolio_id...
-✓ Demo portfolio: 1
-✓ Router accepted portfolio_id
+.....................FFFFFFFF.......................F.F............F.... [ 64%]
+...F.......FF..........................                                  [100%]
 =================================== FAILURES ===================================
 _________ TestGraphStructure.test_should_continue_or_end_with_response _________
 
-self = <test_langgraph.TestGraphStructure object at 0x10e825fc0>
+self = <test_langgraph.TestGraphStructure object at 0x10f5aec20>
 
     def test_should_continue_or_end_with_response(self):
         """Test routing when final response is set."""
@@ -28,7 +13,7 @@ E       ImportError: cannot import name 'should_continue_or_end' from 'agents.gr
 tests/test_langgraph.py:153: ImportError
 __________ TestGraphStructure.test_should_continue_or_end_with_agents __________
 
-self = <test_langgraph.TestGraphStructure object at 0x115aeef20>
+self = <test_langgraph.TestGraphStructure object at 0x10f45b3a0>
 
     def test_should_continue_or_end_with_agents(self):
         """Test routing when agents remain."""
@@ -38,7 +23,7 @@ E       ImportError: cannot import name 'should_continue_or_end' from 'agents.gr
 tests/test_langgraph.py:164: ImportError
 ___________ TestGraphStructure.test_should_continue_or_end_complete ____________
 
-self = <test_langgraph.TestGraphStructure object at 0x115b3f790>
+self = <test_langgraph.TestGraphStructure object at 0x10e3e7b80>
 
     def test_should_continue_or_end_complete(self):
         """Test routing when all agents done."""
@@ -48,7 +33,7 @@ E       ImportError: cannot import name 'should_continue_or_end' from 'agents.gr
 tests/test_langgraph.py:175: ImportError
 ____________________ TestGraphStructure.test_route_to_agent ____________________
 
-self = <test_langgraph.TestGraphStructure object at 0x115b3caf0>
+self = <test_langgraph.TestGraphStructure object at 0x10f5ae9b0>
 
     def test_route_to_agent(self):
         """Test routing to specific agents."""
@@ -58,7 +43,7 @@ E       ImportError: cannot import name 'route_to_agent' from 'agents.graph' (/U
 tests/test_langgraph.py:186: ImportError
 ________________________ TestNodes.test_dispatcher_node ________________________
 
-self = <test_langgraph.TestNodes object at 0x115b3e860>
+self = <test_langgraph.TestNodes object at 0x10f5ae260>
 
     @pytest.mark.asyncio
     async def test_dispatcher_node(self):
@@ -69,7 +54,7 @@ E       ImportError: cannot import name 'agent_dispatcher_node' from 'agents.nod
 tests/test_langgraph.py:213: ImportError
 _____________________ TestNodes.test_dispatcher_node_empty _____________________
 
-self = <test_langgraph.TestNodes object at 0x115b3de40>
+self = <test_langgraph.TestNodes object at 0x10f5ac820>
 
     @pytest.mark.asyncio
     async def test_dispatcher_node_empty(self):
@@ -80,7 +65,7 @@ E       ImportError: cannot import name 'agent_dispatcher_node' from 'agents.nod
 tests/test_langgraph.py:225: ImportError
 ___________________ TestIntegration.test_simple_macro_query ____________________
 
-self = <test_langgraph.TestIntegration object at 0x115b3ded0>
+self = <test_langgraph.TestIntegration object at 0x10f5aceb0>
 
     @pytest.mark.asyncio
     async def test_simple_macro_query(self):
@@ -100,15 +85,15 @@ E       AssertionError: assert 'MacroAgent' in {}
 tests/test_langgraph.py:254: AssertionError
 ----------------------------- Captured stdout call -----------------------------
 
-🚀 Request started: 02eb0c13...
+🚀 Request started: 13f9d52c...
 
 ┌─ 🤖 [Router] Starting...[0m
-└─ ✓ [Router] Done (5936ms)[0m
+└─ ✓ [Router] Done (2814ms)[0m
 
-✅ Request complete (5936ms)
+✅ Request complete (2814ms)
 ____________________ TestIntegration.test_multi_step_query _____________________
 
-self = <test_langgraph.TestIntegration object at 0x115b3ffd0>
+self = <test_langgraph.TestIntegration object at 0x10f5ad8d0>
 
     @pytest.mark.asyncio
     async def test_multi_step_query(self):
@@ -129,46 +114,15 @@ E       AssertionError: assert ('DataAgent' in {} or 'OptimizationAgent' in {})
 tests/test_langgraph.py:269: AssertionError
 ----------------------------- Captured stdout call -----------------------------
 
-🚀 Request started: e9a3c2d8...
+🚀 Request started: e0a32aca...
 
 ┌─ 🤖 [Router] Starting...[0m
-└─ ✓ [Router] Done (5582ms)[0m
+└─ ✓ [Router] Done (3163ms)[0m
 
-✅ Request complete (5583ms)
-___________________ TestIntegration.test_clarification_query ___________________
-
-self = <test_langgraph.TestIntegration object at 0x11890c370>
-
-    @pytest.mark.asyncio
-    async def test_clarification_query(self):
-        """Test an ambiguous query that needs clarification."""
-        from agents.graph import run_agent_graph
-    
-        result = await run_agent_graph("Portfolio")
-    
-        # Should ask for clarification
-        assert result.get("final_response") is not None
-        # Clarification messages typically contain a question
-        response = result.get("final_response", "")
->       assert "?" in response or "clarif" in response.lower() or "möchten" in response.lower()
-E       assert ('?' in "⚠️ Some issues occurred during analysis:\n  - Router error: 'NoneType' object has no attribute 'intent'\n\nAnalysis complete. See details below:" or 'clarif' in "⚠️ some issues occurred during analysis:\n  - router error: 'nonetype' object has no attribute 'intent'\n\nanalysis complete. see details below:" or 'möchten' in "⚠️ some issues occurred during analysis:\n  - router error: 'nonetype' object has no attribute 'intent'\n\nanalysis complete. see details below:")
-E        +  where "⚠️ some issues occurred during analysis:\n  - router error: 'nonetype' object has no attribute 'intent'\n\nanalysis complete. see details below:" = <built-in method lower of str object at 0x11bae29e0>()
-E        +    where <built-in method lower of str object at 0x11bae29e0> = "⚠️ Some issues occurred during analysis:\n  - Router error: 'NoneType' object has no attribute 'intent'\n\nAnalysis complete. See details below:".lower
-E        +  and   "⚠️ some issues occurred during analysis:\n  - router error: 'nonetype' object has no attribute 'intent'\n\nanalysis complete. see details below:" = <built-in method lower of str object at 0x11bae29e0>()
-E        +    where <built-in method lower of str object at 0x11bae29e0> = "⚠️ Some issues occurred during analysis:\n  - Router error: 'NoneType' object has no attribute 'intent'\n\nAnalysis complete. See details below:".lower
-
-tests/test_langgraph.py:282: AssertionError
------------------------------ Captured stdout call -----------------------------
-
-🚀 Request started: bd537c40...
-
-┌─ 🤖 [Router] Starting...[0m
-└─ ✓ [Router] Done (5508ms)[0m
-
-✅ Request complete (5508ms)
+✅ Request complete (3164ms)
 _________________ TestMacroAgentTools.test_assess_regime_tool __________________
 
-self = <test_phase5_4_integration.TestMacroAgentTools object at 0x11890fbb0>
+self = <test_phase5_4_integration.TestMacroAgentTools object at 0x1174b8250>
 
     def test_assess_regime_tool(self):
         """Test regime assessment."""
@@ -187,15 +141,15 @@ self = <test_phase5_4_integration.TestMacroAgentTools object at 0x11890fbb0>
     
 >       assert result.get("success")
 E       assert False
-E        +  where False = <built-in method get of dict object at 0x11cda90c0>('success')
-E        +    where <built-in method get of dict object at 0x11cda90c0> = {'success': False, 'error': "'MacroConfig' object has no attribute 'max_equity_adjustment'"}.get
+E        +  where False = <built-in method get of dict object at 0x11c8cf700>('success')
+E        +    where <built-in method get of dict object at 0x11c8cf700> = {'success': False, 'error': "'MacroConfig' object has no attribute 'max_equity_adjustment'"}.get
 
 tests/test_phase5_4_integration.py:291: AssertionError
 ----------------------------- Captured stdout call -----------------------------
 Regime Assessment: {'success': False, 'error': "'MacroConfig' object has no attribute 'max_equity_adjustment'"}
 __________________ TestAgentInteraction.test_shared_data_flow __________________
 
-self = <test_phase5_4_integration.TestAgentInteraction object at 0x11890c550>
+self = <test_phase5_4_integration.TestAgentInteraction object at 0x117483a30>
 
     def test_shared_data_flow(self):
         """Test that MacroAgent updates shared_data correctly."""
@@ -399,7 +353,7 @@ Drift Check Result:
    Should Rebalance: True
 ___________ TestRouterDecision.test_clarification_requires_question ____________
 
-self = <test_smart_router.TestRouterDecision object at 0x11cbc5270>
+self = <test_smart_router.TestRouterDecision object at 0x11b6c1090>
 
     def test_clarification_requires_question(self):
         """Test that clarification_needed intent requires question."""
@@ -419,7 +373,7 @@ E       Failed: DID NOT RAISE ValueError
 tests/test_smart_router.py:126: Failed
 ______________ TestPortfolioWeights.test_weights_must_sum_to_one _______________
 
-self = <test_smart_router.TestPortfolioWeights object at 0x11cbc7910>
+self = <test_smart_router.TestPortfolioWeights object at 0x11b6c3af0>
 
     def test_weights_must_sum_to_one(self):
         """Test that weights must sum to ~1.0."""
@@ -429,7 +383,7 @@ E       Failed: DID NOT RAISE ValueError
 tests/test_smart_router.py:181: Failed
 _____________ TestPortfolioWeights.test_negative_weights_rejected ______________
 
-self = <test_smart_router.TestPortfolioWeights object at 0x11cbc7550>
+self = <test_smart_router.TestPortfolioWeights object at 0x11b6c2ec0>
 
     def test_negative_weights_rejected(self):
         """Test that negative weights are rejected."""
@@ -474,12 +428,10 @@ FAILED tests/test_langgraph.py::TestNodes::test_dispatcher_node - ImportError...
 FAILED tests/test_langgraph.py::TestNodes::test_dispatcher_node_empty - Impor...
 FAILED tests/test_langgraph.py::TestIntegration::test_simple_macro_query - As...
 FAILED tests/test_langgraph.py::TestIntegration::test_multi_step_query - Asse...
-FAILED tests/test_langgraph.py::TestIntegration::test_clarification_query - a...
 FAILED tests/test_phase5_4_integration.py::TestMacroAgentTools::test_assess_regime_tool
 FAILED tests/test_phase5_4_integration.py::TestAgentInteraction::test_shared_data_flow
 FAILED tests/test_rebalance.py::test_rebalance_agent - UnboundLocalError: loc...
 FAILED tests/test_smart_router.py::TestRouterDecision::test_clarification_requires_question
 FAILED tests/test_smart_router.py::TestPortfolioWeights::test_weights_must_sum_to_one
 FAILED tests/test_smart_router.py::TestPortfolioWeights::test_negative_weights_rejected
-ERROR tests/test_router_simple.py - AttributeError: 'NoneType' object has no ...
-15 failed, 95 passed, 5 warnings, 1 error in 68.65s (0:01:08)
+14 failed, 97 passed, 5 warnings in 42.88s

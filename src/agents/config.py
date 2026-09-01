@@ -68,12 +68,6 @@ ANTHROPIC_HAIKU = LLMConfig(
     max_tokens=1024,
 )
 
-ANTHROPIC_SONNET = LLMConfig(
-    provider="anthropic",
-    model="claude-3-5-sonnet-20241022",
-    temperature=0.1,
-    max_tokens=2048,
-)
 
 
 # =============================================================================
