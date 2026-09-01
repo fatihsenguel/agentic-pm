@@ -1,0 +1,196 @@
+======================================================================
+QUERY: What is the current market regime?   (portfolio_id=None)
+======================================================================
+
+🚀 Request started: e06a1051...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (3001ms)[0m
+
+✅ Request complete (3002ms)
+FINAL: 🌍 **MACRO ENVIRONMENT ANALYSIS**
+
+PLAN: ['MacroAgent']
+AGENTS_TO_RUN: []
+SUB_RESULTS keys: []
+ERRORS: []
+
+======================================================================
+QUERY: Get me the last 1 year of prices for SPY and TLT   (portfolio_id=None)
+======================================================================
+
+🚀 Request started: e86bacca...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (1987ms)[0m
+
+✅ Request complete (1987ms)
+FINAL: Analysis complete. See details below:
+PLAN: ['DataAgent']
+AGENTS_TO_RUN: []
+SUB_RESULTS keys: []
+ERRORS: []
+
+======================================================================
+QUERY: Optimize a portfolio of SPY, TLT and GLD for maximum Sharpe ratio   (portfolio_id=None)
+======================================================================
+
+🚀 Request started: ac66e95c...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (3513ms)[0m
+
+✅ Request complete (3513ms)
+FINAL: 📊 **PORTFOLIO OPTIMIZATION RESULTS**
+
+⚠️ Optimization failed
+PLAN: ['DataAgent', 'OptimizationAgent']
+AGENTS_TO_RUN: []
+SUB_RESULTS keys: []
+ERRORS: []
+
+======================================================================
+QUERY: Update the data for all asset classes   (portfolio_id=None)
+======================================================================
+
+🚀 Request started: beb38aa0...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (2966ms)[0m
+
+✅ Request complete (2967ms)
+FINAL: Analysis complete. See details below:
+PLAN: ['DataAgent']
+AGENTS_TO_RUN: []
+SUB_RESULTS keys: []
+ERRORS: []
+
+======================================================================
+QUERY: What is my current allocation by asset class?   (portfolio_id=1)
+======================================================================
+
+🚀 Request started: d21b35db...
+
+┌─ 🤖 [Router] Starting...[0m
+DEBUG: Verbinde mit DB unter sqlite:////Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/data/portfolio.db
+└─ ✓ [Router] Done (3066ms)[0m
+
+✅ Request complete (3067ms)
+FINAL: Could you please provide your current portfolio holdings? Please specify either: (1) the tickers and their current weights/amounts, or (2) your portfolio composition by asset class (e.g., 60% equities, 30% bonds, 10% alternatives).
+PLAN: []
+AGENTS_TO_RUN: []
+SUB_RESULTS keys: []
+ERRORS: []
+
+======================================================================
+QUERY: What is my volatility over the past twelve months?   (portfolio_id=1)
+======================================================================
+
+🚀 Request started: 57758e56...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (2250ms)[0m
+
+✅ Request complete (2250ms)
+FINAL: Analysis complete. See details below:
+PLAN: ['DataAgent']
+AGENTS_TO_RUN: []
+SUB_RESULTS keys: []
+ERRORS: []
+
+======================================================================
+QUERY: How has SPY performed since I bought it?   (portfolio_id=1)
+======================================================================
+
+🚀 Request started: f1688825...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (3275ms)[0m
+
+✅ Request complete (3275ms)
+FINAL: Analysis complete. See details below:
+PLAN: ['DataAgent']
+AGENTS_TO_RUN: []
+SUB_RESULTS keys: []
+ERRORS: []
+
+======================================================================
+QUERY: Should I rebalance my portfolio?   (portfolio_id=1)
+======================================================================
+
+🚀 Request started: f4a05915...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (2357ms)[0m
+
+✅ Request complete (2357ms)
+FINAL: To assess rebalancing needs, please provide: (1) Your current portfolio holdings and weights (e.g., SPY 50%, TLT 30%, GLD 20%), (2) Your target allocation, and (3) Any drift threshold you use (e.g., rebalance if any position drifts >5%)?
+PLAN: []
+AGENTS_TO_RUN: []
+SUB_RESULTS keys: []
+ERRORS: []
+
+======================================================================
+QUERY: What is the risk of my portfolio?   (portfolio_id=1)
+======================================================================
+
+🚀 Request started: b51ceb94...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (1937ms)[0m
+
+✅ Request complete (1937ms)
+FINAL: Could you please provide your portfolio composition (tickers and weights/amounts)? Also, which risk metrics are you interested in - volatility, VaR, maximum drawdown, or something else?
+PLAN: []
+AGENTS_TO_RUN: []
+SUB_RESULTS keys: []
+ERRORS: []
+
+======================================================================
+QUERY: What positions do I hold in the Technology sector?   (portfolio_id=2)
+======================================================================
+
+🚀 Request started: 988a90b9...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (2557ms)[0m
+
+✅ Request complete (2557ms)
+FINAL: I don't have access to your portfolio holdings. Could you please provide: (1) Your current positions (tickers and weights/amounts), or (2) Specify which Technology sector ETFs/stocks you'd like me to analyze (e.g., QQQ, XLK, ARKK)?
+PLAN: []
+AGENTS_TO_RUN: []
+SUB_RESULTS keys: []
+ERRORS: []
+
+======================================================================
+QUERY: Analyze ZZZZFAKE for me   (portfolio_id=None)
+======================================================================
+
+🚀 Request started: a3903ebd...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (2557ms)[0m
+
+✅ Request complete (2557ms)
+FINAL: Could you provide a valid ticker symbol (e.g., SPY, TLT, GLD)? Also, what type of analysis would you like - price data, risk metrics, optimization, or macro analysis?
+PLAN: []
+AGENTS_TO_RUN: []
+SUB_RESULTS keys: []
+ERRORS: []
+
+======================================================================
+QUERY: help   (portfolio_id=None)
+======================================================================
+
+🚀 Request started: 745bd5c7...
+
+┌─ 🤖 [Router] Starting...[0m
+└─ ✓ [Router] Done (2044ms)[0m
+
+✅ Request complete (2045ms)
+FINAL: What would you like to do? Please choose one: (1) Optimize a portfolio, (2) Analyze market conditions, (3) Rebalance an existing portfolio, (4) Backtest a strategy, or (5) Fetch market data?
+PLAN: []
+AGENTS_TO_RUN: []
+SUB_RESULTS keys: []
+ERRORS: []
+
