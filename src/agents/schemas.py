@@ -184,13 +184,15 @@ class PortfolioWeights(BaseModel):
     def validate_weights(cls, v: Dict[str, float]) -> Dict[str, float]:
         if not v:
             return v
-        
-        # Warn but don't crash on small mismatches (floating point issues)
+
+        negative = {k: w for k, w in v.items() if w < 0}
+        if negative:
+            raise ValueError(f"Negative weights not allowed: {negative}")
+
         total = sum(v.values())
         if abs(total - 1.0) > 0.05:  # 5% tolerance
-            # Just normalize it silently
-            pass
-            
+            raise ValueError(f"Weights must sum to 1.0 (+/-0.05), got {total:.4f}")
+
         return v
 
 
