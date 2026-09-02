@@ -156,6 +156,29 @@ This costs a few cents and ~40 seconds per run (live LLM + yfinance calls). Run 
 
 **It found bug 7, which 91 passing unit tests did not.** Unit tests cover components; the golden set covers whether a real question produces a real answer.
 
+### Why the unit tests missed it — and what to do about it
+
+The existing tests are **wrongly scoped, not outdated**. They verify components in
+isolation (does `RouterDecision` validate, does `calculate_drift` compute, does
+`PortfolioManager` do CRUD) and all of that genuinely worked. Bug 7 lived in the *seam*
+between `nodes.py` (wrote `execution_plan`) and `state.py` (read `execution_order`) —
+both files individually correct, nothing testing the handover. That is a general
+property of unit tests, not a sign of staleness.
+
+Two consequences:
+
+1. **The "91 passing" figure is inflated.** `test_portfolio_integration.py` returns
+   booleans instead of asserting, so its tests pass unconditionally.
+   `test_no_self_config_references` had the same defect until it was fixed this session.
+   `test_langgraph.py` tested functions that no longer exist and was deleted.
+   Rewrite `test_portfolio_integration.py` with real assertions and expect genuine
+   failures to surface.
+
+2. **Add cheap contract tests for the seams.** A test asserting that a macro query
+   yields a plan containing `MacroAgent` and non-empty `sub_results` would have caught
+   bug 7 in 30 seconds with no LLM call. The golden set is the safety net; fast
+   assertions on state handovers are the first line of defence.
+
 `tests/golden/run_baseline.txt` and `run_after_portfolio_context.txt` are raw diagnostic dumps from before/after the graph fixes, kept as historical evidence.
 
 ---
