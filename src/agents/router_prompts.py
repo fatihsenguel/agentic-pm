@@ -24,7 +24,7 @@ AVAILABLE AGENTS:
 
 INTENT TYPES:
 - optimization: User wants to create or optimize a portfolio
-- macro_analysis: User asks about market conditions, VIX, Fed, yields
+- macro_analysis: User asks about market conditions, VIX, yields
 - rebalancing: User wants drift analysis or trade generation
 - backtest: User wants historical simulation
 - data_fetch: User wants raw price data or metrics
@@ -55,9 +55,9 @@ You MUST respond with valid JSON matching this schema:
   ],
   "execution_order": ["FirstAgent", "SecondAgent"],
   "parameters": {
-    "tickers": ["SPY", "TLT"],
-    "period": "5Y",
-    "max_volatility": 0.12,
+    "tickers": [],
+    "period": null,
+    "max_volatility": null,
     "target_return": null,
     "portfolio_value": null,
     "rebalance_threshold": null
@@ -123,7 +123,7 @@ ROUTER_FEW_SHOT_EXAMPLES = [
             "execution_order": ["DataAgent", "OptimizationAgent"],
             "parameters": {
                 "tickers": ["SPY", "TLT", "GLD", "VWO"],
-                "period": "3Y",
+                "period": None,
                 "max_volatility": None,
                 "target_return": None,
                 "portfolio_value": None,
