@@ -67,6 +67,12 @@ class AssetFetchMetadata(Base):
     # When was the last time we fetched the shares history?
     last_shares_fetch_time = Column(DateTime, nullable=True)
 
+    # When was the last time we fetched daily prices?
+    last_price_fetch_time = Column(DateTime, nullable=True)
+
+    # How far back have we actually asked the provider for prices?
+    earliest_price_start = Column(Date, nullable=True)
+
     # (Wir können hier bei Bedarf leicht weitere Zeitstempel hinzufügen, 
     #  z.B. last_dividends_fetch_time)
 
@@ -439,7 +445,7 @@ class PortfolioHolding(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     purchase_date = Column(Date, nullable=True)
-    
+
     # Relationships
     portfolio = relationship('Portfolio', back_populates='holdings')
     asset = relationship('Asset')

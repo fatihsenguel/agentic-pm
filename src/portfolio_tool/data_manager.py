@@ -34,7 +34,8 @@ def load_config():
         return {"data_fetch": {
             "earnings_fetch_interval_days": 7,
             "profile_fetch_interval_days": 30,
-            "shares_fetch_interval_days": 30
+            "shares_fetch_interval_days": 30,
+            "price_fetch_interval_days": 1
         }}
     except tomli.TOMLDecodeError:
         print(f"FEHLER: {CONFIG_PATH} ist fehlerhaft.")
@@ -142,27 +143,72 @@ class DataManager:
 
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    def update_prices_for_asset(self, asset: Asset, start_date: date | None = None) -> UpdateResult:
-        """Updates daily prices for an asset."""
+    def update_prices_for_asset(self, asset: Asset, start_date: date | None = None,
+                                force_update: bool = False) -> UpdateResult:
+        """Updates daily prices for an asset.
+
+        Skips the provider when stored rows already cover the requested range and
+        we checked within price_fetch_interval_days. When the range is covered but
+        stale, fetches only from the newest stored date forward instead of
+        re-downloading the whole window.
+
+        Callers passing an explicit start_date previously bypassed all caching and
+        hit the provider unconditionally, so two tools asking for the same window
+        fetched it twice.
+        """
         try:
             print(f"... prüfe Preise für {asset.ticker}")
-            if not start_date:
-                last_entry = self.session.query(func.max(DailyPrice.date)).filter(
-                    DailyPrice.asset_id == asset.id
-                ).scalar()
-                start_date = (last_entry) if last_entry else date(2000, 1, 1) 
-            
-            if start_date and start_date > date.today():
+            meta = self._get_or_create_metadata(asset.id)
+
+            first_stored, last_stored = self.session.query(
+                func.min(DailyPrice.date), func.max(DailyPrice.date)
+            ).filter(DailyPrice.asset_id == asset.id).one()
+
+            requested_start = start_date or last_stored or date(2000, 1, 1)
+
+            if requested_start > date.today():
                 return UpdateResult(
                     success=True, operation="update_prices", affected_count=0, 
                     entities=[asset.ticker], entity_type="asset", metadata={"status": "up_to_date"}
                 )
-                
+
+            # Coverage is "have we ever ASKED the provider for data this far back",
+            # not "do we hold a row on or before that date". Those differ whenever
+            # the requested start is a weekend, a holiday, or predates the listing:
+            # asking for 2023-09-04 (Labor Day) returns 2023-09-05 as the first row,
+            # so a first_stored comparison can never be satisfied and the asset
+            # refetches its full history on every single call.
+            covered = (
+                meta.earliest_price_start is not None
+                and meta.earliest_price_start <= requested_start
+            )
+            interval = self.config.get("price_fetch_interval_days", 1)
+
+            if covered and not force_update and not self._should_fetch(
+                meta.last_price_fetch_time, interval
+            ):
+                return UpdateResult(
+                    success=True, operation="update_prices", affected_count=0,
+                    entities=[asset.ticker], entity_type="asset",
+                    date_range=(requested_start, last_stored),
+                    metadata={"status": "cached",
+                              "stored_through": last_stored.isoformat() if last_stored else None}
+                )
+
+            # Covered but stale: only the tail is missing. Not covered: full backfill.
+            fetch_from = last_stored if (covered and last_stored) else requested_start
+
             provider_data = self.provider.get_daily_prices(
                 ticker=asset.ticker,
-                start=start_date,
+                start=fetch_from,
                 end=date.today()
             )
+            meta.last_price_fetch_time = datetime.utcnow()
+            # Record how far back we have now asked. first_stored is included so
+            # assets with pre-existing history seed correctly on the first run.
+            asked_from = [d for d in (meta.earliest_price_start, fetch_from, first_stored)
+                          if d is not None]
+            meta.earliest_price_start = min(asked_from)
             
             if not provider_data:
                 return UpdateResult(
@@ -172,7 +218,7 @@ class DataManager:
 
             values_to_upsert = []
             for price_dto in provider_data:
-                if start_date and price_dto.date < start_date:
+                if price_dto.date < fetch_from:
                     continue 
                 values_to_upsert.append({
                     'asset_id': asset.id,
@@ -202,7 +248,7 @@ class DataManager:
                 affected_count=affected_count,
                 entities=[asset.ticker],
                 entity_type="asset",
-                date_range=(start_date, date.today()),
+                date_range=(fetch_from, date.today()),
                 metadata={"provider": "yfinance"}
             )
             

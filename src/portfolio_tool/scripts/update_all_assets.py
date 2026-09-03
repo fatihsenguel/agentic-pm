@@ -116,7 +116,7 @@ def main_update():
         print(f"\n=== 1. TÄGLICHE AUFGABEN (Preise, Divs, Splits) ===")
         for asset in asset_map.values():
             print(f"\n--- Tägliche Verarbeitung {asset.ticker} ---")
-            manager.update_prices_for_asset(asset)
+            manager.update_prices_for_asset(asset, force_update=True)
             manager.update_dividends_for_asset(asset)
             manager.update_splits_for_asset(asset)
         
