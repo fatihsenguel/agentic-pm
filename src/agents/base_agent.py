@@ -39,20 +39,13 @@ class AgentConfig:
     role: AgentRole
     
     # LLM settings
-    model_name: str = "gpt-4o-mini"
     temperature: float = 0.0  # Deterministic for quant tasks
     max_tokens: int = 4096
     
     # Behavior settings
     verbose: bool = False
-    log_tool_calls: bool = True
-    
-    # Rate limiting
-    max_tool_calls_per_turn: int = 10
-    
-    # Custom settings
-    custom_settings: Dict[str, Any] = field(default_factory=dict)
-
+    # log_tool_calls: bool = True          # NOT ENFORCED — see KNOWN_GAPS, trace_tool unwired
+    # max_tool_calls_per_turn: int = 10    # NOT ENFORCED — no loop guard exists
 
 @dataclass
 class AgentMessage:
