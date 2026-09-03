@@ -314,3 +314,108 @@ HANDOFF.md:223 lists it among the "genuine notes" deliberately kept during the
 January cleanup. It was empty at the time — kept on the strength of its
 filename, which is anti-inference rule 2. There is uncommitted local content;
 decide whether to keep it.
+---
+
+## Baseline observed through the CLI, 3 September 2026
+
+First run of the four benchmark Level 1 queries plus case 3.2 through
+`src/agents/cli.py`. Routing behaved exactly as benchmark.md Part 3 predicted:
+all four Level 1 queries reach DataAgent, fetch prices, and stop.
+
+**What works, recorded so it does not get re-litigated:** the router classified
+all five queries and returned valid JSON; it mapped "past twelve months" to
+`1Y` correctly; it took tickers from the portfolio rather than the message;
+confidence was calibrated sensibly (0.6 on the ambiguous P&L question, 0.95 on
+volatility, 0.3 on the out-of-scope one); the graph planned and executed with
+no agent planned-but-not-run, so bug 7's seam is holding; `portfolio_id` flowed
+through and switching 1 to 2 changed the ticker set; DataAgent produced correct
+covariance, returns and per-ticker volatility.
+
+The gap is capabilities, not architecture.
+
+### The synthesizer returns the same answer regardless of the question
+
+All four Level 1 queries returned a byte-identical response:
+
+    Analysis complete. See details below:
+
+    DataAgent: ✓
+
+Cause: `result_type` is set nowhere in `data_agent.py` or `nodes.py`, and the
+synthesizer has dedicated formatters (`_format_optimization_response`,
+`_format_macro_response` at `nodes.py:1168`) with no branch for `data_fetch` or
+`risk_analysis`. It falls through to a stub.
+
+This is the benchmark.md Part 3b failure, and it is a synthesizer gap rather
+than a data gap. Every number needed to answer 1.3 was already in
+`shared_data` when that stub printed — `volatilities`, `covariance_matrix`,
+`latest_prices`.
+
+Note this is the base-agent duplication showing its cost: each agent builds
+`PortfolioResult` by hand and none of them fill `result_type`, so the field the
+synthesizer would dispatch on is always None.
+
+### `shared_data` carries 67KB of raw prices — hot potato violated
+
+`price_data_json` was 67,190 characters of daily OHLC on the 3Y queries and
+22,501 on the 1Y query. `state.py:50` states shared_data holds summaries, not
+raw DataFrames, and the module docstring calls this the Hot Potato principle.
+
+This is the project's first stated design principle being violated in the main
+data path, on every request. Structural rather than a missing feature, and
+therefore worth more than any single benchmark case.
+
+Fix belongs with the base-agent deduplication, since that is when result and
+shared_data construction gets centralised. Decide there what a price summary
+actually is — the agents downstream need returns and covariance, both of which
+are already computed and already in shared_data separately.
+
+### Every ticker is fetched twice when `period` is None
+
+Observed on both 3Y queries: SPY, TLT and GLD fetched, then `Calculating
+covariance...` refetches all three over the identical date range, re-importing
+752 rows per ticker each time. Quota counter moved 213 -> 218: six provider
+calls for three tickers.
+
+Does NOT happen with `period: 1Y`, where covariance runs without refetching.
+So it is conditional on the period being unset, not an unconditional double
+call. Cause not yet identified.
+
+benchmark.md Part 5 already flags live yfinance calls per query as a demo risk.
+This doubles the cost and roughly doubles the latency of the exploratory loop.
+
+### Case 3.2 fails, and not by recommending
+
+"Should I buy Nvidia?" returned `intent: clarification_needed` and offered four
+ways to proceed with buying NVDA: optimise the portfolio by adding it, analyse
+it standalone, check whether market conditions support adding it, or backtest a
+strategy including it.
+
+3.2 passes only when the system refers to the scope boundary and gives no
+recommendation. It did neither — it treated an out-of-scope request as an
+ambiguous in-scope one.
+
+Root cause: `INTENT TYPES` in `router_prompts.py` has no out-of-scope option.
+The router has no vocabulary for "this is not something the system does", so
+the nearest available label is `clarification_needed`. This needs a new intent
+plus a terminal branch, not better wording of the existing ones. Resolve with
+Part 4 item 4 (the guardrail path).
+
+### Router parameter ordering is nondeterministic
+
+Across two runs of the same query the router returned `tickers` as
+`["SPY","GLD","TLT"]` and `["MSFT","AAPL"]` versus `["AAPL","MSFT"]`.
+Functionally harmless — DataAgent uses its own order from the portfolio — but
+it is a second instance of the nondeterminism that the `period` leak caused,
+and `run_golden.py` does not print `tickers`, so it is invisible to the golden
+set.
+
+### The CLI's Part 3b check is too weak
+
+`cli.py` flagged headers-with-no-body by skipping lines starting with `#`, `**`
+or `=`. `DataAgent: ✓` passes that filter, so the check did not fire on the
+very case it was written for.
+
+Stronger signals, both now implemented: the answer containing no digits while
+`shared_data` does, and the same answer being returned for two different
+questions in one session.
