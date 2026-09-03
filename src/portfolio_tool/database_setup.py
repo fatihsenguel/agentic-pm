@@ -24,7 +24,6 @@ Base = declarative_base()
 
 
 # --- 2. Tabellen-Definitionen (Models) ---
-# (Ihr Code von hier...
 class Asset(Base):
     __tablename__ = 'assets'
     id = Column(Integer, primary_key=True)
@@ -439,6 +438,7 @@ class PortfolioHolding(Base):
     average_price = Column(Float, nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    purchase_date = Column(Date, nullable=True)
     
     # Relationships
     portfolio = relationship('Portfolio', back_populates='holdings')
