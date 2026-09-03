@@ -1,3 +1,12 @@
+> **⚠️ Outdated — written January 2026, describes an architecture that no longer exists.**
+> It refers to RiskManagerAgent as an active supervisor (it is not wired at all),
+> references `demos/` scripts that were deleted, and specifies `gpt-4-turbo` (the
+> system runs Claude Haiku 4.5). The Design Principles section below is still
+> accurate and worth reading.
+>
+> For the current state see `docs/HANDOFF.md`, `docs/benchmark.md`, and
+> `tests/golden/KNOWN_GAPS.md`.
+
 # 🏦 Quant Portfolio Manager - Multi-Agent System
 
 An institutional-grade portfolio management system powered by AI agents.
