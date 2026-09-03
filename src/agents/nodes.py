@@ -157,6 +157,43 @@ def get_cost_basis(holdings: Optional[List[Dict]]) -> Dict[str, float]:
         for h in holdings
     }
 
+def build_holdings_summary(holdings: Optional[List[Dict]]) -> List[Dict[str, Any]]:
+    """
+    Reduce holdings rows to the summary published on `shared_data`.
+
+    Hot potato: `shared_data` carries summaries, not database rows. The raw rows
+    stay in `portfolio_holdings`; this is what downstream agents read.
+
+    Deliberately unpriced. Market value needs `latest_prices` and cash, and
+    combining them is an allocation computation that belongs to the agent doing
+    the computing, not to the agent fetching the data.
+
+    `sector` stays None where the asset has none. Per expected_values.md D3,
+    unsectored holdings are reported explicitly rather than bucketed.
+
+    Args:
+        holdings: Rows from PortfolioManager.get_holdings, or None
+
+    Returns:
+        JSON-serialisable list of summary dicts, empty if there are no holdings.
+    """
+    if not holdings:
+        return []
+
+    return [
+        {
+            "ticker": h["ticker"],
+            "quantity": float(h["quantity"]),
+            "average_price": float(h["average_price"]),
+            "asset_class": h.get("asset_class"),
+            "sector": h.get("sector"),
+            "purchase_date": (
+                h["purchase_date"].isoformat() if h.get("purchase_date") else None
+            ),
+        }
+        for h in holdings
+    ]
+
 
 def cache_portfolio_holdings(state: "AgentState", holdings: List[Dict]) -> Dict[str, Any]:
     """
@@ -455,7 +492,8 @@ async def data_agent_node(state: AgentState) -> Dict[str, Any]:
                 "latest_prices": price_result.get("latest_prices", {}),
                 "covariance_matrix": cov_result.get("covariance_matrix", {}),
                 "volatilities": cov_result.get("annualized_volatilities", {}),
-                "expected_returns": expected_returns,  # ⭐ GUARANTEED to exist
+                "expected_returns": expected_returns,  # GUARANTEED to exist
+                "holdings": build_holdings_summary(holdings),
             }
             
             if "price_data" in price_result:
