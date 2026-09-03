@@ -100,4 +100,5 @@ if passed == total:
 else:
     print(f"\n⚠️  {total - passed} tests failed. Fix these before running the demo.")
 
-sys.exit(0 if passed == total else 1)
+if __name__ == "__main__":
+    sys.exit(0 if passed == total else 1)
