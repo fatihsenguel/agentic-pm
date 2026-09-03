@@ -416,7 +416,8 @@ class PortfolioManager:
                     "country": asset.country,
                     "currency": asset.currency,
                     "created_at": holding.created_at,
-                    "updated_at": holding.updated_at
+                    "updated_at": holding.updated_at,
+                    "purchase_date": holding.purchase_date
                 }
                 for holding, asset in holdings
             ]
