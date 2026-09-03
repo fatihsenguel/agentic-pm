@@ -419,3 +419,9 @@ very case it was written for.
 Stronger signals, both now implemented: the answer containing no digits while
 `shared_data` does, and the same answer being returned for two different
 questions in one session.
+
+## No price cache for callers passing a date range.
+data_manager.py:149 only consults max(DailyPrice.date) when start_date is None. fetch_prices_tool and calculate_covariance_tool both pass explicit ranges, so both fetch unconditionally. Nine tickers cost 18 provider calls per query; observed 33s latency against a 60-calls-per-minute provider cap. Fix must be coverage-aware, not existence-aware — the daily update still needs today's close.
+
+## No FX conversion anywhere
+Asset.currency is populated at data_manager.py:413 and read only for display; rebalance_tools.py stamps cfg.currency_symbol on numbers regardless of their actual currency. Blocks a real EUR portfolio: cost basis in EUR against USD-quoted yfinance prices for US tickers makes 1.2's P&L wrong by the exchange rate, silently. Depends on whether tickers carry an exchange suffix (AAPL vs AAPL.DE).
