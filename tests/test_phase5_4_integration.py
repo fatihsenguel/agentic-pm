@@ -282,7 +282,6 @@ class TestMacroAgentTools:
         # Test with manual values
         result = agent.assess_regime_tool(
             vix_level=28.0,
-            fed_sentiment=0.4,
             yield_curve_slope=-0.3
         )
         

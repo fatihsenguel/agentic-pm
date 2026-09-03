@@ -2,7 +2,6 @@
 Macro Agent for Quant Portfolio Manager.
 
 The Macro Agent analyzes the macro environment for TAA decisions:
-- Fed Minutes sentiment analysis (via RAG pipeline)
 - Market regime detection (VIX, Yield Curve)
 - Risk signal generation
 
@@ -13,8 +12,6 @@ It does NOT make trade decisions directly.
 ARCHITECTURE (Separation of Concerns):
 - MacroAgent = Interface/Orchestrator
 - DataManager = Database operations (VIX, Yields persistence)
-- RAG Pipeline = Fed Minutes processing (sentiment, search)
-- Fed Scraper = Fed Minutes download
 
 The Agent DELEGATES work to these components, it does NOT implement
 raw scraping, calculations, or DB operations directly.
@@ -45,10 +42,6 @@ class MacroSignal:
     Used to adjust portfolio positioning based on macro environment.
     """
     
-    # Fed sentiment
-    fed_sentiment: float  # -1 to +1 (dovish to hawkish)
-    fed_confidence: float  # 0 to 1
-    
     # Market indicators
     vix_level: float
     vix_regime: str  # "low", "normal", "elevated", "crisis"
@@ -76,8 +69,6 @@ class MacroSignal:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for agent responses."""
         return {
-            "fed_sentiment": round(self.fed_sentiment, 3),
-            "fed_confidence": round(self.fed_confidence, 3),
             "vix_level": round(self.vix_level, 2),
             "vix_regime": self.vix_regime,
             "yield_curve_slope": round(self.yield_curve_slope, 4) if self.yield_curve_slope else None,
@@ -101,10 +92,6 @@ class MacroSignal:
             f"   VIX Level: {self.vix_level:.1f} ({self.vix_regime.upper()})",
             f"   Yield Curve: {self.yield_curve_signal}",
             "",
-            "📄 FED SENTIMENT:",
-            f"   Score: {self.fed_sentiment:+.2f} ({'Hawkish' if self.fed_sentiment > 0.3 else 'Dovish' if self.fed_sentiment < -0.3 else 'Neutral'})",
-            f"   Confidence: {self.fed_confidence:.0%}",
-            "",
             "🎯 REGIME ASSESSMENT:",
             f"   Current Regime: {self.regime.value.upper()}",
             f"   Confidence: {self.regime_confidence:.0%}",
@@ -127,7 +114,6 @@ class MacroAgent(BaseAgent):
     
     Capabilities:
     - Fetch and persist macro data (VIX, Treasury Yields)
-    - Download and analyze Fed Minutes
     - Detect market regime
     - Generate TAA signals
     
@@ -135,8 +121,6 @@ class MacroAgent(BaseAgent):
     
     ARCHITECTURE:
     - Uses DataManager for database operations
-    - Uses RAG pipeline for Fed Minutes analysis
-    - Uses Fed Scraper for downloading minutes
     """
     
     def __init__(self, agent_config: Optional[AgentConfig] = None):
@@ -151,8 +135,6 @@ class MacroAgent(BaseAgent):
         
         # Lazy-loaded components (Separation of Concerns)
         self._data_manager = None
-        self._sentiment_analyzer = None
-        self._fed_scraper = None
     
     # ==================== LAZY-LOADED COMPONENTS ====================
     
@@ -164,22 +146,6 @@ class MacroAgent(BaseAgent):
             self._data_manager = get_data_manager()
         return self._data_manager
     
-    @property
-    def sentiment_analyzer(self):
-        """Lazy-load sentiment analyzer from RAG pipeline."""
-        if self._sentiment_analyzer is None:
-            from portfolio_tool.rag.sentiment import FedSentimentAnalyzer
-            self._sentiment_analyzer = FedSentimentAnalyzer()
-        return self._sentiment_analyzer
-    
-    @property
-    def fed_scraper(self):
-        """Lazy-load Fed Minutes scraper."""
-        if self._fed_scraper is None:
-            from portfolio_tool.rag.fed_scraper import FedMinutesScraper
-            self._fed_scraper = FedMinutesScraper()
-        return self._fed_scraper
-    
     # ==================== AGENT INTERFACE ====================
     
     @property
@@ -188,8 +154,6 @@ class MacroAgent(BaseAgent):
         return [
             "fetch_macro_data",
             "get_macro_snapshot",
-            "analyze_fed_minutes",
-            "fetch_fed_minutes",
             "assess_market_regime",
             "generate_taa_signal",
             "get_vix_analysis",
@@ -203,8 +167,6 @@ class MacroAgent(BaseAgent):
             self.get_macro_snapshot_tool,
             self.get_vix_analysis_tool,
             self.get_yield_curve_analysis_tool,
-            self.fetch_fed_minutes_tool,
-            self.analyze_fed_minutes_tool,
             self.assess_regime_tool,
             self.generate_taa_signal_tool,
         ]
@@ -226,17 +188,12 @@ CAPABILITIES:
    - Persist data to database for other agents
    - Query historical macro data
 
-2. Fed Minutes Analysis
-   - Download from Federal Reserve website
-   - Extract hawkish/dovish sentiment
-   - Identify key themes
-
-3. Market Regime Detection
+2. Market Regime Detection
    - VIX-based volatility regime
    - Yield curve signals (inversion warning)
    - Combined regime classification
 
-4. TAA Signal Generation
+3. TAA Signal Generation
    - Risk stance recommendation
    - Equity weight adjustment suggestion
    - Confidence level
@@ -289,35 +246,21 @@ Always provide structured results with:
         yield_curve_slope = yield_data.get("slope_10y_3m")
         yield_curve_signal = yield_data.get("status", "normal")
         
-        # ===== STEP 3: Get Fed Sentiment (if document available) =====
-        fed_sentiment = 0.0
-        fed_confidence = 0.5
-        
-        fed_doc = shared.get("fed_document")
-        if fed_doc:
-            sentiment_result = self.analyze_fed_minutes_tool(text=fed_doc)
-            if sentiment_result.get("success"):
-                fed_sentiment = sentiment_result.get("score", 0.0)
-                fed_confidence = sentiment_result.get("confidence", 0.5)
-        
-        # ===== STEP 4: Generate Signal =====
+        # ===== STEP 3: Generate Signal =====
         signal = self._generate_signal(
-            fed_sentiment=fed_sentiment,
-            fed_confidence=fed_confidence,
             vix_level=vix_level,
             yield_curve=yield_curve_slope
         )
         
-        # ===== STEP 5: Update Shared State =====
+        # ===== STEP 4: Update Shared State =====
         state.shared_data["vix_level"] = vix_level
         state.shared_data["vix_regime"] = vix_regime
         state.shared_data["yield_curve_slope"] = yield_curve_slope
         state.shared_data["yield_curve_signal"] = yield_curve_signal
-        state.shared_data["fed_sentiment"] = fed_sentiment
         state.shared_data["macro_signal"] = signal.to_dict()
         state.shared_data["market_regime"] = signal.regime.value
         
-        # ===== STEP 6: Create Result =====
+        # ===== STEP 5: Create Result =====
         result = PortfolioResult(
             agent_name=self.name,
             task_id=task.task_id,
@@ -329,7 +272,6 @@ Always provide structured results with:
             metadata={
                 "vix_source": vix_data.get("source", "unknown"),
                 "yield_source": yield_data.get("source", "unknown"),
-                "fed_analyzed": fed_doc is not None,
             }
         )
         
@@ -475,8 +417,6 @@ Always provide structured results with:
     
     def _generate_signal(
         self,
-        fed_sentiment: float,
-        fed_confidence: float,
         vix_level: float,
         yield_curve: Optional[float]
     ) -> MacroSignal:
@@ -487,19 +427,17 @@ Always provide structured results with:
         yield_signal = self._classify_yield_curve(yield_curve)
         
         # Determine regime
-        regime = self._determine_regime(fed_sentiment, vix_regime, yield_signal)
+        regime = self._determine_regime(vix_regime, yield_signal)
         
         # Calculate confidence
-        regime_confidence = self._calculate_regime_confidence(fed_confidence, vix_regime)
+        regime_confidence = self._calculate_regime_confidence(vix_regime)
         
         # Determine risk stance and adjustment
         risk_stance, equity_adjustment = self._determine_risk_stance(
-            regime, fed_sentiment, vix_regime
+            regime, vix_regime
         )
         
         return MacroSignal(
-            fed_sentiment=fed_sentiment,
-            fed_confidence=fed_confidence,
             vix_level=vix_level,
             vix_regime=vix_regime,
             yield_curve_slope=yield_curve,
@@ -512,7 +450,6 @@ Always provide structured results with:
     
     def _determine_regime(
         self,
-        fed_sentiment: float,
         vix_regime: str,
         yield_signal: str
     ) -> MarketRegime:
@@ -525,12 +462,6 @@ Always provide structured results with:
         # Scoring
         risk_off_signals = 0
         risk_on_signals = 0
-        
-        # Fed sentiment
-        if fed_sentiment > config.macro.hawkish_threshold:
-            risk_off_signals += 1
-        elif fed_sentiment < config.macro.dovish_threshold:
-            risk_on_signals += 1
         
         # VIX
         if vix_regime == "elevated":
@@ -556,25 +487,26 @@ Always provide structured results with:
     
     def _calculate_regime_confidence(
         self,
-        fed_confidence: float,
         vix_regime: str
     ) -> float:
-        """Calculate confidence in regime assessment."""
-        confidence = fed_confidence * 0.5
+        """Calculate confidence in regime assessment.
         
+        NOTE: derived from VIX alone. The yield curve informs the regime but
+        not the confidence in it, so confidence is capped at 0.3. Recorded in
+        tests/golden/KNOWN_GAPS.md.
+        """
         if vix_regime in ["crisis", "low"]:
-            confidence += 0.3
+            confidence = 0.3
         elif vix_regime == "elevated":
-            confidence += 0.2
+            confidence = 0.2
         else:
-            confidence += 0.1
+            confidence = 0.1
         
         return min(0.95, confidence)
     
     def _determine_risk_stance(
         self,
         regime: MarketRegime,
-        fed_sentiment: float,
         vix_regime: str
     ) -> tuple:
         """Determine risk stance and equity adjustment."""
@@ -590,10 +522,7 @@ Always provide structured results with:
             return "risk_off", adj
         
         elif regime == MarketRegime.RISK_ON:
-            adj = max_adj * 0.5
-            if fed_sentiment < config.macro.dovish_threshold:
-                adj += max_adj * 0.2
-            return "risk_on", adj
+            return "risk_on", max_adj * 0.5
         
         elif regime == MarketRegime.RECOVERY:
             return "cautious_risk_on", max_adj * 0.3
@@ -757,91 +686,9 @@ Always provide structured results with:
         except Exception as e:
             return {"success": False, "error": str(e)}
     
-    def fetch_fed_minutes_tool(self, date_spec: str = "latest") -> Dict[str, Any]:
-        """
-        Download Fed Minutes from Federal Reserve website.
-        
-        Args:
-            date_spec: "latest" or "YYYY-MM" format
-            
-        Returns:
-            {success, meeting_date, content_preview, content_length}
-        """
-        try:
-            from portfolio_tool.rag.fed_scraper import DownloadStatus
-            
-            if date_spec.lower() == "latest":
-                doc = self.fed_scraper.get_latest_minutes()
-            else:
-                parts = date_spec.split("-")
-                if len(parts) != 2:
-                    return {"success": False, "error": "Invalid format. Use 'latest' or 'YYYY-MM'"}
-                year, month = int(parts[0]), int(parts[1])
-                doc = self.fed_scraper.get_minutes_by_date(year, month)
-            
-            if doc.download_status in [DownloadStatus.SUCCESS, DownloadStatus.CACHED]:
-                return {
-                    "success": True,
-                    "meeting_date": doc.metadata.meeting_date.isoformat(),
-                    "title": doc.metadata.title,
-                    "content_preview": doc.content[:500] + "..." if len(doc.content) > 500 else doc.content,
-                    "content_length": len(doc.content),
-                    "content": doc.content,  # Full content for analysis
-                    "source": doc.source_path,
-                    "status": doc.download_status.value
-                }
-            else:
-                return {
-                    "success": False,
-                    "status": doc.download_status.value,
-                    "error": doc.error_message
-                }
-                
-        except ImportError:
-            return {"success": False, "error": "Fed scraper not installed"}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-    
-    def analyze_fed_minutes_tool(
-        self,
-        text: str,
-        source: str = "fed_minutes"
-    ) -> Dict[str, Any]:
-        """
-        Analyze Fed Minutes text for sentiment.
-        
-        Args:
-            text: Fed Minutes text content
-            source: Source identifier
-            
-        Returns:
-            {success, score, classification, confidence, key_themes}
-        """
-        try:
-            from portfolio_tool.rag.document_loader import Document
-            
-            doc = Document(content=text, source=source, doc_type="fed_minutes")
-            result = self.sentiment_analyzer.analyze(doc)
-            
-            return {
-                "success": True,
-                "score": result.score,
-                "classification": result.classification.value if hasattr(result.classification, 'value') else str(result.classification),
-                "confidence": result.confidence,
-                "risk_assessment": result.risk_assessment,
-                "key_themes": result.key_themes[:10] if hasattr(result, 'key_themes') else [],
-                "hawkish_signals": result.hawkish_signals[:5] if hasattr(result, 'hawkish_signals') else [],
-                "dovish_signals": result.dovish_signals[:5] if hasattr(result, 'dovish_signals') else [],
-                "summary": result.to_summary() if hasattr(result, 'to_summary') else "",
-            }
-            
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-    
     def assess_regime_tool(
         self,
         vix_level: float,
-        fed_sentiment: float = 0.0,
         yield_curve_slope: Optional[float] = None
     ) -> Dict[str, Any]:
         """
@@ -849,7 +696,6 @@ Always provide structured results with:
         
         Args:
             vix_level: Current VIX level
-            fed_sentiment: Fed sentiment score (-1 to +1)
             yield_curve_slope: 10Y-3M spread
             
         Returns:
@@ -857,8 +703,6 @@ Always provide structured results with:
         """
         try:
             signal = self._generate_signal(
-                fed_sentiment=fed_sentiment,
-                fed_confidence=0.7 if fed_sentiment != 0 else 0.5,
                 vix_level=vix_level,
                 yield_curve=yield_curve_slope
             )
@@ -874,7 +718,6 @@ Always provide structured results with:
     def generate_taa_signal_tool(
         self,
         current_equity_weight: float = 0.60,
-        fed_text: Optional[str] = None,
         use_database: bool = True
     ) -> Dict[str, Any]:
         """
@@ -882,7 +725,6 @@ Always provide structured results with:
         
         Args:
             current_equity_weight: Current equity allocation (0-1)
-            fed_text: Optional Fed Minutes text for sentiment
             use_database: Use database for VIX/Yields (default True)
             
         Returns:
@@ -900,20 +742,8 @@ Always provide structured results with:
             vix_level = vix_data.get("current_vix", 20.0)
             yield_slope = yield_data.get("slope_10y_3m")
             
-            # Analyze Fed if provided
-            fed_sentiment = 0.0
-            fed_confidence = 0.5
-            
-            if fed_text:
-                sentiment_result = self.analyze_fed_minutes_tool(text=fed_text)
-                if sentiment_result.get("success"):
-                    fed_sentiment = sentiment_result.get("score", 0.0)
-                    fed_confidence = sentiment_result.get("confidence", 0.5)
-            
             # Generate signal
             signal = self._generate_signal(
-                fed_sentiment=fed_sentiment,
-                fed_confidence=fed_confidence,
                 vix_level=vix_level,
                 yield_curve=yield_slope
             )
@@ -937,8 +767,6 @@ Always provide structured results with:
             ]
             if yield_slope is not None:
                 rationale.append(f"Yield curve: {signal.yield_curve_signal}")
-            if fed_text:
-                rationale.append(f"Fed sentiment: {fed_sentiment:+.2f}")
             
             return {
                 "success": True,
