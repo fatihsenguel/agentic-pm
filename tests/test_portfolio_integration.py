@@ -187,7 +187,8 @@ async def test_4_node_portfolio_loading():
         state = create_initial_state("test", portfolio_id=portfolio_id)
         
         print(f"\n4.1 Loading portfolio context for {portfolio_id}...")
-        tickers, holdings = load_portfolio_context(state)
+        ctx = load_portfolio_context(state)
+        tickers, holdings = ctx.tickers, ctx.holdings
         
         assert tickers is not None
         assert len(tickers) > 0
@@ -206,7 +207,8 @@ async def test_4_node_portfolio_loading():
         print("\n4.3 Testing fallback (no portfolio)...")
         state_no_portfolio = create_initial_state("test", portfolio_id=None)
         
-        tickers, holdings = load_portfolio_context(state_no_portfolio)
+        ctx = load_portfolio_context(state_no_portfolio)
+        tickers, holdings = ctx.tickers, ctx.holdings
         assert tickers == ["SPY", "TLT", "GLD"]
         assert holdings is None
         print(f"✓ Fallback tickers: {tickers}")

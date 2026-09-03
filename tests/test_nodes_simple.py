@@ -16,7 +16,8 @@ async def test():
     
     # Test load_portfolio_context
     print("\n1. Testing load_portfolio_context...")
-    tickers, holdings = load_portfolio_context(state)
+    ctx = load_portfolio_context(state)
+    tickers, holdings = ctx.tickers, ctx.holdings
     print(f"✓ Loaded tickers: {tickers}")
     print(f"✓ Loaded {len(holdings) if holdings else 0} holdings")
     

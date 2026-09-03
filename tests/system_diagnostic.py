@@ -142,7 +142,8 @@ async def diagnostic_1_empty_portfolio():
     
     try:
         state = create_initial_state("Test", portfolio_id=portfolio_id)
-        tickers, holdings = load_portfolio_context(state)
+        ctx = load_portfolio_context(state)
+        tickers, holdings = ctx.tickers, ctx.holdings
         # Should not reach here
     finally:
         pm.delete_portfolio(portfolio_id)
@@ -151,7 +152,8 @@ async def diagnostic_1_empty_portfolio():
 async def diagnostic_2_missing_tickers():
     """Test: No portfolio and no tickers should fail (Low level helper - raises Exception)"""
     state = create_initial_state("Do something vague")
-    tickers, holdings = load_portfolio_context(state)
+    ctx = load_portfolio_context(state)
+    tickers, holdings = ctx.tickers, ctx.holdings
 
 
 async def diagnostic_3_valid_portfolio():
@@ -168,7 +170,8 @@ async def diagnostic_3_valid_portfolio():
     
     try:
         state = create_initial_state("Test", portfolio_id=portfolio_id)
-        tickers, holdings = load_portfolio_context(state)
+        ctx = load_portfolio_context(state)
+        tickers, holdings = ctx.tickers, ctx.holdings
         
         assert tickers == ["SPY"], f"Expected ['SPY'], got {tickers}"
         assert holdings is not None, "Expected holdings, got None"

@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 from typing import Dict, Any, Optional, Literal, List, Tuple
 from langchain_core.messages import AIMessage, HumanMessage
 
+from .protocols import PortfolioContext
+
 from .state import (
     AgentState,
     set_router_decision,
@@ -61,8 +63,8 @@ class DataCalculationError(Exception):
 # HELPER FUNCTIONS - STRICT MODE (NO FALLBACKS)
 # =============================================================================
 
-def load_portfolio_context(state: "AgentState") -> Tuple[List[str], Optional[List[Dict]]]:
-    """Load portfolio tickers and holdings from state or database."""
+def load_portfolio_context(state: "AgentState") -> PortfolioContext:
+    """Load portfolio tickers, holdings and cash from state or database."""
     
     portfolio_id = state.get("portfolio_id")
     
@@ -83,17 +85,33 @@ def load_portfolio_context(state: "AgentState") -> Tuple[List[str], Optional[Lis
             )
         
         logger.debug(f"No portfolio specified, using tickers from query: {tickers}")
-        return tickers, None
+        return PortfolioContext(tickers=tickers)
     
     # Portfolio specified - load from database
     from portfolio_tool.portfolio_manager import PortfolioManager
     pm = PortfolioManager()
     
+    # Cash lives on the portfolio row, not on the holdings, so it is read even
+    # when holdings come from cache. expected_values.md D2 puts cash in the
+    # allocation denominator, so a missing balance is a wrong answer.
+    portfolio = pm.get_portfolio(portfolio_id)
+    if portfolio is None:
+        raise PortfolioContextError(
+            f"Portfolio {portfolio_id} not found.\n"
+            "Check portfolio_id is correct."
+        )
+    cash_balance = float(portfolio["cash_balance"])
+    
     # Check cache first
     cached_holdings = state.get("portfolio_holdings")
     if cached_holdings:
         tickers = [h["ticker"] for h in cached_holdings]
-        return tickers, cached_holdings
+        return PortfolioContext(
+            tickers=tickers,
+            holdings=cached_holdings,
+            cash_balance=cash_balance,
+            portfolio_id=portfolio_id,
+        )
     
     # ✅ DISTINGUISH: User errors vs System errors
     try:
@@ -117,7 +135,12 @@ def load_portfolio_context(state: "AgentState") -> Tuple[List[str], Optional[Lis
         )
     
     tickers = [h["ticker"] for h in holdings]
-    return tickers, holdings
+    return PortfolioContext(
+        tickers=tickers,
+        holdings=holdings,
+        cash_balance=cash_balance,
+        portfolio_id=portfolio_id,
+    )
 
 
 def get_current_positions(holdings: Optional[List[Dict]]) -> Dict[str, float]:
@@ -368,7 +391,8 @@ async def data_agent_node(state: AgentState) -> Dict[str, Any]:
         
         # ⭐ STRICT: Load portfolio context (fails if invalid)
         try:
-            tickers, holdings = load_portfolio_context(state)
+            ctx = load_portfolio_context(state)
+            tickers, holdings = ctx.tickers, ctx.holdings
         except PortfolioContextError as e:
             logger.error(f"Portfolio context error: {e}")
             return {
@@ -494,6 +518,7 @@ async def data_agent_node(state: AgentState) -> Dict[str, Any]:
                 "volatilities": cov_result.get("annualized_volatilities", {}),
                 "expected_returns": expected_returns,  # GUARANTEED to exist
                 "holdings": build_holdings_summary(holdings),
+                "cash_balance": ctx.cash_balance,
             }
             
             if "price_data" in price_result:

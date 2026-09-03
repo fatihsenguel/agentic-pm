@@ -262,6 +262,25 @@ class RiskDecomposition:
 
 
 @dataclass
+class PortfolioContext:
+    """
+    The portfolio a request is about, resolved once from the database.
+
+    Returned by `load_portfolio_context`. An object rather than a tuple so that
+    adding a field later does not break every call site — `cash_balance` was
+    added after `tickers` and `holdings` and forced exactly that churn.
+
+    `holdings` and `cash_balance` are None for ad-hoc queries that name tickers
+    without a portfolio. None means "no portfolio, so unknown"; it does not mean
+    zero. A portfolio holding no cash reports 0.0.
+    """
+    tickers: List[str]
+    holdings: Optional[List[Dict[str, Any]]] = None
+    cash_balance: Optional[float] = None
+    portfolio_id: Optional[int] = None
+
+
+@dataclass
 class PortfolioResult:
     """
     Standardized result from portfolio agents.

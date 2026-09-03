@@ -39,7 +39,8 @@ def test_load_portfolio_context_no_portfolio_no_tickers():
     state = create_initial_state("Do something")
     
     try:
-        tickers, holdings = load_portfolio_context(state)
+        ctx = load_portfolio_context(state)
+        tickers, holdings = ctx.tickers, ctx.holdings
         assert False, "Should have raised PortfolioContextError"
     except PortfolioContextError as e:
         assert "No portfolio specified" in str(e)
@@ -56,7 +57,8 @@ def test_load_portfolio_context_empty_portfolio():
     state = create_initial_state("Test", portfolio_id=portfolio_id)
     
     try:
-        tickers, holdings = load_portfolio_context(state)
+        ctx = load_portfolio_context(state)
+        tickers, holdings = ctx.tickers, ctx.holdings
         assert False, "Should have raised PortfolioContextError"
     except PortfolioContextError as e:
         assert "is empty" in str(e)
@@ -85,7 +87,8 @@ def test_load_portfolio_context_with_valid_portfolio():
     state = create_initial_state("Test", portfolio_id=portfolio_id)
     
     try:
-        tickers, holdings = load_portfolio_context(state)
+        ctx = load_portfolio_context(state)
+        tickers, holdings = ctx.tickers, ctx.holdings
         
         assert tickers == ["SPY", "TLT"]
         assert len(holdings) == 2
@@ -106,7 +109,8 @@ def test_load_portfolio_context_with_router_tickers():
         }
     }
     
-    tickers, holdings = load_portfolio_context(state)
+    ctx = load_portfolio_context(state)
+    tickers, holdings = ctx.tickers, ctx.holdings
     
     assert tickers == ["AAPL", "MSFT"]
     assert holdings is None
