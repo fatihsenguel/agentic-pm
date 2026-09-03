@@ -137,7 +137,7 @@ Work through it and stop when time runs out. Sorted by effect, not by effort.
 
 **Do not build while 1–6 are open:** further agents, frontend, database restructuring, additional data sources, multi-user support. Each enlarges the attack surface in conversation without meeting the expectation.
 
-**Deadline:** _______________. Part 4 only functions as a triage list if there is a date attached to it.
+**Deadline:** none. Correctness over speed. Part 4 therefore stops being a triage list and becomes an ordering by dependency — nothing is dropped for time.
 
 ---
 
