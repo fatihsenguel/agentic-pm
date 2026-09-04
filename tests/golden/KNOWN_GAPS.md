@@ -552,6 +552,28 @@ coverage check that both assume period strings. Adding an end date to
 `fetch_prices_tool` because the volatility window is inconvenient would buy one
 figure and leave the router still unable to ask the question.
 
+### When `sector` comes up, weigh `group_by` and `filter` against it first
+
+Roadmap item 5 proposes a `sector` field on `ExtractedParameters` to narrow the
+`data_fetch` branch from both breakdowns to the one asked for. Consider
+`group_by` and `filter` instead, and decide deliberately.
+
+One field answers one question; a grouping parameter answers the class of
+question. `Asset` already carries country and industry columns that the seed
+writes, so those breakdowns come free the moment grouping is a parameter rather
+than a function name. The prompt change costs the same either way — it is one
+extracted field versus two, measured on the golden set once.
+
+**The tell is already in the output.** The formatter prints both breakdowns and
+says so under "Not done", because nothing in the routing decision records which
+one was asked for. That is a missing parameter being paid for in noise, not a
+limitation of the model.
+
+The cost of getting this wrong is not the field. It is that
+`allocation_by_asset_class` and `allocation_by_sector` are already two functions
+differing only in their grouping key, and a `sector` field ratifies that shape.
+Country and industry would make four.
+
 ---
 
 ## Where non-determinism is allowed to live
