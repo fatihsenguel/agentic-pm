@@ -120,6 +120,25 @@ the very case it was written for. Replaced with two stronger signals, both now
 firing: the answer containing no digits while `shared_data` does, and the same
 answer returned for two different questions in one session.
 
+## DataAgent loaded holdings and discarded them
+
+Recorded as "the single blocker under benchmark 1.1, 1.2 and 1.4". `portfolio_id`
+was resolved to a ticker list for fetching and the quantities, average prices and
+purchase dates were never published: nothing assigned `shared_data["holdings"]`,
+and a CLI run showed only price-derived keys.
+
+Closed 4 September by roadmap item 1, in two parts. `get_holdings` was not
+projecting `purchase_date` — the column, the migration and the seed all existed
+and the SELECT never read it. Then `build_holdings_summary` (in `nodes.py`,
+search the name) began publishing an unpriced summary of ticker, quantity,
+average_price, asset_class, sector and purchase_date to `shared_data["holdings"]`,
+with `cash_balance` beside it. Unpriced deliberately: pricing it inside DataAgent
+would have left item 2 with nothing to compute.
+
+The log line and the raise that reported the gap are still in `nodes.py` under
+the message "Portfolio specified but holdings not loaded". They now fire only
+when a portfolio genuinely has none.
+
 ---
 
 # OPEN
@@ -237,26 +256,6 @@ as-of date starts being reported.
 ---
 
 ## Unbuilt features
-
-### DataAgent loads holdings and discards them
-
-**The single blocker under benchmark 1.1, 1.2 and 1.4.**
-
-`portfolio_id` is resolved to a ticker list for fetching, and the quantities,
-average prices, purchase dates and weights are never written to `shared_data`.
-Confirmed: nothing anywhere assigns `shared_data["holdings"]`, and a CLI run
-publishes only price-derived keys — `tickers`, `latest_prices`,
-`covariance_matrix`, `volatilities`, `expected_returns`, `price_data_json`.
-
-`nodes.py:211` logs "Portfolio N specified but holdings not loaded" and
-`nodes.py:825` raises it. RebalanceAgent fails on it today; first observed in the
-1 Sep inspection notes.
-
-The portfolio is not missing. It is being narrowed to tickers and thrown away.
-
-Fix in Phase 1 item 2, and decide there what a holdings summary contains — that
-decision interacts with the `price_data_json` hot-potato violation below, since
-both are about what `shared_data` should carry.
 
 ### The synthesizer returns the same answer regardless of the question
 
