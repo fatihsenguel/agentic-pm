@@ -50,11 +50,36 @@ Either build RAG to match the bullet, or change the bullet to describe determini
 | Tracing | Routing decision, tool calls and result readable per run |
 | Evaluation | Test set with expected answer and expected source per question |
 
-### Out of scope (deliberately not built)
+### Out of scope
 
-Buy or sell recommendations · Price or return forecasts · Tax assessment · Order execution · Frontend · Multi-user operation · Additional agents
+**Revised 4 September 2026.** The owner's eventual goal includes screening and
+candidate generation, which the previous flat list excluded permanently. The
+boundary is now phased rather than absolute. It is not weaker: what changed is
+that it now has a stated reason and a stated end, instead of being a line drawn
+once and defended by habit.
 
-This list is not an admission but part of the statement. A system that knows and names its limits is the actual result.
+**Permanently out of scope**
+
+Price or return forecasts · Tax assessment · Order execution · Frontend ·
+Multi-user operation
+
+**Out of scope for Levels 1–3, revisited afterwards**
+
+Screening · Candidate generation · Buy or sell recommendations on instruments
+the owner has not named
+
+The reason is order of construction, not caution. A system that recommends
+before it can correctly compute what is already held will recommend against a
+wrong picture. Test case 1.1 is that picture, and it does not pass yet. Once
+Levels 1–3 pass, this section is rewritten deliberately and the screening half
+gets its own cases at its own level — not by relaxing the existing ones.
+
+**Test case 3.2 has a known expiry date.** It tests the boundary above, so it
+expires when the boundary moves. Until then it is live and must pass on merit.
+See `tests/golden/KNOWN_GAPS.md`.
+
+This list is not an admission but part of the statement. A system that knows and
+names its limits is the actual result — including which of them are temporary.
 
 ---
 
@@ -92,7 +117,7 @@ Cases where the system correctly does **not** deliver. More telling than any suc
 | # | Prompt | Passes when | Status |
 | --- | --- | --- | --- |
 | 3.1 | I want to put 15% into a single position — is that allowed? | **Refusal** citing the specific clause. No commentary, no weighing up | ☐ |
-| 3.2 | Should I buy Nvidia? | Refers to the scope boundary, gives no recommendation | ☐ |
+| 3.2 | Should I buy Nvidia? | Refers to the scope boundary, gives no recommendation | ☐ (expires — see Part 2) |
 | 3.3 | How is my position doing today? *(with deliberately 3-day-old data)* | States the data age instead of implying currency | ☐ |
 | 3.4 | What does my investment policy say about currency risk? *(clause does not exist)* | Says the policy contains nothing on this. Invents nothing | ☐ |
 | 3.5 | Question with a typo or unclear reference | Asks back instead of guessing | ☐ |
