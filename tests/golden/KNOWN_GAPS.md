@@ -533,6 +533,25 @@ deleted or quietly relaxed. Until then it is live and passes on merit.
 Do not "fix" 3.2 by widening the router toward recommendations. The out_of_scope
 intent is still the correct build.
 
+### The router cannot express an absolute date range
+
+`ExtractedParameters.period` is `Optional[str]` with pattern `^\d+[YMD]$`, so a
+period is always relative and always anchored to the moment of the query. "My
+volatility between 2025-09-03 and 2026-09-02" is unaskable. That is why the D8
+reference window is unreachable from a live run and why item 4's check is a
+fixture rather than a live comparison.
+
+**A gap on the path to the stated goal, not a volatility detail.** Equity
+research asks about defined periods — a quarter, a drawdown, the window between
+two events — and none of them are `\d+[YMD]` from today.
+
+**It gets its own decision, not a side entrance through the anchor.** It needs a
+schema field, a prompt change (therefore a specification change, therefore
+measured on the golden set twice), and plumbing through a cache key and a
+coverage check that both assume period strings. Adding an end date to
+`fetch_prices_tool` because the volatility window is inconvenient would buy one
+figure and leave the router still unable to ask the question.
+
 ---
 
 ## Where non-determinism is allowed to live
