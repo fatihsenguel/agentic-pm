@@ -337,8 +337,18 @@ subtracts `config.data.period_days`. Nothing anchors it to a close.
 Observed 4 September on portfolio 3. `period: 1Y` returned **2025-09-04 to
 2026-09-02, 251 closes**. `expected_values.md` D8 specifies 2025-09-03 to
 2026-09-02, 252 closes and 251 daily returns. One trading day short at the
-front. The end agrees because the data simply stops at the last settled close;
-the start does not, and it moves every calendar day the query is run.
+front.
+
+**Both ends now disagree. Observed again 4 September, later the same day.** The
+frame came back ending **2026-09-03**, one close past D8's 2026-09-02. The
+earlier note said the end agreed because the data stops at the last settled
+close; that held only while the last settled close was still 09-02. A new close
+landed between the two runs and the cache picked it up. The start was always
+adrift; the end drifts too, one trading day at a time, and D8's instance is now
+behind both.
+
+This was invisible until the as-of field existed. It is the first thing that
+field caught.
 
 The reference and the code therefore disagree, and the disagreement is visible:
 Part 4's sanity check quotes TLT at 9.55% and GLD at 29.21%; the run gave GLD
