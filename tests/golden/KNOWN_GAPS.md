@@ -425,7 +425,10 @@ not a second input to the synthesizer.
 ### `shared_data` carries 67KB of raw prices — hot potato violated
 
 `price_data_json` was 67,190 characters of daily OHLC on the 3Y queries and
-22,501 on the 1Y query. `state.py:50` states shared_data holds summaries, not raw
+22,501 on the 1Y query. **Measured again 4 September on portfolio 3: 161,557
+characters**, 2.4x the recorded figure — the earlier measurement was taken on
+fewer tickers. It scales with the ticker count, so the recorded number is a floor
+and not a size. `state.py:50` states shared_data holds summaries, not raw
 DataFrames, and the module docstring calls this the Hot Potato principle.
 
 This is the project's first stated design principle violated in the main data
