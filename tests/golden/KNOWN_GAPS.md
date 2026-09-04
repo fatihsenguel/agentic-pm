@@ -490,6 +490,45 @@ conflicting values was WRONG: line 28 is `DataConfig` ("3Y") and line 132 is
 `RiskManagerConfig:154` — with the same value. Soft duplication, no current
 conflict. Decide which owns it before either changes.
 
+### The agent roster is restated in seven places
+
+Recorded 4 September, while adding the sixth agent. Nothing is broken today;
+this is about what breaks quietly at the seventh.
+
+The list of agents exists in:
+
+1. `router_prompts.py` - the `AVAILABLE AGENTS` block
+2. `router_prompts.py` - "NEVER hallucinate agents - only use the 5 listed
+   above", which hardcodes the count in prose
+3. `router_prompts.py` - the few-shot examples, which teach by demonstration
+4. `graph.py` - `route_next_step`'s `Literal[...]` return annotation
+5. `graph.py` - the `add_node` calls
+6. `graph.py` - `routing_map`
+7. `graph.py` - the `agent_nodes` list used to wire the loop edges
+
+Adding an agent means finding all seven. Miss the prompt and the router cannot
+plan the agent that exists. Miss `routing_map` and LangGraph raises on an
+unmapped return value - loud, fine. Miss the prose count and nothing fails at
+all: the model is told there are five while being shown six, and the effect is
+a slightly worse classifier with no error anywhere. That last one is the
+repair-instead-of-raise shape applied to a prompt.
+
+The fix is to derive all seven from one registry - a single mapping of agent
+name to node function and description, with the prompt's roster rendered from
+it. Same principle as moving the database URL into config: policy stated once,
+everything else reads it. Related to the period-vocabulary entry above, which
+wants the same treatment for a different list.
+
+Deliberately NOT done while adding the sixth agent. Doing both at once would
+mean a golden-set diff that cannot distinguish "the new agent perturbed
+classification" from "the regenerated prompt reads differently". One change per
+commit exists for exactly this.
+
+Worth doing before the seventh agent, not urgent before then. Note the prompt
+text will change when rendered from a registry even if the roster does not, so
+the commit that does it should expect a golden diff and be judged on whether
+routing decisions moved, not on whether the prompt string changed.
+
 ### `hawkish_threshold` and `dovish_threshold` are now unreferenced
 
 `config.py:67-68`, in `MacroConfig`. Their only consumers were the Fed blocks
