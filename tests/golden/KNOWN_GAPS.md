@@ -369,12 +369,27 @@ stronger option: a reference that moves daily is not a reference, which is why
 D8 pinned settled closes in the first place, and benchmark 3.3 wants the system
 to know its as-of date regardless.
 
-The first option needs no new seam. `end_date` is computed inside
-`_calculate_period_dates` and no caller passes a date, so anchoring it to the
-last settled close is a change to that function alone. Item 5 shares nothing
-with it: item 5 adds an output field to the price summary. A caller-facing
-end-date parameter on `fetch_prices_tool` would only be needed to pin a run to
-a fixed date, which the strict runner deliberately avoids needing.
+The first option needs no new seam, but it is **not** a change to
+`_calculate_period_dates` alone. That function runs before the fetch, so it
+cannot know the last settled close — the dates it returns are what bounds the
+fetch that discovers it.
+
+**And a post-fetch trim alone is inert. Tried and reverted, 4 September.** The
+frame arrives bounded by the fetch window, so every row is already
+`>= today - N`, while the evaluation start `last_close - N` is always
+`<= today - N`. The filter drops nothing, on any period. The window is one
+trading day *short* at the front, not long, so the missing close was never
+fetched and no trim adds it back.
+
+Both halves are needed: widen the fetch to `[today - N - slack, today]`, then
+trim to `[last_close - N, last_close]` before the frame is cached. `slack` is
+policy and belongs in `DataConfig`; under-fetching reproduces this bug with no
+visible symptom, which is how the trim-only version passed review.
+
+Item 5 shares nothing with it: item 5 adds an output field to the price summary.
+A caller-facing end-date parameter on `fetch_prices_tool` would only be needed
+to pin a run to a fixed date, which the strict runner deliberately avoids
+needing.
 
 ---
 
