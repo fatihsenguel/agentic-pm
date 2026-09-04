@@ -497,7 +497,7 @@ conflicting values was WRONG: line 28 is `DataConfig` ("3Y") and line 132 is
 `RiskManagerConfig:154` — with the same value. Soft duplication, no current
 conflict. Decide which owns it before either changes.
 
-### The agent roster is restated in seven places
+### The agent roster is restated in eight places
 
 Recorded 4 September, while adding the sixth agent. Nothing is broken today;
 this is about what breaks quietly at the seventh.
@@ -512,9 +512,11 @@ The list of agents exists in:
 5. `graph.py` - the `add_node` calls
 6. `graph.py` - `routing_map`
 7. `graph.py` - the `agent_nodes` list used to wire the loop edges
-**Corrected same day: it is eight, not seven.** The missed site is
-`AgentName` in `schemas.py:28`, a Pydantic enum, and `AgentTask.agent` is typed
-against it. Adding the sixth agent to the prompt and the graph but not the enum
+8. `schemas.py` - the `AgentName` Pydantic enum
+
+**Site 8 was missed when this entry was first written, and found the same day by
+breaking it.** `AgentTask.agent` is typed against `AgentName`.
+Adding the sixth agent to the prompt and the graph but not the enum
 meant the router returned a plan naming `PortfolioAnalysisAgent`, Pydantic
 rejected the whole response as invalid, all three retries failed identically,
 and `route()` returned None.
@@ -527,14 +529,14 @@ bug, different file.
 
 This entry missing a site while enumerating them is the argument for the registry.
 
-Adding an agent means finding all seven. Miss the prompt and the router cannot
+Adding an agent means finding all eight. Miss the prompt and the router cannot
 plan the agent that exists. Miss `routing_map` and LangGraph raises on an
 unmapped return value - loud, fine. Miss the prose count and nothing fails at
 all: the model is told there are five while being shown six, and the effect is
 a slightly worse classifier with no error anywhere. That last one is the
 repair-instead-of-raise shape applied to a prompt.
 
-The fix is to derive all seven from one registry - a single mapping of agent
+The fix is to derive all eight from one registry - a single mapping of agent
 name to node function and description, with the prompt's roster rendered from
 it. Same principle as moving the database URL into config: policy stated once,
 everything else reads it. Related to the period-vocabulary entry above, which
