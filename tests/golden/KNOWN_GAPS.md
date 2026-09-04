@@ -877,3 +877,29 @@ switching portfolios changed the ticker set; DataAgent produced correct
 covariance, returns and per-ticker volatility.
 
 **The gap is capabilities, not architecture.**
+
+---
+
+## Directions, and decisions deferred with reasons
+
+### Does the router stay a classifier, or become a tool-caller?
+
+**Deferred until Level 1 passes and the IPS lands. Not now.**
+
+Today the router makes one decision from the user's words and emits a plan. That
+is exactly why the golden set can pin it: five routing fields, diffable, and a
+prompt change that moves them is visible immediately. Free tool-calling would
+answer questions nobody anticipated, which is what the equity-research goal
+eventually wants, but it leaves nothing stable to diff — the fast loop would stop
+being an instrument.
+
+**Whichever way it goes, the tool shape decides the cost, and that shape is being
+chosen now regardless.** A model calling `allocate(group_by=..., window=...)` is
+trivial to add. Nine near-identical `allocation_by_X` functions are the same
+brittleness with more steps, and each one has to be described to the model
+separately. The decision about tool-calling can wait; the decision about whether
+the quant layer is parameterised cannot, because every function added between now
+and then is one more thing to unpick.
+
+Related: the group_by entry above, and the router's inability to express an
+absolute date range.
