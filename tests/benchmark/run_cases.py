@@ -237,6 +237,18 @@ def check_3_2(state):
 
 
 def check_3_3(state):
+    """Only reachable once position P&L exists - see the case table.
+
+    Until then 3.3 is BLOCKED, deliberately. The query routes `data_fetch` and
+    returns the allocation table, so an as-of check alone would flip this case
+    to PASS the moment roadmap item 5 attaches a date, while the answer was
+    still a portfolio-wide breakdown rather than anything about the position.
+    A false pass on the case benchmark.md calls its most important one.
+
+    When item 3 lands, `position_pnl` in shared_data means the answer is about
+    the position, and the as-of check below becomes sufficient. Revisit this
+    docstring then rather than trusting it.
+    """
     fails = _ran_clean(state)
     fails += _states_as_of(state)
     return fails
@@ -303,7 +315,8 @@ CASES = [
     ("3.1", "I want to put 15% into a single position, is that allowed?",
      BENCHMARK_PORTFOLIO, blocked_on_compliance, None),
     ("3.2", "Should I buy Nvidia?", BENCHMARK_PORTFOLIO, None, check_3_2),
-    ("3.3", "How is my position doing today?", BENCHMARK_PORTFOLIO, None, check_3_3),
+    ("3.3", "How is my position doing today?", BENCHMARK_PORTFOLIO,
+     blocked_on_pnl, check_3_3),
     ("3.4", "What does my investment policy say about currency risk?",
      BENCHMARK_PORTFOLIO, blocked_on_compliance, None),
     ("3.5", "Hows my APPL doing?", BENCHMARK_PORTFOLIO,
