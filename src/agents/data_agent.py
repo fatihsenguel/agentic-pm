@@ -465,6 +465,19 @@ Always include in your responses:
                     ticker: round(float(prices[ticker].dropna().iloc[-1]), 2)
                     for ticker in prices.columns
                 },
+                # The date of the close each latest price came from. Same
+                # expression as the price above, `.index[-1]` instead of
+                # `.iloc[-1]`, so it cannot drift from the figure it dates. Per
+                # ticker because `dropna()` is per ticker: a holding missing the
+                # final close is priced older than the frame's end.
+                #
+                # YYYY-MM-DD is load-bearing downstream, where these are
+                # compared with `min` as strings. Lexicographic and
+                # chronological order coincide in this format and in no other.
+                "as_of_dates": {
+                    ticker: prices[ticker].dropna().index[-1].strftime("%Y-%m-%d")
+                    for ticker in prices.columns
+                },
                 "price_range": {
                     ticker: {
                         "min": round(float(prices[ticker].min()), 2),

@@ -528,6 +528,7 @@ async def data_agent_node(state: AgentState) -> Dict[str, Any]:
                 "tickers": tickers,
                 "tickers_str": tickers_str,
                 "latest_prices": price_result.get("latest_prices", {}),
+                "as_of_dates": price_result.get("as_of_dates", {}),
                 "covariance_matrix": cov_result.get("covariance_matrix", {}),
                 "volatilities": raw_vols,
                 "expected_returns": expected_returns,  # GUARANTEED to exist
@@ -726,6 +727,15 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
                 "DataAgent must provide prices before allocation is computed."
             )
 
+        as_of_dates = shared.get("as_of_dates")
+        if not as_of_dates:
+            raise DataCalculationError(
+                "No as_of_dates in shared_data.\n"
+                "Every figure derived from market data must state its as-of "
+                "date (benchmark.md Part 3b). DataAgent publishes these "
+                "alongside latest_prices; absent dates are not current dates."
+            )
+
         cash_balance = shared.get("cash_balance")
         if cash_balance is None:
             raise DataCalculationError(
@@ -742,6 +752,36 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
 
         by_class = allocation_by_asset_class(holdings, prices, cash_balance)
         by_sector = allocation_by_sector(holdings, prices)
+
+        # An allocation line aggregates several holdings, so no single holding's
+        # date describes it. Reduce to the worst case: no figure is presented as
+        # fresher than its stalest input. That can understate freshness and
+        # cannot overstate it, which is the safe direction for a data-age field.
+        #
+        # Computed here rather than in the synthesizer so the value lands in
+        # shared_data and can be asserted on - anything the synthesizer derives
+        # exists only as text in the answer. Compliance needs the same number.
+        #
+        # `min` is chronological only because these are YYYY-MM-DD strings, in
+        # which lexicographic order matches date order. Nothing enforces that
+        # format; it comes from the strftime in data_agent.py.
+        held = [h["ticker"] for h in holdings if h.get("ticker") in as_of_dates]
+        if not held:
+            # allocation_by_asset_class has already raised on any unpriced
+            # holding, so a partial gap cannot reach here. This is the
+            # all-missing case, and it means the price summary lost its dates.
+            raise DataCalculationError(
+                "No as-of date for any held ticker.\n"
+                f"Holdings: {sorted({h.get('ticker') for h in holdings})}\n"
+                f"Dated:    {sorted(as_of_dates)}\n"
+                "The allocation cannot state how current it is."
+            )
+        stalest = min(held, key=lambda t: as_of_dates[t])
+
+        # Equal dates are the normal case - nine holdings, one close - and the
+        # synthesizer has to know. Naming a stalest holding when nothing is
+        # stale invents a distinction the data does not carry.
+        uniform = len({as_of_dates[t] for t in held}) == 1
 
         def _lines(allocation):
             return [
@@ -769,6 +809,11 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
                 "denominator": by_sector.denominator_label,
                 "invested_value": round(by_sector.invested_value, 2),
                 "sectored_value": round(by_sector.total_value, 2),
+            },
+            "as_of": {
+                "worst_case": as_of_dates[stalest],
+                "stalest": stalest,
+                "uniform": uniform,
             },
         }
 
@@ -1473,6 +1518,12 @@ def _format_allocation_response(sub_results: Dict) -> List[str]:
     Formats only. Every figure is read from the agent's result unchanged; the
     only arithmetic is rendering a stored fraction as a percentage.
 
+    The as-of date is read, not derived. PortfolioAnalysisAgent reduces the
+    per-holding dates to a worst case and publishes it; computing it here would
+    put the figure only in the answer text, where the runner cannot assert on
+    it. Whether those dates agree is read too, for the same reason - the one
+    branch below selects wording, it does not compare dates.
+
     Both breakdowns are printed. The router extracts no sector, so nothing in
     the decision distinguishes benchmark 1.1 from 1.4 and picking one would be
     a guess. Selecting is formatting and belongs here - it needs a sector on
@@ -1488,6 +1539,17 @@ def _format_allocation_response(sub_results: Dict) -> List[str]:
     by_sector = allocation.get("by_sector") or {}
 
     lines = ["**PORTFOLIO ALLOCATION**", ""]
+
+    as_of = allocation.get("as_of") or {}
+    if as_of.get("worst_case"):
+        if as_of.get("uniform"):
+            lines.append(f"**Priced as of {as_of['worst_case']}** — the close "
+                         f"for every holding.")
+        else:
+            lines.append(f"**Priced as of {as_of['worst_case']}** — the oldest "
+                         f"close among the holdings ({as_of.get('stalest')}). "
+                         f"No figure below is fresher than that.")
+        lines.append("")
 
     if by_class:
         lines.append(f"**Total portfolio value:** {by_class['total_value']:,.2f}")
@@ -1515,11 +1577,9 @@ def _format_allocation_response(sub_results: Dict) -> List[str]:
                          f"{line['market_value']:>15,.2f}   {held}")
 
     lines.append("")
-    lines.append("**Not done.** No as-of date is attached to these prices, so the")
-    lines.append("figures do not say how current they are (benchmark 3.3, unbuilt).")
-    lines.append("No sector was extracted from the question, so both breakdowns are")
-    lines.append("shown rather than the one asked for. Fund holdings are counted at")
-    lines.append("fund level; there is no look-through.")
+    lines.append("**Not done.** No sector was extracted from the question, so")
+    lines.append("both breakdowns are shown rather than the one asked for. Fund")
+    lines.append("holdings are counted at fund level; there is no look-through.")
     return lines
 
 

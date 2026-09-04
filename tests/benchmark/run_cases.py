@@ -28,10 +28,11 @@ What each case asserts instead:
     answer at all
   - benchmark.md Part 3b: is an as-of date stated
 
-KNOWN WEAKNESS OF THIS INSTRUMENT, recorded rather than hidden. The as-of check
-is a date-shaped regex over the answer text. Any date satisfies it, including a
-volatility window string. It is a proxy until roadmap item 5 gives the system a
-real as-of field, at which point this check should assert on that field instead.
+The as-of check asserts on `shared_data["allocation"]["as_of"]["worst_case"]`:
+that it exists, that it is a date, and that that exact date reaches the answer.
+It was a date-shaped regex over the prose until roadmap item 5 built the field,
+and it was replaced in the same commit so that 1.1 and 1.4 could not flip to
+PASS on the proxy.
 
 STATUSES
 
@@ -119,9 +120,35 @@ def _ran_clean(state):
 
 
 def _states_as_of(state):
-    if AS_OF.search(_answer(state)):
-        return []
-    return ["no as-of date in the answer (benchmark.md Part 3b)"]
+    """Assert on the structured as-of value, not on a date shape in the prose.
+
+    Three separate things, because a date-shaped regex over the answer was
+    satisfied by any date at all - including the volatility window string - and
+    would have reported 1.1 and 1.4 as passing on the proxy rather than on the
+    field.
+
+    Allocation-specific, deliberately. It reads
+    `shared_data["allocation"]["as_of"]`, and every case calling it today (1.1,
+    1.4, and 3.3 once P&L unblocks it) produces an allocation. A P&L or
+    volatility answer will carry its as-of somewhere else; that wants a second
+    accessor here, not a wider search. Searching for a date wherever one might
+    live is what the regex version did.
+    """
+    allocation = _shared(state).get("allocation") or {}
+    as_of = allocation.get("as_of") or {}
+    stated = as_of.get("worst_case")
+
+    if not stated:
+        return ["no as_of.worst_case in shared_data['allocation'] "
+                "(benchmark.md Part 3b)"]
+
+    fails = []
+    if not AS_OF.fullmatch(str(stated)):
+        fails.append(f"as_of.worst_case is not a YYYY-MM-DD date: {stated!r}")
+    if str(stated) not in _answer(state):
+        fails.append(f"as-of date {stated} is in shared_data but never reaches "
+                     f"the answer")
+    return fails
 
 
 def _prose_carries(state, lines, key):
