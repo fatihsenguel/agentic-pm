@@ -903,3 +903,22 @@ and then is one more thing to unpick.
 
 Related: the group_by entry above, and the router's inability to express an
 absolute date range.
+
+### Direction for `quant/`: one implementation per formula
+
+**One tested implementation of each formula, reachable from anywhere, never
+restated in a document.** D7 already names `quant/risk_metrics.py` canonical for
+return-series volatility because five implementations existed. This is the
+general form of that decision.
+
+**D8 claiming the code matched when it did not is this rule being broken.** The
+window rule lived in prose in `expected_values.md`, the code computed something
+else, and the sentence asserting they agreed sat inside the reference document
+for a day without either side being run against the other. A formula stated in a
+document and implemented in code is two implementations, and one of them has no
+test.
+
+`portfolio_volatility(weights, cov_matrix)` is the next function into that
+package (D7, roadmap item 4). Its check is a pytest fixture over the 252 closes
+extracted from `expected_values.xlsx` and committed, not read from
+`data/portfolio.db`, which is untracked and would not survive a fresh clone.
