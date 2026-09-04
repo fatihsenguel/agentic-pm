@@ -34,7 +34,7 @@ the previous settled close.
 | D5 | Volatility on daily or weekly returns? | **Daily.** ~250 observations against ~52 weekly; weekly cuts microstructure noise but 52 points is a thin estimate. |
 | D6 | Annualisation factor? | **252.** Must match D5. |
 | D7 | Which volatility implementation is canonical? | **`quant/risk_metrics.py`** for return-series volatility, plus a new `portfolio_volatility(weights, cov_matrix)` there — none of the five existing implementations computes portfolio-level vol. `analytics_tools.py` and `optimization/base.py` delegate to it; `backtest/metrics.py` and the inline `engine.py:523` are scoped backtest-internal. |
-| D8 | Volatility window? | **One calendar year of daily closes ending at the last settled close**, 2025-09-03 to 2026-09-02. Matches what the code computes for `period: 1Y`. |
+| D8 | Volatility window? | **One calendar year of daily closes ending at the last settled close**, 2025-09-03 to 2026-09-02. The code does **not** compute this: `_calculate_period_dates` returns today-minus-365 to today, anchored to the calendar rather than to a close, so it is adrift at the front and now at the end too. This decision is the reference; the code is what needs to change. |
 
 Note the tension between D2 and Part 4: the volatility weights exclude cash
 while D2 includes it. Resolved by disclosure — see Part 4.
