@@ -1311,6 +1311,8 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             lines.extend(_format_rebalance_response(sub_results))
         elif intent == "backtest":
             lines.extend(_format_backtest_response(sub_results))
+        elif intent == "data_fetch" and "PortfolioAnalysisAgent" in sub_results:
+            lines.extend(_format_allocation_response(sub_results))
         elif intent == "combined":
             # Combined: show all relevant results
             if "MacroAgent" in sub_results:
@@ -1461,6 +1463,63 @@ def _format_backtest_response(sub_results: Dict) -> List[str]:
         lines.append("⚠️ Past performance does not guarantee future results.")
     
     return lines
+
+
+def _format_allocation_response(sub_results: Dict) -> List[str]:
+    """Format the allocation PortfolioAnalysisAgent computed.
+
+    Formats only. Every figure is read from the agent's result unchanged; the
+    only arithmetic is rendering a stored fraction as a percentage.
+
+    Both breakdowns are printed. The router extracts no sector, so nothing in
+    the decision distinguishes benchmark 1.1 from 1.4 and picking one would be
+    a guess. Selecting is formatting and belongs here - it needs a sector on
+    ExtractedParameters first.
+    """
+    analysis = sub_results.get("PortfolioAnalysisAgent", {})
+    if not analysis.get("success"):
+        return ["Allocation could not be computed.",
+                f"  {analysis.get('error', 'No error recorded.')}"]
+
+    allocation = analysis.get("allocation") or {}
+    by_class = allocation.get("by_asset_class") or {}
+    by_sector = allocation.get("by_sector") or {}
+
+    lines = ["**PORTFOLIO ALLOCATION**", ""]
+
+    if by_class:
+        lines.append(f"**Total portfolio value:** {by_class['total_value']:,.2f}")
+        lines.append(f"  invested {by_class['invested_value']:,.2f} "
+                     f"+ cash {by_class['cash_balance']:,.2f}")
+        lines.append("")
+        lines.append(f"**By asset class**, % of {by_class['denominator']}:")
+        for line in by_class.get("lines", []):
+            pct = line.get("pct_of_denominator")
+            pct_str = f"{pct:.2%}" if pct is not None else "n/a"
+            lines.append(f"  - {line['label']:<13}{pct_str:>8}"
+                         f"{line['market_value']:>15,.2f}")
+
+    if by_sector:
+        lines.append("")
+        lines.append(f"**By sector**, % of {by_sector['denominator']} "
+                     f"and of invested value {by_sector['invested_value']:,.2f}:")
+        for line in by_sector.get("lines", []):
+            of_sectored = line.get("pct_of_denominator")
+            of_invested = line.get("pct_of_invested")
+            sectored_str = f"{of_sectored:.2%}" if of_sectored is not None else "n/a"
+            invested_str = f"{of_invested:.2%}" if of_invested is not None else "n/a"
+            held = ", ".join(line.get("tickers", []))
+            lines.append(f"  - {line['label']:<13}{sectored_str:>8}{invested_str:>9}"
+                         f"{line['market_value']:>15,.2f}   {held}")
+
+    lines.append("")
+    lines.append("**Not done.** No as-of date is attached to these prices, so the")
+    lines.append("figures do not say how current they are (benchmark 3.3, unbuilt).")
+    lines.append("No sector was extracted from the question, so both breakdowns are")
+    lines.append("shown rather than the one asked for. Fund holdings are counted at")
+    lines.append("fund level; there is no look-through.")
+    return lines
+
 
 
 # =============================================================================
