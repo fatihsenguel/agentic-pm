@@ -2,7 +2,7 @@
 
 **Session date:** 4 September 2026 (second sitting)
 **Branch:** `baseline-v1`
-**State:** Green. 105 tests passing, golden set stable over four consecutive runs, working tree clean. **Benchmark: 0/12 passing, 3 failing, 9 blocked** — and for the first time that number is produced by a program rather than by reading CLI output.
+**State:** Green. 105 tests passing, golden set stable over four consecutive runs, working tree clean. For the benchmark count, run `python tests/benchmark/run_cases.py` — it is not quoted here, because it changes on every capability commit and this line was stale twice in two days.
 
 Written for an LLM assistant picking up cold in a new conversation.
 
@@ -243,9 +243,14 @@ false-pass path.
 
 ## 6. Where we stand against the benchmark
 
+```bash
+python tests/benchmark/run_cases.py
 ```
-0/12 passing, 3 failing, 9 blocked
-```
+
+The count is deliberately not written down here. §0 says to run the runner before
+believing anything about what works, and a number copied into prose is exactly
+the belief that outlives its evidence. What follows is the shape of the gap,
+which moves more slowly than the count.
 
 **1.1 and 1.4 fail on the missing as-of date and nothing else.** Every other
 assertion holds against portfolio 3: labels, percentages summing to 1.0, all four
