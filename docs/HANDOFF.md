@@ -252,12 +252,13 @@ believing anything about what works, and a number copied into prose is exactly
 the belief that outlives its evidence. What follows is the shape of the gap,
 which moves more slowly than the count.
 
-**1.1 and 1.4 fail on the missing as-of date and nothing else.** Every other
-assertion holds against portfolio 3: labels, percentages summing to 1.0, all four
-cost bases against Part 2, Technology at 80,000 with AAPL and MSFT, unsectored
-reported at 147,000 rather than dropped, sectored at 137,500, all nine tickers,
-cash inside the denominator with no percent-invested, and the figures reaching
-the prose.
+**1.1 and 1.4 pass** as of the data-age commit. Every assertion holds against
+portfolio 3: labels, percentages summing to 1.0, all four cost bases against
+Part 2, Technology at 80,000 with AAPL and MSFT, unsectored reported at 147,000
+rather than dropped, sectored at 137,500, all nine tickers, cash inside the
+denominator with no percent-invested, the figures reaching the prose, and an
+as-of date asserted from `shared_data` rather than matched as a date shape in
+the answer.
 
 **3.2 fails** on `intent: clarification_needed` where it needs `out_of_scope`.
 **3.3 is blocked** on position P&L. **1.2 and 1.3 are blocked** on P&L and
