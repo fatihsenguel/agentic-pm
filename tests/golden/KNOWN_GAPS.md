@@ -583,6 +583,53 @@ is a second instance of the nondeterminism that the `period` leak caused, and
 
 ---
 
+## The twelve benchmark cases are not executable
+
+Recorded 4 September. The gap is real; the timing is deliberate.
+
+`benchmark.md` defines twelve cases with expected behaviour. None of them is an
+automated pass/fail. `run_golden.py` diffs five routing fields and cannot see an
+answer; `pytest` covers components, not cases. So "how many cases pass" is
+assessed by reading CLI output, which is judgment, and judgment under no
+deadline drifts toward thoroughness. A number that goes up is the one signal
+neither care nor thoroughness can argue with.
+
+**Why this is not simply "write the eval suite now."** The expected outputs are
+free text from an LLM synthesizer. "Answers with the correct percentages" is not
+a string comparison - the model can phrase it many ways and be right every time,
+or produce the right figures under a wrong label. Asserting on prose needs
+either structured output alongside it or a judge model, and a judge is a
+non-deterministic instrument measuring a deterministic component. See "Where
+non-determinism is allowed to live" above: the golden set is the wrong
+instrument for judgment, and a judge is the wrong instrument for arithmetic.
+
+**The way through is the split the architecture already has.** Assert on
+`shared_data`, which is structured and deterministic - case 1.1 requires
+`allocation_by_asset_class` to carry Equity at 0.6941 against
+expected_values.md Part 2. Then assert weakly on the prose: does the answer
+contain those figures at all. That second check already exists as
+`cli.py:132`, "NO NUMBERS IN ANSWER while shared_data has them", which prints a
+warning where it could fail a test. The instrument is built; it just does not
+assert.
+
+**Shape:** `tests/benchmark/run_cases.py`, one query per case, printing `n/12`,
+with a recorded reason per failing case. Not part of `pytest` - the cases cost
+API calls and take minutes, so they are a third loop alongside the golden set,
+not a fourth thing bolted onto the first.
+
+**Build it with roadmap item 3, the synthesizer**, because that is the first
+moment any case can pass end to end. A runner that can only ever print 0/12
+reports nothing that this file does not already say. From item 3 onward, every
+capability commit is expected to move the counter, and "done" for a roadmap item
+means its case asserts rather than that its arithmetic is right.
+
+Note item 2 already shipped this way at the computation layer:
+`tests/test_allocation.py` carries fourteen assertions taken from
+expected_values.md Parts 2 and 3, committed with the capability. What is missing
+is the case-level assertion, not the value-level one.
+
+---
+
 ## What works, recorded so it does not get re-litigated
 
 From the first CLI baseline, 3 September 2026. The router classified all five test
