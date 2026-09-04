@@ -84,6 +84,12 @@ class CovarianceResult:
             result["annualized_volatilities"] = {
                 k: f"{v:.2%}" for k, v in self.annualized_volatilities.items()
             }
+            # Raw floats alongside the display strings. Anything doing further
+            # arithmetic reads this key; the formatted one is for display only.
+            # The ImportError fallback in data_agent.py already emits both.
+            result["annualized_volatilities_raw"] = {
+                k: float(v) for k, v in self.annualized_volatilities.items()
+            }
         
         if self.condition_number is not None:
             result["condition_number"] = round(self.condition_number, 2)

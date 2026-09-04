@@ -500,6 +500,20 @@ async def data_agent_node(state: AgentState) -> Dict[str, Any]:
                 )
             
             # Build result
+            # STRICT: volatilities travel as floats, not display strings.
+            # "15.33%" forces every downstream consumer to parse it back, which
+            # is the hot-potato violation in miniature.
+            raw_vols = cov_result.get("annualized_volatilities_raw")
+            if not raw_vols:
+                raise DataCalculationError(
+                    "Covariance succeeded but 'annualized_volatilities_raw' is missing.\n"
+                    f"Available keys: {list(cov_result.keys())}\n"
+                    "\n"
+                    "Data contract violation. Volatilities must reach shared_data as\n"
+                    "floats (0.1533), not formatted strings ('15.33%').\n"
+                    "Fix the producer, not the consumer."
+                )
+
             result = {
                 "success": True,
                 "prices": price_result,
@@ -515,7 +529,7 @@ async def data_agent_node(state: AgentState) -> Dict[str, Any]:
                 "tickers_str": tickers_str,
                 "latest_prices": price_result.get("latest_prices", {}),
                 "covariance_matrix": cov_result.get("covariance_matrix", {}),
-                "volatilities": cov_result.get("annualized_volatilities", {}),
+                "volatilities": raw_vols,
                 "expected_returns": expected_returns,  # GUARANTEED to exist
                 "holdings": build_holdings_summary(holdings),
                 "cash_balance": ctx.cash_balance,
