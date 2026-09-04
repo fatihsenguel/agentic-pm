@@ -1531,6 +1531,12 @@ def _format_risk_response(sub_results: Dict) -> List[str]:
     against the covariance matrix and does not exist yet (expected_values.md
     D7). Benchmark 1.3 asks for exactly that, so this names the gap rather than
     letting nine per-holding numbers stand in for the one number asked for.
+
+    The window comes from `prices["period"]`, which is the range actually
+    returned, not the router's requested period. The router emits null when the
+    user names no timeframe and the window is then resolved from config two
+    files away, so the requested value is absent exactly when the reader most
+    needs to be told what was measured.
     """
     data = sub_results.get("DataAgent", {})
     if not data.get("success"):
@@ -1541,10 +1547,18 @@ def _format_risk_response(sub_results: Dict) -> List[str]:
     if not vols:
         return ["No volatilities were computed for this request."]
 
-    period = data.get("period")
-    window = f" over {period}" if period else ""
+    prices = data.get("prices") or {}
+    window = prices.get("period")
+    observations = prices.get("num_observations")
 
-    lines = ["**RISK**", "", f"**Annualised volatility per holding**{window}:"]
+    lines = ["**RISK**", ""]
+    if window:
+        basis = f"**Annualised volatility per holding**, {window}"
+        if observations:
+            basis = f"{basis}, {observations} closes"
+        lines.append(f"{basis}:")
+    else:
+        lines.append("**Annualised volatility per holding**, window not reported:")
     for ticker, vol in sorted(vols.items(), key=lambda kv: -kv[1]):
         lines.append(f"  - {ticker:<6}{vol:>8.2%}")
 
