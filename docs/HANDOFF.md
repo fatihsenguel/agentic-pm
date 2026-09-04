@@ -2,7 +2,7 @@
 
 **Session date:** 4 September 2026 (second sitting)
 **Branch:** `baseline-v1`
-**State:** Green. 105 tests passing, golden set stable over four consecutive runs, working tree clean. **Benchmark: 0/12 passing, 4 failing, 8 blocked** — and for the first time that number is produced by a program rather than by reading CLI output.
+**State:** Green. 105 tests passing, golden set stable over four consecutive runs, working tree clean. **Benchmark: 0/12 passing, 3 failing, 9 blocked** — and for the first time that number is produced by a program rather than by reading CLI output.
 
 Written for an LLM assistant picking up cold in a new conversation.
 
@@ -244,7 +244,7 @@ false-pass path.
 ## 6. Where we stand against the benchmark
 
 ```
-0/12 passing, 4 failing, 8 blocked
+0/12 passing, 3 failing, 9 blocked
 ```
 
 **1.1 and 1.4 fail on the missing as-of date and nothing else.** Every other
@@ -267,7 +267,7 @@ output contract plus the capabilities of Levels 2 and 3.
 
 ## 7. Next steps, in order
 
-**The ordering below follows the counter, not the roadmap.** Three of the four
+**The ordering below follows the counter, not the roadmap.** Two of the three
 failing cases fail on data age, and the two blocked Level 1 cases will fail on it
 too once their arithmetic exists.
 
