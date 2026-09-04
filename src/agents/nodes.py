@@ -1313,6 +1313,8 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             lines.extend(_format_backtest_response(sub_results))
         elif intent == "data_fetch" and "PortfolioAnalysisAgent" in sub_results:
             lines.extend(_format_allocation_response(sub_results))
+        elif intent == "risk_analysis":
+            lines.extend(_format_risk_response(sub_results))
         elif intent == "combined":
             # Combined: show all relevant results
             if "MacroAgent" in sub_results:
@@ -1518,6 +1520,39 @@ def _format_allocation_response(sub_results: Dict) -> List[str]:
     lines.append("No sector was extracted from the question, so both breakdowns are")
     lines.append("shown rather than the one asked for. Fund holdings are counted at")
     lines.append("fund level; there is no look-through.")
+    return lines
+
+
+
+def _format_risk_response(sub_results: Dict) -> List[str]:
+    """Format the risk figures DataAgent produced.
+
+    Per holding only. Portfolio-level volatility needs the holding weights
+    against the covariance matrix and does not exist yet (expected_values.md
+    D7). Benchmark 1.3 asks for exactly that, so this names the gap rather than
+    letting nine per-holding numbers stand in for the one number asked for.
+    """
+    data = sub_results.get("DataAgent", {})
+    if not data.get("success"):
+        return ["Risk figures could not be loaded.",
+                f"  {data.get('error', 'No error recorded.')}"]
+
+    vols = (data.get("covariance") or {}).get("annualized_volatilities_raw") or {}
+    if not vols:
+        return ["No volatilities were computed for this request."]
+
+    period = data.get("period")
+    window = f" over {period}" if period else ""
+
+    lines = ["**RISK**", "", f"**Annualised volatility per holding**{window}:"]
+    for ticker, vol in sorted(vols.items(), key=lambda kv: -kv[1]):
+        lines.append(f"  - {ticker:<6}{vol:>8.2%}")
+
+    lines.append("")
+    lines.append("**Not done.** Portfolio volatility is not computed. It needs the")
+    lines.append("holding weights against the covariance matrix (expected_values.md")
+    lines.append("D7); the figures above are per holding, and averaging them is not")
+    lines.append("the same number. No as-of date is attached (benchmark 3.3).")
     return lines
 
 
