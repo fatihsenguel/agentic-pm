@@ -350,9 +350,12 @@ stronger option: a reference that moves daily is not a reference, which is why
 D8 pinned settled closes in the first place, and benchmark 3.3 wants the system
 to know its as-of date regardless.
 
-Note there is no seam for the first option yet. `fetch_prices_tool` takes only
-`tickers`, `period` and `interval`; nothing accepts an as-of or end date. That
-seam is also what item 5 needs, so build it once.
+The first option needs no new seam. `end_date` is computed inside
+`_calculate_period_dates` and no caller passes a date, so anchoring it to the
+last settled close is a change to that function alone. Item 5 shares nothing
+with it: item 5 adds an output field to the price summary. A caller-facing
+end-date parameter on `fetch_prices_tool` would only be needed to pin a run to
+a fixed date, which the strict runner deliberately avoids needing.
 
 ---
 

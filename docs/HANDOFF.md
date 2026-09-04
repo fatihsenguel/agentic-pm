@@ -297,9 +297,13 @@ it moves every day the query runs.
 Item 4 checks `portfolio_volatility` against 10.2936% and will not reproduce it.
 **Do not resolve that by editing `expected_values.md`.** Either anchor the code
 to the last settled close, or change D8 to a trailing window and recompute Part 4
-with the reason recorded. The first is stronger. No seam exists for it yet —
-`fetch_prices_tool` takes only `tickers`, `period` and `interval` — and that is
-the same seam item 1 above needs. Build it once.
+with the reason recorded. The first is stronger, and it is a change inside
+`_calculate_period_dates`, not a new parameter: `end_date` is computed
+differently, and no caller passes a date. Item 1 shares no seam with this —
+item 1 adds an output field, `.index[-1]` on the expression that already
+produces `latest_prices`. A caller-facing end-date parameter on
+`fetch_prices_tool` is only needed to pin a run to a fixed date, which the
+strict runner deliberately avoids needing. Do not build one for these two.
 
 ### 3. Position P&L (benchmark 1.2, unblocks 3.3)
 
