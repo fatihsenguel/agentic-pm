@@ -685,10 +685,23 @@ non-determinism is allowed to live" above: the golden set is the wrong
 instrument for judgment, and a judge is the wrong instrument for arithmetic.
 
 **The way through is the split the architecture already has.** Assert on
-`shared_data`, which is structured and deterministic - case 1.1 requires
-`allocation_by_asset_class` to carry Equity at 0.6941 against
-expected_values.md Part 2. Then assert weakly on the prose: does the answer
-contain those figures at all. That second check already exists as
+`shared_data`, which is structured, then assert weakly on the prose: does the
+answer contain those figures at all.
+
+**Corrected 4 September, while writing the runner.** An earlier version of this
+entry said case 1.1 should assert `allocation_by_asset_class` carries Equity at
+0.6941 against expected_values.md Part 2. That assertion expires. Market values
+move with prices, expected_values is pinned to the 2026-09-02 closes, and there
+is no seam to pin a run against a date - `fetch_prices_tool` takes only
+`tickers`, `period` and `interval`. A runner built that way would start failing
+on price movement rather than on regression.
+
+`tests/test_allocation.py` already checks those figures against Parts 2 and 3
+with fixed inputs, which is the instrument that should own them. The runner
+asserts what does not move: structure and invariants, the static cost-basis and
+cash figures, the ticker set, whether the figures in `shared_data` reached the
+prose, and whether Part 3b's as-of date is stated. The exact market-value check
+stays where fixed inputs make it stable. That second check already exists as
 `cli.py:132`, "NO NUMBERS IN ANSWER while shared_data has them", which prints a
 warning where it could fail a test. The instrument is built; it just does not
 assert.
