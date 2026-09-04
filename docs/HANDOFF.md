@@ -1,13 +1,14 @@
 # AGENTIC_FINANCE — Session Handoff
 
-**Session date:** 4 September 2026
+**Session date:** 4 September 2026 (second sitting)
 **Branch:** `baseline-v1`
-**State:** Green. 105 tests passing, golden set stable over two consecutive runs, working tree clean.
+**State:** Green. 105 tests passing, golden set stable over four consecutive runs, working tree clean. **Benchmark: 0/12 passing, 4 failing, 8 blocked** — and for the first time that number is produced by a program rather than by reading CLI output.
 
 Written for an LLM assistant picking up cold in a new conversation.
 
 **Regenerate this document at the end of each session rather than patching it.**
-Generated context files rot faster than the code they describe.
+Generated context files rot faster than the code they describe. The previous
+version of this file carried four wrong figures by the end of one session.
 
 ---
 
@@ -15,13 +16,15 @@ Generated context files rot faster than the code they describe.
 
 | File | What it is |
 |---|---|
-| `docs/benchmark.md` | **The definition of done.** 12 test cases across 3 levels, plus scope boundaries and the output contract. Everything is measured against this. Part 2 is now phased — see §5. |
-| `docs/PM-Assistant — Roadmap.md` | Phased plan, ordered by dependency. Committed 4 September after being untracked and nearly lost; carries a header listing the points superseded since it was written. |
-| `tests/golden/KNOWN_GAPS.md` | Open decisions, resolved decisions, and why obvious fixes are wrong. Long, and the most useful file in the repo. |
-| `tests/golden/expected_values.md` | Hand-computed expected answers for portfolio 3, plus eight recorded decisions (D1–D8). The reference the code gets checked against. `expected_values.xlsx` alongside it holds the formulas. |
+| `docs/benchmark.md` | **The definition of done.** 12 test cases across 3 levels, plus scope boundaries and the output contract. Part 3's Level 1 status note is now stale — 1.1 and 1.4 compute correctly; they fail on the output contract. |
+| `tests/benchmark/run_cases.py` | **The scoreboard.** Run it before believing anything about what works. Its docstring states what it asserts and what it deliberately does not. |
+| `tests/golden/KNOWN_GAPS.md` | Open decisions, resolved decisions, and why obvious fixes are wrong. 29 open entries. Long, and the most useful file in the repo. |
+| `tests/golden/expected_values.md` | Hand-computed expected answers for portfolio 3, plus eight decisions (D1–D8). `expected_values.xlsx` alongside it holds the formulas and the 252 closes. |
+| `docs/PM-Assistant — Roadmap.md` | Phased plan. Carries a header listing superseded points. Its ordering is now overridden by §7 below, which follows the counter. |
 
 **Do not update `expected_values` to match code output.** If they disagree, one
-of the two is wrong and that gets resolved deliberately.
+of the two is wrong and that gets resolved deliberately. There is a live
+disagreement right now — see §7 item 2.
 
 ---
 
@@ -39,8 +42,7 @@ of the two is wrong and that gets resolved deliberately.
 
 A **personal portfolio management and equity research assistant**, driven by the
 owner's own Investment Policy Statement. The goal explicitly includes
-**screening and stock picking** — not only analysing named instruments. That is
-currently out of scope by phase, not permanently; see §5.
+**screening and stock picking**. That is out of scope by phase, not permanently.
 
 There is **no deadline**. Correctness over speed. Scope creep is the live risk
 rather than under-delivery.
@@ -60,12 +62,13 @@ rather than under-delivery.
   imports inside function bodies.
 - Never infer a module's purpose or dependencies from its name.
 - One change per commit. **If the commit message needs an "and", it is two
-  commits.** This rule was adopted on 4 September and settles most scope
-  questions on its own.
-- Verify against `pytest` and the golden set, run as **separate commands** — not
-  chained with `&&`, which hides failures.
-- Do not paste multi-line blocks containing interactive commands (`git add -p`)
-  or trailing `#` comments into zsh; both get eaten.
+  commits.**
+- Verify with `pytest` and the golden set as **separate commands** — not chained
+  with `&&`, which hides failures.
+- Do not paste multi-line blocks containing interactive commands or trailing `#`
+  comments into zsh; both get eaten. Patches: `git diff -U0` and
+  `git apply --unidiff-zero`, with `--check` first. Note `git commit -am` does
+  not stage a new file.
 
 ### What the owner does NOT want
 
@@ -82,23 +85,29 @@ source .venv/bin/activate
 pytest -q
 
 python tests/golden/run_golden.py > /tmp/golden_now.txt 2>/dev/null
-diff tests/golden/expected.txt /tmp/golden_now.txt && echo "NO DIFF"
+diff tests/golden/expected.txt /tmp/golden_now.txt
+
+python tests/benchmark/run_cases.py
 
 python src/agents/cli.py --portfolio 3
 ```
 
 **Caveat on "105 passing":** `test_portfolio_integration.py` returns booleans
-instead of asserting, so its tests pass unconditionally, and its TEST 7 catches
-every exception and returns `True` in both branches. 105 means 105 collected and
-none errored, not 105 things verified. 14 of the 105 are the new allocation
-tests, which do assert against hand-computed figures.
+instead of asserting, so its seven blocks pass unconditionally, and TEST 7
+returns `True` in both branches. 105 means 105 collected and none errored, not
+105 things verified. 14 of the 105 are `test_allocation.py`, which does assert
+against hand-computed figures — and which is now the **only** place exact
+market-value figures are checked. See §7 item 1 for why they are not in the
+benchmark runner.
 
 ### Branches and tags
 
 `baseline-v1` is the working branch. `wip/phase7-snapshot` holds Compliance/IPS
-code to pull forward. `wip/rag-early` and tag `rag-early-parked` hold the deleted
-RAG code. `master` (b327e80) has a fuller RAG version with a vector store. All
-three tags are on the remote.
+code to pull forward (`ips_manager.py`, `esg_screener.py`,
+`compliance_agent.py`). `wip/rag-early` and tag `rag-early-parked` hold the
+deleted RAG code. `master` (b327e80) has a fuller RAG version with a vector
+store. Tags on the remote: `baseline-v1-clean`, `baseline-v1-green`,
+`rag-early-parked`.
 
 ### Database
 
@@ -107,54 +116,48 @@ three tags are on the remote.
 
 - **Portfolio 3, "Benchmark Portfolio" — use this one.** 9 positions, 4 asset
   classes, 4 sectors, cost basis 284,500 plus 15,500 cash = 300,000 flat.
-  Synthetic and deliberately round, so `expected_values` can be hand-computed.
   Seeded by `src/portfolio_tool/scripts/seed_portfolio.py` (idempotent).
-- **Portfolio 1, "Demo Portfolio"** — January data. `run_golden.py:21-24` runs
-  four of its ten queries against it, so **do not modify or delete it** or the
-  baseline breaks.
-- **Portfolio 2, "Integration Test"** — confirmed 4 September to be a *leaked
-  test artifact*, not January data. Contains AAPL 10 @ 150.0 and MSFT 5 @ 350.0,
-  which is `test_portfolio_integration.py:42-43` verbatim, left behind by a run
-  that returned early before its `delete_portfolio`. `run_golden.py:26` uses it
-  for the Technology-sector query, so it is load-bearing by accident. Its
-  holdings have no `asset_class` set.
+- **Portfolio 1, "Demo Portfolio"** — January data. `run_golden.py` runs four of
+  its ten queries against it (`QUERIES` lines 20–23), so **do not modify or
+  delete it** or the baseline breaks.
+- **Portfolio 2, "Integration Test"** — a leaked test artifact, AAPL 10 @ 150 and
+  MSFT 5 @ 350, left behind by a run that returned early before its
+  `delete_portfolio`. `run_golden.py`'s line 24 uses it for the Technology-sector
+  query, so it is load-bearing by accident.
+- **Reseeding portfolio 3 mutates portfolios 1 and 2.** `asset_class` and
+  `sector` live on `Asset`, which is shared across portfolios, and the seed
+  always rewrites that metadata. Both now report asset classes they did not have
+  on 3 September. Recorded in KNOWN_GAPS.
+- **No golden query runs against portfolio 3.** The fast loop cannot see a
+  regression in any figure the benchmark scores. That is the runner's job.
 
 ---
 
 ## 3. Environment
 
 - **Python 3.10.21** (Homebrew). `pyproject.toml` pins `>=3.10,<3.11`.
-- 88 packages frozen in `baseline-v1-lock.txt`.
+- 88 packages frozen in `baseline-v1-lock.txt`. `asyncio_mode = "auto"`, so the
+  async tests do run.
 - src-layout: `src/agents` → `agents`, `src/portfolio_tool` → `portfolio_tool`,
   `src/observability` → `observability`, `src/config.py` → `config`. Never
   `from src.…`.
 
-`.env` holds `DATABASE_URL`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`. `.env` is
+`.env` holds `DATABASE_URL`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, and is
 gitignored.
 
 - **OpenAI: no credits** (429). Do not route there.
 - **Anthropic: working.** Must be a **workspace-scoped** key.
 
-### Database URL — changed 4 September
+### Database URL
 
-`DATABASE_URL` used to be read by nothing; `database_setup.py` computed its own
-path from `__file__`. It is now live. `config.py` owns it via `DatabaseConfig`,
-calls `load_dotenv()` itself so load order cannot matter, and
+`config.py` owns it via `DatabaseConfig`, calls `load_dotenv()` itself, and
 `resolve_database_url` anchors a **relative** SQLite path to the project root.
+`.env` contains `sqlite:///./data/portfolio.db`, so that means "relative to the
+repo", not "relative to the shell" — deliberately the opposite of shell
+intuition, because SQLite creates a missing file silently.
 
-`.env` contains `sqlite:///./data/portfolio.db`, a relative path. Anchoring is
-what makes that safe: SQLite creates a missing file silently, so a cwd-relative
-URL would hand out a fresh empty database when run from a subdirectory rather
-than failing. `sqlite:///./data/…` therefore means "relative to the repo", not
-"relative to the shell" — deliberately the opposite of shell intuition.
-
-`alembic.ini:87` still carries its own relative copy of the path and keeps that
-fragility. Unfixed, deliberately: a third change with its own failure mode.
-
-`data_manager.py:25` has the same bug (`CONFIG_PATH = "config.toml"`, cwd
-relative) and it is worse, because it warns and continues with default fetch
-intervals rather than failing. Demonstrated live on 4 September. One-line fix
-using `_PROJECT_ROOT`; not blocking.
+`alembic.ini:87` and `data_manager.py:25` both still carry their own cwd-relative
+paths. Unfixed, deliberately.
 
 ### LLM configuration
 
@@ -165,265 +168,251 @@ ANTHROPIC_HAIKU` (`claude-haiku-4-5-20251001`).
 silently give Haiku if selected. Never guess a model id; check
 `GET https://api.anthropic.com/v1/models`.
 
-`src/agents/__init__.py` imports all four presets by name, so deleting one breaks
-the package.
-
 ---
 
-## 4. What this session did (4 September)
+## 4. What this session did
 
-Roughly: closed roadmap item 1, built and wired item 2, and fixed three
-infrastructure faults found on the way.
+Fourteen commits. Roughly: corrected the documents, closed the last mile of
+Level 1's computation, and built the scoreboard.
 
-**Closed the holdings gap (item 1).** `get_holdings` was not projecting
-`purchase_date` — the column existed, the migration existed, the seed wrote it,
-and the SELECT never read it. Then `build_holdings_summary` publishes an
-**unpriced** summary (ticker, quantity, average_price, asset_class, sector,
-purchase_date) to `shared_data`. Unpriced deliberately: pricing it inside
-DataAgent would leave item 2 with nothing to compute and dissolve the
-agent/synthesizer split.
+**Corrected six document claims that were wrong.** The holdings gap moved to
+RESOLVED; the synthesizer entry was corrected to "no longer blocked, still open"
+rather than resolved; the roster heading became eight to match its own body; the
+stamp date, the migration count (eleven, not ten) and the runner entry were
+fixed. Line-number references in touched entries became symbol names, because
+`nodes.py` is 1500 lines and every commit moves them.
 
-**Introduced `PortfolioContext`.** `load_portfolio_context` returned a
-`(tickers, holdings)` tuple and could not carry cash. It now returns a dataclass,
-so the next field costs no call sites. Cash reaches `shared_data` as
-`cash_balance`; per D2 it is the allocation denominator, and an absent balance is
-an unknown denominator rather than zero.
+**Added synthesizer branches for `data_fetch` and `risk_analysis`.** Two
+commits, two formatters, reading `sub_results["PortfolioAnalysisAgent"]` rather
+than `shared_data` — `mark_agent_complete` stores the node's result verbatim, the
+allocation object is already on it, and every existing formatter takes
+`sub_results`. `shared_data` is the channel between agents, not a second input to
+the synthesizer. Neither branch moved the golden set, as expected: the runner
+prints five routing fields and the synthesizer runs after routing.
 
-**Built allocation (item 2).** `quant/allocation.py` is pure arithmetic —
-`allocation_by_asset_class` and `allocation_by_sector`, with `_market_values` and
-`_cost_bases` as shared helpers that item 4's P&L will reuse unchanged.
-`tests/test_allocation.py` has 14 assertions taken from `expected_values.md`
-Parts 2 and 3, and passed on the first run. Missing prices **raise** rather than
-skip.
+**Fixed a defect introduced by those branches.** The risk formatter reported a
+window it never named, so a query with no timeframe returned three-year figures
+under an unlabelled heading. `data_agent.py` already builds the observed range
+and observation count and both were being discarded. Now rendered, and it falls
+back to saying the window is unreported rather than omitting it.
 
-**Added `PortfolioAnalysisAgent`.** A sixth agent in the router's vocabulary,
-with a node reading only `shared_data`. Named for what it does today; it may
-become the risk agent 2.1 needs, and renaming is cheaper than a wrong
-abstraction. Publishes both breakdowns, since selecting between two computed
-breakdowns is formatting rather than computing.
+**Built `tests/benchmark/run_cases.py`.** Twelve cases, one query each,
+PASS/FAIL/BLOCKED, printing n/12. Blocked cases probe for the capability they
+need rather than declaring themselves blocked, so they unblock automatically; a
+case that unblocks with no check written reports FAIL saying so.
 
-The first prompt version **bled**: the volatility query flipped
-`risk_analysis` → `data_fetch`, and the risk query picked up the new agent.
-Narrowed by moving the guidance out of the `data_fetch` bullet, dropping
-"weighted" as a trigger word, and adding both regressed queries as explicit
-counter-examples. Second version was clean and stable over two runs.
-`expected.txt` moved by exactly four lines, deliberately.
-
-**Fixed the test suite writing to the live database.** `pytest` created and
-deleted a portfolio in `data/portfolio.db` on every run. `conftest.py` now
-redirects the whole suite to a temp **copy** — a copy rather than an empty file,
-because ~22 tests read cached prices and an empty database would refetch every
-series from yfinance. It raises with instructions if the source database is
-missing.
-
-**Fixed the volatilities contract.** `shared_data["volatilities"]` carried
-`"15.33%"` strings while `expected_returns` was hard-validated as floats.
-`CovarianceResult.to_dict` now emits `annualized_volatilities_raw` alongside the
-display strings, and the node raises if it is absent.
-
-**Renamed `test_portfolio_manager_simple.py` → `check_portfolio_manager.py`.**
-Same treatment as January's `test_imports.py`: no test functions, and it wrote to
-the live database at import.
-
-**Docs.** benchmark.md Part 2 made phased. KNOWN_GAPS gained the supervisor
-decision, the non-determinism boundary, the agent-roster duplication, the
-benchmark-runner entry, and three corrections to its own earlier claims. The
-roadmap was recovered from outside the repo and committed.
+**Recorded six new findings** in KNOWN_GAPS at session end, plus two during the
+session because they gate queued work.
 
 ---
 
 ## 5. Decisions taken this session
 
-**Keep the router and graph. Do not wire the supervisor. Do not rename it.**
-`RiskManagerAgent` is `class RiskManagerAgent(SupervisorAgent)` — an unused
-second orchestrator, not a risk agent. Plan-then-execute makes one routing
-decision that depends only on the user's words, which is why the golden set can
-pin it; a supervisor makes N decisions that depend on data just fetched, which
-nothing can pin. Most of what a supervisor would do is conditional edges, which
-LangGraph does natively with a deterministic predicate. Full reasoning in
-KNOWN_GAPS. Salvage `check_concentration_risk` for 2.1; discard the scaffolding.
+**The synthesizer reads `sub_results`, not `shared_data`.** Confirmed against
+`mark_agent_complete`, which stores the result dict verbatim. Not a trade-off —
+`sub_results` is already the synthesizer's input contract.
 
-**Scope is phased, not absolute.** Screening, candidate generation and
-recommendations on un-named instruments are out of scope for Levels 1–3 and
-revisited afterwards — because a system that recommends before it can compute
-what is already held recommends against a wrong picture. Case 3.2 tests that
-boundary and therefore has a known expiry date. Forecasts, tax, execution,
-frontend and multi-user remain permanently out.
+**The `data_fetch` branch prints both breakdowns.** `ExtractedParameters` has no
+`sector` field, so nothing in the decision distinguishes benchmark 1.1 from 1.4.
+Defaulting to asset class would answer 1.4 with the wrong table; inspecting the
+query text would put classification in the synthesizer. Printing both is never
+wrong, needs no prompt change, and narrows later. The CLI's identical-answer
+check fires on it, which is the instrument correctly reporting the stopgap.
 
-**Where non-determinism may live.** The future Equity Analyst may be uncertain
-and run on a larger model; its uncertainty must not leak into deterministic
-components. Its output crosses the contract boundary marked as opinion via
-`confidence`, `reasoning` and `warnings` on `PortfolioResult`. Its instrument is
-the Phase 4 eval set, not the golden set.
+**The benchmark counter uses the strict definition.** Full Part 3b compliance,
+including data age, asserted from the start. The counter reads 0/12 rather than
+reporting a number the benchmark's own text does not support. A counter that
+drifts ahead of its definition is the same failure shape as everything else being
+removed here.
 
-**Allocation and P&L are separate commits.** Shared inputs are not the same as
-one concept; three documents split them the same way, and the commit message
-needs an "and".
+**Exact market-value figures are not asserted in the runner.** They stay in
+`test_allocation.py`, where fixed inputs make them stable. Market values move
+with prices, `expected_values.md` is pinned to the 2026-09-02 closes, and no seam
+exists to pin a run against a date. The runner asserts what does not move:
+structure, invariants, static cost bases, the ticker set, whether the figures
+reached the prose, and whether Part 3b's as-of date is stated. This corrected an
+earlier KNOWN_GAPS entry that specified the expiring assertion.
+
+**Case 3.3 is blocked on position P&L, not merely failing on the date.** It
+routes `data_fetch` and returns the allocation table, so an as-of check alone
+would flip it to PASS the moment item 5 attaches a date, while the answer was
+still a portfolio-wide breakdown. Blocking it on `position_pnl` removes the
+false-pass path.
 
 ---
 
 ## 6. Where we stand against the benchmark
 
-**Zero of the twelve cases pass.** Routing is correct for all of them, and for
-1.1 and 1.4 the numbers are now computed correctly and sit in `shared_data`.
-They are invisible because the synthesizer has no branch for them.
+```
+0/12 passing, 4 failing, 8 blocked
+```
 
-Every Level 1 query still returns:
+**1.1 and 1.4 fail on the missing as-of date and nothing else.** Every other
+assertion holds against portfolio 3: labels, percentages summing to 1.0, all four
+cost bases against Part 2, Technology at 80,000 with AAPL and MSFT, unsectored
+reported at 147,000 rather than dropped, sectored at 137,500, all nine tickers,
+cash inside the denominator with no percent-invested, and the figures reaching
+the prose.
 
-    Analysis complete. See details below:
-
-    DataAgent: ✓
-
-    PortfolioAnalysisAgent: ✓
+**3.2 fails** on `intent: clarification_needed` where it needs `out_of_scope`.
+**3.3 is blocked** on position P&L. **1.2 and 1.3 are blocked** on P&L and
+portfolio volatility. **2.1, 2.2, 2.3, 3.1 and 3.4 are blocked** on the
+Compliance agent and the IPS. **3.5 is blocked** structurally — it needs a second
+turn and the runner sends one query per case.
 
 The architecture is sound and this should not be re-litigated. The gap is the
-last mile of Level 1 plus the capabilities of Levels 2 and 3.
+output contract plus the capabilities of Levels 2 and 3.
 
 ---
 
 ## 7. Next steps, in order
 
-### 1. Synthesizer branches for `data_fetch` and `risk_analysis`
+**The ordering below follows the counter, not the roadmap.** Three of the four
+failing cases fail on data age, and the two blocked Level 1 cases will fail on it
+too once their arithmetic exists.
 
-**The single blocker on every Level 1 case.** `synthesizer_node` dispatches on
-**intent** at `nodes.py` (search `def synthesizer_node`), and those two intents
-have no branch. **It does not dispatch on `result_type`** — an earlier diagnosis
-said it did and was wrong.
+### 1. Data-age reporting (benchmark 3.3, roadmap item 5)
 
-The formatters must not compute anything. An agent computes; the synthesizer
-formats. For 1.1 that means reading `shared_data["allocation"]["by_asset_class"]`
-and rendering it; for 1.4, `by_sector`.
+**The bottleneck.** Unlocks 1.1, 1.4 and 3.3, and is a precondition for 1.2 and
+1.3 passing Part 3b when they arrive. benchmark.md Part 4 already promoted it to
+second; the counter is now evidence rather than argument.
 
-### 2. The benchmark case runner
+**It opens with a decision, not with code.** `latest_prices` is built as
+`prices[ticker].dropna().iloc[-1]`, per ticker. A ticker missing the final close
+reports an older price than the frame's end date, and nothing marks it. A single
+`as_of` field on the output would therefore be a summary that is wrong for
+exactly the holding that is stalest. Decide whether as-of is per figure, per
+holding, or a stated worst case, **before** adding any field.
 
-Ships **with** item 1 above, per the KNOWN_GAPS entry. `tests/benchmark/run_cases.py`,
-one query per case, printing `n/12`. Assert on `shared_data`, which is structured
-and deterministic; assert weakly on the prose (does it contain the figures at
-all). Do not use a judge model — that is a non-deterministic instrument measuring
-a deterministic component. `cli.py:132`'s "NO NUMBERS IN ANSWER" check is the
-weak assertion already written, currently printing instead of failing.
+Note the runner's current as-of check is a date-shaped regex over the prose. When
+the structured field exists, the check should assert on that instead.
 
-Not part of `pytest`: the cases cost API calls and minutes. It is a third loop.
+### 2. The volatility window, before item 4
 
-### 3. Position P&L
+`_calculate_period_dates` sets `end_date = date.today()`. Observed 4 September:
+`period: 1Y` returned 2025-09-04 to 2026-09-02, 251 closes, against D8's
+2025-09-03 to 2026-09-02 and 252 closes. One trading day short at the front, and
+it moves every day the query runs.
 
-`compute_position_pnl` goes in `quant/allocation.py` beside the existing
-helpers — `_market_values` and `_cost_bases` are exactly its inputs, so it adds a
-function rather than modifying one. Check against `expected_values.md` Part 1.
-Per D4 it is **price return**, forced by the data model: `Dividend` has no
-`portfolio_id`.
+Item 4 checks `portfolio_volatility` against 10.2936% and will not reproduce it.
+**Do not resolve that by editing `expected_values.md`.** Either anchor the code
+to the last settled close, or change D8 to a trailing window and recompute Part 4
+with the reason recorded. The first is stronger. No seam exists for it yet —
+`fetch_prices_tool` takes only `tickers`, `period` and `interval` — and that is
+the same seam item 1 above needs. Build it once.
 
-Before wiring anything to `get_portfolio_summary`, fix `get_portfolio_value`
-(`portfolio_manager.py:557`) to **raise** rather than log-and-skip on a missing
-price. It currently shrinks the denominator silently.
+### 3. Position P&L (benchmark 1.2, unblocks 3.3)
 
-### 4. Portfolio volatility
+`compute_position_pnl` goes in `quant/allocation.py` beside `_market_values` and
+`_cost_bases`, which are exactly its inputs. Check against `expected_values.md`
+Part 1. Per D4 it is **price return**, forced by the data model: `Dividend` has
+no `portfolio_id`. Before wiring anything to `get_portfolio_summary`, fix
+`get_portfolio_value` (`portfolio_manager.py`, search the name) to **raise**
+rather than log-and-skip on a missing price.
 
-Check against `expected_values.md` Part 4 (10.2936%). Per D7, none of the five
-existing volatility implementations computes portfolio-level vol; a new
-`portfolio_volatility(weights, cov_matrix)` goes in `quant/risk_metrics.py`.
-`shared_data["volatilities"]` now carries floats, so no parsing is needed.
+### 4. Portfolio volatility (benchmark 1.3)
 
-### 5. Data-age reporting
+Blocked behind item 2. Per D7 a new `portfolio_volatility(weights, cov_matrix)`
+goes in `quant/risk_metrics.py`; none of the five existing implementations
+computes portfolio-level vol. `shared_data["volatilities"]` carries floats.
 
-Benchmark 3.3. Build it into the output contract rather than retrofitting.
-`latest_prices` is the previous settled close, reported as current with no as-of
-date, and the cache means it can be up to two closes behind.
+### 5. `sector` on `ExtractedParameters`
+
+Narrows the `data_fetch` branch from both breakdowns to the one asked for. A
+prompt change, therefore a specification change, therefore measured against the
+golden set — which has the Technology query at `pid=2` and can see it. Expect a
+diff and judge it on whether routing moved.
 
 ### Later, with reasons
 
-- **Generate the agent roster from a registry.** It is restated in **eight**
-  places. Do it before the seventh agent, not now.
-- **Base-agent deduplication.** Do it when Risk and Compliance arrive, and wire
-  `trace_tool` and `log_delegation` at the same time (benchmark 2.1 cannot pass
-  without them).
-- **README rewrite.** Keep its Design Principles section. Note it describes
-  RiskManagerAgent as an active supervisor, and on that one point it is
+- **`out_of_scope` router intent** (benchmark 3.2) — a new intent plus a terminal
+  branch, not better wording of the existing ones.
+- **The IPS from `wip/phase7-snapshot`** — unlocks 2.1–2.3, 3.1 and 3.4 at once.
+  Wire `trace_tool` and `log_delegation` at the same time; 2.1 cannot pass
+  without them.
+- **Generate the agent roster from a registry.** Eight sites. Before the seventh
+  agent, not now.
+- **README rewrite.** Keep its Design Principles section. It describes
+  RiskManagerAgent as an active supervisor and on that one point it is
   *accurate* — do not delete the true sentence with the false ones.
-- **`out_of_scope` router intent.** Benchmark 3.2.
-- **The five remaining unguarded test files**, and `test_portfolio_integration.py`
-  which does not assert.
-- **Delete `src/portfolio_tool/rag/`**, `alembic.ini` path, `data_manager.py`
-  config path, CostCalculator pricing table, `.gitignore` rewrite.
+- **Widen the golden set to portfolio 3,** or decide deliberately that the fast
+  loop stays a routing instrument. Not while the synthesizer is changing.
+- **`test_portfolio_integration.py`**, which does not assert, and the five other
+  unguarded files.
 
 ---
 
 ## 8. Rules learned the hard way
 
-**Both instruments have blind spots, and the CLI is the third one.**
-`run_golden.py` prints five routing fields and nothing else — no answer content,
-no numbers. `pytest` passes on tests that never assert. The price-cache bug that
-was wrong for four of nine assets passed pytest, applied cleanly, improved
-latency, and was caught only by reading the CLI's provider-call output.
+**Every instrument has a blind spot, and they do not overlap.** `run_golden.py`
+prints five routing fields and no answer content. `pytest` passes on tests that
+never assert, and collects nothing that exercises `synthesizer_node` — both
+synthesizer commits this session were invisible to it. The CLI was the only thing
+that could see them. The benchmark runner is the fourth loop and the first that
+scores cases.
 
-**A prompt change is a specification change, and it must be measured.** Adding
-the sixth agent bled into two unrelated queries on the first attempt. The golden
-set caught it in forty seconds. Never accept a mixed diff because the good part
-is visible; narrow and re-run. Then run it **twice** — a case that only works
-most of the time counts as failed.
+**A prompt change is a specification change, and it must be measured.** Run the
+golden set twice — a case that only works most of the time counts as failed.
 
 **Fields that look like they control something often do not.** `model_name`,
 `ANTHROPIC_SONNET`, `log_tool_calls`, `max_tool_calls_per_turn`,
-`hawkish_threshold`, and `result_type` all read as live and are not. `DATABASE_URL`
-was on this list until 4 September. Grep before believing any of them.
+`hawkish_threshold`, `result_type`, and now `nodes.py`'s `"3Y"` period default,
+which is both a duplicate of config and unreachable. Grep before believing any of
+them.
 
 **The recurring bug shape is repair-instead-of-raise.** A wrong answer with a
-plausible face rather than an error. `PRICING.get(model, PRICING["gpt-4-turbo"])`,
-`fed_confidence = 0.5`, the scraper's `soup.body.get_text()` fallback,
-`get_portfolio_value` skipping unpriced tickers, `data_manager` warning about a
-missing `config.toml` and continuing.
+plausible face rather than an error. This session added two: a volatility figure
+with no stated window, and `cash_balance` defaulting to 0.0 so that D2's
+"absent is not zero" rule cannot fire.
 
 **Capability exists, wiring does not.** `conversation_history`, `ToolTrace`,
-`log_delegation`, `get_portfolio_summary`'s P&L arithmetic, and the `confidence`
-/ `reasoning` / `warnings` fields on `PortfolioResult` are all built and
-unconnected. Nothing fails when the connection is missing, which is why they
-survive.
+`log_delegation`, the `confidence` / `reasoning` / `warnings` fields on
+`PortfolioResult` — and the price frame's date range and observation count, which
+were computed on every request and discarded until this session.
 
-**Duplication is found by breaking it, not by reading.** The roster entry in
-KNOWN_GAPS enumerated seven sites and missed the eighth — the Pydantic enum that
-then broke the run.
+**Documents rot inside a single session.** The previous handoff was written on
+4 September and by the end of the same day carried a wrong migration count, wrong
+line numbers in four places, a wrong claim about portfolio 2, and a wrong
+"14 assertions" figure. Prefer symbol names to line numbers, and regenerate.
 
 ---
 
 ## 9. Quick reference
 
 ```bash
-# Setup
 cd "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE"
 source .venv/bin/activate
 
-# Verification — separate commands, never chained with &&
 pytest -q
 python tests/golden/run_golden.py > /tmp/golden_now.txt 2>/dev/null
 diff tests/golden/expected.txt /tmp/golden_now.txt
+python tests/benchmark/run_cases.py
+python tests/benchmark/run_cases.py --case 1.1
 
-# Exploratory loop
 python src/agents/cli.py --portfolio 3
-#   :p <id>  switch portfolio    :v  verbose    :r  raw state    :q  quit
 
-# Re-seed the benchmark portfolio
 python src/portfolio_tool/scripts/seed_portfolio.py --show
 python src/portfolio_tool/scripts/seed_portfolio.py --reset
 
-# Import health
 python tests/check_imports.py
 
-# Before deleting any symbol
 grep -rn "SymbolName" src/ tests/ --include='*.py'
 ```
 
 Note zsh eats `--include=*.py` unquoted, and swallows `#` comments pasted on
 command lines.
 
-### The three loops
+### The four loops
 
 | Loop | Cost | Answers |
 |---|---|---|
-| `pytest` | ~30s | Do the components still work |
-| CLI | ~3s | What is it actually doing |
+| `pytest` | ~35s | Do the components still work |
+| CLI | ~4s | What is it actually doing |
 | Golden set | ~40s, cents | Did routing change anywhere |
+| Benchmark runner | ~1min, cents | How many cases pass |
 
-`golden set → change → golden set → commit`. When the diff changes, decide
-whether it is an improvement **before** updating `expected.txt`.
-
-A fourth loop arrives with the synthesizer: the benchmark case runner, `n/12`.
+`golden set → change → golden set → decide whether the diff is an improvement
+→ then update `expected.txt``. The runner is per capability commit, not per
+change: from here, every capability commit is expected to move the counter, and
+"done" for a roadmap item means its case asserts rather than that its arithmetic
+is right.
