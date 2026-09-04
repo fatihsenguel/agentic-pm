@@ -310,9 +310,28 @@ fixture is committed rather than read from `data/portfolio.db`, which is
 untracked and would not survive a fresh clone.
 
 Anchoring is still worth doing on its own merits: the code does not implement
-D8's rule today. It is a change inside
-`_calculate_period_dates`, not a new parameter: `end_date` is computed
-differently, and no caller passes a date. Item 1 shares no seam with this —
+D8's rule today.
+
+**It is not a change inside `_calculate_period_dates`.** That function runs
+before the fetch — line 427 computes the dates, 432 fetches against them, 437
+reads against them — so the dates it returns are what bounds the fetch that
+discovers the last settled close. It cannot know that date. Reading the database
+maximum before fetching would bound the fetch by yesterday's data and never pick
+up a new close.
+
+Separate the two windows, which is most of the fix:
+
+- The **fetch window** bounds what is asked of the provider and the database. It
+  ends at today, and must, because that is the only way a close that landed
+  since the last run is picked up at all.
+- The **evaluation window** is what the figures are computed over. It ends at
+  the last close that actually settled, which is `prices.index[-1]` and is not
+  known until the frame is in hand.
+
+One date range is currently doing both jobs, and that is the bug. The anchor is
+a post-fetch trim of the frame to one period back from its own last close,
+applied before the frame is cached, so covariance, returns and the per-name
+volatilities all read the evaluation window. Item 1 shares no seam with this —
 item 1 adds an output field, `.index[-1]` on the expression that already
 produces `latest_prices`. A caller-facing end-date parameter on
 `fetch_prices_tool` is only needed to pin a run to a fixed date, which the
