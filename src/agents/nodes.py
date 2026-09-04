@@ -1206,7 +1206,7 @@ async def backtest_agent_node(state: AgentState) -> Dict[str, Any]:
             agent = create_backtest_agent(verbose=False)
             
             # =========================================================================
-            # ⭐ STRICT: Dynamic Configuration (Bank-Grade Fix)
+            # ⭐ STRICT: Dynamic Configuration
             # Remove hardcoded financial assumptions. Use Config or User Input.
             # =========================================================================
             
