@@ -265,8 +265,8 @@ All four benchmark Level 1 queries return a byte-identical response:
 
     DataAgent: ✓
 
-Cause: `synthesizer_node` dispatches on the router's **intent**, at
-`nodes.py:1104`:
+Cause: `synthesizer_node` dispatches on the router's **intent** (in `nodes.py`,
+search `def synthesizer_node`):
 
     if   intent == "optimization":     _format_optimization_response(...)
     elif intent == "macro_analysis":   _format_macro_response(...)
@@ -288,8 +288,16 @@ field looks like the dispatch key and is not.
 
 The fix is two branches plus formatters, but those formatters must not compute
 anything. A formatter doing arithmetic is the separation-of-concerns violation
-the project's principles name. An agent computes; the synthesizer formats. So
-this is blocked behind the holdings gap above.
+the project's principles name. An agent computes; the synthesizer formats.
+
+**No longer blocked, 4 September.** The holdings gap it waited on is resolved and
+PortfolioAnalysisAgent publishes the allocation, so every number 1.1 and 1.4 need
+already exists. This entry stays OPEN — the branches are unwritten and they are
+the next commit. Note the formatters read `sub_results["PortfolioAnalysisAgent"]`,
+not `shared_data`: `mark_agent_complete` stores the node's result dict verbatim,
+that result already carries the same allocation object, and every existing
+formatter takes `sub_results`. `shared_data` is the channel between agents; it is
+not a second input to the synthesizer.
 
 ### `shared_data` carries 67KB of raw prices — hot potato violated
 
