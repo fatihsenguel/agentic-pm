@@ -277,6 +277,40 @@ following day. An answer can now be up to two settled closes behind.
 This is benchmark 3.3 in the data layer. Resolve in Phase 1 item 5, where the
 as-of date starts being reported.
 
+### The volatility window is anchored to today, not to the last settled close
+
+`data_agent.py`, `_calculate_period_dates`, sets `end_date = date.today()` and
+subtracts `config.data.period_days`. Nothing anchors it to a close.
+
+Observed 4 September on portfolio 3. `period: 1Y` returned **2025-09-04 to
+2026-09-02, 251 closes**. `expected_values.md` D8 specifies 2025-09-03 to
+2026-09-02, 252 closes and 251 daily returns. One trading day short at the
+front. The end agrees because the data simply stops at the last settled close;
+the start does not, and it moves every calendar day the query is run.
+
+The reference and the code therefore disagree, and the disagreement is visible:
+Part 4's sanity check quotes TLT at 9.55% and GLD at 29.21%; the run gave GLD
+29.21% and TLT 9.35%. Weighting the run's nine figures by market value gives
+20.5254% against Part 4's 20.5408% - 0.0154 percentage points apart. That
+pattern says the method is right and the window is not. A ddof or annualisation
+difference would move the weighted average much further.
+
+**This blocks roadmap item 4.** `portfolio_volatility` is checked against
+10.2936%, and against a window that shifts daily it will not reproduce - today,
+tomorrow, or ever except by coincidence. The pressure at that moment will be to
+edit `expected_values.md` to match. Do not.
+
+**The decision, to be taken before item 4 and not now.** Either anchor the code
+to the last settled close so it matches D8, or change D8 to a trailing window
+ending today and recompute Part 4 with the reason recorded. The first is the
+stronger option: a reference that moves daily is not a reference, which is why
+D8 pinned settled closes in the first place, and benchmark 3.3 wants the system
+to know its as-of date regardless.
+
+Note there is no seam for the first option yet. `fetch_prices_tool` takes only
+`tickers`, `period` and `interval`; nothing accepts an as-of or end date. That
+seam is also what item 5 needs, so build it once.
+
 ---
 
 ## Unbuilt features
