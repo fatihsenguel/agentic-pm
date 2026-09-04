@@ -216,6 +216,22 @@ Note an earlier claim that the golden set uses only portfolio 1 was wrong. Both
 1 and 2 appear in `QUERIES`, and `expected.txt` carries `pid=2` on the
 Technology-sector query. `run_golden.py` has one commit and has never changed.
 
+### Seeding portfolio 3 rewrites metadata shared with portfolios 1 and 2
+
+`asset_class` and `sector` live on `Asset`, not on `PortfolioHolding`, and
+`seed_portfolio.py` always rewrites that metadata. `Asset` rows are shared across
+portfolios, so seeding portfolio 3 retroactively changed what portfolios 1 and 2
+report - including the two the golden set runs.
+
+Observed 4 September: portfolio 2 now returns `asset_class: "Equity"` and
+`sector: "Technology"`, and portfolio 1 returns Equity, Commodity and Fixed
+Income. HANDOFF §2's claim that portfolio 2's holdings have no `asset_class` was
+true when written and is now false.
+
+So "do not modify or delete portfolio 1" is not sufficient protection. Reseeding
+portfolio 3 mutates the data the baseline runs against, silently, and the golden
+runner prints no figures that would show it.
+
 ### `test_portfolio_integration.py` still does not assert
 
 Confirmed by pytest emitting `PytestReturnNotNoneWarning` for
@@ -253,6 +269,24 @@ with no error. `smart_router.py:104` imports it behind
 `self.config.use_stronger_model`, so the path is reachable. Verify the current
 Sonnet string against `GET /v1/models` rather than typing one in.
 
+### `cash_balance` cannot be absent, so D2 is unenforceable
+
+`Portfolio.cash_balance` is `Column(Float, nullable=False, default=0.0)`.
+
+D2 says an absent cash balance is an unknown denominator rather than zero, and
+`portfolio_analysis_agent_node` enforces it by raising when `cash_balance` is
+None. The model can never produce None, so the guard can only fire if
+`shared_data` lacks the key - never because a portfolio has no recorded cash.
+
+Observed 4 September: portfolios 1 and 2 both reported Cash 0.00% without
+complaint. Nothing distinguishes a portfolio holding no cash from a portfolio
+whose cash was never entered, and the second silently shrinks the denominator
+for every asset-class percentage. Portfolio 3 is unaffected - its 15,500 is
+seeded - so this bites the first real portfolio, not the benchmark one.
+
+Fixing it means a migration to nullable plus a decision about what None means at
+every read site. Not blocking; decide before a real portfolio is loaded.
+
 ### No FX conversion anywhere
 
 `Asset.currency` is populated at `data_manager.py:413` and read only for display;
@@ -276,6 +310,15 @@ following day. An answer can now be up to two settled closes behind.
 
 This is benchmark 3.3 in the data layer. Resolve in Phase 1 item 5, where the
 as-of date starts being reported.
+
+**The as-of date is per holding, not per answer. Recorded 4 September.**
+`latest_prices` is built as `prices[ticker].dropna().iloc[-1]`, per ticker. A
+ticker missing the final close reports an older price than the frame's end date,
+and nothing marks it. So a single `as_of` field on the output would be a summary
+that is wrong for exactly the holding that is stalest - the repair-instead-of-
+raise shape applied to the field designed to prevent it. Item 5 has to decide
+whether as-of is per figure, per holding, or a worst-case for the answer, before
+any field is added.
 
 ### The volatility window is anchored to today, not to the last settled close
 
@@ -533,7 +576,7 @@ A live path contradicts 3.2. Resolve when building 3.2, not before.
 
 ## Configuration and policy duplication
 
-### Period vocabulary lives in two places
+### Period vocabulary lives in three places
 
 `DataConfig.period_days` (`config.py:40`) holds the valid period keys. The router
 prompt hardcodes the same list independently in its extraction rules. Policy
@@ -545,6 +588,14 @@ belongs in config, so the prompt should generate that line from
 already uses `{{ }}`. Cleaner route: pull that one line out of the constant and
 append it as its own part inside `build_router_prompt`, which already assembles
 `parts = [ROUTER_SYSTEM_PROMPT]` and adds sections.
+
+**A third site, found 4 September.** `nodes.py` extracts the period as
+`parameters.get("period", "3Y")`. That literal is a second copy of
+`config.data.default_period`, and it is also dead: the router always emits the
+key with `null`, so `.get` returns None and the real default is applied by
+`period or config.data.default_period` in `data_agent.py`, two files away. A
+hardcoded policy value that never fires, sitting exactly where a reader would
+look for the default.
 
 Do this with the prompt rework, not before.
 
@@ -654,6 +705,22 @@ Line 43 imports `database_setup`, which prints a German DEBUG line and construct
 an engine as an import side effect; line 52 imports `data_manager`, which needs
 `tomli`. So no module under `portfolio_tool` can be imported without sqlalchemy,
 pandas and tomli loading first, regardless of what that module itself needs.
+
+Confirmed by execution 4 September: importing `quant/allocation.py`, which is
+pure arithmetic over dicts and imports only `dataclasses` and `typing`, failed on
+a missing `sqlalchemy`.
+
+### `Allocation.total_value` means two different things
+
+In `allocation_by_asset_class` it is invested plus cash. In
+`allocation_by_sector` it is sectored value, cash and unsectored excluded.
+Nothing downstream is wrong today - `portfolio_analysis_agent_node` maps the
+sector one to `sectored_value` in the published JSON - but the dataclass field
+carries two meanings depending on which constructor produced it.
+
+Same family as the fields that read as live and are not: the name says one thing
+at one call site and another at the other, and only the mapping in the node
+keeps it honest.
 
 ### Router parameter ordering is nondeterministic
 
