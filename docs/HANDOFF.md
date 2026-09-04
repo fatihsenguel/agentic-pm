@@ -103,7 +103,7 @@ three tags are on the remote.
 ### Database
 
 `data/portfolio.db` is untracked runtime state. Alembic head is
-**`a7d5e1c04b83`**, 10 migrations, linear chain.
+**`a7d5e1c04b83`**, 11 migrations, linear chain from `c1e79ae31788`.
 
 - **Portfolio 3, "Benchmark Portfolio" — use this one.** 9 positions, 4 asset
   classes, 4 sectors, cost basis 284,500 plus 15,500 cash = 300,000 flat.
