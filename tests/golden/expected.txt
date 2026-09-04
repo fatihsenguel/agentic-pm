@@ -21,9 +21,9 @@ Q: Optimize a portfolio of SPY, TLT and GLD for maximum Sharpe ratio | pid=None
 
 Q: What is my current allocation by asset class? | pid=1
   intent: data_fetch
-  plan:   ['DataAgent']
+  plan:   ['DataAgent', 'PortfolioAnalysisAgent']
   period: None
-  agents_run: ['DataAgent']
+  agents_run: ['DataAgent', 'PortfolioAnalysisAgent']
   errors: 0
 
 Q: What is my volatility over the past twelve months? | pid=1
@@ -49,9 +49,9 @@ Q: What is the risk of my portfolio? | pid=1
 
 Q: What positions do I hold in the Technology sector? | pid=2
   intent: data_fetch
-  plan:   ['DataAgent']
+  plan:   ['DataAgent', 'PortfolioAnalysisAgent']
   period: None
-  agents_run: ['DataAgent']
+  agents_run: ['DataAgent', 'PortfolioAnalysisAgent']
   errors: 0
 
 Q: Analyze ZZZZFAKE for me | pid=None

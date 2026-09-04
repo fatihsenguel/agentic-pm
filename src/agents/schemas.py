@@ -32,6 +32,7 @@ class AgentName(str, Enum):
     OPTIMIZATION_AGENT = "OptimizationAgent"
     REBALANCE_AGENT = "RebalanceAgent"
     BACKTEST_AGENT = "BacktestAgent"
+    PORTFOLIO_ANALYSIS_AGENT = "PortfolioAnalysisAgent"
     # Fallback for router logic
     ROUTER = "Router"
 

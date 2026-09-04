@@ -675,6 +675,131 @@ async def macro_agent_node(state: AgentState) -> Dict[str, Any]:
             agent_ctx.__exit__(None, None, None)
 
 # =============================================================================
+# PORTFOLIO ANALYSIS AGENT NODE
+# =============================================================================
+
+async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
+    """
+    Computes allocation from the holdings, prices and cash DataAgent published.
+
+    Reads only `shared_data` - no database, no provider calls. DataAgent fetches;
+    this agent computes; the synthesizer formats. Publishes both the asset-class
+    and sector breakdowns because 1.1 needs one and 1.4 the other, and choosing
+    between two computed breakdowns is selection rather than computation.
+
+    Reference: expected_values.md Parts 2 and 3, decisions D1-D3.
+    """
+    tracer = get_tracer()
+    agent_ctx = None
+
+    try:
+        if tracer and hasattr(tracer, "get_current_request"):
+            req = tracer.get_current_request()
+            if req:
+                agent_ctx = req.trace_agent("PortfolioAnalysisAgent")
+                agent_ctx.__enter__()
+    except Exception as e:
+        logger.warning(f"Tracing failed in PortfolioAnalysisAgent (ignoring): {e}")
+
+    print("\n" + "=" * 80)
+    print("PORTFOLIO ANALYSIS AGENT - Computing allocation")
+    print("=" * 80)
+
+    try:
+        shared = state.get("shared_data", {})
+
+        # STRICT: every input comes from DataAgent. No fallbacks - a default
+        # here would produce an allocation against a denominator nobody chose.
+        holdings = shared.get("holdings")
+        if not holdings:
+            raise DataCalculationError(
+                "No holdings in shared_data.\n"
+                "PortfolioAnalysisAgent requires DataAgent to run first with a "
+                "portfolio_id.\n"
+                "Check the plan puts DataAgent before PortfolioAnalysisAgent."
+            )
+
+        prices = shared.get("latest_prices")
+        if not prices:
+            raise DataCalculationError(
+                "No latest_prices in shared_data.\n"
+                "DataAgent must provide prices before allocation is computed."
+            )
+
+        cash_balance = shared.get("cash_balance")
+        if cash_balance is None:
+            raise DataCalculationError(
+                "No cash_balance in shared_data.\n"
+                "Per expected_values.md D2 cash belongs in the allocation "
+                "denominator. Absent cash is not zero cash - it is an unknown "
+                "denominator, and the percentages would all be wrong."
+            )
+
+        from portfolio_tool.quant.allocation import (
+            allocation_by_asset_class,
+            allocation_by_sector,
+        )
+
+        by_class = allocation_by_asset_class(holdings, prices, cash_balance)
+        by_sector = allocation_by_sector(holdings, prices)
+
+        def _lines(allocation):
+            return [
+                {
+                    "label": line.label,
+                    "market_value": round(line.market_value, 2),
+                    "cost_basis": round(line.cost_basis, 2),
+                    "pct_of_denominator": line.pct_of_denominator,
+                    "pct_of_invested": line.pct_of_invested,
+                    "tickers": line.tickers,
+                }
+                for line in allocation.lines
+            ]
+
+        allocation_summary = {
+            "by_asset_class": {
+                "lines": _lines(by_class),
+                "denominator": by_class.denominator_label,
+                "invested_value": round(by_class.invested_value, 2),
+                "cash_balance": round(by_class.cash_balance, 2),
+                "total_value": round(by_class.total_value, 2),
+            },
+            "by_sector": {
+                "lines": _lines(by_sector),
+                "denominator": by_sector.denominator_label,
+                "invested_value": round(by_sector.invested_value, 2),
+                "sectored_value": round(by_sector.total_value, 2),
+            },
+        }
+
+        print(f"  Total portfolio value: {by_class.total_value:,.2f}")
+        for line in by_class.lines:
+            print(f"    {line.label:<16} {line.pct_of_denominator:>7.2%}")
+
+        result = {
+            "success": True,
+            "agent_name": "PortfolioAnalysisAgent",
+            "allocation": allocation_summary,
+        }
+
+        return {
+            **mark_agent_complete(state, "PortfolioAnalysisAgent", result),
+            "shared_data": {**shared, "allocation": allocation_summary},
+        }
+
+    except Exception as e:
+        return {
+            **mark_agent_complete(
+                state, "PortfolioAnalysisAgent", {"success": False, "error": str(e)}
+            ),
+            **add_error(state, f"PortfolioAnalysisAgent: {str(e)}"),
+        }
+    finally:
+        if agent_ctx:
+            agent_ctx.__exit__(None, None, None)
+
+
+# =============================================================================
 # FIXED: OPTIMIZATION AGENT NODE
 # =============================================================================
 

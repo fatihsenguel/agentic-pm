@@ -21,6 +21,7 @@ AVAILABLE AGENTS:
 3. OptimizationAgent - Runs portfolio optimization (Mean-Variance, Risk Parity, etc.)
 4. RebalanceAgent - Calculates drift, generates trade lists for rebalancing
 5. BacktestAgent - Runs historical simulations of portfolio strategies
+6. PortfolioAnalysisAgent - Computes allocation of an EXISTING portfolio by asset class and by sector. Needs DataAgent first (holdings, prices, cash).
 
 INTENT TYPES:
 - optimization: User wants to create or optimize a portfolio
@@ -95,11 +96,27 @@ User: "Sollte ich bei diesem VIX-Level mehr in Bonds gehen?"
 User: "Backteste die Strategie über 5 Jahre"
 → intent: "backtest", agents: [DataAgent, BacktestAgent], period: "5Y"
 
+User: "What is my volatility over the past twelve months?"
+→ intent: "risk_analysis", agents: [DataAgent], period: "1Y", confidence: 0.95
+
+User: "What is the risk of my portfolio?"
+→ intent: "risk_analysis", agents: [DataAgent], confidence: 0.9
+
+User: "What is my current allocation by asset class?"
+→ intent: "data_fetch", agents: [DataAgent, PortfolioAnalysisAgent], confidence: 0.9
+
 User: "Portfolio"
 → intent: "clarification_needed", clarification_question: "Was möchten Sie mit Ihrem Portfolio tun? Optimieren, analysieren, oder rebalancen?"
+6. PortfolioAnalysisAgent is added to the plan ONLY when the user asks how an
+   existing portfolio is divided up - its allocation, breakdown or composition
+   by asset class, sector or region, or which positions sit in one of those
+   buckets. Add it after DataAgent.
+   Do NOT add it for risk, volatility, drawdown or concentration questions:
+   those keep intent risk_analysis and are DataAgent alone. "My portfolio"
+   appearing in a question is not by itself a reason to add it.
 
 CRITICAL RULES:
-1. NEVER hallucinate agents - only use the 5 listed above
+1. NEVER hallucinate agents - only use the 6 listed above
 2. NEVER invent tickers - extract only what user provides, use defaults if none
 3. ALWAYS provide execution_order that respects dependencies
 4. If unsure, set confidence low and/or ask for clarification
