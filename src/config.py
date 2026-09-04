@@ -16,8 +16,59 @@ from dataclasses import dataclass, field
 from typing import Dict, Literal
 import os
 
+from dotenv import load_dotenv
+
+# Loaded here rather than in agents/config.py alone. Anything reading an
+# environment variable through this module must see .env regardless of which
+# package imported first; database_setup.py depends on that ordering.
+load_dotenv()
+
 # Type definitions
 CovarMethod = Literal["sample", "shrinkage", "exponential"]
+
+
+# =============================================================================
+# DATABASE LOCATION
+# =============================================================================
+
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+_SQLITE_PREFIX = "sqlite:///"
+
+
+def resolve_database_url(url: str) -> str:
+    """
+    Anchor a relative SQLite path to the project root.
+
+    `sqlite:///./data/portfolio.db` in .env means "the data directory in this
+    repository", NOT "relative to the shell's current directory". That is the
+    opposite of normal shell intuition and is deliberate: SQLite creates a
+    missing file silently, so a cwd-relative URL would hand out a new empty
+    database instead of failing when run from a subdirectory.
+
+    Absolute SQLite paths, in-memory databases and non-SQLite URLs pass through
+    untouched.
+    """
+    if not url.startswith(_SQLITE_PREFIX):
+        return url
+
+    path = url[len(_SQLITE_PREFIX):]
+
+    if not path or path.startswith(":") or os.path.isabs(path):
+        return url
+
+    return _SQLITE_PREFIX + os.path.join(_PROJECT_ROOT, os.path.normpath(path))
+
+
+@dataclass
+class DatabaseConfig:
+    """Where the portfolio database lives."""
+
+    url: str = field(
+        default_factory=lambda: resolve_database_url(
+            os.getenv("DATABASE_URL", "sqlite:///./data/portfolio.db")
+        )
+    )
 
 
 @dataclass
@@ -188,6 +239,7 @@ class FeatureFlags:
 class AppConfig:
     """Main application configuration."""
     
+    database: DatabaseConfig = field(default_factory=DatabaseConfig)
     data: DataConfig = field(default_factory=DataConfig)
     macro: MacroConfig = field(default_factory=MacroConfig)
     optimization: OptimizationConfig = field(default_factory=OptimizationConfig)

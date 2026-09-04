@@ -9,13 +9,12 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker, Session
 import datetime
 
-# Database (portfolio.db) unabh vom pfad machen
-base_dir = os.path.dirname(os.path.abspath(__file__))  # src/portfolio_tool/
-src_dir = os.path.dirname(base_dir)                      # src/
-project_root = os.path.dirname(src_dir)                  # E:\Programming\AGENTIC_FINANCE\
-db_path = os.path.join(project_root, "data", "portfolio.db")
+# Where the database lives is policy, so it comes from config rather than being
+# computed here. config.resolve_database_url anchors a relative SQLite path to
+# the project root, which is what the hardcoded path did.
+from config import config
 
-DATABASE_URL = f"sqlite:///{db_path}"
+DATABASE_URL = config.database.url
 
 print(f"DEBUG: Verbinde mit DB unter {DATABASE_URL}")
 
