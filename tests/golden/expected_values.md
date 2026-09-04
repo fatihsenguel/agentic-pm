@@ -17,9 +17,20 @@ updated together.**
 - **Price as-of:** 2026-09-02 settled close
 
 Pinned to settled closes on purpose. An intraday quote cannot be reproduced,
-which would make this useless as a fixed reference. The 09-02 closes also match
-what the system itself reports, since its most recent `DailyPrice` row is always
-the previous settled close.
+which would make this useless as a fixed reference.
+
+**The pin has since diverged from live output, and that is the pin working.**
+On 2026-09-04 the system reported prices as of **2026-09-03** and Equity at
+**69.53%** against Part 2's 69.41%. Nothing here is wrong and nothing here gets
+updated. Market values move with prices; this document is fixed at the 09-02
+closes precisely so that a moving figure has something still to be compared
+against. Expect the gap to widen.
+
+If you are comparing a run against Part 2 and the percentages differ, check the
+as-of date the answer states before looking for a defect. The figures that do
+**not** move — cost bases, the ticker set, labels, percentages summing to 1.0 —
+are the ones a run must still reproduce exactly, and they are what
+`tests/benchmark/run_cases.py` asserts.
 
 ---
 
