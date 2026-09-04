@@ -192,6 +192,30 @@ five hand-build `PortfolioResult` (`backtest_agent:250`, `macro_agent:321`,
 So the job is migrating five files to a helper that exists and works, not
 designing one.
 
+### No golden query runs against portfolio 3
+
+`run_golden.py`'s `QUERIES` list runs four of its ten queries against portfolio 1
+and one — the Technology-sector query — against portfolio 2. Portfolio 3, the
+Benchmark Portfolio and the only one `expected_values.md` was computed against,
+appears nowhere.
+
+So the fast loop cannot see a regression in any figure the benchmark is scored
+on. Worse, the portfolios it does pin cannot produce those figures at all:
+portfolio 1 carries January average prices and `sector` NULL on every holding,
+and portfolio 2 is a two-position leaked test artifact with no `asset_class`. The
+allocation queries in the golden set therefore run green against data that would
+make case 1.1 meaningless.
+
+Recorded, not fixed. Widening the golden set is a decision about what the fast
+loop is for: it is the routing instrument, run on every change, and adding a
+nine-position portfolio costs time and provider calls on every run. The benchmark
+case runner is the instrument that covers portfolio 3, and its being a separate
+loop is the reason. Decide once the runner exists, not before.
+
+Note an earlier claim that the golden set uses only portfolio 1 was wrong. Both
+1 and 2 appear in `QUERIES`, and `expected.txt` carries `pid=2` on the
+Technology-sector query. `run_golden.py` has one commit and has never changed.
+
 ### `test_portfolio_integration.py` still does not assert
 
 Confirmed by pytest emitting `PytestReturnNotNoneWarning` for
