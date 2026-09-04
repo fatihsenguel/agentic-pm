@@ -51,6 +51,16 @@ guard. pytest imported it during collection, SystemExit propagated, and the run
 aborted with INTERNALERROR after 10 of 91 items. Every other test file in the
 suite had the guard; this one did not.
 
+**That last sentence is wrong, corrected 4 September.** Six test files define no
+collectible tests and have no `__main__` guard, so all six execute at import on
+every run: `test_graph_simple.py`, `test_nodes_simple.py`,
+`test_portfolio_manager_simple.py`, `test_rebalance_import.py`,
+`test_router_simple.py`, `test_state_simple.py`. `test_imports.py` was not the
+only unguarded file - it was the only unguarded file that called `sys.exit()`.
+The others run silently and nothing fails, which is why they survived. Read as
+originally written, this entry would tell a future session the sweep was
+finished.
+
 So the "91 tests pass" figure in HANDOFF.md was not reproducible with a bare
 `pytest` invocation, and the verify-against-pytest half of the workflow had not
 been functioning. Fixed in 30819f6 by renaming to `check_imports.py`, since the
@@ -308,12 +318,40 @@ strategic asset allocation works. Drift must be measured against a fixed target.
 Correct fix: targets belong to the portfolio / IPS. See `ips_manager.py` on
 `wip/phase7-snapshot`. Resolve when Phase 7 is pulled forward.
 
-### RiskManagerAgent is not wired
+### RiskManagerAgent is not a risk agent - it is an unused second orchestrator
 
 `src/agents/risk_manager_agent.py` exists but has no graph node, no routing entry,
 and no mention in `router_prompts.py`. The router classifies
 `intent: risk_analysis` correctly and then has nowhere to send it. Risk queries
 route to DataAgent and stop.
+
+**Corrected 4 September after reading the file.** Wiring it up is not the fix.
+It is `class RiskManagerAgent(SupervisorAgent)` at line 36; its own docstring
+says it parses mandates, delegates to specialised agents and synthesises results,
+and `process()` dispatches on `TaskType` to `_handle_optimization`,
+`_handle_backtest`, `_handle_rebalance`, `_handle_regime_analysis`. That is the
+router and the graph, written a second time. Outside its own file it is
+referenced only by exports in `__init__.py` and by `check_imports.py`; it is
+never instantiated. It is the only `SupervisorAgent` subclass.
+
+Note the README, marked outdated, describes it as an active supervisor. On this
+one point the README is accurate about the code. Do not let the rewrite delete
+the true sentence with the false ones.
+
+**Decision, 4 September: keep the router and graph, do not wire the supervisor,
+do not rename it.** Plan-then-execute makes one routing decision that depends
+only on the user's words, which is exactly why the golden set can pin it. A
+supervisor makes N decisions that depend on data just fetched, which nothing can
+pin - not because it is random, but because the market moved. Most of what a
+supervisor would do is conditional edges, which LangGraph does natively with a
+deterministic predicate; a supervisor earns its place only when a branch needs
+judgment no predicate can express, and none of the twelve cases produces one. If
+equity research later needs iterative retrieval, that is a loop inside one agent,
+not a supervisor above the roster.
+
+What is worth salvaging is `check_concentration_risk` from its tool list, for a
+real risk agent when 2.1 is built. The supervisor scaffolding around it is not.
+Blocking nothing; do not chase it.
 
 ### No API path to set `asset_class` or `sector`
 
@@ -354,6 +392,47 @@ router has no vocabulary for "this is not something the system does", so the
 nearest available label is `clarification_needed`. Needs a new intent plus a
 terminal branch, not better wording of the existing ones. Resolve with Part 4
 item 4 (the guardrail path).
+
+**This case has a known expiry date.** benchmark.md Part 2 was made phased on
+4 September: screening and candidate generation are out of scope for Levels 1-3
+and revisited afterwards, because a system that recommends before it can compute
+what is already held recommends against a wrong picture. 3.2 tests that boundary,
+so when the boundary moves 3.2 is rewritten with its own cases rather than
+deleted or quietly relaxed. Until then it is live and passes on merit.
+
+Do not "fix" 3.2 by widening the router toward recommendations. The out_of_scope
+intent is still the correct build.
+
+---
+
+## Where non-determinism is allowed to live
+
+Recorded 4 September, before the Equity Analyst exists, so the boundary is
+deliberate rather than discovered.
+
+The Equity Analyst will be genuinely uncertain, will run on a larger model, and
+may use a skills-style layer for procedural knowledge. All three are fine and
+none of them change the architecture - `AgentConfig` already carries per-agent
+model settings, so a different model per agent needs no new machinery.
+
+**The constraint is that its uncertainty must not leak into the deterministic
+components.** If it produces a quality score and the optimiser weights on it, a
+judgment has been laundered into arithmetic and the trace will not show it. The
+number will look like every other number in the output.
+
+So its output crosses the contract boundary marked as an opinion, using
+`confidence`, `reasoning` and `warnings` on `PortfolioResult` - fields that
+already exist and are currently unused everywhere.
+
+And it will not be reproducible, so **the golden set is the wrong instrument for
+it**. The golden set works because one routing decision depends only on the
+user's words. An analyst's judgment depends on documents and on the model, and
+re-running it will not reproduce the previous answer. Its instrument is the
+Phase 4 eval set - expected answer and expected source per question - which is
+also the open commitment in benchmark.md Part 1.
+
+Nothing to build now. This exists so that when the analyst arrives, the question
+"where may this be uncertain" has already been answered.
 
 ---
 
