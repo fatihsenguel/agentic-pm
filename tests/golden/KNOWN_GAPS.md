@@ -611,6 +611,17 @@ already uses `{{ }}`. Cleaner route: pull that one line out of the constant and
 append it as its own part inside `build_router_prompt`, which already assembles
 `parts = [ROUTER_SYSTEM_PROMPT]` and adds sections.
 
+**A fourth site, found 4 September.** `fetch_prices_tool`'s signature default is
+`period: str = "5Y"`, against `DataConfig.default_period` of `"3Y"` — 1825 days
+against 1095. It is unreached: every caller passes `period` explicitly
+(`nodes.py:424`, `data_agent.py` at 178, 223, 538, 625 and 700, `__init__.py`,
+and the tests), so the truthy `"5Y"` never falls through to
+`period or config.data.default_period`. Note it is registered as an LLM-callable
+tool at `data_agent.py:103`, so it becomes reachable the day the router calls
+tools rather than classifying — see the classifier/tool-caller decision below.
+Delete the default rather than align it; a default nothing takes is a second
+policy waiting for a caller.
+
 **A third site, found 4 September.** `nodes.py` extracts the period as
 `parameters.get("period", "3Y")`. That literal is a second copy of
 `config.data.default_period`, and it is also dead: the router always emits the
