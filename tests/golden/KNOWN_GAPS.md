@@ -311,14 +311,23 @@ following day. An answer can now be up to two settled closes behind.
 This is benchmark 3.3 in the data layer. Resolve in Phase 1 item 5, where the
 as-of date starts being reported.
 
-**The as-of date is per holding, not per answer. Recorded 4 September.**
-`latest_prices` is built as `prices[ticker].dropna().iloc[-1]`, per ticker. A
-ticker missing the final close reports an older price than the frame's end date,
-and nothing marks it. So a single `as_of` field on the output would be a summary
-that is wrong for exactly the holding that is stalest - the repair-instead-of-
-raise shape applied to the field designed to prevent it. Item 5 has to decide
-whether as-of is per figure, per holding, or a worst-case for the answer, before
-any field is added.
+**Two levels, and they were settled separately. Recorded 4 September.**
+
+*The data level was never in question.* Each holding already has its own as-of
+date: `latest_prices` is built as `prices[ticker].dropna().iloc[-1]`, per ticker,
+so a ticker missing the final close carries an older date than the frame's end
+and nothing marks it. That is a property of the data, not a decision.
+
+*The output level was the open question* - whether the answer states a date per
+figure, per holding, or as a worst case. `benchmark.md` Part 3b settles it: an
+as-of date is required for every figure derived from market data. Per figure and
+per holding coincide for the allocation figures, since each derives from one
+holding's price, and diverge only for aggregates, which reduce over many.
+
+A single portfolio-level `as_of` is ruled out at both levels: it is not what the
+data holds, and it is not what Part 3b asks for. It would be a summary wrong for
+exactly the stalest holding - the repair-instead-of-raise shape applied to the
+field meant to prevent it.
 
 ### The volatility window is anchored to today, not to the last settled close
 
