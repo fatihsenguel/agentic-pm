@@ -505,6 +505,20 @@ The list of agents exists in:
 5. `graph.py` - the `add_node` calls
 6. `graph.py` - `routing_map`
 7. `graph.py` - the `agent_nodes` list used to wire the loop edges
+**Corrected same day: it is eight, not seven.** The missed site is
+`AgentName` in `schemas.py:28`, a Pydantic enum, and `AgentTask.agent` is typed
+against it. Adding the sixth agent to the prompt and the graph but not the enum
+meant the router returned a plan naming `PortfolioAnalysisAgent`, Pydantic
+rejected the whole response as invalid, all three retries failed identically,
+and `route()` returned None.
+
+That failure was loud and immediate, which is the right behaviour. But it
+surfaced through `test_router_simple.py`, one of the six unguarded files, which
+makes a live router call at import time - so it aborted pytest collection and
+the other 105 tests reported nothing. Same shape as the January `sys.exit()`
+bug, different file.
+
+This entry missing a site while enumerating them is the argument for the registry.
 
 Adding an agent means finding all seven. Miss the prompt and the router cannot
 plan the agent that exists. Miss `routing_map` and LangGraph raises on an
