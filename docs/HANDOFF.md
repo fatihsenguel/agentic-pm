@@ -334,10 +334,32 @@ Separate the two windows, which is most of the fix:
   the last close that actually settled, which is `prices.index[-1]` and is not
   known until the frame is in hand.
 
-One date range is currently doing both jobs, and that is the bug. The anchor is
-a post-fetch trim of the frame to one period back from its own last close,
-applied before the frame is cached, so covariance, returns and the per-name
-volatilities all read the evaluation window. Item 1 shares no seam with this —
+One date range is currently doing both jobs, and that is the bug.
+
+**A post-fetch trim alone does nothing. Tried and reverted, 4 September.** The
+frame arrives bounded by the fetch window, so every row is already
+`>= today - N`. The evaluation start is `last_close - N`, and since
+`last_close <= today` that is always `<= today - N`. The filter's lower bound
+sits at or below the frame's first row every time, and it drops nothing. Zero
+rows removed on both 1Y and 3Y.
+
+The direction was wrong too. The window is one trading day **short** at the
+front — 251 closes against D8's 252 — so the missing day was never fetched, and
+no trim adds rows.
+
+**The fetch window has to be wider than the evaluation window:**
+
+- fetch `[today - N - slack, today]`
+- trim to `[last_close - N, last_close]`, before the frame is cached, so
+  covariance, returns and the per-name volatilities read the evaluation window
+
+`slack` covers the gap between today and the last settled close: a weekend plus
+a holiday is four days, and a stale cache adds more, since
+`price_fetch_interval_days` lets an answer sit two closes behind. It is policy
+and belongs in `DataConfig` beside `period_days`. Over-fetching costs rows the
+trim discards; under-fetching silently reproduces this bug with no symptom.
+
+Item 1 shares no seam with this —
 item 1 adds an output field, `.index[-1]` on the expression that already
 produces `latest_prices`. A caller-facing end-date parameter on
 `fetch_prices_tool` is only needed to pin a run to a fixed date, which the
