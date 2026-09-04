@@ -295,9 +295,22 @@ the structured field exists, the check should assert on that instead.
 it moves every day the query runs.
 
 Item 4 checks `portfolio_volatility` against 10.2936% and will not reproduce it.
-**Do not resolve that by editing `expected_values.md`.** Either anchor the code
-to the last settled close, or change D8 to a trailing window and recompute Part 4
-with the reason recorded. The first is stronger, and it is a change inside
+**Do not resolve that by editing `expected_values.md`.** D8 is already a trailing
+window — one calendar year of daily closes ending at the last settled close — so
+anchoring the code to that close implements D8 rather than competing with it.
+There is no choice to make between the two; the earlier framing of this as
+"anchor the code or change D8" was wrong.
+
+What anchoring does not do is restore the 10.2936% check. That figure belongs to
+a window whose end has passed, and no live run reaches it again. Item 4's check
+is a pytest fixture over the 252 closes in `expected_values.xlsx`, with the
+window pinned inside the fixture — no end-date parameter, no live match, and the
+reference stays hand-computed. Same pattern as `test_allocation.py`, per §5. The
+fixture is committed rather than read from `data/portfolio.db`, which is
+untracked and would not survive a fresh clone.
+
+Anchoring is still worth doing on its own merits: the code does not implement
+D8's rule today. It is a change inside
 `_calculate_period_dates`, not a new parameter: `end_date` is computed
 differently, and no caller passes a date. Item 1 shares no seam with this —
 item 1 adds an output field, `.index[-1]` on the expression that already
