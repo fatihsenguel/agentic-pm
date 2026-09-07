@@ -4,7 +4,10 @@
 > Phase 1 item 1 (base-agent deduplication is no longer first — see HANDOFF
 > §6); Phase 2 "Wire RiskManagerAgent" (it is a supervisor, not a risk agent —
 > see KNOWN_GAPS); Phase 4 (the case runner arrives with the synthesizer, not
-> last). Phase 0.1–0.3 are done. Regenerate rather than patch further.
+> last). Phase 0.1–0.3 are done. **Phase 1 items 2–5 are done as of
+> 7 September; all four Level 1 cases pass on the runner.** Item 4's text
+> below says the calculation does not exist; it does now, in
+> `quant/risk_metrics.py`. Regenerate rather than patch further.
 
 # PM-Assistant — Roadmap
 
