@@ -233,6 +233,18 @@ output. Consequences:
 Add an answer-body-non-empty check before doing any prompt work. Prompt changes
 cannot be evaluated with an instrument this narrow.
 
+**7 September: four prompt changes, none visible to it.** `measure` and
+`group_by` were added to the router's output, and `tickers` changed meaning,
+and `run_golden.py` prints none of the three. Every one of the day's golden
+diffs was empty except the one where a plan changed - which is the right
+instrument for plans and no instrument at all for the fields the synthesizer
+now dispatches on. The benchmark runner sees them; the fast loop does not.
+Widening the printed fields is a decision about what the fast loop is for
+and would move `expected.txt` for every query.
+
+The CLI truncates `parameters` at roughly 260 characters, which is before
+`measure` and `group_by`. It cannot show the field that selects the answer.
+
 ### `trace_tool` and `log_delegation` are never called
 
 `observability/tracer.py` fully implements `ToolTrace` and
