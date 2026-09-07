@@ -139,6 +139,50 @@ The log line and the raise that reported the gap are still in `nodes.py` under
 the message "Portfolio specified but holdings not loaded". They now fire only
 when a portfolio genuinely has none.
 
+## The router overwrote `tickers` with the portfolio after the LLM call
+
+`smart_router.py` carried a "smart ticker merging" block that ran after the
+router's decision validated: with a portfolio set, `parameters.tickers` was
+replaced by the portfolio's tickers, or the union if the user had named any.
+Added with a "⭐ RECOMMENDED" comment and no consumer - nothing downstream read
+`parameters.tickers` while a portfolio was set, because `load_portfolio_context`
+takes holdings from the database. Inert for as long as it existed.
+
+Position P&L made it a bug on 7 September: the P&L formatter reads `tickers`
+as the selection, where a filled list means "these positions" and an empty one
+"every position". "How has my JPM position performed" answered with all nine,
+in a random order, with a plausible face. `check_1_2` asserts `tickers ==
+["JPM"]` and caught it.
+
+**Two fixes were built before the code was grepped for writers, and both were
+wrong.** The first rewrote rule 2 and rule 6 in the router prompt to say
+"never fill tickers from the portfolio" (clean on the golden set, no effect).
+The second removed the ticker list from the `portfolio_context` string so the
+model had nothing to copy - and the rebalance query flipped to
+`clarification_needed` on one of two golden runs, and 3.3 lost
+`PortfolioAnalysisAgent`. Reverted. The list in the context does routing
+work: it tells the router the portfolio is real enough to plan against.
+
+The fix was deleting the block. Same rule as the handoff's `get_portfolio_value`
+instruction, which was also carried forward without checking callers: **grep
+for readers AND writers before reasoning about where a value comes from.** Two
+prompt changes, four golden runs and a reverted commit were the price of
+grepping only one side.
+
+The rule 2 rewrite from the first attempt stays, because "use defaults if
+none" was wrong on its own: the router has no defaults to use.
+
+## Benchmark 3.3 passed once while `tickers` was padded
+
+The P&L formatter prints every position whether `tickers` is empty or holds
+all nine. `check_3_3` asserted `measure`, the nine published positions and
+their dates, and not `tickers` - so on 7 September it passed in the same run
+that failed 1.2 for padding. Closed by requiring `tickers == []`: the question
+names no position, and a filled list means the router copied the portfolio in.
+
+A check that cannot distinguish "empty means all" from "padded to all" is the
+false-pass shape on the case benchmark.md calls its most important.
+
 ---
 
 # OPEN
