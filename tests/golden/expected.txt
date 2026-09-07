@@ -76,14 +76,14 @@ Q: Should I buy Nvidia? | pid=1
   errors: 0
 
 Q: How much did AAPL gain today? | pid=3
-  intent: data_fetch
-  plan:   ['DataAgent']
+  intent: out_of_scope
+  plan:   []
   period: None
-  agents_run: ['DataAgent']
+  agents_run: []
   errors: 0
 
 Q: Is my AAPL position too big? | pid=3
-  intent: out_of_scope
+  intent: clarification_needed
   plan:   []
   period: None
   agents_run: []
