@@ -335,7 +335,7 @@ answer arrives with a plausible face instead of an error. Same family as bugs 5,
 
 ### `RouterDecision.validate_execution_order` repairs instead of raising
 
-Recorded 8 September. When `execution_order` disagrees with `agents_needed`
+Recorded 7 September (third sitting). When `execution_order` disagrees with `agents_needed`
 and the two have the same length, the validator overwrites `execution_order`
 from `agents_needed` and returns valid. A router that named the right agents
 in the wrong order is silently reordered; a router that named different
@@ -347,7 +347,7 @@ how often Haiku actually triggers it.
 
 ### A router failure becomes a clarification with confidence 0.0
 
-Recorded 8 September. `SmartRouter.route` catches every exception and returns
+Recorded 7 September (third sitting). `SmartRouter.route` catches every exception and returns
 `_create_fallback_decision`, which is `clarification_needed` with a fixed
 German apology. Any failure between the LLM call and the decision - parse,
 validation, network - reaches the user as "could you be more specific" and
@@ -1024,7 +1024,7 @@ it. Making it contribute is a deliberate design change and its own commit.
 
 ### The intent vocabulary is restated in five places
 
-Recorded 8 September, while adding `out_of_scope`. `IntentType` in
+Recorded 7 September (third sitting), while adding `out_of_scope`. `IntentType` in
 `schemas.py`; the `INTENT TYPES` list in `ROUTER_SYSTEM_PROMPT`; the
 `"intent": "a|b|c"` line in the same prompt's OUTPUT FORMAT; the same line in
 `REPAIR_PROMPT`; and the `if intent == ...` chain in `synthesizer_node`. Same
@@ -1093,7 +1093,7 @@ over the past twelve months?" appear in `router_prompts.py` word for word as
 example added on 7 September is a paraphrase of 3.3 ("How are my positions
 doing?").
 
-**Decided 8 September: few-shots may not quote benchmark prompts verbatim.**
+**Decided 7 September (third sitting): few-shots may not quote benchmark prompts verbatim.**
 A benchmark prompt in the golden set is a test; the same prompt in a few-shot
 is the router passing by recognition. The `out_of_scope` example added that
 day uses a different instrument in German for this reason, and 3.2's prompt
@@ -1116,7 +1116,7 @@ with `--ignore-whitespace`; every patch since has been applied that way.
 
 ### `IntentType.UNKNOWN` has no reader
 
-Recorded 8 September. In the enum, absent from the prompt, referenced
+Recorded 7 September (third sitting). In the enum, absent from the prompt, referenced
 nowhere (`_create_fallback_decision` uses `CLARIFICATION_NEEDED`). Deletion is
 safe. Not done alongside adding `out_of_scope`: two vocabulary changes, one
 case behind them.
@@ -1140,12 +1140,12 @@ which is a conversation-memory question (3.5), not a 3.2 one.
 
 `rebalance_agent_node` copies `shared_data["macro_regime"]`'s regime and
 `equity_adjustment` into `result["taa_signal"]`. The formatter line that
-printed it went on 8 September; the field stays because removing it is a
+printed it went on 7 September (third sitting); the field stays because removing it is a
 RebalanceAgent change. No reader.
 
 ### The first `out_of_scope` definition moved "Should I rebalance?" to clarification
 
-Recorded 8 September, same sitting. The first wording listed in-scope
+Recorded 7 September (third sitting). The first wording listed in-scope
 mechanics as "drift, rebalancing trades to a target" and closed with "if a
 request could be an in-scope question, that is clarification_needed:
 ambiguity wins over refusal". On the golden set "Should I rebalance my
@@ -1167,7 +1167,7 @@ set pins the routing, not the outcome.
 
 ### Rule 6's placement may have been why it lost to rule 2
 
-Hypothesis, stated 8 September, not believed. The PortfolioAnalysisAgent
+Hypothesis, stated 7 September (third sitting), not believed. The PortfolioAnalysisAgent
 rule sat after EXAMPLES and before a CRITICAL RULES list numbered 1-5,
 numbered 6 with no list around it. The ticker-padding fix was in code
 (`smart_router.py`) and stands regardless; the placement was fixed as its own

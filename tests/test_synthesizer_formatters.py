@@ -2,7 +2,7 @@
 Formatter tests for the synthesizer, with synthetic successful sub_results.
 
 The first pytest that touches anything in synthesizer_node. Recorded reason:
-on 8 September two formatter lines were deleted (the macro Recommendation line
+on 7 September (third sitting) two formatter lines were deleted (the macro Recommendation line
 and the rebalance Tactical Signal line) and no loop could see the deletion -
 the golden set prints no answer, the runner has no macro or rebalance case, and
 every live macro and rebalance run in the CLI errored before reaching the
