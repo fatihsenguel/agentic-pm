@@ -670,6 +670,23 @@ already uses `{{ }}`. Cleaner route: pull that one line out of the constant and
 append it as its own part inside `build_router_prompt`, which already assembles
 `parts = [ROUTER_SYSTEM_PROMPT]` and adds sections.
 
+**A fifth site, and a disagreement rather than a duplication. Found
+4 September.** `ExtractedParameters.period` is
+`pattern=r"^\d+[YMD]$"`, and its own comment offers `"3M"` and `"30D"` as
+examples. `config.data.period_days` holds only `1Y, 2Y, 3Y, 5Y, 10Y`. So the
+router is free to emit a period the config cannot resolve, and
+`_calculate_period_dates` raises `Unknown period '3M'. Valid periods: [...]`.
+
+**The raise is correct and should stay.** Recording it because the schema and the
+config are two statements of the same vocabulary that do not match, and the
+schema is the wider one — the failure surfaces at the data layer for a decision
+the router already made. Whoever adds month periods has to add them in both
+places, and will find the evaluation window is defined in years only (see spans
+versus counts, below).
+
+This is the gap that bites first when windows widen beyond years — before any
+question about absolute date ranges.
+
 **A fourth site, found 4 September.** `fetch_prices_tool`'s signature default is
 `period: str = "5Y"`, against `DataConfig.default_period` of `"3Y"` — 1825 days
 against 1095. It is unreached: every caller passes `period` explicitly
