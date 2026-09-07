@@ -527,6 +527,7 @@ async def data_agent_node(state: AgentState) -> Dict[str, Any]:
                 "as_of_dates": price_result.get("as_of_dates", {}),
                 "price_window": price_result.get("window"),
                 "covariance_matrix": cov_result.get("covariance_matrix", {}),
+                "covariance_method": cov_result.get("method"),
                 "volatilities": raw_vols,
                 "expected_returns": expected_returns,  # GUARANTEED to exist
                 "holdings": build_holdings_summary(holdings),
