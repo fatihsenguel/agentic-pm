@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 7 September 2026, fourth sitting.
+Last updated 8 September 2026, fifth sitting.
 
 ---
 
@@ -692,6 +692,27 @@ checker-only file); instrument limit versus issuer limit as separate types
 (SPY is 500 issuers) and what each needs from the allocation block; which
 agent is the "Risk" agent 2.1 names on this branch.
 
+**Status 8 September.** `docs/IPS.md` exists (synthetic, for portfolio 3;
+a personal one replaces it later as a local file) and settled the first
+two: unnumbered clauses are `statement` entries, citable and not computed,
+so the policy is visibly full and still silent on currency (3.4); IPS-4.1
+is per instrument, funds included, and IPS-4.2 is per issuer over directly
+held shares only, so there is no look-through and no gap to report. Which
+holdings are shares is carried data - `Asset.instrument_type`, `share` or
+`fund`, set by the seed, checker raises when missing - accepted on the
+strength of the `Compliance` sheet's own note; not built. The third, the
+Risk agent, is recommended as PortfolioAnalysisAgent with `measure`
+`concentration` added when that figure is built (rejected: a new RiskAgent
+owning one measure; RiskManagerAgent, which is not a risk agent) and is
+**not yet accepted**. The `shared_data["compliance"]` shape - `policy`,
+`as_of`, `findings` with `clause/type/subject/observed/limit/bound/status/
+distance_pp/distance_value`, `statements`; statuses `ok | breach | exempt`,
+plus `refused` for a hypothetical and a `no_clause` marker for a topic - is
+proposed in the same message and **not yet accepted** either. Both block
+the runner checks, which are written first. expected_values.md Part 7 and
+the workbook's `Compliance` sheet agree on every figure; D9 (at the limit
+passes, strict, unrounded) came from the sheet.
+
 The branch stays where it is. Nothing on it is scheduled.
 
 ### RiskManagerAgent is not a risk agent - it is an unused second orchestrator
@@ -1311,6 +1332,21 @@ else. It cannot fire: `AgentTask.agent` and `RouterDecision.execution_order`
 are typed against `AgentName`, so Pydantic has already rejected the whole
 response before this runs. Harmless, but a check that cannot fail is a check
 nobody will notice going wrong. Delete with the next `smart_router.py` change.
+
+### A workbook edit rode into a KNOWN_GAPS commit
+
+Recorded 8 September. Commit `22508c9` ("Record that the router refuses
+in-scope questions naming a held ticker...") reports two files changed,
+34 insertions and 1 deletion. The patch it applied changed one file with
+exactly those line counts, so the second file contributed no lines: a
+binary, and the only tracked binary that was open at the time was
+`tests/golden/expected_values.xlsx`, where the `Compliance` sheet was being
+built. `git commit -am` staged it. The sheet is wanted; the commit message
+does not mention it, and the history says a KNOWN_GAPS entry changed the
+workbook. Not rewritten - rewriting four commits back for a message is more
+risk than the record is worth. The rule it adds to the brief: `git status
+--short` before every `commit -am`, and a modified tracked binary is its
+own commit with its own message. Confirm with `git show --stat 22508c9`.
 
 ### `graph.py` carries dead duplicates of the state helpers
 
