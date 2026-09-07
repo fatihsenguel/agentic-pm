@@ -24,6 +24,7 @@ QUERIES = [
     ("What positions do I hold in the Technology sector?", 2),
     ("Analyze ZZZZFAKE for me", None),
     ("help", None),
+    ("Should I buy Nvidia?", 1),
 ]
 
 
