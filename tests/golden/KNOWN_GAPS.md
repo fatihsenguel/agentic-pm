@@ -1015,6 +1015,17 @@ the router already made. Whoever adds month periods has to add them in both
 places, and will find the evaluation window is defined in years only (see spans
 versus counts, below).
 
+**"last week" becomes `1Y`. Found 8 September** in a CLI session the evening
+before. Not a router mistake: the extraction rule says "map natural language
+to the nearest valid value", and for any span shorter than a year the nearest
+valid value is `1Y`. A question about a week gets an answer about a year and
+no error, because the prompt told the router to repair rather than refuse.
+Same shape as the `3M` case above from the other side: there the schema is
+wider than the config and the data layer raises; here the prompt is narrower
+than the question and nothing raises. Fix belongs with the period-vocabulary
+registry, not before: a span the vocabulary does not have is
+`clarification_needed` naming the spans it does, never the nearest one.
+
 This is the gap that bites first when windows widen beyond years — before any
 question about absolute date ranges.
 
