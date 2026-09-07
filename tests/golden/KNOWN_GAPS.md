@@ -1390,6 +1390,17 @@ a golden query in a few-shot is the router passing by recognition. The
 prompt commit is its own commit before any compliance prompt change so the
 two golden diffs stay separable. Prediction recorded with the commit.
 
+**First attempt failed, 8 September.** The sentence went in (6e68c47) with
+the prediction that both queries move to `data_fetch`. Neither moved: the
+golden run with the sentence live routed both `out_of_scope`, identical to
+the pinned pre-fix lines. Zero effect, wrong on both. Likely cause is
+placement: the sentence sits at the end of the paragraph, after "Held or
+not held makes no difference", which the router reads as the scope of the
+refusal before it reaches the exception. Second hypothesis, its own commit:
+reword that one counter-sentence so it scopes only the ownership judgement.
+If that does not move both lines, the third is a few-shot with a different
+ticker and wording, not stacked on the second. Each attempt is one change.
+
 
 Hypothesis, stated 7 September (third sitting), not believed. The PortfolioAnalysisAgent
 rule sat after EXAMPLES and before a CRITICAL RULES list numbered 1-5,
