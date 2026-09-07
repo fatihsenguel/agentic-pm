@@ -34,8 +34,6 @@ class AgentName(str, Enum):
     REBALANCE_AGENT = "RebalanceAgent"
     BACKTEST_AGENT = "BacktestAgent"
     PORTFOLIO_ANALYSIS_AGENT = "PortfolioAnalysisAgent"
-    # Fallback for router logic
-    ROUTER = "Router"
 
 
 class TradeAction(str, Enum):
