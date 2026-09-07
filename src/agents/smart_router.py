@@ -209,20 +209,14 @@ class SmartRouter:
                 user_message=user_message
             )
             
-            # ⭐ RECOMMENDED: Smart ticker merging
+            # parameters.tickers is what the user named, and nothing else. A
+            # block here used to overwrite it with the portfolio's tickers (or
+            # the union, via list(set(...)), which is where the random order
+            # came from). Nothing read the overwritten value while a portfolio
+            # was set - the data layer loads holdings from the database - until
+            # position P&L did, where a filled list means "these positions" and
+            # an empty one "every position".
             if portfolio_tickers and decision:
-                llm_tickers = decision.parameters.tickers or []
-                
-                if llm_tickers:
-                    # User mentioned specific tickers - combine with portfolio
-                    combined = list(set(llm_tickers + portfolio_tickers))
-                    decision.parameters.tickers = combined
-                    logger.info(f"Mixed query: Combined {llm_tickers} + portfolio {portfolio_id} → {combined}")
-                else:
-                    # Pure portfolio query - use only portfolio tickers
-                    decision.parameters.tickers = portfolio_tickers
-                    logger.info(f"Portfolio query: Using portfolio {portfolio_id} tickers: {portfolio_tickers}")
-                
                 decision.parameters.portfolio_id = portfolio_id
             
             # Additional validation if enabled
