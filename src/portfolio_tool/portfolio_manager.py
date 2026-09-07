@@ -560,21 +560,20 @@ class PortfolioManager:
         
         return total
     
-    def get_portfolio_summary(
-        self, 
-        portfolio_id: int,
-        current_prices: Optional[Dict[str, float]] = None
-    ) -> Dict:
+    def get_portfolio_summary(self, portfolio_id: int) -> Dict:
         """
-        Get comprehensive portfolio summary
-        
+        Get portfolio metadata and holdings, unpriced.
+
+        Pricing and P&L are not computed here. Market value and P&L are
+        quant/allocation.py's job, fed by DataAgent through shared_data; this
+        method used to carry a third copy of the P&L formula, one that skipped
+        holdings with no price instead of raising.
+
         Args:
             portfolio_id: Portfolio ID
-            current_prices: Optional dict of current prices
-                           NOTE: Caller must provide prices (use DataManager)
-            
+
         Returns:
-            Summary dict with portfolio info, holdings, and optionally values
+            Summary dict with portfolio info and holdings
         """
         portfolio = self.get_portfolio(portfolio_id)
         if not portfolio:
@@ -582,30 +581,11 @@ class PortfolioManager:
         
         holdings = self.get_holdings(portfolio_id)
         
-        summary = {
+        return {
             "portfolio": portfolio,
             "holdings": holdings,
             "num_holdings": len(holdings)
         }
-        
-        if current_prices:
-            # Add current values and returns
-            for holding in holdings:
-                ticker = holding["ticker"]
-                if ticker in current_prices:
-                    current_price = current_prices[ticker]
-                    cost_basis = holding["quantity"] * holding["average_price"]
-                    current_value = holding["quantity"] * current_price
-                    
-                    holding["current_price"] = current_price
-                    holding["cost_basis"] = cost_basis
-                    holding["current_value"] = current_value
-                    holding["unrealized_gain"] = current_value - cost_basis
-                    holding["return_pct"] = ((current_price / holding["average_price"]) - 1) * 100
-            
-            summary["total_value"] = self.get_portfolio_value(portfolio_id, current_prices)
-        
-        return summary
     
     # ========================================================================
     # VALIDATION METHODS
