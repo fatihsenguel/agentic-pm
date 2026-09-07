@@ -245,6 +245,20 @@ and would move `expected.txt` for every query.
 The CLI truncates `parameters` at roughly 260 characters, which is before
 `measure` and `group_by`. It cannot show the field that selects the answer.
 
+**7 September (third sitting): a CLI check that could not distinguish two
+states.** Two formatter lines were deleted (macro Recommendation, rebalance
+Tactical Signal) and the instruction was to confirm in the CLI. Both live
+runs errored before the branch - the macro path on "Yield curve data missing
+from snapshot", the rebalance path on the missing target - so the answer was
+a bare header with and without the deletion. `tests/test_synthesizer_formatters.py`
+now feeds `_format_macro_response` and `_format_rebalance_response` a
+synthetic successful `sub_results` and was checked to fail on the pre-deletion
+source and pass on the current one. It is the first pytest that touches
+anything in the synthesizer. It does not cover `synthesizer_node` itself, the
+intent dispatch chain, or any other formatter; the note in §8 of the handoff
+that pytest "collects nothing that exercises synthesizer_node" is still true
+of the node.
+
 ### `trace_tool` and `log_delegation` are never called
 
 `observability/tracer.py` fully implements `ToolTrace` and
@@ -582,7 +596,7 @@ that result already carries the same allocation object, and every existing
 formatter takes `sub_results`. `shared_data` is the channel between agents; it is
 not a second input to the synthesizer.
 
-### `shared_data` carries 67KB of raw prices — hot potato violated
+### `shared_data` carries 160KB of raw prices — hot potato violated
 
 `price_data_json` was 67,190 characters of daily OHLC on the 3Y queries and
 22,501 on the 1Y query. **Measured again 4 September on portfolio 3: 161,557
@@ -590,6 +604,8 @@ characters**, 2.4x the recorded figure — the earlier measurement was taken on
 fewer tickers. It scales with the ticker count, so the recorded number is a floor
 and not a size. `state.py:50` states shared_data holds summaries, not raw
 DataFrames, and the module docstring calls this the Hot Potato principle.
+Seen again 7 September (third sitting) at 162,186 characters in the CLI on a
+rebalance query; the heading used to say 67KB, which was the January figure.
 
 This is the project's first stated design principle violated in the main data
 path, on every request. Structural rather than a missing feature.
@@ -837,6 +853,19 @@ Nothing to build now. This exists so that when the analyst arrives, the question
 ---
 
 ## Scope conflicts with benchmark.md
+
+### The macro path has not produced an answer since at least 3 September
+
+Recorded 7 September (third sitting). Every live macro run ends in
+`MacroAgent error: Yield curve data missing from snapshot`: `fetch_macro_data_tool`
+reports 60 rows imported, `get_macro_snapshot_tool` returns a yield curve
+block without `slope_raw`, and `macro_agent_node` raises on it - correctly.
+`expected.txt` has recorded `errors: 1` on the macro golden query since the
+first baseline, so the golden set has been pinning a failure as the expected
+routing outcome. Not a routing defect and not chased: MacroAgent is tolerated,
+not targeted (next entry). Recorded because it means the macro formatter's
+success branch has not run in a month, which is why a CLI check of it could
+not see anything.
 
 ### MacroAgent is live but outside the target architecture
 
@@ -1172,6 +1201,16 @@ rule sat after EXAMPLES and before a CRITICAL RULES list numbered 1-5,
 numbered 6 with no list around it. The ticker-padding fix was in code
 (`smart_router.py`) and stands regardless; the placement was fixed as its own
 commit before the 3.2 prompt change so that the 3.2 golden diff is clean.
+
+### pytest warning inventory
+
+Recorded 7 September (third sitting), from a green run of 132. Twenty
+warnings, four kinds: two Pydantic class-based `Config` declarations in
+`schemas.py` (`AgentTask`, `RouterDecision`), deprecated for V3; sixteen
+SQLAlchemy `Query.get()` legacy calls from `data_manager.py:57`; and two
+`PytestReturnNotNoneWarning` from `test_portfolio_integration.py`, which is
+the "does not assert" entry above showing up in pytest's own output. None
+blocks anything; the Pydantic one has a removal date.
 
 ### `.gitignore` is corrupted
 
