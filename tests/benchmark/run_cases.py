@@ -2,8 +2,8 @@
 Benchmark case runner. Prints n/12 against docs/benchmark.md Part 3.
 
 Not part of pytest. Twelve live queries cost API calls and about a minute, so
-this is a third loop alongside the golden set, not a fourth thing bolted onto
-pytest.
+this is the fourth loop - pytest, CLI, golden set, runner - not a thing bolted
+onto pytest. Each of the four has a blind spot the others do not.
 
     python tests/benchmark/run_cases.py
     python tests/benchmark/run_cases.py --case 1.1
