@@ -534,6 +534,15 @@ Always include in your responses:
                 "tickers": ticker_list,
                 "period": f"{prices.index[0].strftime('%Y-%m-%d')} to {prices.index[-1].strftime('%Y-%m-%d')}",
                 "num_observations": len(prices),
+                # The evaluation window as data, for anything downstream that
+                # has to state what its figure was computed over. The string
+                # above is for display; a consumer parsing it back would be
+                # a second statement of the same dates.
+                "window": {
+                    "start": prices.index[0].strftime("%Y-%m-%d"),
+                    "end": prices.index[-1].strftime("%Y-%m-%d"),
+                    "closes": int(len(prices)),
+                },
                 "data_source": "database",
                 "data_points_per_ticker": {
                     ticker: int(prices[ticker].notna().sum())
