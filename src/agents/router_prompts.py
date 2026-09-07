@@ -21,7 +21,7 @@ AVAILABLE AGENTS:
 3. OptimizationAgent - Runs portfolio optimization (Mean-Variance, Risk Parity, etc.)
 4. RebalanceAgent - Calculates drift, generates trade lists for rebalancing
 5. BacktestAgent - Runs historical simulations of portfolio strategies
-6. PortfolioAnalysisAgent - Computes figures about an EXISTING portfolio's holdings: allocation by asset class and by sector, and P&L per position since purchase. Needs DataAgent first (holdings, prices, cash).
+6. PortfolioAnalysisAgent - Computes figures about an EXISTING portfolio's holdings: allocation by asset class and by sector, P&L per position since purchase, and the portfolio's own volatility from its weights and the covariance matrix. Needs DataAgent first (holdings, prices, cash, covariance).
 
 INTENT TYPES:
 - optimization: User wants to create or optimize a portfolio
@@ -76,7 +76,7 @@ EXTRACTION RULES:
 - Periods: MUST be exactly one of: "1Y", "2Y", "3Y", "5Y", "10Y". Map natural language to the nearest valid value (e.g. "twelve months"/"past year" -> "1Y", "since 2021" -> "5Y"). Use null if the user gave no timeframe - do not guess.
 - Volatility: Extract percentages mentioned with "volatility" (12% vol → 0.12)
 - Portfolio Value: Extract amounts (€100,000 → 100000)
-- Measure: set ONLY when PortfolioAnalysisAgent is in the plan. "allocation" for how the portfolio is divided up or which positions sit in a bucket; "position_pnl" for how a position or the holdings have performed, gained, lost or done since purchase. Otherwise null.
+- Measure: set ONLY when PortfolioAnalysisAgent is in the plan. "allocation" for how the portfolio is divided up or which positions sit in a bucket; "position_pnl" for how a position or the holdings have performed, gained, lost or done since purchase; "portfolio_volatility" for the volatility of the portfolio as a whole. Otherwise null.
 - Group by: with measure "allocation", "asset_class" or "sector" when the user names one; null when they do not. Always null for any other measure.
 
 CONFIDENCE GUIDELINES:
@@ -101,7 +101,7 @@ User: "Backteste die Strategie über 5 Jahre"
 → intent: "backtest", agents: [DataAgent, BacktestAgent], period: "5Y"
 
 User: "What is my volatility over the past twelve months?"
-→ intent: "risk_analysis", agents: [DataAgent], period: "1Y", confidence: 0.95
+→ intent: "risk_analysis", agents: [DataAgent, PortfolioAnalysisAgent], measure: "portfolio_volatility", period: "1Y", confidence: 0.95
 
 User: "What is the risk of my portfolio?"
 → intent: "risk_analysis", agents: [DataAgent], confidence: 0.9
@@ -129,9 +129,12 @@ User: "Portfolio"
    means "these positions". An unnamed "my position" or "my positions" with an
    active portfolio means every position: plan the agent with empty tickers
    rather than asking which one.
-   Do NOT add it for risk, volatility, drawdown or concentration questions:
-   those keep intent risk_analysis and are DataAgent alone. "My portfolio"
-   appearing in a question is not by itself a reason to add it.
+   Also add it, with intent risk_analysis and measure "portfolio_volatility",
+   when the user asks for the volatility of their portfolio as a whole. Do NOT
+   add it for other risk questions - VaR, drawdown, concentration, or a
+   general "what is my risk": those keep intent risk_analysis and are
+   DataAgent alone. "My portfolio" appearing in a question is not by itself a
+   reason to add it.
 
 CRITICAL RULES:
 1. NEVER hallucinate agents - only use the 6 listed above
