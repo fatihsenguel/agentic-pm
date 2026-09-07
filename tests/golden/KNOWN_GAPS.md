@@ -1345,7 +1345,40 @@ Note the query's `errors: 1` was and is real: RebalanceAgent runs with no
 target source (see "Rebalance has no target allocation source"). The golden
 set pins the routing, not the outcome.
 
-### Rule 6's placement may have been why it lost to rule 2
+### The router refuses in-scope questions that name a held ticker
+
+Recorded 8 September. A CLI session on the evening of 7 September routed
+"How much did AAPL gain today?" to `out_of_scope` at confidence 0.95, with
+a portfolio holding AAPL active. The question is about a position's P&L -
+the same measure as 1.2 and 3.3 - and the router had the holdings list in
+its context. It refused because the ticker is named without "my".
+
+Two things the record needs to say. First, the `out_of_scope` rule's
+sentence "Held or not held makes no difference" is about the ownership
+judgement (buy/sell/hold), but it sits directly after the refusal list and
+reads as "a question naming a stock is refused whether held or not". The
+in-scope sentence that follows lists "its allocation, P&L, risk" but only
+under "a portfolio the user already holds", which the router did not
+connect to a bare ticker. Second, and the reason this was invisible: 3.2
+asserts that an out-of-scope question is refused. It cannot see a router
+that refuses too much, and neither could the golden set, which had no
+in-scope query that names a held ticker without "my". Every refusal the
+loops could see was a correct one.
+
+Fix in two commits. Golden set first: "How much did AAPL gain today?" and
+"Is my AAPL position too big?" added against portfolio 3 (the one that
+holds AAPL and that the benchmark is scored on), run twice, and today's
+routing pinned in `expected.txt` as it is, the way the macro query pins its
+error, so the fix has something to be seen against. Then the prompt: one
+sentence in the `out_of_scope` rule saying that a question about how a
+ticker the portfolio holds has performed, gained, lost, or how large it is,
+is a question about that position without the word "my" - `data_fetch`
+with PortfolioAnalysisAgent, `measure` `position_pnl` or `allocation`,
+`tickers` the named symbol. No few-shot, and not the golden wording:
+a golden query in a few-shot is the router passing by recognition. The
+prompt commit is its own commit before any compliance prompt change so the
+two golden diffs stay separable. Prediction recorded with the commit.
+
 
 Hypothesis, stated 7 September (third sitting), not believed. The PortfolioAnalysisAgent
 rule sat after EXAMPLES and before a CRITICAL RULES list numbered 1-5,
