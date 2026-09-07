@@ -957,3 +957,32 @@ test.
 package (D7, roadmap item 4). Its check is a pytest fixture over the 252 closes
 extracted from `expected_values.xlsx` and committed, not read from
 `data/portfolio.db`, which is untracked and would not survive a fresh clone.
+
+### Spans versus counts: is a window calendar days or closes?
+
+**Deferred until a non-year period actually exists. Not now.**
+
+The evaluation window is a count of closes — `years x trading_days_per_year` —
+because that is what the reference computes and what D6 annualises by, and
+because `tail` anchors to the last settled close without arithmetic. Every period
+that exists today is a year multiple, so every one has a close count.
+
+`_evaluation_window` raises on anything that is not a year rather than guessing,
+because "3M" has two defensible readings and picking one in a helper would settle
+the question silently:
+
+- **a span** — ninety calendar days back from the last close, whatever number of
+  closes that contains
+- **a count** — sixty-three closes, being a quarter of 252
+
+They differ by a few observations, which matters for a volatility figure and not
+much else. Neither is more general: `period_days` and a close table are both
+convention lookups against a resolved period, and both are missing months today.
+
+**What is not deferred, and is the same in either reading:** the window ends at
+the last settled close, never at `date.today()`. That is the anchor, it was the
+actual bug, and it is fixed. The unit question is a separate and smaller thing
+that got tangled with it during the 4 September sitting.
+
+Decide it when someone asks for a quarter, with a real case in hand. Nothing
+built now makes that decision easier, and choosing today means choosing blind.
