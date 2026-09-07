@@ -32,7 +32,7 @@ This commits to an evaluation set. For an employer whose third listed responsibi
 
 **Additional decision — the architecture in that bullet is questionable.** A self-authored IPS is structured data: a concentration limit is a number with an identifier, a permitted-instrument list is a set. Citing a clause deterministically from structured rules is *more* defensible than retrieving it, and it is auditable. Test case 3.4 (clause does not exist) is trivially correct with structured rules and genuinely hard with retrieval — a retrieval system returns the nearest neighbour, which is exactly the failure mode being tested for.
 
-Either build RAG to match the bullet, or change the bullet to describe deterministic policy checking with clause references. **The second is the stronger claim** and is what `ips_manager.py` on `wip/phase7-snapshot` appears to model. RAG remains the right tool for the equity-research half of the project — 10-K filings, earnings transcripts, CEO commentary — where the documents are external and unstructured.
+Either build RAG to match the bullet, or change the bullet to describe deterministic policy checking with clause references. **The second is the stronger claim** and is what the project builds. It is not what `ips_manager.py` on `wip/phase7-snapshot` models: that branch was read on 7 September 2026 and rejected — its rules are database rows with a label, not clauses (`tests/golden/KNOWN_GAPS.md`). RAG remains the right tool for the equity-research half of the project — 10-K filings, earnings transcripts, CEO commentary — where the documents are external and unstructured.
 
 ---
 
@@ -109,7 +109,7 @@ Must run without errors. Proves little, but a failure here damages everything th
 
 Questions requiring several agents in one run.
 
-**Status note:** requires the Compliance agent and IPS from `wip/phase7-snapshot`, and RiskManagerAgent to be wired into the graph. Neither exists on the working branch. RiskManagerAgent's file exists but has no graph node, no routing entry and no mention in the router prompt.
+**Status note, revised 7 September 2026:** requires the Compliance agent and the IPS, built from the owner's document (`docs/HANDOFF.md` §7.2), not pulled from `wip/phase7-snapshot`. Neither exists on the working branch. RiskManagerAgent is not the "Risk" agent 2.1 names — it is an unused supervisor with no graph node, no routing entry and no mention in the router prompt (`KNOWN_GAPS.md`); which agent plays that role is an open decision.
 
 | # | Prompt | Passes when | Status |
 | --- | --- | --- | --- |
@@ -160,7 +160,7 @@ Work through it and stop when time runs out. Sorted by effect, not by effort.
 
 1. **Level 1 capabilities.** Allocation aggregation, position P&L against `average_price`, volatility surfaced as an answer, holdings filtered by sector. This is the foundation everything above it stands on. Precede it with the base-agent deduplication described in `docs/HANDOFF.md` §10, otherwise each new capability copies five stale patterns.
 2. **Data-age reporting (test case 3.3).** Promoted from fourth. It is a cross-cutting output-contract change, cheaper to build into Level 1 than to retrofit afterwards, and it is the single most transferable point in the interview.
-3. **The IPS, from `wip/phase7-snapshot`.** `ips_manager.py`, `esg_screener.py`, `compliance_agent.py`. This unlocks Level 2 and test cases 3.1 and 3.4 simultaneously. It also resolves the open question of where rebalancing targets come from (see `tests/golden/KNOWN_GAPS.md`).
+3. **The IPS, from the owner's document.** A prose IPS with numbered clauses, `ips.toml` derived from it, a pure checker, then the agent (`docs/HANDOFF.md` §7.2). Not from `wip/phase7-snapshot`, read and rejected 7 September 2026. This unlocks Level 2 and test cases 3.1 and 3.4 simultaneously. It also resolves the open question of where rebalancing targets come from (see `tests/golden/KNOWN_GAPS.md`).
 4. **One guardrail path that genuinely blocks** (test case 3.1), with clause citation.
 5. **Minimal conversation history** — enough to close the clarification loop for test case 3.5.
 6. **Eval set, 20–30 questions** with expected answer and expected source per question. Produces the figure quoted in the CV. Moved last not because it matters least, but because it is the only item that cannot be built before the things it measures.
