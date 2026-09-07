@@ -1031,6 +1031,28 @@ ae6f220 — model identity lives in `agents/config.py`.
 
 ## Hygiene
 
+### Two router few-shot examples are benchmark prompts verbatim
+
+"What is my current allocation by asset class?" and "What is my volatility
+over the past twelve months?" appear in `router_prompts.py` word for word as
+1.1 and 1.3. The router passes those cases partly by recognition. A third
+example added on 7 September is a paraphrase of 3.3 ("How are my positions
+doing?"). Whether few-shots may quote the benchmark is a decision about what
+the counter measures; it has not been taken, only noticed.
+
+### A second turn after a clarification hits the stub
+
+CLI, 7 September: "How is my position doing today?" (before the routing fix)
+asked which position; the reply "AAPL for today" routed `data_fetch` with
+`[DataAgent]` alone and produced the header-only stub. Conversation memory,
+not a P&L defect; recorded so the shape is on file when 3.5 is built.
+
+### Patches that delete whitespace-only lines need `--ignore-whitespace`
+
+`git apply --unidiff-zero` matches removed lines exactly. A patch removing
+indented blank lines failed on 7 September on the owner's machine and applied
+with `--ignore-whitespace`; every patch since has been applied that way.
+
 ### `.gitignore` is corrupted
 
 A PowerShell here-string was written into it literally. Line 1 is `@"`, there is a
