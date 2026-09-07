@@ -168,3 +168,116 @@ Headline figures:
   technology exposure is materially above 29.05%.
 - **One window, one regime.** Twelve months of daily data is a single estimate
   and says nothing about volatility under different conditions.
+
+---
+
+## Part 7 — Compliance against `docs/IPS.md`
+
+Computed 2026-09-07 from Part 1's 09-02 market values, before the checker
+exists, so the checker has something independent to be wrong against. Every
+figure here is one division of a Part 1 number by the Part 1 total; the
+`Compliance` sheet of the workbook is to carry the same formulas.
+
+**Denominator.** Total portfolio value including cash, **410,200.50**, for
+every clause - the IPS says so in its preamble and in §3 and §4. Note this is
+*not* Part 3's sector denominator: Part 3 reports sectors as a share of
+invested value (D3), the IPS limits sectors as a share of total. Both are
+right; they answer different questions. 1.4 keeps D3, IPS-4.3 uses total.
+
+**Which holdings are "directly held shares".** IPS-4.2 and 4.3 count only
+directly held shares; IPS-4.3 defines the excluded set as holdings without a
+sector. On this portfolio that is SPY, TLT, GLD and VNQ (funds); AAPL, MSFT,
+JNJ, JPM and NEE are shares. How the code knows is an open decision in
+KNOWN_GAPS, not a fact this reference decides.
+
+**Distances.** IPS-5.2: the required change is the amount that returns the
+figure to the limit. Given in percentage points of total, and in currency
+*at unchanged total* - which is the case when the excess is sold to cash.
+Any other trade moves the denominator and the currency figure with it; the
+percentage-point figure is the reference, the currency figure is a
+convenience under that stated assumption.
+
+### §3 — Strategic allocation
+
+| Clause | Class | Market value | % of total | Limit | Status | Distance |
+|---|---|---|---|---|---|---|
+| IPS-3.1 | Equity | 284,713.50 | 69.41% | 40% – 65% | **breach, above max** | 4.41 pp = 18,083.18 |
+| IPS-3.2 | Fixed Income | 40,975.00 | 9.99% | 8% – 30% | ok | 1.99 pp above min |
+| IPS-3.3 | Commodity | 40,278.00 | 9.82% | ≤ 15% | ok | 5.18 pp below max |
+| IPS-3.4 | Real Estate | 28,734.00 | 7.00% | ≤ 15% | ok | 8.00 pp below max |
+| IPS-3.5 | Cash | 15,500.00 | 3.78% | ≥ 3% | ok | 0.78 pp above min |
+
+### §4 — Concentration
+
+**IPS-4.1, every holding, limit 12% of total**
+
+| Ticker | Market value | % of total | Status | Distance |
+|---|---|---|---|---|
+| SPY | 76,516.00 | 18.65% | **breach** | 6.65 pp = 27,291.94 |
+| AAPL | 64,992.00 | 15.84% | **breach** | 3.84 pp = 15,767.94 |
+| MSFT | 49,682.00 | 12.11% | **breach** | 0.11 pp = 457.94 |
+| JNJ | 41,281.50 | 10.06% | ok | |
+| TLT | 40,975.00 | 9.99% | ok | |
+| GLD | 40,278.00 | 9.82% | ok | |
+| JPM | 35,622.00 | 8.68% | ok | |
+| VNQ | 28,734.00 | 7.00% | ok | |
+| NEE | 16,620.00 | 4.05% | ok | |
+
+**IPS-4.2, directly held shares, limit 10% of total**
+
+| Ticker | Market value | % of total | Status | Distance |
+|---|---|---|---|---|
+| AAPL | 64,992.00 | 15.84% | **breach** | 5.84 pp = 23,971.95 |
+| MSFT | 49,682.00 | 12.11% | **breach** | 2.11 pp = 8,661.95 |
+| JNJ | 41,281.50 | 10.06% | **breach** | 0.06 pp = 261.45 |
+| JPM | 35,622.00 | 8.68% | ok | |
+| NEE | 16,620.00 | 4.05% | ok | |
+
+SPY, TLT, GLD and VNQ are not attributed to any issuer (IPS-4.2) and do not
+appear.
+
+**IPS-4.3, sectors over directly held shares, limit 25% of total**
+
+| Sector | Market value | % of total | Status | Distance |
+|---|---|---|---|---|
+| Technology | 114,674.00 | 27.96% | **breach** | 2.96 pp = 12,123.88 |
+| Healthcare | 41,281.50 | 10.06% | ok | |
+| Financials | 35,622.00 | 8.68% | ok | |
+| Utilities | 16,620.00 | 4.05% | ok | |
+| (no sector) | 186,503.00 | 45.47% | reported, not counted | |
+
+### Two figures decided by cents
+
+MSFT is 0.11 pp over IPS-4.1 and JNJ 0.06 pp over IPS-4.2 at these closes.
+A live run will put either on the other side of its limit within days. Pinned
+here as computed; the checker's unit test runs over the committed closes and
+is stable, the runner asserts on the structure of a finding and not on which
+clauses breach, and no document should say "MSFT breaches 4.1" as if it were
+a standing fact. Cash is 0.78 pp above IPS-3.5 and can cross the same way.
+
+### Expected answers, in the Part 3b shape
+
+- **2.1 (concentration)** - the IPS-4.1 table (three breaches), the IPS-4.2
+  table (three breaches), the IPS-4.3 table (one breach), each figure as of
+  2026-09-02, each verdict citing its clause id. Must state that funds are
+  counted at fund level and not attributed to issuers or sectors. Gives no
+  recommendation.
+- **2.2 (any rule violated)** - every checkable clause with its status, one
+  finding per subject: eight breaches (IPS-3.1; 4.1 on SPY, AAPL, MSFT; 4.2
+  on AAPL, MSFT, JNJ; 4.3 on Technology) and, at clause level, four clauses
+  fully inside their limits (3.2 to 3.5). Must also name the clauses it
+  did not compute (IPS-1.x, 2.x, 5.x, 6.x) as policy statements outside the
+  check, so "all rules" is visibly all of them. Gives no recommendation.
+- **2.3 (what would have to change)** - for each breach, the condition in
+  the Distance column: Equity down 4.41 pp of total; SPY down 6.65 pp, AAPL
+  3.84 pp, MSFT 0.11 pp under IPS-4.1; AAPL 5.84 pp, MSFT 2.11 pp, JNJ
+  0.06 pp under IPS-4.2; Technology 2.96 pp under IPS-4.3. Overlaps are
+  stated, not netted: reducing AAPL by 5.84 pp satisfies both of its
+  clauses and most of the Technology excess, and that is for the reader to
+  see. Names no instrument to trade and no target (IPS-5.2).
+- **3.1 (15% in a single position)** - refused, citing IPS-4.1 (limit 12%,
+  3.00 pp over) and, if the position would be a directly held share,
+  IPS-4.2 (limit 10%, 5.00 pp over). No weighing, no "depends".
+- **3.4 (currency risk)** - the policy contains no clause on currency risk.
+  Names nothing that is not in `docs/IPS.md`. The nearest clause by topic
+  is none; IPS-2.1 lists instrument types and is not about currency.
