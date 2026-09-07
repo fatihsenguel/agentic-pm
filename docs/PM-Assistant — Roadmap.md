@@ -131,15 +131,18 @@ Last not because it matters least, but because it is the only item that cannot b
 
 ## Working rhythm
 
-Three loops, different speeds:
+Four loops, different speeds, run as separate commands and never chained with `&&`. Each has a blind spot and they do not overlap.
 
 | Loop | Cost | Answers |
 | --- | --- | --- |
 | `pytest` | seconds | Do the components still work |
 | CLI | seconds | What is it actually doing |
-| Golden set | ~40s, a few cents | Did behaviour change anywhere |
+| Golden set | ~40s, a few cents | Did routing behaviour change anywhere |
+| `python tests/benchmark/run_cases.py` | ~1min, cents | What actually works against benchmark.md |
 
-`golden set → change → golden set → commit`. When the diff changes, decide whether it is an improvement before updating `expected.txt`.
+The runner was built after this table was first written and is the authoritative one: **run it before believing anything about what works.** The golden set prints five routing fields and no answer content, so it is blind to every figure; `pytest` collects nothing that exercises the synthesizer. On 7 September the golden set caught a cache-key regression `pytest` passed straight through, and a separate change passed three of the four loops while being arithmetically inert.
+
+`golden set -> change -> golden set -> decide whether the diff is an improvement -> then update expected.txt`.
 
 **Rules carried over from the recovery session:**
 
