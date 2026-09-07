@@ -1401,6 +1401,26 @@ reword that one counter-sentence so it scopes only the ownership judgement.
 If that does not move both lines, the third is a few-shot with a different
 ticker and wording, not stacked on the second. Each attempt is one change.
 
+**Second attempt: partial, 8 September.** Rewording the counter-sentence
+(d8cd0d6) moved "How much did AAPL gain today?" out of `out_of_scope` - to
+`data_fetch` with `['DataAgent']` alone: a price fetch for AAPL, no
+PortfolioAnalysisAgent, so no `measure` and an answer about the stock's
+price rather than the position's gain. Not the plan predicted, and by this
+project's standard a wrong answer with a plausible face is not better than
+a refusal. "Is my AAPL position too big?" did not move. Both runs agreed;
+the eleven old lines held. Pinned as it stands in the commit after d8cd0d6.
+
+Two things decided from it. "Too big" is a compliance question - a size
+against a limit - and it moves when the compliance intent enters the prompt,
+with its own prediction, not now: routing it to `allocation` today and to
+compliance next week is two prompt changes for one line. And the third
+attempt for "gain today" is a few-shot: every in-scope rule in this prompt
+that routes reliably has one, and the two sentence-level attempts show the
+rule text alone does not reach a bare ticker. Different ticker, different
+wording, "(active portfolio holding X)" annotation as the existing
+examples use. Prediction: "gain today" gains PortfolioAnalysisAgent;
+"too big" holds; eleven hold.
+
 
 Hypothesis, stated 7 September (third sitting), not believed. The PortfolioAnalysisAgent
 rule sat after EXAMPLES and before a CRITICAL RULES list numbered 1-5,
