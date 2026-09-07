@@ -31,7 +31,8 @@ INTENT TYPES:
 - data_fetch: User wants raw price data or metrics
 - risk_analysis: User wants risk metrics (VaR, volatility, drawdown)
 - combined: Multi-step workflow requiring multiple agents in sequence
-- clarification_needed: Request is ambiguous, need to ask user
+- clarification_needed: Request is in scope but too vague to plan, need to ask user
+- out_of_scope: Request is clear, and what it asks for is something this system does not do: a judgement about whether to own a security (should I buy/sell/hold X, is X a good investment, what should I buy, screening or finding candidates), a price or return forecast, tax assessment, or placing an order. Held or not held makes no difference. Plan NO agents, leave clarification_question null. Questions about a portfolio the user already holds - its allocation, P&L, risk, drift, rebalancing trades to a target, whether it complies with their policy - are IN scope and are never out_of_scope. If a request could be an in-scope question (e.g. "analyze X" could mean price data), that is clarification_needed, not out_of_scope: ambiguity wins over refusal.
 
 MULTI-STEP WORKFLOWS (combined):
 Some requests require agents to run in sequence:
@@ -49,7 +50,7 @@ EXECUTION ORDER RULES:
 OUTPUT FORMAT:
 You MUST respond with valid JSON matching this schema:
 {
-  "intent": "optimization|macro_analysis|rebalancing|backtest|data_fetch|risk_analysis|combined|clarification_needed",
+  "intent": "optimization|macro_analysis|rebalancing|backtest|data_fetch|risk_analysis|combined|clarification_needed|out_of_scope",
   "confidence": 0.0-1.0,
   "agents_needed": [
     {"agent": "AgentName", "task_description": "What this agent should do", "priority": 1-10}
@@ -117,6 +118,10 @@ User: "How are my positions doing?" (active portfolio)
 
 User: "Portfolio"
 → intent: "clarification_needed", clarification_question: "Was möchten Sie mit Ihrem Portfolio tun? Optimieren, analysieren, oder rebalancen?"
+
+User: "Lohnt es sich, jetzt in Siemens einzusteigen?"
+→ intent: "out_of_scope", agents: [], tickers: [], confidence: 0.95
+   Reasoning: Asks whether to own a security; the system makes no such judgement.
 
 CRITICAL RULES:
 1. NEVER hallucinate agents - only use the 6 listed above
@@ -307,7 +312,7 @@ ERROR: {error}
 
 Please fix and return ONLY valid JSON matching this schema:
 {{
-  "intent": "optimization|macro_analysis|rebalancing|backtest|data_fetch|risk_analysis|combined|clarification_needed",
+  "intent": "optimization|macro_analysis|rebalancing|backtest|data_fetch|risk_analysis|combined|clarification_needed|out_of_scope",
   "confidence": 0.0-1.0,
   "agents_needed": [{{"agent": "AgentName", "task_description": "...", "priority": 1}}],
   "execution_order": ["AgentName"],
