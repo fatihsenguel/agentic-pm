@@ -835,14 +835,38 @@ reading `shared["macro_regime"]` for `regime` and `equity_adjustment`,
 `nodes.py:1176-1224` formats macro output in the synthesizer, and
 `risk_manager_agent.py:374` delegates regime analysis to it.
 
-### `generate_taa_signal_tool` returns allocation recommendations
+### The macro `equity_adjustment` surface is a market-timing recommendation
 
-It returns `action: "INCREASE"/"DECREASE"` with a `recommended_equity_weight`, and
-`prompts.py:114` instructs the model to recommend equity weight adjustments.
-benchmark.md Part 2 lists buy/sell recommendations as out of scope, and test case
-3.2 requires refusing recommendation requests.
+Rewritten 7 September. The entry used to be titled after
+`generate_taa_signal_tool`, and the 7 September handoff turned that into
+"`generate_taa_signal_tool` is a live path". It is not. `macro_agent_node`
+calls `assess_regime_tool`; nothing in `nodes.py` or `graph.py` calls
+`generate_taa_signal_tool`, and the BaseAgent tool-calling loop (`get_tools`,
+`tool_map`, the system prompt in `prompts.py`) has no caller from the graph.
+Its only caller is `tests/test_phase5_4_integration.py`.
 
-A live path contradicts 3.2. Resolve when building 3.2, not before.
+**Registration in a tools list is not reachability.** Grep for the caller.
+
+The live surface is: `assess_regime_tool` → `MacroSignal.equity_adjustment`
+→ `shared_data["macro_regime"]` → `_format_macro_response`, which prints
+`**Recommendation:** Adjust equity by ±X%`, and `rebalance_agent_node`, which
+copies it into `taa_signal` for `_format_rebalance_response`'s "Tactical
+Signal" line. The router prompt teaches the same thing: the MULTI-STEP line
+"Sollte ich bei diesem VIX-Level mehr in Bonds gehen?" → "allocation
+recommendation", and few-shot example 4 (not rendered; the builder takes
+three).
+
+A regime-driven equity adjustment is a market-timing call. That sits under
+"price or return forecasts" in benchmark.md Part 2's permanent list, not the
+Levels 1–3 list, so it is a defect on its own terms rather than a 3.2
+dependency. Resolution, decided 7 September, after 3.2 and as separate
+commits so the 3.2 golden diff is not confounded: drop the macro
+Recommendation line; drop the Tactical Signal line and leave the
+`taa_signal` field in the rebalance result (removing the field is a
+RebalanceAgent change, and MacroAgent is already recorded as tolerated);
+retire the MULTI-STEP line and example 4. `generate_taa_signal_tool`,
+`MacroSignal.equity_adjustment` and `prompts.py` stay as dead code, recorded
+here.
 
 ---
 
