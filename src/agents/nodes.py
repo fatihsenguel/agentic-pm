@@ -685,10 +685,12 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
 
     Reads only `shared_data` - no database, no provider calls. DataAgent fetches;
     this agent computes; the synthesizer formats. Publishes both the asset-class
-    and sector breakdowns because 1.1 needs one and 1.4 the other, and choosing
-    between two computed breakdowns is selection rather than computation.
+    and sector breakdowns and the P&L of every position, because 1.1, 1.4 and
+    1.2 each need a different one and choosing between computed figures is
+    selection rather than computation. The router's `measure` says which was
+    asked for; the synthesizer reads it, this node does not.
 
-    Reference: expected_values.md Parts 2 and 3, decisions D1-D3.
+    Reference: expected_values.md Parts 1-3, decisions D1-D4.
     """
     tracer = get_tracer()
     agent_ctx = None
@@ -748,10 +750,12 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
         from portfolio_tool.quant.allocation import (
             allocation_by_asset_class,
             allocation_by_sector,
+            position_pnl,
         )
 
         by_class = allocation_by_asset_class(holdings, prices, cash_balance)
         by_sector = allocation_by_sector(holdings, prices)
+        pnl = position_pnl(holdings, prices)
 
         # An allocation line aggregates several holdings, so no single holding's
         # date describes it. Reduce to the worst case: no figure is presented as
@@ -796,6 +800,31 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
                 for line in allocation.lines
             ]
 
+        # Every position, whichever one was asked about: selecting is the
+        # synthesizer's job. One holding, one close, so the as-of is per
+        # position and needs no reduction. A held ticker with no date cannot
+        # state its age and is not published silently as if it could.
+        undated = [t for t in pnl if t not in as_of_dates]
+        if undated:
+            raise DataCalculationError(
+                f"No as-of date for priced holdings: {sorted(undated)}.\n"
+                "Every P&L figure must state its date (benchmark.md Part 3b)."
+            )
+        position_pnl_summary = {
+            t: {
+                "quantity": p.quantity,
+                "average_price": p.average_price,
+                "price": p.price,
+                "cost_basis": round(p.cost_basis, 2),
+                "market_value": round(p.market_value, 2),
+                "pnl_abs": round(p.pnl_abs, 2),
+                "pnl_pct": p.pnl_pct,
+                "purchase_date": p.purchase_date,
+                "as_of": as_of_dates[t],
+            }
+            for t, p in pnl.items()
+        }
+
         allocation_summary = {
             "by_asset_class": {
                 "lines": _lines(by_class),
@@ -820,16 +849,22 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
         print(f"  Total portfolio value: {by_class.total_value:,.2f}")
         for line in by_class.lines:
             print(f"    {line.label:<16} {line.pct_of_denominator:>7.2%}")
+        print(f"  Position P&L computed for {len(pnl)} positions")
 
         result = {
             "success": True,
             "agent_name": "PortfolioAnalysisAgent",
             "allocation": allocation_summary,
+            "position_pnl": position_pnl_summary,
         }
 
         return {
             **mark_agent_complete(state, "PortfolioAnalysisAgent", result),
-            "shared_data": {**shared, "allocation": allocation_summary},
+            "shared_data": {
+                **shared,
+                "allocation": allocation_summary,
+                "position_pnl": position_pnl_summary,
+            },
         }
 
     except Exception as e:
