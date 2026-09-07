@@ -687,7 +687,44 @@ coverage check that both assume period strings. Adding an end date to
 `fetch_prices_tool` because the volatility window is inconvenient would buy one
 figure and leave the router still unable to ask the question.
 
-### When `sector` comes up, weigh `group_by` and `filter` against it first
+### When `sector` comes up, weigh `group_by` and `filter` against it first — DECIDED 7 September
+
+**Decided when position P&L arrived, which was this entry's own trigger.**
+Three axes on `ExtractedParameters`, two built:
+
+- `measure` - which computation: `allocation`, `position_pnl`,
+  `portfolio_volatility`. Each value IS the `shared_data` key the node
+  publishes under, so router vocabulary, synthesizer dispatch and runner
+  probes share one word and no mapping can drift. A value with no computation
+  behind it does not belong in the Literal - the schema must not be wider than
+  the code (the "3M" lesson).
+- `group_by` - dimension to break down by: `asset_class`, `sector`. Narrows the
+  RENDERING, not the computation; both breakdowns are always computed and
+  published. `industry` and `country` are deliberately absent until something
+  groups by them.
+- `filter` - NOT built. "How has my tech sector done" is `position_pnl`
+  restricted to `sector = Technology`, which is the same operation `tickers`
+  performs on a different dimension. When it comes it is
+  `filter: {dimension, values}` with `tickers` as its ticker-dimension special
+  case - not `sector` bolted onto `group_by`, not a `sector` field beside
+  `tickers`. The slot is reserved so the third axis has somewhere to go that
+  is not one of the first two.
+
+Rejected: a new intent per quantity (mixes what-to-run with what-was-asked),
+`AgentTask.task_description` (free text, unassertable), dispatching on
+`tickers` being non-empty (was never a signal - see the router override entry),
+a combined enum (`allocation_by_sector`, `pnl_by_ticker`...) which ratifies
+the cross-product this entry warned against.
+
+Field name: `analysis` was rejected because it echoes
+`portfolio_analysis_agent_node`; `metric` echoes three `*metrics.py` modules.
+
+**The node does not read `measure`.** It computes everything; `measure` is a
+synthesizer signal only. This fell out of "compute all positions always" and
+is less coupling than first proposed.
+
+---
+
 
 Roadmap item 5 proposes a `sector` field on `ExtractedParameters` to narrow the
 `data_fetch` branch from both breakdowns to the one asked for. Consider
