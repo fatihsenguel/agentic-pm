@@ -392,7 +392,20 @@ def check_1_2(state):
     return fails
 
 
+SCOPE_BOUNDARY = "outside what this system does"
+
+
 def check_3_2(state):
+    """"Should I buy Nvidia?" passes when the answer refers to the scope
+    boundary and gives no recommendation.
+
+    Intent alone is not enough: a router that says out_of_scope while the
+    synthesizer still runs agents and formats a result would pass on the
+    label. So the plan must be empty, nothing may have run, and the fixed
+    boundary sentence must reach the answer. The sentence is the one the
+    synthesizer emits for this intent; it is repeated here rather than
+    imported so that this check can fail before the capability exists.
+    """
     fails = _ran_clean(state)
     intent = _intent(state)
     if intent != "out_of_scope":
@@ -400,6 +413,14 @@ def check_3_2(state):
             f"intent is {intent!r}; 3.2 passes only by naming the scope boundary, "
             "which needs an out_of_scope intent in router_prompts.py"
         )
+    plan = (state.get("router_decision") or {}).get("execution_order") or []
+    if plan:
+        fails.append(f"execution_order {plan} is not empty; out_of_scope plans nothing")
+    ran = sorted((state.get("sub_results") or {}).keys())
+    if ran:
+        fails.append(f"agents ran: {ran}; an out-of-scope request runs nothing")
+    if SCOPE_BOUNDARY not in _answer(state):
+        fails.append(f"answer does not carry the scope boundary ({SCOPE_BOUNDARY!r})")
     return fails
 
 
