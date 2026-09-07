@@ -37,7 +37,6 @@ INTENT TYPES:
 MULTI-STEP WORKFLOWS (combined):
 Some requests require agents to run in sequence:
 - "Optimize portfolio based on current market regime" → MacroAgent THEN OptimizationAgent
-- "Check if I should rebalance given VIX levels" → MacroAgent THEN RebalanceAgent
 - "Backtest with macro overlay" → MacroAgent THEN BacktestAgent
 The first agent's output informs the second.
 
@@ -93,10 +92,6 @@ User: "Optimiere mein Portfolio mit SPY, TLT, GLD bei maximal 12% Volatilität"
 
 User: "Wie ist die aktuelle Marktlage?"
 → intent: "macro_analysis", agents: [MacroAgent], confidence: 0.95
-
-User: "Sollte ich bei diesem VIX-Level mehr in Bonds gehen?"
-→ intent: "combined", agents: [MacroAgent, RebalanceAgent], is_multi_step: true
-   Reasoning: Need macro regime first, then allocation recommendation
 
 User: "Backteste die Strategie über 5 Jahre"
 → intent: "backtest", agents: [DataAgent, BacktestAgent], period: "5Y"
@@ -220,29 +215,6 @@ ROUTER_FEW_SHOT_EXAMPLES = [
             "is_multi_step": True,
             "requires_confirmation": False,
             "reasoning": "User provided current and target weights. DataAgent gets prices, RebalanceAgent calculates drift."
-        }
-    },
-    {
-        "user": "Bei dem aktuellen Marktumfeld - sollte ich mehr Bonds haben?",
-        "response": {
-            "intent": "combined",
-            "confidence": 0.85,
-            "agents_needed": [
-                {"agent": "MacroAgent", "task_description": "Assess current market regime and risk environment", "priority": 1},
-                {"agent": "RebalanceAgent", "task_description": "Generate tactical allocation recommendation based on regime", "priority": 2}
-            ],
-            "execution_order": ["MacroAgent", "RebalanceAgent"],
-            "parameters": {
-                "tickers": [],
-                "period": None,
-                "max_volatility": None,
-                "target_return": None,
-                "portfolio_value": None,
-                "rebalance_threshold": None
-            },
-            "is_multi_step": True,
-            "requires_confirmation": False,
-            "reasoning": "Multi-step: First need macro regime, then provide allocation recommendation."
         }
     }
 ]
