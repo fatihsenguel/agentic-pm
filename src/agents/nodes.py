@@ -1388,7 +1388,7 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
         elif intent == "backtest":
             lines.extend(_format_backtest_response(sub_results))
         elif intent == "data_fetch" and "PortfolioAnalysisAgent" in sub_results:
-            lines.extend(_format_allocation_response(sub_results))
+            lines.extend(_format_analysis_response(decision, sub_results))
         elif intent == "risk_analysis":
             lines.extend(_format_risk_response(sub_results))
         elif intent == "combined":
@@ -1543,7 +1543,34 @@ def _format_backtest_response(sub_results: Dict) -> List[str]:
     return lines
 
 
-def _format_allocation_response(sub_results: Dict) -> List[str]:
+def _format_analysis_response(decision: Dict, sub_results: Dict) -> List[str]:
+    """Select which of PortfolioAnalysisAgent's figures the question asked for.
+
+    The agent computes every figure; the router's `measure` says which one the
+    user wanted. Dispatching on anything else - `tickers` being non-empty, the
+    intent, the task description - was tried on paper and fails: the router
+    fills `tickers` from the portfolio on every allocation query (rule 2), the
+    intent is `data_fetch` for all of them, and the task description is free
+    text nothing can assert on.
+
+    A plan naming the agent with no measure is a router error and raises
+    rather than picking a formatter, because whichever one it picked would
+    answer a question the user did not ask with figures that look right.
+    """
+    parameters = decision.get("parameters") or {}
+    measure = parameters.get("measure")
+
+    if measure == "allocation":
+        return _format_allocation_response(sub_results, parameters.get("group_by"))
+    if measure == "position_pnl":
+        return _format_pnl_response(sub_results, parameters.get("tickers") or [])
+    raise ValueError(
+        f"PortfolioAnalysisAgent ran but the router set measure={measure!r}. "
+        "Nothing to select; see ExtractedParameters.measure."
+    )
+
+
+def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = None) -> List[str]:
     """Format the allocation PortfolioAnalysisAgent computed.
 
     Formats only. Every figure is read from the agent's result unchanged; the
@@ -1555,10 +1582,9 @@ def _format_allocation_response(sub_results: Dict) -> List[str]:
     it. Whether those dates agree is read too, for the same reason - the one
     branch below selects wording, it does not compare dates.
 
-    Both breakdowns are printed. The router extracts no sector, so nothing in
-    the decision distinguishes benchmark 1.1 from 1.4 and picking one would be
-    a guess. Selecting is formatting and belongs here - it needs a sector on
-    ExtractedParameters first.
+    `group_by` narrows the rendering, not the computation: both breakdowns are
+    always computed and published, and the one the user named is the one
+    printed. With no `group_by` both are printed.
     """
     analysis = sub_results.get("PortfolioAnalysisAgent", {})
     if not analysis.get("success"):
@@ -1566,8 +1592,10 @@ def _format_allocation_response(sub_results: Dict) -> List[str]:
                 f"  {analysis.get('error', 'No error recorded.')}"]
 
     allocation = analysis.get("allocation") or {}
-    by_class = allocation.get("by_asset_class") or {}
-    by_sector = allocation.get("by_sector") or {}
+    by_class = allocation.get("by_asset_class") if group_by in (None, "asset_class") else None
+    by_sector = allocation.get("by_sector") if group_by in (None, "sector") else None
+    by_class = by_class or {}
+    by_sector = by_sector or {}
 
     lines = ["**PORTFOLIO ALLOCATION**", ""]
 
@@ -1595,7 +1623,8 @@ def _format_allocation_response(sub_results: Dict) -> List[str]:
                          f"{line['market_value']:>15,.2f}")
 
     if by_sector:
-        lines.append("")
+        if by_class:
+            lines.append("")
         lines.append(f"**By sector**, % of {by_sector['denominator']} "
                      f"and of invested value {by_sector['invested_value']:,.2f}:")
         for line in by_sector.get("lines", []):
@@ -1608,9 +1637,62 @@ def _format_allocation_response(sub_results: Dict) -> List[str]:
                          f"{line['market_value']:>15,.2f}   {held}")
 
     lines.append("")
-    lines.append("**Not done.** No sector was extracted from the question, so")
-    lines.append("both breakdowns are shown rather than the one asked for. Fund")
-    lines.append("holdings are counted at fund level; there is no look-through.")
+    if group_by is None:
+        lines.append("**Not done.** The question named no breakdown, so both are")
+        lines.append("shown. Fund holdings are counted at fund level; there is no")
+        lines.append("look-through.")
+    else:
+        lines.append("**Not done.** Fund holdings are counted at fund level; there")
+        lines.append("is no look-through.")
+    return lines
+
+
+def _format_pnl_response(sub_results: Dict, tickers: List[str]) -> List[str]:
+    """Format the position P&L PortfolioAnalysisAgent computed.
+
+    Formats only; every figure is read from the agent's result. `tickers`
+    selects which positions to print - empty means all of them, since the
+    router leaves it empty when the user named none. A requested ticker that
+    is not held is said so, not dropped: dropping it would answer a question
+    about a position the portfolio does not contain with figures about others.
+
+    One holding, one close, so the as-of date is per position and printed
+    beside it rather than reduced. Price return only, per expected_values.md
+    D4, and the answer says so because on five of the nine holdings it
+    understates the return.
+    """
+    analysis = sub_results.get("PortfolioAnalysisAgent", {})
+    if not analysis.get("success"):
+        return ["Position P&L could not be computed.",
+                f"  {analysis.get('error', 'No error recorded.')}"]
+
+    pnl = analysis.get("position_pnl") or {}
+    if not pnl:
+        return ["No position P&L was published for this request."]
+
+    wanted = [t.upper() for t in tickers] or sorted(pnl)
+    not_held = [t for t in wanted if t not in pnl]
+    shown = [t for t in wanted if t in pnl]
+
+    lines = ["**POSITION P&L SINCE PURCHASE**", ""]
+    for t in not_held:
+        lines.append(f"**{t} is not held in this portfolio.**")
+    if not_held:
+        lines.append("")
+
+    for t in shown:
+        p = pnl[t]
+        sign = "+" if p["pnl_abs"] >= 0 else "-"
+        lines.append(f"**{t}** — {sign}{abs(p['pnl_abs']):,.2f} ({p['pnl_pct']:+.2%}) "
+                     f"since {p.get('purchase_date') or 'an unrecorded purchase date'}")
+        lines.append(f"  {p['quantity']:,.0f} shares, cost {p['cost_basis']:,.2f} "
+                     f"at {p['average_price']:,.2f} average")
+        lines.append(f"  now {p['market_value']:,.2f} at {p['price']:,.2f}, "
+                     f"priced as of {p['as_of']}")
+        lines.append("")
+
+    lines.append("**Not done.** Price return only: dividends are not attributed to")
+    lines.append("the portfolio, so income is not included (expected_values.md D4).")
     return lines
 
 
