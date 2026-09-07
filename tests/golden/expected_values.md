@@ -196,7 +196,15 @@ figure to the limit. Given in percentage points of total, and in currency
 *at unchanged total* - which is the case when the excess is sold to cash.
 Any other trade moves the denominator and the currency figure with it; the
 percentage-point figure is the reference, the currency figure is a
-convenience under that stated assumption.
+convenience under that stated assumption. The `Compliance` sheet carries the
+distance on every row, signed: positive is a breach, negative is headroom;
+the tables below print it for breaches and describe headroom in words.
+
+**Statuses.** A finding is `ok`, `breach` or `exempt`. Exempt is for a
+holding the clause does not apply to - the funds under IPS-4.2 - and is not
+`ok`: an exempt row carries no arithmetic and is reported as exempt, so the
+policy is visibly applied to every holding rather than silently to some.
+Comparison is strict and unrounded (D9).
 
 ### §3 — Strategic allocation
 
@@ -234,8 +242,11 @@ convenience under that stated assumption.
 | JPM | 35,622.00 | 8.68% | ok | |
 | NEE | 16,620.00 | 4.05% | ok | |
 
-SPY, TLT, GLD and VNQ are not attributed to any issuer (IPS-4.2) and do not
-appear.
+| SPY, TLT, GLD, VNQ | | | exempt | not attributed to an issuer (IPS-4.2) |
+
+Which holdings are funds is data the code has to carry, not infer:
+`Asset.instrument_type`, `share` or `fund`, set by the seed, and the checker
+raises on a holding where it is missing (decision recorded in KNOWN_GAPS).
 
 **IPS-4.3, sectors over directly held shares, limit 25% of total**
 
@@ -259,10 +270,10 @@ a standing fact. Cash is 0.78 pp above IPS-3.5 and can cross the same way.
 ### Expected answers, in the Part 3b shape
 
 - **2.1 (concentration)** - the IPS-4.1 table (three breaches), the IPS-4.2
-  table (three breaches), the IPS-4.3 table (one breach), each figure as of
-  2026-09-02, each verdict citing its clause id. Must state that funds are
-  counted at fund level and not attributed to issuers or sectors. Gives no
-  recommendation.
+  table (three breaches, four exempt), the IPS-4.3 table (one breach), each
+  figure as of 2026-09-02, each verdict citing its clause id. Must state
+  that funds are counted at fund level and not attributed to issuers or
+  sectors. Gives no recommendation.
 - **2.2 (any rule violated)** - every checkable clause with its status, one
   finding per subject: eight breaches (IPS-3.1; 4.1 on SPY, AAPL, MSFT; 4.2
   on AAPL, MSFT, JNJ; 4.3 on Technology) and, at clause level, four clauses
