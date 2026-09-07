@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 7 September 2026, second sitting.
+Last updated 7 September 2026, fourth sitting.
 
 ---
 
@@ -979,7 +979,7 @@ conflicting values was WRONG: line 28 is `DataConfig` ("3Y") and line 132 is
 `RiskManagerConfig:154` — with the same value. Soft duplication, no current
 conflict. Decide which owns it before either changes.
 
-### The agent roster is restated in eight places
+### The agent roster is restated in eight places — RESOLVED 7 September (fourth sitting)
 
 Recorded 4 September, while adding the sixth agent. Nothing is broken today;
 this is about what breaks quietly at the seventh.
@@ -1039,6 +1039,37 @@ diff, and a moved line is the nondeterminism or a regression, never the
 rerender. Observed 7 September (fourth sitting): empty diff on four runs, two
 after each of the two commits.
 
+**Resolved 7 September (fourth sitting), two commits.** First `AgentName.ROUTER`
+was deleted on its own: no reader, and not a name the graph can run, so the
+enum stopped accepting it before the enum was derived from anything. Then the
+registry: `AGENTS` in `schemas.py`, an ordered dict of name to the one-line
+prompt description. `AgentName` is built from it with the functional `Enum`
+API (validation output checked identical under `use_enum_values`: plain
+strings in `execution_order` and `agents_needed[].agent` before and after).
+`router_prompts.py` assembles `ROUTER_SYSTEM_PROMPT` at import from three
+literal pieces with the roster and its count rendered in between, plain
+concatenation because of the JSON braces. `graph.py` derives `add_node`,
+`routing_map` and the loop edges from `AGENTS`, and `route_next_step` returns
+`str`: with an explicit `path_map`, LangGraph's `BranchSpec.from_path` never
+reads the `Literal` annotation (langgraph 1.2.11), so it was a copy of the
+roster that checked nothing. Sites 1, 2, 4, 5, 6, 7 and 8 read the registry;
+3 (the few-shots, and the MULTI-STEP and EXECUTION ORDER prose) does not and
+should not - it teaches plans by demonstration, not a roster.
+
+**Not "name to node function", as this entry proposed.** The node binding
+stays in `graph.py` as `AGENT_NODES`, with a `RuntimeError` at import if its
+key set differs from `AGENTS` in either direction. `schemas.py` is a
+pydantic-only leaf that `smart_router` imports; putting node coroutines in it
+would pull `nodes.py`, `config` and langchain into the validation schema. So a
+name is stated twice - roster and binding - and the second statement is
+checked, which is the point: a missed site now aborts pytest collection at
+`tests/test_graph_simple.py` (the first file to import `agents.graph`) with a
+message naming both sets, instead of failing on the first live route as site
+8 did on 4 September.
+
+Four more places name the roster than the eight above, none of which the
+registry reads; see "Roster sites the registry does not read" under Hygiene.
+
 ### `hawkish_threshold` and `dovish_threshold` are now unreferenced
 
 `config.py:67-68`, in `MacroConfig`. Their only consumers were the Fed blocks
@@ -1063,8 +1094,10 @@ Recorded 7 September (third sitting), while adding `out_of_scope`. `IntentType` 
 `"intent": "a|b|c"` line in the same prompt's OUTPUT FORMAT; the same line in
 `REPAIR_PROMPT`; and the `if intent == ...` chain in `synthesizer_node`. Same
 shape as the agent roster. Adding `out_of_scope` touched four of the five in
-three commits. Registry treatment wanted eventually; not with the roster
-registry, which is its own commit.
+three commits. Registry treatment wanted eventually; the roster registry
+landed 7 September (fourth sitting) as its own commit and is the pattern:
+one mapping in `schemas.py`, the prompt rendered from it, the chain in
+`synthesizer_node` checked against it at import rather than derived.
 
 ### Router parameters are restated by hand in two more places
 
@@ -1154,6 +1187,52 @@ Recorded 7 September (third sitting). In the enum, absent from the prompt, refer
 nowhere (`_create_fallback_decision` uses `CLARIFICATION_NEEDED`). Deletion is
 safe. Not done alongside adding `out_of_scope`: two vocabulary changes, one
 case behind them.
+
+### Roster sites the registry does not read
+
+Recorded 7 September (fourth sitting), while building the registry. Each
+names agents by hand, none is read by anything live, and none was in the
+eight-site list:
+
+- `graph.py` `get_graph_mermaid()` - a ninth restatement, already stale (no
+  PortfolioAnalysisAgent). Only reader is `print_graph`, only under
+  `__main__`. Delete, or render from `AGENTS`; not worth rendering.
+- `router_prompts.py` `build_router_prompt(available_agents=...)` - the
+  docstring says "for dynamic routing"; the body never reads it.
+  `SmartRouter.route` and `route_sync` thread it through and `router_node`
+  never passes it. A dead parameter shaped like the registry's hook. Delete,
+  own commit.
+- `prompts.py` `get_agent_prompt` - a name-to-prompt map with a `RiskManager`
+  key (no `Agent` suffix, matches nothing the graph has ever named) and no
+  PortfolioAnalysisAgent. See the next entry: no live caller.
+- `observability/tracer.py` `ConsoleFormatter.COLORS` - a consumer, not a
+  roster; PortfolioAnalysisAgent simply has no colour. Cosmetic.
+
+The per-node strings (`mark_agent_complete(state, "MacroAgent", ...)`,
+`trace_agent("MacroAgent")`, the formatters' `sub_results.get("MacroAgent")`)
+are each agent's own identity, three or four times inside its own node, not
+the roster. The registry does not fix a typo there and was not meant to.
+
+### `get_agent_prompt`, `build_agent_prompt` and `build_system_prompt` have no caller
+
+Recorded 7 September (fourth sitting). `prompts.py`: `get_agent_prompt` is
+read only by `build_agent_prompt`, which nothing calls. `build_system_prompt`
+is a separate function - it does not call `get_agent_prompt` - exported from
+`agents/__init__.py` and also called by nothing. Each agent inlines its own
+prompt in its `get_system_prompt`, and nothing outside `agents/__init__.py`
+imports `prompts.py` - the `*_AGENT_PROMPT` constants are re-exported and
+otherwise unread. Three dead functions, a stale map and a dead module;
+deletion is safe and is its own commit, after a grep for every name the
+`__init__` re-exports.
+
+### `_validate_decision`'s agent check is unreachable
+
+Recorded 7 September (fourth sitting). `smart_router.py` `_validate_decision`
+builds `valid_agents` from `AgentName` and errors on a task naming anything
+else. It cannot fire: `AgentTask.agent` and `RouterDecision.execution_order`
+are typed against `AgentName`, so Pydantic has already rejected the whole
+response before this runs. Harmless, but a check that cannot fail is a check
+nobody will notice going wrong. Delete with the next `smart_router.py` change.
 
 ### `graph.py` carries dead duplicates of the state helpers
 
