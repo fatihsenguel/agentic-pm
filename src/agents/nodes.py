@@ -1436,6 +1436,8 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             lines.extend(_format_analysis_response(decision, sub_results))
         elif intent == "risk_analysis":
             lines.extend(_format_risk_response(sub_results))
+        elif intent == "out_of_scope":
+            lines.extend(_format_out_of_scope_response())
         elif intent == "combined":
             # Combined: show all relevant results
             if "MacroAgent" in sub_results:
@@ -1455,6 +1457,29 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
         
     except Exception as e:
         return set_final_response(state, f"Error synthesizing response: {str(e)}")
+
+
+# The scope boundary as benchmark.md Part 2 draws it today: security selection
+# is out, portfolio mechanics on what is already held are in. Fixed text, not
+# model output, so the refusal cannot grow a recommendation. Its eventual home
+# is a clause in the IPS, cited like any other; until the IPS lands it lives
+# here. tests/benchmark/run_cases.py asserts on the first sentence.
+OUT_OF_SCOPE_RESPONSE = [
+    "🚫 **OUT OF SCOPE**",
+    "",
+    "This asks for something outside what this system does.",
+    "",
+    "It answers questions about the portfolio you already hold - allocation, "
+    "P&L per position, volatility - and checks them against your investment "
+    "policy. It does not screen, pick, or say whether to buy or sell an "
+    "instrument, forecast prices or returns, assess tax, or place orders. "
+    "No recommendation is given here.",
+]
+
+
+def _format_out_of_scope_response() -> List[str]:
+    """Out-of-scope request: nothing ran, so there is nothing to format."""
+    return list(OUT_OF_SCOPE_RESPONSE)
 
 
 def _format_optimization_response(sub_results: Dict) -> List[str]:
