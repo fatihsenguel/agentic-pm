@@ -683,12 +683,13 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
 
     Reads only `shared_data` - no database, no provider calls. DataAgent fetches;
     this agent computes; the synthesizer formats. Publishes both the asset-class
-    and sector breakdowns and the P&L of every position, because 1.1, 1.4 and
-    1.2 each need a different one and choosing between computed figures is
-    selection rather than computation. The router's `measure` says which was
-    asked for; the synthesizer reads it, this node does not.
+    and sector breakdowns, the P&L of every position, and portfolio
+    volatility, because 1.1, 1.4, 1.2 and 1.3 each need a different one and
+    choosing between computed figures is selection rather than computation.
+    The router's `measure` says which was asked for; the synthesizer reads it,
+    this node does not.
 
-    Reference: expected_values.md Parts 1-3, decisions D1-D4.
+    Reference: expected_values.md Parts 1-4, decisions D1-D8.
     """
     tracer = get_tracer()
     agent_ctx = None
@@ -808,6 +809,43 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
                 f"No as-of date for priced holdings: {sorted(undated)}.\n"
                 "Every P&L figure must state its date (benchmark.md Part 3b)."
             )
+        # Portfolio volatility (expected_values.md Part 4, D7): market-value
+        # weights of the invested assets, cash excluded, against the
+        # covariance matrix DataAgent published. Every input is read from
+        # shared_data and checked for presence: a missing matrix or window
+        # cannot be defaulted into a figure that still states its basis.
+        cov_matrix = shared.get("covariance_matrix")
+        if not cov_matrix:
+            raise DataCalculationError(
+                "No covariance_matrix in shared_data.\n"
+                "DataAgent publishes it for up to ten tickers; see "
+                "CovarianceResult.to_dict. Portfolio volatility cannot be "
+                "computed without it."
+            )
+        window = shared.get("price_window")
+        if not window:
+            raise DataCalculationError(
+                "No price_window in shared_data.\n"
+                "A volatility figure must state the window it was computed "
+                "over (benchmark 1.3: basis of calculation traceable)."
+            )
+
+        from portfolio_tool.quant.risk_metrics import portfolio_volatility_by_ticker
+
+        invested = by_class.invested_value
+        weights = {p.ticker: p.market_value / invested for p in pnl.values()}
+        vol = portfolio_volatility_by_ticker(weights, cov_matrix)
+
+        portfolio_volatility_summary = {
+            "annualised": vol,
+            "weights_basis": "market value of invested assets, cash excluded",
+            "weights": {t: round(w, 6) for t, w in weights.items()},
+            "weights_as_of": as_of_dates[stalest],
+            "window": window,
+            "covariance_method": shared.get("covariance_method"),
+            "annualisation": config.data.trading_days_per_year,
+        }
+
         position_pnl_summary = {
             t: {
                 "quantity": p.quantity,
@@ -848,12 +886,14 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
         for line in by_class.lines:
             print(f"    {line.label:<16} {line.pct_of_denominator:>7.2%}")
         print(f"  Position P&L computed for {len(pnl)} positions")
+        print(f"  Portfolio volatility: {vol:.4%} over {window['closes']} closes")
 
         result = {
             "success": True,
             "agent_name": "PortfolioAnalysisAgent",
             "allocation": allocation_summary,
             "position_pnl": position_pnl_summary,
+            "portfolio_volatility": portfolio_volatility_summary,
         }
 
         return {
@@ -862,6 +902,7 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
                 **shared,
                 "allocation": allocation_summary,
                 "position_pnl": position_pnl_summary,
+                "portfolio_volatility": portfolio_volatility_summary,
             },
         }
 
