@@ -1421,6 +1421,28 @@ wording, "(active portfolio holding X)" annotation as the existing
 examples use. Prediction: "gain today" gains PortfolioAnalysisAgent;
 "too big" holds; eleven hold.
 
+**Third attempt: wrong on both lines, 8 September.** The few-shot
+("Is NEE up or down?", 31ce272) sent "How much did AAPL gain today?" back
+to `out_of_scope`, and moved "Is my AAPL position too big?" - the line
+predicted to hold - to `clarification_needed`. Both runs agreed; the
+eleven old lines held. Pinned as it stands, and kept rather than reverted:
+a refusal is an honest failure, and clarification on "too big" is
+defensible while there is no policy to judge size against (the rule says
+ambiguity wins over refusal). Attempt 2's state - a price fetch answering a
+position question - was the worse of the three.
+
+**Score for the sitting: three prompt edits, six line predictions, six
+wrong.** Stopped. The lesson is not a fourth wording: two hypotheses are
+tangled in the query and no edit so far could tell them apart. "Bare
+ticker" is one; "today" is the other - the router may be reading "gain
+today" as an intraday move, which the system does not compute, and
+refusing that. A golden query with the ticker and without the word ("How
+much has AAPL gained?") separates them at the cost of one line and no
+prompt change. Whichever it is, the next edit to this paragraph is the
+compliance one, and "too big" and "gain today" get their next prediction
+there, not before. The false refusal stays pinned meanwhile, like the
+macro line.
+
 
 Hypothesis, stated 7 September (third sitting), not believed. The PortfolioAnalysisAgent
 rule sat after EXAMPLES and before a CRITICAL RULES list numbered 1-5,
