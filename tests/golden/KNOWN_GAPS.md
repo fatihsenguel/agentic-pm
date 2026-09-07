@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 4 September 2026.
+Last updated 7 September 2026, second sitting.
 
 ---
 
