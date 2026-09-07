@@ -28,9 +28,9 @@ Q: What is my current allocation by asset class? | pid=1
 
 Q: What is my volatility over the past twelve months? | pid=1
   intent: risk_analysis
-  plan:   ['DataAgent']
+  plan:   ['DataAgent', 'PortfolioAnalysisAgent']
   period: 1Y
-  agents_run: ['DataAgent']
+  agents_run: ['DataAgent', 'PortfolioAnalysisAgent']
   errors: 0
 
 Q: Should I rebalance my portfolio? | pid=1
