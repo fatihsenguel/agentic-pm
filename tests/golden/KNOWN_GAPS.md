@@ -139,6 +139,31 @@ The log line and the raise that reported the gap are still in `nodes.py` under
 the message "Portfolio specified but holdings not loaded". They now fire only
 when a portfolio genuinely has none.
 
+## Position P&L — RESOLVED 7 September
+
+**Built. Do not rebuild this.** `position_pnl(holdings, prices)` in
+`quant/allocation.py`, beside `_market_values` and `_cost_bases` which are its
+inputs. Price return per D4. `tests/test_position_pnl.py` checks all nine rows
+of expected_values.md Part 1 and the total. PortfolioAnalysisAgent computes
+every position on every run and publishes `shared_data["position_pnl"]` keyed
+by ticker, each with its own `as_of` - one holding, one close, nothing to
+reduce. The synthesizer selects on `measure` and `tickers`; empty means all.
+`check_1_2` (JPM, exactly `["JPM"]`) and `check_3_3` (all nine, exactly `[]`)
+assert. 1.2 and 3.3 moved to PASS.
+
+**The handoff's instruction for this item was wrong on inspection.** It said
+to fix `get_portfolio_value` to raise before wiring anything to
+`get_portfolio_summary`. Neither had a caller outside `portfolio_manager.py`;
+the production flow is DataAgent -> shared_data -> the analysis node -> quant,
+where `_market_values` already raises. `get_portfolio_summary` carried its
+own inline P&L (a third copy of the formula, skipping unpriced holdings) and
+that block was deleted instead. `rebalance_tools.py:82,89` is a fourth copy,
+logged and untouched. `get_portfolio_value` is now uncalled; deleting it is
+its own decision.
+
+Not published: a portfolio-total P&L (Part 1's +110,200.50 / +38.73%). No
+case asks for it.
+
 ## The router overwrote `tickers` with the portfolio after the LLM call
 
 `smart_router.py` carried a "smart ticker merging" block that ran after the
