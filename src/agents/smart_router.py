@@ -188,22 +188,18 @@ class SmartRouter:
                 conversation_history=conversation_history,
                 include_examples=self.config.include_examples,
                 available_agents=available_agents,
-                # Tells the router the portfolio exists. It is not shown the
-                # members: told which symbols the portfolio holds, it copied
-                # them into parameters.tickers on every query, through two
-                # rewrites of the rules saying not to. Nothing in routing needs
-                # the list - the data layer loads holdings from the database,
-                # and the P&L formatter reports a named symbol that is not
-                # held. A filled tickers list means "these positions" and an
-                # empty one "every position", so a copied list is a wrong
-                # answer with a plausible face.
+                # Tells the router the portfolio exists, not to copy it: nothing
+                # downstream reads parameters.tickers when a portfolio is set
+                # except the position P&L formatter, where a filled list means
+                # "these positions" and an empty one means "every position".
                 portfolio_context=(
-                    f"The user has an active portfolio (id={portfolio_id}) with "
-                    f"{len(portfolio_tickers)} positions. 'My portfolio', 'my "
-                    f"holdings', 'my position(s)', 'my allocation', 'my risk' and "
-                    f"'my volatility' refer to it. You already have this data - "
-                    f"never ask the user to provide their holdings. Its symbols are "
-                    f"not listed here and must not be guessed."
+                    f"The user has an active portfolio (id={portfolio_id}) holding: "
+                    f"{', '.join(portfolio_tickers)}. 'My portfolio', 'my holdings', "
+                    f"'my position(s)', 'my allocation', 'my risk' and 'my volatility' "
+                    f"refer to it. You already have this data - never ask the user to "
+                    f"provide their holdings, and never copy these tickers into "
+                    f"parameters.tickers: leave tickers empty unless the user names "
+                    f"specific symbols in the message."
                 ) if portfolio_tickers else None
             )
             
