@@ -866,12 +866,19 @@ Same family as the fields that read as live and are not: the name says one thing
 at one call site and another at the other, and only the mapping in the node
 keeps it honest.
 
-### Router parameter ordering is nondeterministic
+### Router parameter ordering is nondeterministic — RESOLVED 7 September
 
-Across runs of the same query the router returns `tickers` in different orders.
-Functionally harmless — DataAgent uses its own order from the portfolio — but it
-is a second instance of the nondeterminism that the `period` leak caused, and
-`run_golden.py` does not print `tickers`, so it stays invisible.
+**The cause was code, not the model, and this entry blamed the wrong thing.**
+`smart_router.py` overwrote `parameters.tickers` after the LLM call with the
+portfolio's tickers, via `list(set(llm_tickers + portfolio_tickers))`, and a
+set has no order. Removed with the override itself - see "The router
+overwrote `tickers` with the portfolio" under RESOLVED. The router's own
+extraction is not known to be nondeterministic; nothing has measured it,
+because `run_golden.py` still does not print `tickers`.
+
+Kept because the wrong attribution sat here for three days while the actual
+line was greppable. An observed symptom in a router output is not evidence
+about the router until the code between the LLM and the state has been read.
 
 ---
 
