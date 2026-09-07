@@ -627,6 +627,72 @@ strategic asset allocation works. Drift must be measured against a fixed target.
 Correct fix: targets belong to the portfolio / IPS. See `ips_manager.py` on
 `wip/phase7-snapshot`. Resolve when Phase 7 is pulled forward.
 
+### `wip/phase7-snapshot` was read and rejected - DECIDED 7 September (fourth sitting)
+
+Every document said the IPS comes from this branch: handoff §2 and §7.2,
+benchmark.md Part 1, Part 3's Level 2 status note and Part 4 item 3, the
+roadmap's ordering principle and Phase 3, the rebalance entry below, and the
+runner's blocked-probe message. None of them had been checked against the
+branch. Its own commit message says "UNVERIFIED, do not build on this", and
+that is right for a stronger reason than staleness.
+
+What is there (`ips_manager.py` read in full, `compliance_agent.py`'s
+structure and `run_compliance_check`, `esg_screener.py` by name only):
+
+- A multi-client engine: `Client` and `ClientIPS` tables, `jurisdiction`,
+  `tax_status`, five risk profiles, an ESG exclusion table. benchmark.md
+  promises no multi-user operation and no case needs ESG.
+- Rules are database rows with a `constraint_name` label. No clause
+  identifier and no clause text, so 3.1 cannot cite and 3.4 cannot say
+  "nothing", which needs a closed, identifiable set of clauses.
+- Repair-instead-of-raise, six places seen: no client -> invented default
+  constraints and a compliance verdict against a policy nobody wrote;
+  unknown severity -> `HIGH`; missing tolerance -> `0.05`; unknown risk
+  profile -> `"moderate"`; empty portfolio -> `COMPLIANT`; policy numbers in
+  a `profiles` dict inside the manager.
+- A second arithmetic path: `_load_holdings` and `_get_current_price`
+  recompute the market values and weights PortfolioAnalysisAgent already
+  publishes, with no reference in expected_values.md.
+- It recommends: `_generate_recommendations` and `_breach_to_trade` produce
+  trades, the surface the third sitting cut and the thing 2.3 forbids.
+- Every import is `from Finance.Korrekte_Versionen.AGENTIC_FINANCE.src...`;
+  it needs `config.compliance` and three tables baseline-v1 does not have.
+
+Pulling it "one file at a time" would mean deleting all of the above and
+keeping three enum names. Decided instead:
+
+- The IPS is a prose document with numbered clauses, written by the owner;
+  `ips.toml` at the repo root is derived from it, one entry per clause with
+  the clause id, a type, parameters and the clause text so a citation is
+  the owner's words. Policy in config, not code and not the database.
+- The type vocabulary is closed and the loader raises on anything the
+  checker cannot check. Currency risk has no type on purpose; that is what
+  makes 3.4 pass on merit.
+- A pure `load_ips()` and `check(ips, allocation)` over the allocation
+  block PortfolioAnalysisAgent publishes to `shared_data` - no second
+  arithmetic path - returning per clause: id, observed, limit, status, and
+  for a breach the distance to the limit (2.3 is a condition, not a trade).
+  Denominator is D2's, total value including cash. Unit-tested against an
+  expected_values.md Part 5 computed by hand first.
+- The ComplianceAgent node last: reads `shared_data`, calls the checker,
+  publishes `shared_data["compliance"]`; the synthesizer formats and cites.
+  It enters `AGENTS` then, one line and one binding. `trace_tool` and
+  `log_delegation` are wired with it, for 2.1. 3.1 is the checker applied to
+  a hypothetical weight, not to holdings.
+- Order: Part 5 -> runner checks for 2.2, 2.3, 3.1, 3.4 (structure: a
+  clause id is cited and exists in the loaded file, status is a breach or
+  refusal, no trade line) -> `ips.toml` and loader -> checker -> node ->
+  prompt and route, golden twice -> formatter. Each its own commit. The
+  runner is expected to move at the node commit and not before.
+
+Open at the time of writing, decided before any TOML: whether a clause the
+checker cannot check is still citable (a type with no checker, or a
+checker-only file); instrument limit versus issuer limit as separate types
+(SPY is 500 issuers) and what each needs from the allocation block; which
+agent is the "Risk" agent 2.1 names on this branch.
+
+The branch stays where it is. Nothing on it is scheduled.
+
 ### RiskManagerAgent is not a risk agent - it is an unused second orchestrator
 
 `src/agents/risk_manager_agent.py` exists but has no graph node, no routing entry,
