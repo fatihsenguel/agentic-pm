@@ -510,7 +510,16 @@ the project's principles name. An agent computes; the synthesizer formats.
 **No longer blocked, 4 September.** The holdings gap it waited on is resolved and
 PortfolioAnalysisAgent publishes the allocation, so every number 1.1 and 1.4 need
 already exists. This entry stays OPEN — the branches are unwritten and they are
-the next commit. Note the formatters read `sub_results["PortfolioAnalysisAgent"]`,
+the next commit.
+
+**Branches written, 7 September.** `data_fetch` and `risk_analysis` with
+PortfolioAnalysisAgent in `sub_results` go to `_format_analysis_response`,
+which selects on the router's `measure`: allocation (narrowed by `group_by`),
+position P&L (selected by `tickers`), portfolio volatility. A plan naming the
+agent with no `measure` raises rather than guessing a formatter. The stub
+below is reached now only by raw price fetches with no analysis agent, which
+is the "Get me the last 1 year of prices" shape and still answers nothing
+with figures. Entry stays OPEN for that case alone. Note the formatters read `sub_results["PortfolioAnalysisAgent"]`,
 not `shared_data`: `mark_agent_complete` stores the node's result dict verbatim,
 that result already carries the same allocation object, and every existing
 formatter takes `sub_results`. `shared_data` is the channel between agents; it is
