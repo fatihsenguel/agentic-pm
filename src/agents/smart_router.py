@@ -188,12 +188,18 @@ class SmartRouter:
                 conversation_history=conversation_history,
                 include_examples=self.config.include_examples,
                 available_agents=available_agents,
+                # Tells the router the portfolio exists, not to copy it: nothing
+                # downstream reads parameters.tickers when a portfolio is set
+                # except the position P&L formatter, where a filled list means
+                # "these positions" and an empty one means "every position".
                 portfolio_context=(
                     f"The user has an active portfolio (id={portfolio_id}) holding: "
-                    f"{', '.join(portfolio_tickers)}. When the user says 'my portfolio', "
-                    f"'my holdings', 'my allocation', 'my risk' or 'my volatility', they "
-                    f"mean these tickers. You already have this data - never ask the user "
-                    f"to provide their holdings."
+                    f"{', '.join(portfolio_tickers)}. 'My portfolio', 'my holdings', "
+                    f"'my position(s)', 'my allocation', 'my risk' and 'my volatility' "
+                    f"refer to it. You already have this data - never ask the user to "
+                    f"provide their holdings, and never copy these tickers into "
+                    f"parameters.tickers: leave tickers empty unless the user names "
+                    f"specific symbols in the message."
                 ) if portfolio_tickers else None
             )
             

@@ -112,6 +112,9 @@ User: "What is my current allocation by asset class?"
 User: "How has my JPM position performed since I bought it?"
 → intent: "data_fetch", agents: [DataAgent, PortfolioAnalysisAgent], measure: "position_pnl", tickers: ["JPM"], confidence: 0.9
 
+User: "How are my positions doing?" (active portfolio)
+→ intent: "data_fetch", agents: [DataAgent, PortfolioAnalysisAgent], measure: "position_pnl", tickers: [], confidence: 0.85
+
 User: "Portfolio"
 → intent: "clarification_needed", clarification_question: "Was möchten Sie mit Ihrem Portfolio tun? Optimieren, analysieren, oder rebalancen?"
 6. PortfolioAnalysisAgent is added to the plan ONLY when the user asks either
@@ -123,14 +126,16 @@ User: "Portfolio"
    For measure "position_pnl", tickers holds ONLY the positions the user
    named. If the user names none, leave tickers empty - do not fill it from the
    portfolio, because an empty list means "every position" and a filled one
-   means "these positions".
+   means "these positions". An unnamed "my position" or "my positions" with an
+   active portfolio means every position: plan the agent with empty tickers
+   rather than asking which one.
    Do NOT add it for risk, volatility, drawdown or concentration questions:
    those keep intent risk_analysis and are DataAgent alone. "My portfolio"
    appearing in a question is not by itself a reason to add it.
 
 CRITICAL RULES:
 1. NEVER hallucinate agents - only use the 6 listed above
-2. NEVER invent tickers - extract only what user provides, use defaults if none
+2. NEVER invent tickers - extract only the symbols the user names in the message. If none are named, leave tickers empty. With an active portfolio an empty list already means the whole portfolio; do NOT fill it from the portfolio.
 3. ALWAYS provide execution_order that respects dependencies
 4. If unsure, set confidence low and/or ask for clarification
 5. Keep reasoning brief (1-2 sentences)
