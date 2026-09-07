@@ -21,7 +21,7 @@ AVAILABLE AGENTS:
 3. OptimizationAgent - Runs portfolio optimization (Mean-Variance, Risk Parity, etc.)
 4. RebalanceAgent - Calculates drift, generates trade lists for rebalancing
 5. BacktestAgent - Runs historical simulations of portfolio strategies
-6. PortfolioAnalysisAgent - Computes allocation of an EXISTING portfolio by asset class and by sector. Needs DataAgent first (holdings, prices, cash).
+6. PortfolioAnalysisAgent - Computes figures about an EXISTING portfolio's holdings: allocation by asset class and by sector, and P&L per position since purchase. Needs DataAgent first (holdings, prices, cash).
 
 INTENT TYPES:
 - optimization: User wants to create or optimize a portfolio
@@ -61,7 +61,9 @@ You MUST respond with valid JSON matching this schema:
     "max_volatility": null,
     "target_return": null,
     "portfolio_value": null,
-    "rebalance_threshold": null
+    "rebalance_threshold": null,
+    "measure": null,
+    "group_by": null
   },
   "is_multi_step": false,
   "requires_confirmation": false,
@@ -74,6 +76,8 @@ EXTRACTION RULES:
 - Periods: MUST be exactly one of: "1Y", "2Y", "3Y", "5Y", "10Y". Map natural language to the nearest valid value (e.g. "twelve months"/"past year" -> "1Y", "since 2021" -> "5Y"). Use null if the user gave no timeframe - do not guess.
 - Volatility: Extract percentages mentioned with "volatility" (12% vol → 0.12)
 - Portfolio Value: Extract amounts (€100,000 → 100000)
+- Measure: set ONLY when PortfolioAnalysisAgent is in the plan. "allocation" for how the portfolio is divided up or which positions sit in a bucket; "position_pnl" for how a position or the holdings have performed, gained, lost or done since purchase. Otherwise null.
+- Group by: with measure "allocation", "asset_class" or "sector" when the user names one; null when they do not. Always null for any other measure.
 
 CONFIDENCE GUIDELINES:
 - 0.9+: Clear, unambiguous request with all info provided
@@ -103,14 +107,23 @@ User: "What is the risk of my portfolio?"
 → intent: "risk_analysis", agents: [DataAgent], confidence: 0.9
 
 User: "What is my current allocation by asset class?"
-→ intent: "data_fetch", agents: [DataAgent, PortfolioAnalysisAgent], confidence: 0.9
+→ intent: "data_fetch", agents: [DataAgent, PortfolioAnalysisAgent], measure: "allocation", group_by: "asset_class", confidence: 0.9
+
+User: "How has my JPM position performed since I bought it?"
+→ intent: "data_fetch", agents: [DataAgent, PortfolioAnalysisAgent], measure: "position_pnl", tickers: ["JPM"], confidence: 0.9
 
 User: "Portfolio"
 → intent: "clarification_needed", clarification_question: "Was möchten Sie mit Ihrem Portfolio tun? Optimieren, analysieren, oder rebalancen?"
-6. PortfolioAnalysisAgent is added to the plan ONLY when the user asks how an
-   existing portfolio is divided up - its allocation, breakdown or composition
-   by asset class, sector or region, or which positions sit in one of those
-   buckets. Add it after DataAgent.
+6. PortfolioAnalysisAgent is added to the plan ONLY when the user asks either
+   how an existing portfolio is divided up - its allocation, breakdown or
+   composition by asset class, sector or region, or which positions sit in one
+   of those buckets (measure "allocation") - or how a position or the holdings
+   have performed since purchase (measure "position_pnl"). Add it after
+   DataAgent and set measure.
+   For measure "position_pnl", tickers holds ONLY the positions the user
+   named. If the user names none, leave tickers empty - do not fill it from the
+   portfolio, because an empty list means "every position" and a filled one
+   means "these positions".
    Do NOT add it for risk, volatility, drawdown or concentration questions:
    those keep intent risk_analysis and are DataAgent alone. "My portfolio"
    appearing in a question is not by itself a reason to add it.

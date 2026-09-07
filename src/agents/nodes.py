@@ -347,15 +347,11 @@ def _decision_to_dict(decision) -> Dict[str, Any]:
             }
             for t in decision.agents_needed
         ],
-        "parameters": {
-            "tickers": decision.parameters.tickers,
-            "period": decision.parameters.period,
-            "max_volatility": decision.parameters.max_volatility,
-            "target_return": decision.parameters.target_return,
-            "portfolio_value": decision.parameters.portfolio_value,
-            "rebalance_threshold": decision.parameters.rebalance_threshold,
-            "portfolio_id": decision.parameters.portfolio_id,
-        },
+        # Every extracted field, from the schema. A hand-picked key list here
+        # was a second statement of ExtractedParameters and dropped any field
+        # it did not name - a router output that validated and then vanished
+        # before any node could read it.
+        "parameters": decision.parameters.model_dump(),
         "execution_order": decision.execution_order,
     }
 

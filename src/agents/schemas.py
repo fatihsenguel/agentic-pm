@@ -69,6 +69,16 @@ class ExtractedParameters(BaseModel):
     rebalance_threshold: Optional[float] = Field(default=None, ge=0.01, le=0.5)
     portfolio_id: Optional[int] = Field(default=None, description="Portfolio ID if analyzing a saved portfolio")
 
+    # Which figure a portfolio-analysis question asks for. Each value is the
+    # key PortfolioAnalysisAgent publishes it under in shared_data, so the
+    # router's vocabulary, the synthesizer's dispatch and the benchmark
+    # runner's probes share one word. A value with no computation behind it
+    # does not belong here - the schema must not be wider than the code.
+    measure: Optional[Literal["allocation", "position_pnl"]] = Field(default=None)
+    # How to break an allocation down. Only dimensions that are computed;
+    # industry and country exist on Asset but nothing groups by them yet.
+    group_by: Optional[Literal["asset_class", "sector"]] = Field(default=None)
+
     @field_validator('tickers')
     @classmethod
     def validate_tickers(cls, v: List[str]) -> List[str]:
