@@ -130,9 +130,9 @@ def _states_as_of(state):
     Allocation-specific, deliberately. It reads
     `shared_data["allocation"]["as_of"]`, and every case calling it (1.1, 1.4)
     produces an allocation. P&L carries its as-of per position under
-    `shared_data["position_pnl"]` and has `_states_pnl_as_of` below; a
-    volatility answer will want a third. Searching for a date wherever one
-    might live is what the regex version did.
+    `shared_data["position_pnl"]` and has `_states_pnl_as_of` below; portfolio
+    volatility carries a window and a weights date and `check_1_3` reads both.
+    Searching for a date wherever one might live is what the regex version did.
     """
     allocation = _shared(state).get("allocation") or {}
     as_of = allocation.get("as_of") or {}
@@ -236,6 +236,71 @@ def check_1_1(state):
 
     fails += _prose_carries(state, lines, "pct_of_denominator")
     fails += _states_as_of(state)
+    return fails
+
+
+def check_1_3(state):
+    """Portfolio volatility over twelve months. Passes when "basis of
+    calculation traceable": every element of the basis is published as data
+    and reaches the prose. The figure itself moves with prices and is pinned
+    by tests/test_portfolio_volatility.py over the committed closes; here it
+    is checked as an invariant against the per-holding figures Part 4 names.
+    """
+    fails = _ran_clean(state)
+    params = (state.get("router_decision") or {}).get("parameters") or {}
+    if params.get("measure") != "portfolio_volatility":
+        fails.append(f"measure is {params.get('measure')!r}, not 'portfolio_volatility'")
+    if params.get("period") != "1Y":
+        fails.append(f"period is {params.get('period')!r}; 'twelve months' is 1Y")
+
+    pv = _shared(state).get("portfolio_volatility") or {}
+    if not pv:
+        return fails + ["no portfolio_volatility in shared_data"]
+
+    vol = pv.get("annualised")
+    if not isinstance(vol, (int, float)) or not 0 < vol < 1:
+        fails.append(f"annualised volatility {vol!r} is not a fraction in (0, 1)")
+
+    window = pv.get("window") or {}
+    for key in ("start", "end"):
+        if not AS_OF.fullmatch(str(window.get(key, ""))):
+            fails.append(f"window.{key} is not a YYYY-MM-DD date: {window.get(key)!r}")
+    if window.get("closes") != 252:
+        fails.append(f"window.closes is {window.get('closes')}, not 252 (D8: 1Y is 252 closes)")
+
+    weights = pv.get("weights") or {}
+    if set(weights) != TICKERS:
+        fails.append(f"weights cover {sorted(weights)}, not the nine positions")
+    elif abs(sum(weights.values()) - 1.0) > 1e-4:
+        fails.append(f"weights sum to {sum(weights.values())}, not 1 (rounded to 6dp)")
+
+    # Part 4's sanity check as an invariant: diversification puts the
+    # portfolio figure well below the weighted average of the single names.
+    vols = _shared(state).get("volatilities") or {}
+    if weights and vols and set(weights) <= set(vols):
+        weighted_average = sum(weights[t] * vols[t] for t in weights)
+        if isinstance(vol, (int, float)) and vol > 0.8 * weighted_average:
+            fails.append(f"portfolio volatility {vol:.4f} is not below the "
+                         f"weighted average of single-name vols {weighted_average:.4f}; "
+                         "an average is not a portfolio figure (Part 4)")
+
+    answer = _answer(state)
+    if isinstance(vol, (int, float)) and f"{vol:.2%}" not in answer:
+        fails.append(f"volatility {vol:.2%} is in shared_data but never reaches the answer")
+    for label, value in (("window.start", window.get("start")),
+                         ("window.end", window.get("end")),
+                         ("window.closes", window.get("closes")),
+                         ("annualisation", pv.get("annualisation")),
+                         ("covariance_method", pv.get("covariance_method"))):
+        if value is not None and str(value) not in answer:
+            fails.append(f"{label} {value} is in shared_data but never reaches the answer")
+
+    stated = pv.get("weights_as_of")
+    if not stated:
+        fails.append("no weights_as_of in shared_data['portfolio_volatility'] "
+                     "(benchmark.md Part 3b)")
+    else:
+        fails += _date_reaches_answer(state, stated, "portfolio_volatility.weights_as_of")
     return fails
 
 
@@ -423,7 +488,7 @@ CASES = [
     ("1.2", "How has my JPM position performed since I bought it?", BENCHMARK_PORTFOLIO,
      blocked_on_pnl, check_1_2),
     ("1.3", "What is my volatility over the past twelve months?", BENCHMARK_PORTFOLIO,
-     blocked_on_portfolio_vol, None),
+     blocked_on_portfolio_vol, check_1_3),
     ("1.4", "What positions do I hold in the Technology sector?", BENCHMARK_PORTFOLIO,
      None, check_1_4),
     ("2.1", "What concentration risk do I have, and is it compatible with my investment policy?",
