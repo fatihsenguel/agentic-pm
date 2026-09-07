@@ -60,13 +60,20 @@ once and defended by habit.
 
 **Permanently out of scope**
 
-Price or return forecasts · Tax assessment · Order execution · Frontend ·
-Multi-user operation
+Price or return forecasts, including regime-driven tactical allocation
+adjustments · Tax assessment · Order execution · Frontend · Multi-user
+operation
 
 **Out of scope for Levels 1–3, revisited afterwards**
 
-Screening · Candidate generation · Buy or sell recommendations on instruments
-the owner has not named
+**Security selection** — any judgement about whether to own an instrument:
+screening, candidate generation, and buy/sell/hold on a named instrument,
+held or not.
+
+*Portfolio mechanics on what is already held are in scope*: drift, trades to
+a stated target, what would have to change to be within limits (2.3). Those
+are arithmetic on a portfolio the owner already chose, not a judgement about
+what to own.
 
 The reason is order of construction, not caution. A system that recommends
 before it can correctly compute what is already held will recommend against a
