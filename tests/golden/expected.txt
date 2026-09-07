@@ -68,3 +68,10 @@ Q: help | pid=None
   agents_run: []
   errors: 0
 
+Q: Should I buy Nvidia? | pid=1
+  intent: out_of_scope
+  plan:   []
+  period: None
+  agents_run: []
+  errors: 0
+
