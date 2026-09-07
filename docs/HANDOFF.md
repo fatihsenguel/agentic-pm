@@ -1,14 +1,16 @@
 # AGENTIC_FINANCE — Session Handoff
 
-**Session date:** 7 September 2026 (second sitting)
+**Session date:** 7 September 2026 (third sitting)
 **Branch:** `baseline-v1`
-**State:** Green. 127 tests passing, golden set clean on both runs after the last prompt change, `expected.txt` moved once deliberately (the volatility query now plans PortfolioAnalysisAgent). For the benchmark count, run `python tests/benchmark/run_cases.py` — it is not quoted here. For the commit count, `git rev-list --count 270a916..HEAD`; the previous version of this file quoted one and it was off by one.
+**State:** Green. 132 tests passing, golden set clean on two runs after the last prompt change, `expected.txt` moved once deliberately (an eleventh query, benchmark 3.2's prompt, routes `out_of_scope`). For the benchmark count, run `python tests/benchmark/run_cases.py` — it is not quoted here. For the commit count, `git rev-list --count 270a916..HEAD`.
 
 Written for an LLM assistant picking up cold in a new conversation.
 
 **Regenerate this document at the end of each session rather than patching it.**
-Generated context files rot faster than the code they describe. The previous
-version of this file carried four wrong figures by the end of one session.
+Generated context files rot faster than the code they describe. The version
+this replaces was written at the end of the second sitting and by the start of
+the third asserted that a tool was a live path without a grep — the rule
+against doing that is in its own §8.
 
 ---
 
@@ -16,16 +18,16 @@ version of this file carried four wrong figures by the end of one session.
 
 | File | What it is |
 |---|---|
-| `docs/benchmark.md` | **The definition of done.** 12 test cases across 3 levels, plus scope boundaries and the output contract. Part 3's Level 1 status note is now stale — 1.1 and 1.4 compute correctly; they fail on the output contract. |
+| `docs/benchmark.md` | **The definition of done.** 12 test cases across 3 levels, plus scope boundaries and the output contract. Part 2's Levels 1–3 boundary is now drawn at security selection versus portfolio mechanics (7 September, third sitting). |
 | `tests/benchmark/run_cases.py` | **The scoreboard.** Run it before believing anything about what works. Its docstring states what it asserts and what it deliberately does not. |
-| `tests/golden/KNOWN_GAPS.md` | Open decisions, resolved decisions, and why obvious fixes are wrong. Long, and the most useful file in the repo. Read the RESOLVED entries for P&L, portfolio volatility and the router override before touching any of them. |
+| `tests/golden/KNOWN_GAPS.md` | Open decisions, resolved decisions, and why obvious fixes are wrong. Long, and the most useful file in the repo. Read the RESOLVED entries for P&L, portfolio volatility and the router override, and the third-sitting entries on the `out_of_scope` prompt and the CLI blind spot, before touching any of them. |
 | `tests/golden/expected_values.md` | Hand-computed expected answers for portfolio 3, plus eight decisions (D1–D8). `expected_values.xlsx` holds the formulas; the 252 closes are also committed as `tests/golden/benchmark_closes.csv`, which two pytest files read. |
-| `docs/PM-Assistant — Roadmap.md` | Phased plan. Carries a header listing superseded points. Its ordering is now overridden by §7 below, which follows the counter. |
+| `docs/PM-Assistant — Roadmap.md` | Phased plan. Carries a header listing superseded points. Its ordering is overridden by §7 below, which follows the counter. |
 
 **Do not update `expected_values` to match code output.** If they disagree, one
 of the two is wrong and that gets resolved deliberately. The live volatility
-figure (10.40% on 7 September) differs from Part 4's 10.29% because the window
-has moved two closes; that is the pin working, not a disagreement.
+figure differs from Part 4's 10.29% because the window has moved; that is the
+pin working, not a disagreement.
 
 ---
 
@@ -98,15 +100,21 @@ python tests/benchmark/run_cases.py
 python src/agents/cli.py --portfolio 3
 ```
 
-**Caveat on "127 passing":** `test_portfolio_integration.py` returns booleans
+**Caveat on "132 passing":** `test_portfolio_integration.py` returns booleans
 instead of asserting, so its seven blocks pass unconditionally, and TEST 7
-returns `True` in both branches. 127 means 127 collected and none errored, not
-127 things verified. The ones that do assert against hand-computed figures are
+returns `True` in both branches. 132 means 132 collected and none errored, not
+132 things verified. The ones that assert against hand-computed figures are
 `test_allocation.py` (Parts 2–3), `test_position_pnl.py` (Part 1) and
-`test_portfolio_volatility.py` (Part 4, over the committed closes, via both
-numpy and the system's own `CovarianceEstimator`). Those three are the only
-places exact figures are checked; the runner asserts structure, static
+`test_portfolio_volatility.py` (Part 4). `test_synthesizer_formatters.py`
+(new, third sitting) is the only pytest that touches the synthesizer, and it
+touches two formatters, not the node. The runner asserts structure, static
 figures and invariants, deliberately.
+
+**The golden set has eleven queries.** The eleventh is benchmark 3.2's prompt
+against portfolio 1 and prints `intent: out_of_scope`, `plan: []`. The macro
+query has printed `errors: 1` since the first baseline; that is a pinned
+failure, not a pinned success (KNOWN_GAPS, "The macro path has not produced an
+answer").
 
 ### Branches and tags
 
@@ -180,89 +188,78 @@ silently give Haiku if selected. Never guess a model id; check
 
 ## 4. What this session did
 
-**Second sitting of 7 September, from `270a916`.** Two capabilities, one
-structural change to the router's output, one code fix that two prompt
-patches had been standing in for, and the document sweep. All four loops
-green at the end; the runner moved from 2/12 to 5/12 and Level 1 is complete.
+**Third sitting of 7 September, from `b732c25`.** One capability (benchmark
+3.2), one document boundary redrawn, three cuts to a recommendation surface,
+one formatter test, and the sweep. All four loops green at the end; the runner
+moved from 5/12 to 6/12.
 
-**Position P&L, built (roadmap item 3; benchmark 1.2, 3.3).** `position_pnl`
-in `quant/allocation.py`, checked against Part 1. PortfolioAnalysisAgent
-computes every position on every run and publishes
-`shared_data["position_pnl"]` per ticker with a per-position `as_of`. The
-handoff's instruction to go through `get_portfolio_summary` was wrong —
-nothing called it — and its inline P&L was deleted instead.
+**`out_of_scope` intent, built (benchmark 3.2).** `IntentType.OUT_OF_SCOPE`
+with a validator that raises on a non-empty plan; the synthesizer emits a fixed
+`OUT_OF_SCOPE_RESPONSE` for it; the router prompt defines it against
+`clarification_needed` with one German refusal example on a different
+instrument. No graph change: an empty plan already flows Router → synthesizer
+→ END. `check_3_2` asserts intent, empty plan, no agents run, and that the
+boundary sentence reaches the answer, and was strengthened *before* the
+capability so it could be seen failing for the right reasons.
 
-**Portfolio volatility, built (roadmap item 4; benchmark 1.3).**
-`portfolio_volatility` in `quant/risk_metrics.py`, the optimiser delegating to
-it, the 252 closes committed as a fixture, and the node publishing the figure
-with its whole basis: window (DataAgent now publishes `price_window` as data),
-weights and their date, covariance method, annualisation. The system's own
-covariance estimator reproduces the reference on the fixture, so the live
-matrix's conventions are tested rather than assumed.
+**The first prompt wording moved a golden line, deterministically.** "Should
+I rebalance my portfolio?" went to `clarification_needed` on both runs under
+the first definition ("rebalancing trades to a target" plus "ambiguity wins
+over refusal"). Fixed in its own commit by naming the query as in-scope
+mechanics. The prediction for that patch was "ten existing lines unchanged";
+it was wrong. Record in KNOWN_GAPS.
 
-**`measure` and `group_by` on `ExtractedParameters`.** The router now says
-which figure a question asks for; the synthesizer dispatches on it; the node
-computes everything regardless. This replaced the "sector on
-ExtractedParameters" item with the shape the KNOWN_GAPS entry argued for, and
-reserved a third axis (`filter`) without building it. Decision record is in
-KNOWN_GAPS under the old `group_by` entry.
+**benchmark.md Part 2 redrawn.** "Buy or sell recommendations on instruments
+the owner has not named" contradicted 3.2 (Nvidia is named) and, corrected to
+"held or not", would have put 2.3's rebalance-to-compliance out of scope. The
+line is now security selection (out) versus portfolio mechanics on what is
+held (in). Regime-driven tactical adjustments were added to the permanent
+forecast bullet.
 
-**The router was overwriting `tickers` with the portfolio after the LLM
-call.** A block in `smart_router.py`, no consumer until P&L read the field.
-Found only after two prompt changes failed to fix it and one of them regressed
-routing and was reverted. The record of those attempts is in KNOWN_GAPS and is
-the most useful thing this sitting produced: grep for writers, not just readers.
+**The recommendation surface cut, in three commits after 3.2.** The macro
+formatter's `**Recommendation:** Adjust equity by ±X%` line; the rebalance
+formatter's Tactical Signal line; the "mehr in Bonds" example in all three
+places it appeared in the router prompt. `generate_taa_signal_tool` was not
+the live path — it is registered in a tools list nobody calls — and the
+handoff that said it was is the one this replaces.
 
-**Two runner checks were wrong or blind.** `check_3_3` passed once with a
-padded `tickers`; it now requires the list empty. The 1.2 check was right from
-the start and is what caught the override.
+**Rule 6 of the router prompt moved** from after EXAMPLES, where it sat
+numbered 6 with no list around it, to under CRITICAL RULES. Zero golden diff,
+which is the expected result and says nothing about the hypothesis that its
+placement was why it lost to rule 2 (KNOWN_GAPS).
 
-**Document corrections:** D8's stale "the code does not compute this"; the
-handoff's `get_portfolio_value` instruction; the roadmap's Phase 1 status;
-benchmark.md's Level 1 status note; KNOWN_GAPS's wrong cause for the
-nondeterministic ticker order, and its low count of inline volatility
-implementations.
-
----
+**Document corrections:** handoff §7.1 (no terminal branch needed; wrong tool
+named); the KNOWN_GAPS TAA entry (rewritten around `equity_adjustment`); the
+hot-potato entry's heading (67KB was the January figure; 162KB is current);
+the date on every entry written this sitting, which was first recorded as
+8 September.
 
 ## 5. Decisions taken this session
 
-**`measure` values are `shared_data` keys.** `allocation`, `position_pnl`,
-`portfolio_volatility` — each is the key the node publishes under, so the
-router's vocabulary, the synthesizer's dispatch and the runner's probes share
-one word. A value with no computation behind it does not go in the Literal.
+**`out_of_scope` plans nothing and the synthesizer writes the refusal.** The
+text is a constant next to the formatter, not config: it is prose about the
+boundary, not a parameter anyone tunes. Its eventual home is a clause in the
+IPS, cited like any other; coupling 3.2 to the IPS now was rejected as scope
+creep. No `scope_reason` field: nothing consumes it.
 
-**The node computes everything; `measure` is a synthesizer signal.** Both
-allocations, all nine P&Ls and the portfolio volatility are published on every
-run. Selection is the synthesizer's job. `shared_data` grows by summary data
-only; the hot-potato violation is `price_data_json` and nothing added today.
+**Few-shots may not quote benchmark prompts verbatim.** A benchmark prompt in
+the golden set is a test; in a few-shot it is the router passing by
+recognition. The two existing verbatim examples (1.1, 1.3) get replaced in
+their own commit, later. The `out_of_scope` fix does quote a *golden* query
+verbatim inside the definition text — same problem one level down, left in
+because it is the phrasing that flipped, recorded.
 
-**`group_by` narrows rendering, not computation.** Both breakdowns are always
-computed; the one asked for is printed. `industry` and `country` stay out of
-the enum until something groups by them.
+**`IntentType.UNKNOWN` stays for now.** No reader; safe to delete; not
+deleted alongside adding an intent, because that is two vocabulary changes
+with one case behind them.
 
-**`tickers` is what the user named, and empty means every position.** The
-router prompt says so (rule 2 no longer offers "defaults"), and the code that
-made it untrue is gone. `check_1_2` asserts exactly `["JPM"]`; `check_3_3`
-asserts exactly `[]`.
+**`taa_signal` stays on the rebalance result.** Its formatter line went;
+removing the field is a RebalanceAgent change and MacroAgent is tolerated,
+not targeted.
 
-**P&L's as-of is per position; volatility's is a window plus a weights date.**
-Each has its own accessor in the runner. No search for dates.
-
-**The optimiser delegates `sqrt(w'Σw)` to the canonical function; the
-inline copies inside objective functions do not.** They are evaluated on
-iterates that do not sum to one, and the canonical function raises on that.
-Open decision, recorded.
-
-**The sweep happened before 3.2, not after.** Twenty-two commits and a
-finding list this long would have rotted across another capability.
-
-**Not decided, surfaced:** whether few-shot examples may quote benchmark
-prompts; whether the fast loop should print `measure` and `group_by`; whether
-`get_portfolio_value` is deleted; the ten-ticker cap on the published
-covariance matrix.
-
----
+**The scope boundary is selection versus mechanics.** Rebalance trade lists
+and 2.3 are in; whether to own a security is out; regime-driven allocation
+shifts are permanently out as forecasts.
 
 ## 6. Where we stand against the benchmark
 
@@ -273,45 +270,34 @@ python tests/benchmark/run_cases.py
 The count is deliberately not written down here. What follows is the shape of
 the gap.
 
-**Level 1 passes in full.** 1.1 and 1.4 on allocation with the structured
-as-of; 1.2 on JPM with `tickers == ["JPM"]`, the purchase date, the P&L figure
-and "price return" reaching the prose; 1.3 on the volatility figure with every
-basis element reaching the prose and the figure below the weighted average of
-the single names; 3.3 on all nine positions with `tickers == []`.
+**Level 1 passes in full.** As before: 1.1 and 1.4 on allocation with the
+structured as-of; 1.2 on JPM with `tickers == ["JPM"]`; 1.3 on the volatility
+figure with its basis; 3.3 on all nine positions with `tickers == []`.
 
-**3.2 fails** on `intent: clarification_needed` where it needs `out_of_scope`.
-**2.1, 2.2, 2.3, 3.1 and 3.4 are blocked** on the Compliance agent and the IPS.
-**3.5 is blocked** structurally — it needs a second turn.
+**3.2 passes** on `intent: out_of_scope`, empty plan, no agents run, and the
+boundary sentence in the answer. It has a known expiry (benchmark.md Part 2);
+when the boundary moves it gets rewritten, not relaxed.
 
-The architecture is sound. The gap is now entirely Levels 2 and 3.
+**2.1, 2.2, 2.3, 3.1 and 3.4 are blocked** on the Compliance agent and the
+IPS. **3.5 is blocked** structurally — it needs a second turn.
+
+The gap is now entirely the IPS and conversation memory.
 
 ---
 
 ## 7. Next steps, in order
 
-Roadmap Phase 1 is done. Items 1 and 2 below are the "Later" list from the
-previous handoff, now at the top. Neither is unblocked by anything left to
-build; both are decisions first.
+### 1. The agent roster registry, as its own commit
 
-### 1. `out_of_scope` router intent (benchmark 3.2)
+Before the seventh agent. KNOWN_GAPS "The agent roster is restated in eight
+places" has the list; site 8 (`AgentName` in `schemas.py`) is the one missed
+last time. Derive prompt roster, `Literal`, `add_node`, `routing_map`,
+`agent_nodes` and the enum from one mapping. Expect a golden diff because the
+rendered prompt text changes even if the roster does not; judge it on whether
+routing moved, not on the prompt string. Golden set twice.
 
-A new `IntentType`, a synthesizer branch that emits a fixed scope-boundary
-statement, and a prompt change (golden set twice). Not better wording of
-`clarification_needed`. No new graph edge: a decision with an empty
-`execution_order` already flows Router → synthesizer → END, because
-`is_execution_complete` is true on an empty `agents_to_run`. The branch that
-is missing is inside `synthesizer_node`'s dispatch. Two traps: a live
-recommendation surface contradicts 3.2 — `assess_regime_tool` publishes
-`equity_adjustment` into `shared_data["macro_regime"]`, and
-`_format_macro_response` prints it as a Recommendation line
-(`generate_taa_signal_tool` is registered in MacroAgent's tools list but no
-node calls it, so it is not that path; see KNOWN_GAPS) — resolve it after
-3.2, as separate commits, so the 3.2 golden diff is not confounded; and the
-case has a known expiry (benchmark.md Part 2), so build the intent for the
-boundary as it is now, not for one that admits screening.
-
-Bring the intent's vocabulary and the terminal branch's shape as a decision
-before writing, the way `measure` was brought.
+The intent vocabulary has the same problem in five places (KNOWN_GAPS). Not
+the same commit.
 
 ### 2. The IPS from `wip/phase7-snapshot` (2.1–2.3, 3.1, 3.4)
 
@@ -319,74 +305,80 @@ before writing, the way `measure` was brought.
 time, expecting stale imports and renamed config fields. Structured rules
 with clause identifiers, checked deterministically — not retrieval
 (benchmark.md Part 1). Wire `trace_tool` and `log_delegation` at the same
-time; 2.1 cannot pass without them. Rebalance targets come from here too.
+time; 2.1 cannot pass without them. Rebalance targets come from here too,
+which also closes the standing "No target weights" error on the golden
+rebalance query. The `OUT_OF_SCOPE_RESPONSE` constant moves into the IPS as
+a clause when there is one to cite.
 
-The seventh agent triggers the roster-registry entry in KNOWN_GAPS — eight
-sites, and the eighth was missed last time. Do the registry first, as its own
-commit, expecting a golden diff that must be judged on routing rather than on
-prompt text.
+The runner's blocked probes for these cases unblock on `"ComplianceAgent" in
+sub_results`; their checks are unwritten and will report FAIL saying so until
+written. Write each check before its capability, as with 3.2.
 
 ### Later, with reasons
 
 - **Conversation memory** for 3.5. `AgentState.messages` and
   `build_router_prompt(conversation_history=...)` exist and are never
   populated. The runner sends one query per case and will need a second turn.
+  When built, consider moving clarification's exit onto the intent rather
+  than the `final_response` proxy (KNOWN_GAPS).
+- **Replace the two verbatim few-shots** (1.1, 1.3) with paraphrases; the
+  runner shows whether the cases survive without recognition.
+- **`RouterDecision.validate_execution_order`** repairs instead of raising.
+  Make it raise once the golden set has shown how often it fires.
 - **`filter` on `ExtractedParameters`** when a question restricts P&L by
   sector. The slot is reserved; nothing is built.
 - **README rewrite.** Keep its Design Principles section and the one true
   sentence about RiskManagerAgent.
 - **`test_portfolio_integration.py`** and the five other unguarded files.
-- **The inline `sqrt(w'Σw)` copies** in optimiser objectives — decide
-  whether a non-validating core exists or they stay scoped.
+- **The inline `sqrt(w'Σw)` copies** in optimiser objectives.
+- **`IntentType.UNKNOWN`**, deletion, own commit.
 
 ---
 
 ## 8. Rules learned the hard way
 
-**Every instrument has a blind spot, and they do not overlap.** `run_golden.py`
-prints five routing fields and no answer content. `pytest` passes on tests that
-never assert, and collects nothing that exercises `synthesizer_node` — both
-synthesizer commits this session were invisible to it. The CLI was the only thing
-that could see them. The benchmark runner is the fourth loop and the first that
-scores cases.
+**Registration in a tools list is not reachability.** `generate_taa_signal_tool`
+is in MacroAgent's `get_tools()` and no node calls it; the BaseAgent
+tool-calling loop has no caller from the graph. The previous handoff said it
+was a live path, and the assistant that read it repeated the claim before
+grepping. Grep for the caller, not the registration.
 
-**A prompt change is a specification change, and it must be measured.** Run the
-golden set twice — a case that only works most of the time counts as failed.
+**A check that cannot distinguish two states passes in both — including a
+CLI check.** Two formatter lines were deleted and the instruction was to
+confirm in the CLI. Both live paths errored before the branch, so the answer
+was a bare header with and without the deletion. The formatter test exists
+because of this. Before proposing "check it in the CLI", read the guard above
+the changed line.
+
+**A prompt change is a hypothesis, not an edit.** Two prompt predictions this
+sitting, one wrong: the first `out_of_scope` definition moved a golden line
+that was predicted to hold, on both runs. Same rate as the second sitting.
+
+**Every instrument has a blind spot, and they do not overlap.** `run_golden.py`
+prints five routing fields and no answer content. `pytest` passes on tests
+that never assert and, until this sitting, collected nothing in the
+synthesizer; it still collects nothing that exercises `synthesizer_node`. The
+CLI shows the answer but cannot show `measure` or `group_by`. The runner is
+the first loop that scores cases.
 
 **Fields that look like they control something often do not.** `model_name`,
 `ANTHROPIC_SONNET`, `log_tool_calls`, `max_tool_calls_per_turn`,
-`hawkish_threshold`, `result_type`, and now `nodes.py`'s `"3Y"` period default,
-which is both a duplicate of config and unreachable. Grep before believing any of
-them.
+`hawkish_threshold`, `result_type`, `nodes.py`'s `"3Y"` literal, and
+`IntentType.UNKNOWN`. Grep before believing any of them.
 
-**The recurring bug shape is repair-instead-of-raise.** A wrong answer with a
-plausible face rather than an error. This session added two: a volatility figure
-with no stated window, and `cash_balance` defaulting to 0.0 so that D2's
-"absent is not zero" rule cannot fire.
+**The recurring bug shape is repair-instead-of-raise.** Two more named this
+sitting: `validate_execution_order` rewriting the plan, and every router
+exception becoming a clarification with confidence 0.0.
 
-**Capability exists, wiring does not.** `conversation_history`, `ToolTrace`,
-`log_delegation`, the `confidence` / `reasoning` / `warnings` fields on
-`PortfolioResult` — and the price frame's date range and observation count, which
-were computed on every request and discarded until this session.
+**Documents rot inside a single session.** This file's predecessor was written
+at the end of the second sitting and carried a wrong reachability claim by
+the start of the third. Entries written this sitting were dated 8 September
+for most of it. Prefer symbol names to line numbers, and regenerate.
 
-**Documents rot inside a single session.** The previous handoff was written on
-4 September and by the end of the same day carried a wrong migration count, wrong
-line numbers in four places, a wrong claim about portfolio 2, and a wrong
-"14 assertions" figure. The one before this carried a wrong commit count, a
-wrong instruction for the next task, and its §0 pointed at a document whose D8
-cell contradicted itself. Prefer symbol names to line numbers, and regenerate.
-
-**A prompt change is a hypothesis, not an edit.** Two of the three prompt
-patches on 7 September were predicted to change router behaviour and did not,
-because the behaviour was set in code after the prompt ran. Read everything
-between the LLM call and the state before attributing anything to the model,
-and treat "the prompt now says X" as a claim the runner tests.
-
-**A check that cannot distinguish two states passes in both.** `check_3_3`
-verified nine positions and their dates and passed while the router had
-padded `tickers` to all nine — because the formatter prints all nine either
-way. When a case's answer looks the same under the bug and under the fix,
-assert on the input that differs.
+**One change per commit means one change per patch, too.** An amend without
+`-a` swept a template rewrite into the next commit; caught on export because
+the patch sequence was re-applied from base and compared. Re-apply from base
+before handing patches over.
 
 ---
 
