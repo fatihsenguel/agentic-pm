@@ -295,13 +295,20 @@ build; both are decisions first.
 
 ### 1. `out_of_scope` router intent (benchmark 3.2)
 
-A new `IntentType`, a terminal branch in the graph, a synthesizer response
-that names the scope boundary, and a prompt change (golden set twice). Not
-better wording of `clarification_needed`. Two traps: `generate_taa_signal_tool`
-is a live path that returns allocation recommendations and contradicts 3.2 —
-resolve it in the same piece of work, not before; and the case has a known
-expiry (benchmark.md Part 2), so build the intent for the boundary as it is
-now, not for one that admits screening.
+A new `IntentType`, a synthesizer branch that emits a fixed scope-boundary
+statement, and a prompt change (golden set twice). Not better wording of
+`clarification_needed`. No new graph edge: a decision with an empty
+`execution_order` already flows Router → synthesizer → END, because
+`is_execution_complete` is true on an empty `agents_to_run`. The branch that
+is missing is inside `synthesizer_node`'s dispatch. Two traps: a live
+recommendation surface contradicts 3.2 — `assess_regime_tool` publishes
+`equity_adjustment` into `shared_data["macro_regime"]`, and
+`_format_macro_response` prints it as a Recommendation line
+(`generate_taa_signal_tool` is registered in MacroAgent's tools list but no
+node calls it, so it is not that path; see KNOWN_GAPS) — resolve it after
+3.2, as separate commits, so the 3.2 golden diff is not confounded; and the
+case has a known expiry (benchmark.md Part 2), so build the intent for the
+boundary as it is now, not for one that admits screening.
 
 Bring the intent's vocabulary and the terminal branch's shape as a decision
 before writing, the way `measure` was brought.
