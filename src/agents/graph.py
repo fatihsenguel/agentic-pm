@@ -4,9 +4,10 @@
 # Phase: 6.2 - LangGraph State Machine
 # Status: BANK-READY & FLEXIBLE
 
-from typing import Literal, Dict, Any, Tuple, AsyncGenerator
+from typing import Dict, Any, Tuple, AsyncGenerator
 from langgraph.graph import StateGraph, END
 
+from .schemas import AGENTS
 from .state import AgentState, create_initial_state, is_execution_complete, get_next_agent
 from .nodes import (
     router_node,
@@ -21,6 +22,31 @@ from .nodes import (
 
 import logging
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# AGENT NODE BINDINGS
+# =============================================================================
+
+# Agent name -> the node coroutine that implements it. The roster itself is
+# schemas.AGENTS; this is the one place a name is bound to code, and the two
+# must agree exactly, so a roster entry with no node, or a node with no roster
+# entry, fails here at import rather than on the first live route.
+AGENT_NODES = {
+    "DataAgent": data_agent_node,
+    "MacroAgent": macro_agent_node,
+    "OptimizationAgent": optimization_agent_node,
+    "RebalanceAgent": rebalance_agent_node,
+    "BacktestAgent": backtest_agent_node,
+    "PortfolioAnalysisAgent": portfolio_analysis_agent_node,
+}
+
+if set(AGENT_NODES) != set(AGENTS):
+    raise RuntimeError(
+        "agent roster and node bindings disagree: "
+        f"schemas.AGENTS has {sorted(AGENTS)}, graph.AGENT_NODES has "
+        f"{sorted(AGENT_NODES)}. An agent is added to both or to neither."
+    )
 
 
 # =============================================================================
@@ -65,22 +91,19 @@ def _is_execution_complete_internal(state: AgentState) -> bool:
 # ROUTING LOGIC (THE BRAIN)
 # =============================================================================
 
-def route_next_step(state: AgentState) -> Literal[
-    "DataAgent", 
-    "MacroAgent", 
-    "OptimizationAgent", 
-    "RebalanceAgent", 
-    "BacktestAgent",
-    "PortfolioAnalysisAgent", 
-    "synthesizer",
-    "end"
-]:
+def route_next_step(state: AgentState) -> str:
     """
     Universal Router: Decides the next step based on the execution plan.
     
     Why Dynamic? 
     It allows the Smart Router to create any valid sequence (e.g., Data->Backtest)
     without being forced into a rigid waterfall structure.
+
+    Returns a key of the routing map built in build_graph: an agent name from
+    schemas.AGENTS, "synthesizer" or "end". LangGraph raises on anything else.
+    This used to be annotated as a Literal listing the agents by hand; with an
+    explicit path_map LangGraph never reads the annotation, so it was a copy
+    of the roster that checked nothing.
     """
     # 1. Early Exit (Clarification needed)
     if state.get("final_response") and not state.get("sub_results"):
@@ -115,13 +138,10 @@ def build_graph() -> StateGraph:
     # 1. Add Nodes
     graph.add_node("Router", router_node)
     
-    # Agent Nodes (Names must match 'route_next_step' return values)
-    graph.add_node("DataAgent", data_agent_node)
-    graph.add_node("MacroAgent", macro_agent_node)
-    graph.add_node("OptimizationAgent", optimization_agent_node)
-    graph.add_node("RebalanceAgent", rebalance_agent_node)
-    graph.add_node("PortfolioAnalysisAgent", portfolio_analysis_agent_node)
-    graph.add_node("BacktestAgent", backtest_agent_node)
+    # Agent Nodes, one per roster entry, named as the roster names them so
+    # that route_next_step's return value is the node name.
+    for name in AGENTS:
+        graph.add_node(name, AGENT_NODES[name])
     
     # Output Node
     graph.add_node("synthesizer", synthesizer_node)
@@ -133,28 +153,16 @@ def build_graph() -> StateGraph:
     
     # Map valid return values to nodes
     # This map is used by ALL nodes to determine where to go next
-    routing_map = {
-        "DataAgent": "DataAgent",
-        "MacroAgent": "MacroAgent",
-        "OptimizationAgent": "OptimizationAgent",
-        "RebalanceAgent": "RebalanceAgent",
-        "PortfolioAnalysisAgent": "PortfolioAnalysisAgent",
-        "BacktestAgent": "BacktestAgent",
-        "synthesizer": "synthesizer",
-        "end": END
-    }
+    routing_map = {name: name for name in AGENTS}
+    routing_map["synthesizer"] = "synthesizer"
+    routing_map["end"] = END
     
     # Router -> Next Agent
     graph.add_conditional_edges("Router", route_next_step, routing_map)
     
     # Agents -> Next Agent (Loop)
     # This allows any agent to transition to any other agent if the plan says so
-    agent_nodes = [
-        "DataAgent", "MacroAgent", "OptimizationAgent", 
-        "RebalanceAgent", "BacktestAgent", "PortfolioAnalysisAgent"
-    ]
-    
-    for node in agent_nodes:
+    for node in AGENTS:
         graph.add_conditional_edges(node, route_next_step, routing_map)
     
     # Synthesizer -> END

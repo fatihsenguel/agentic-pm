@@ -6,6 +6,7 @@
 from typing import List, Dict, Optional, Any, Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 from enum import Enum
+import re
 
 
 # =============================================================================
@@ -26,14 +27,36 @@ class IntentType(str, Enum):
     OUT_OF_SCOPE = "out_of_scope"  # Clear request for something the system does not do
 
 
-class AgentName(str, Enum):
-    """Valid agent names in the system."""
-    DATA_AGENT = "DataAgent"
-    MACRO_AGENT = "MacroAgent"
-    OPTIMIZATION_AGENT = "OptimizationAgent"
-    REBALANCE_AGENT = "RebalanceAgent"
-    BACKTEST_AGENT = "BacktestAgent"
-    PORTFOLIO_ANALYSIS_AGENT = "PortfolioAnalysisAgent"
+# The agent roster, stated once. Name -> the one-line description the router
+# prompt renders, in the order the prompt lists them. Every other statement of
+# the roster derives from this: AgentName below, the AVAILABLE AGENTS block and
+# its count in router_prompts.py, and the nodes, routing map and loop edges in
+# graph.py, which binds each name to its node function and raises at import
+# if the binding and this dict disagree. RiskManagerAgent is absent on
+# purpose: it is an unwired supervisor, not an agent the graph runs.
+AGENTS: Dict[str, str] = {
+    "DataAgent": "Fetches market prices, calculates covariance matrices, returns, volatility",
+    "MacroAgent": "Analyzes VIX, yield curve, market regime (risk-on/risk-off)",
+    "OptimizationAgent": "Runs portfolio optimization (Mean-Variance, Risk Parity, etc.)",
+    "RebalanceAgent": "Calculates drift, generates trade lists for rebalancing",
+    "BacktestAgent": "Runs historical simulations of portfolio strategies",
+    "PortfolioAnalysisAgent": "Computes figures about an EXISTING portfolio's holdings: allocation by asset class and by sector, P&L per position since purchase, and the portfolio's own volatility from its weights and the covariance matrix. Needs DataAgent first (holdings, prices, cash, covariance).",
+}
+
+
+def _enum_member_name(agent: str) -> str:
+    """DataAgent -> DATA_AGENT, PortfolioAnalysisAgent -> PORTFOLIO_ANALYSIS_AGENT."""
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", agent).upper()
+
+
+# Valid agent names in the system: the roster above as a str Enum, so that
+# AgentTask.agent and RouterDecision.execution_order reject any name the graph
+# cannot run. Members are not written by hand; add an agent to AGENTS.
+AgentName = Enum(
+    "AgentName",
+    {_enum_member_name(name): name for name in AGENTS},
+    type=str,
+)
 
 
 class TradeAction(str, Enum):

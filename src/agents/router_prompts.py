@@ -5,23 +5,28 @@
 
 from typing import List, Optional
 
+from .schemas import AGENTS
+
 # =============================================================================
 # ROUTER SYSTEM PROMPT
 # =============================================================================
 
-ROUTER_SYSTEM_PROMPT = """You are the Intent Router for a Quant Portfolio Management system.
+# The system prompt is assembled at import from three literal pieces with the
+# agent roster and its count rendered from schemas.AGENTS in between. Plain
+# concatenation rather than .format(), because the prompt is full of JSON
+# braces. Rendering must reproduce the hand-written text byte for byte: a
+# roster line is "N. Name - description".
+
+_PROMPT_BEFORE_ROSTER = """You are the Intent Router for a Quant Portfolio Management system.
 
 YOUR ROLE:
 Analyze user requests and determine which agents should handle them.
 You DO NOT execute tasks - you only route them.
 
 AVAILABLE AGENTS:
-1. DataAgent - Fetches market prices, calculates covariance matrices, returns, volatility
-2. MacroAgent - Analyzes VIX, yield curve, market regime (risk-on/risk-off)
-3. OptimizationAgent - Runs portfolio optimization (Mean-Variance, Risk Parity, etc.)
-4. RebalanceAgent - Calculates drift, generates trade lists for rebalancing
-5. BacktestAgent - Runs historical simulations of portfolio strategies
-6. PortfolioAnalysisAgent - Computes figures about an EXISTING portfolio's holdings: allocation by asset class and by sector, P&L per position since purchase, and the portfolio's own volatility from its weights and the covariance matrix. Needs DataAgent first (holdings, prices, cash, covariance).
+"""
+
+_PROMPT_AFTER_ROSTER = """
 
 INTENT TYPES:
 - optimization: User wants to create or optimize a portfolio
@@ -119,7 +124,9 @@ User: "Lohnt es sich, jetzt in Siemens einzusteigen?"
    Reasoning: Asks whether to own a security; the system makes no such judgement.
 
 CRITICAL RULES:
-1. NEVER hallucinate agents - only use the 6 listed above
+1. NEVER hallucinate agents - only use the """
+
+_PROMPT_AFTER_COUNT = """ listed above
 2. NEVER invent tickers - extract only the symbols the user names in the message. If none are named, leave tickers empty. With an active portfolio an empty list already means the whole portfolio; do NOT fill it from the portfolio.
 3. ALWAYS provide execution_order that respects dependencies
 4. If unsure, set confidence low and/or ask for clarification
@@ -143,6 +150,22 @@ CRITICAL RULES:
    DataAgent alone. "My portfolio" appearing in a question is not by itself a
    reason to add it.
 """
+
+
+def _render_roster() -> str:
+    return "\n".join(
+        f"{i}. {name} - {description}"
+        for i, (name, description) in enumerate(AGENTS.items(), 1)
+    )
+
+
+ROUTER_SYSTEM_PROMPT = (
+    _PROMPT_BEFORE_ROSTER
+    + _render_roster()
+    + _PROMPT_AFTER_ROSTER
+    + str(len(AGENTS))
+    + _PROMPT_AFTER_COUNT
+)
 
 # =============================================================================
 # FEW-SHOT EXAMPLES (for better accuracy)
