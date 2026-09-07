@@ -191,9 +191,10 @@ class OptimizerInterface(ABC):
         weights: np.ndarray,
         cov_matrix: np.ndarray
     ) -> float:
-        """Calculate portfolio volatility."""
-        variance = np.dot(weights, np.dot(cov_matrix, weights))
-        return float(np.sqrt(variance))
+        """Portfolio volatility, delegated to the canonical implementation
+        (expected_values.md D7). The formula lived here too until 7 September."""
+        from portfolio_tool.quant.risk_metrics import portfolio_volatility
+        return portfolio_volatility(weights, cov_matrix)
     
     def _calculate_sharpe_ratio(
         self,
