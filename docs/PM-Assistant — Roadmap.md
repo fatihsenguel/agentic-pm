@@ -7,14 +7,17 @@
 > last). Phase 0.1–0.3 are done. **Phase 1 items 2–5 are done as of
 > 7 September; all four Level 1 cases pass on the runner.** Item 4's text
 > below says the calculation does not exist; it does now, in
-> `quant/risk_metrics.py`. Regenerate rather than patch further.
+> `quant/risk_metrics.py`. **Phase 3 "Pull ... from `wip/phase7-snapshot`"
+> is superseded (7 September, fourth sitting): the branch was read and
+> rejected; the IPS is built from the owner's document — see
+> `HANDOFF.md` §7.2 and `KNOWN_GAPS.md`.** Regenerate rather than patch further.
 
 # PM-Assistant — Roadmap
 
 **Written:** 2 September 2026
 **Read alongside:** `docs/HANDOFF.md` (state of the code), `docs/benchmark.md` (definition of done), `tests/golden/KNOWN_GAPS.md` (open decisions and why obvious fixes are wrong).
 
-**Ordering principle.** Nothing in this list is ordered by effort. It is ordered by what other things depend on it. The target architecture (Supervisor, Compliance, Risk, Quant, Data, later an Equity Analyst) is closer than it looks — the supervisor and data layers work, Quant is two agents that need merging, Risk exists but is unwired, and Compliance is sitting on `wip/phase7-snapshot`. What is missing is not agents. It is the capabilities underneath them.
+**Ordering principle.** Nothing in this list is ordered by effort. It is ordered by what other things depend on it. The target architecture (Supervisor, Compliance, Risk, Quant, Data, later an Equity Analyst) is closer than it looks — the supervisor and data layers work, Quant is two agents that need merging, Risk exists but is unwired, and Compliance has to be built (what sits on `wip/phase7-snapshot` was rejected, see the header). What is missing is not agents. It is the capabilities underneath them.
 
 ---
 
@@ -107,7 +110,7 @@ Mechanical once Phase 1 has established the patterns.
 
 ## Phase 3 — Compliance and the IPS
 
-Pull `ips_manager.py`, `esg_screener.py`, `compliance_agent.py` forward from `wip/phase7-snapshot`, one file at a time. Expect the same rot found during recovery: stale imports and renamed config fields.
+Superseded, see the header: not pulled from `wip/phase7-snapshot`. Built from the owner's prose IPS — `ips.toml` derived from it, a pure checker over the allocation block in `shared_data`, then the agent. Order and open decisions in `HANDOFF.md` §7.2 and `KNOWN_GAPS.md`.
 
 Unlocks benchmark Level 2 in full, plus cases 3.1 (refusal with clause citation) and 3.4 (clause does not exist). Also resolves where rebalancing targets come from — see `KNOWN_GAPS.md`; do **not** solve it by inserting the optimizer into the rebalance chain.
 
