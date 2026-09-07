@@ -674,13 +674,13 @@ keeping three enum names. Decided instead:
   arithmetic path - returning per clause: id, observed, limit, status, and
   for a breach the distance to the limit (2.3 is a condition, not a trade).
   Denominator is D2's, total value including cash. Unit-tested against an
-  expected_values.md Part 5 computed by hand first.
+  expected_values.md Part 7 computed by hand first.
 - The ComplianceAgent node last: reads `shared_data`, calls the checker,
   publishes `shared_data["compliance"]`; the synthesizer formats and cites.
   It enters `AGENTS` then, one line and one binding. `trace_tool` and
   `log_delegation` are wired with it, for 2.1. 3.1 is the checker applied to
   a hypothetical weight, not to holdings.
-- Order: Part 5 -> runner checks for 2.2, 2.3, 3.1, 3.4 (structure: a
+- Order: Part 7 -> runner checks for 2.2, 2.3, 3.1, 3.4 (structure: a
   clause id is cited and exists in the loaded file, status is a breach or
   refusal, no trade line) -> `ips.toml` and loader -> checker -> node ->
   prompt and route, golden twice -> formatter. Each its own commit. The

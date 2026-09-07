@@ -309,7 +309,7 @@ clauses, written by the owner; `ips.toml` at the repo root derived from it
 (clause id, a type from a closed vocabulary, parameters, clause text); a
 loader that raises on any type the checker cannot check; a pure checker over
 the allocation block PortfolioAnalysisAgent publishes to `shared_data`;
-expected_values.md Part 5 computed by hand first; runner checks written
+expected_values.md Part 7 computed by hand first; runner checks written
 before the capability; the ComplianceAgent node last, entering `AGENTS`
 then. Structured rules with clause identifiers, checked deterministically —
 not retrieval (benchmark.md Part 1). Wire `trace_tool` and `log_delegation`
