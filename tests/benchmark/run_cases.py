@@ -128,11 +128,11 @@ def _states_as_of(state):
     field.
 
     Allocation-specific, deliberately. It reads
-    `shared_data["allocation"]["as_of"]`, and every case calling it today (1.1,
-    1.4, and 3.3 once P&L unblocks it) produces an allocation. A P&L or
-    volatility answer will carry its as-of somewhere else; that wants a second
-    accessor here, not a wider search. Searching for a date wherever one might
-    live is what the regex version did.
+    `shared_data["allocation"]["as_of"]`, and every case calling it (1.1, 1.4)
+    produces an allocation. P&L carries its as-of per position under
+    `shared_data["position_pnl"]` and has `_states_pnl_as_of` below; a
+    volatility answer will want a third. Searching for a date wherever one
+    might live is what the regex version did.
     """
     allocation = _shared(state).get("allocation") or {}
     as_of = allocation.get("as_of") or {}
@@ -142,11 +142,34 @@ def _states_as_of(state):
         return ["no as_of.worst_case in shared_data['allocation'] "
                 "(benchmark.md Part 3b)"]
 
+    return _date_reaches_answer(state, stated, "allocation.as_of.worst_case")
+
+
+def _states_pnl_as_of(state, tickers):
+    """Per-position as-of: `shared_data["position_pnl"][ticker]["as_of"]`.
+
+    One holding, one close, so there is nothing to reduce and every position
+    asked about carries its own date. Each must be a date and each must reach
+    the answer.
+    """
+    pnl = _shared(state).get("position_pnl") or {}
+    fails = []
+    for t in tickers:
+        stated = (pnl.get(t) or {}).get("as_of")
+        if not stated:
+            fails.append(f"no as_of for {t} in shared_data['position_pnl'] "
+                         "(benchmark.md Part 3b)")
+            continue
+        fails += _date_reaches_answer(state, stated, f"position_pnl[{t}].as_of")
+    return fails
+
+
+def _date_reaches_answer(state, stated, where):
     fails = []
     if not AS_OF.fullmatch(str(stated)):
-        fails.append(f"as_of.worst_case is not a YYYY-MM-DD date: {stated!r}")
+        fails.append(f"{where} is not a YYYY-MM-DD date: {stated!r}")
     if str(stated) not in _answer(state):
-        fails.append(f"as-of date {stated} is in shared_data but never reaches "
+        fails.append(f"as-of date {stated} is in {where} but never reaches "
                      f"the answer")
     return fails
 
@@ -252,6 +275,58 @@ def check_1_4(state):
     return fails
 
 
+def check_1_2(state):
+    """JPM since purchase. The static figures are Part 1's cost-basis column
+    and the purchase date; the moving ones are checked as invariants and for
+    reaching the prose.
+
+    `parameters.tickers` must be exactly ["JPM"]. Rule 2 lets the router fill
+    tickers from the portfolio when the user names none, and for P&L an empty
+    list means every position - so a padded list would silently turn a
+    question about one position into an answer about nine.
+    """
+    fails = _ran_clean(state)
+    params = (state.get("router_decision") or {}).get("parameters") or {}
+    if params.get("measure") != "position_pnl":
+        fails.append(f"measure is {params.get('measure')!r}, not 'position_pnl'")
+    if params.get("tickers") != ["JPM"]:
+        fails.append(f"tickers {params.get('tickers')} != ['JPM']; the position "
+                     "named in the question, and nothing else")
+
+    pnl = _shared(state).get("position_pnl") or {}
+    jpm = pnl.get("JPM")
+    if not jpm:
+        return fails + ["no position_pnl.JPM in shared_data"]
+
+    if abs(jpm.get("cost_basis", 0.0) - 20_000.00) > CENT:
+        fails.append(f"JPM cost basis {jpm.get('cost_basis')} != 20000.00")
+    if jpm.get("quantity") != 100 or jpm.get("average_price") != 200.0:
+        fails.append(f"JPM holding {jpm.get('quantity')} @ {jpm.get('average_price')} "
+                     "!= 100 @ 200.00 (Part 1)")
+    if jpm.get("purchase_date") != "2024-07-15":
+        fails.append(f"JPM purchase_date {jpm.get('purchase_date')!r} != 2024-07-15")
+
+    mv, cost = jpm.get("market_value"), jpm.get("cost_basis")
+    if mv is not None and cost:
+        if abs(jpm.get("pnl_abs", 0.0) - (mv - cost)) > CENT:
+            fails.append("pnl_abs != market_value - cost_basis")
+        if abs(jpm.get("pnl_pct", 0.0) - (mv - cost) / cost) > 1e-9:
+            fails.append("pnl_pct != pnl_abs / cost_basis")
+
+    answer = _answer(state)
+    if "2024-07-15" not in answer:
+        fails.append("purchase date 2024-07-15 never reaches the answer (1.2: "
+                     "purchase date named)")
+    if jpm.get("pnl_pct") is not None and f"{jpm['pnl_pct']:.2%}" not in answer:
+        fails.append(f"P&L {jpm['pnl_pct']:.2%} is in shared_data but never "
+                     "reaches the answer")
+    if "price return" not in answer.lower():
+        fails.append("answer does not say it is price return only (D4)")
+
+    fails += _states_pnl_as_of(state, ["JPM"])
+    return fails
+
+
 def check_3_2(state):
     fails = _ran_clean(state)
     intent = _intent(state)
@@ -264,20 +339,29 @@ def check_3_2(state):
 
 
 def check_3_3(state):
-    """Only reachable once position P&L exists - see the case table.
+    """"How is my position doing today?" - no position named, so every
+    position is the answer, each with its own as-of date reaching the prose.
 
-    Until then 3.3 is BLOCKED, deliberately. The query routes `data_fetch` and
-    returns the allocation table, so an as-of check alone would flip this case
-    to PASS the moment roadmap item 5 attaches a date, while the answer was
-    still a portfolio-wide breakdown rather than anything about the position.
-    A false pass on the case benchmark.md calls its most important one.
-
-    When item 3 lands, `position_pnl` in shared_data means the answer is about
-    the position, and the as-of check below becomes sufficient. Revisit this
-    docstring then rather than trusting it.
+    `position_pnl` in shared_data does NOT mean the answer is about the
+    position: PortfolioAnalysisAgent publishes it on every run, allocation
+    queries included. What says the answer is about positions is the router's
+    `measure`, and that is what this asserts on, plus that all nine positions
+    were published and dated. An allocation table with a date would fail here
+    on `measure`, which is the false pass this case exists to refuse.
     """
     fails = _ran_clean(state)
-    fails += _states_as_of(state)
+    params = (state.get("router_decision") or {}).get("parameters") or {}
+    if params.get("measure") != "position_pnl":
+        fails.append(f"measure is {params.get('measure')!r}, not 'position_pnl'; "
+                     "the answer is not about the position")
+
+    pnl = _shared(state).get("position_pnl") or {}
+    if set(pnl) != TICKERS:
+        fails.append(f"position_pnl covers {sorted(pnl)}, not the nine positions")
+    if "price return" not in _answer(state).lower():
+        fails.append("answer does not say it is price return only (D4)")
+
+    fails += _states_pnl_as_of(state, sorted(pnl))
     return fails
 
 
@@ -328,7 +412,7 @@ CASES = [
     ("1.1", "What is my current allocation by asset class?", BENCHMARK_PORTFOLIO,
      None, check_1_1),
     ("1.2", "How has my JPM position performed since I bought it?", BENCHMARK_PORTFOLIO,
-     blocked_on_pnl, None),
+     blocked_on_pnl, check_1_2),
     ("1.3", "What is my volatility over the past twelve months?", BENCHMARK_PORTFOLIO,
      blocked_on_portfolio_vol, None),
     ("1.4", "What positions do I hold in the Technology sector?", BENCHMARK_PORTFOLIO,
