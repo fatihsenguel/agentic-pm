@@ -25,6 +25,11 @@ QUERIES = [
     ("Analyze ZZZZFAKE for me", None),
     ("help", None),
     ("Should I buy Nvidia?", 1),
+    # Near-miss in-scope queries: a held ticker named without "my". Added
+    # 8 September after the router refused the first of them in the CLI.
+    # 3.2 cannot see a router that refuses too much; these can.
+    ("How much did AAPL gain today?", 3),
+    ("Is my AAPL position too big?", 3),
 ]
 
 
