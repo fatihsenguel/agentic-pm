@@ -624,8 +624,9 @@ DO NOT fix by inserting OptimizationAgent into the chain. Re-optimising on every
 drift check means the target moves with the covariance matrix, which is not how
 strategic asset allocation works. Drift must be measured against a fixed target.
 
-Correct fix: targets belong to the portfolio / IPS. See `ips_manager.py` on
-`wip/phase7-snapshot`. Resolve when Phase 7 is pulled forward.
+Correct fix: targets belong to the IPS - a clause with target weights per
+asset class, in `ips.toml`. Not `ips_manager.py` on `wip/phase7-snapshot`,
+which was read and rejected (entry below). Resolve when the IPS is built.
 
 ### `wip/phase7-snapshot` was read and rejected - DECIDED 7 September (fourth sitting)
 
