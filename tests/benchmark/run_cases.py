@@ -348,12 +348,21 @@ def check_3_3(state):
     `measure`, and that is what this asserts on, plus that all nine positions
     were published and dated. An allocation table with a date would fail here
     on `measure`, which is the false pass this case exists to refuse.
+
+    `tickers` must be empty. The formatter prints all nine positions whether
+    the list is empty or padded with all nine, so without this check the case
+    passed while the router was still copying the portfolio in - it did, on
+    7 September, in the same run that failed 1.2 for exactly that padding.
     """
     fails = _ran_clean(state)
     params = (state.get("router_decision") or {}).get("parameters") or {}
     if params.get("measure") != "position_pnl":
         fails.append(f"measure is {params.get('measure')!r}, not 'position_pnl'; "
                      "the answer is not about the position")
+    if params.get("tickers"):
+        fails.append(f"tickers {params.get('tickers')} is not empty; the question "
+                     "names no position, and a filled list means the router "
+                     "copied the portfolio in")
 
     pnl = _shared(state).get("position_pnl") or {}
     if set(pnl) != TICKERS:
