@@ -1029,10 +1029,15 @@ mean a golden-set diff that cannot distinguish "the new agent perturbed
 classification" from "the regenerated prompt reads differently". One change per
 commit exists for exactly this.
 
-Worth doing before the seventh agent, not urgent before then. Note the prompt
-text will change when rendered from a registry even if the roster does not, so
-the commit that does it should expect a golden diff and be judged on whether
-routing decisions moved, not on whether the prompt string changed.
+Worth doing before the seventh agent, not urgent before then. An earlier
+version of this paragraph said the prompt text would change when rendered
+from a registry and the commit should expect a golden diff. That was wrong:
+rendering `N. Name - description` and the count from the same strings
+reproduces the hand-written prompt byte for byte (checked with `diff` on the
+rendered prompt before and after), so the correct expectation is zero golden
+diff, and a moved line is the nondeterminism or a regression, never the
+rerender. Observed 7 September (fourth sitting): empty diff on four runs, two
+after each of the two commits.
 
 ### `hawkish_threshold` and `dovish_threshold` are now unreferenced
 
