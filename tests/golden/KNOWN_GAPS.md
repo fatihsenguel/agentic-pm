@@ -297,7 +297,21 @@ rate, silently. Severity depends on whether tickers carry an exchange suffix
 (`AAPL` vs `AAPL.DE`) — with the suffix, prices come back in EUR and the problem
 does not arise.
 
-### Prices are reported as current with no as-of date
+### Prices are reported as current with no as-of date — RESOLVED 7 September
+
+**Built. Do not rebuild this.** `as_of_dates` is published per ticker from
+`data_agent.py` beside `latest_prices`; `portfolio_analysis_agent_node` reduces
+it to a worst case and publishes `allocation.as_of`; the synthesizer renders it,
+naming the stalest holding only when the dates actually differ. The benchmark
+runner asserts the structured value and that it reaches the prose, replacing a
+date-shaped regex. 1.1 and 1.4 moved from FAIL to PASS on it.
+
+The reasoning below is kept because the shape it argues for is the shape that was
+built, and because the per-holding-versus-per-answer question returns for P&L and
+volatility, which will each carry an as-of somewhere other than `allocation`.
+
+---
+
 
 `latest_prices` carries the most recent `DailyPrice` row, which is the previous
 settled close — 2026-09-02 when queried on 2026-09-03. The data is correct;
