@@ -1537,10 +1537,6 @@ def _format_macro_response(sub_results: Dict) -> List[str]:
         lines.append(f"  • VIX: {vix.get('value', 'N/A')} ({vix.get('regime', 'N/A')})")
         lines.append(f"  • Yield Curve: {yc.get('status', 'N/A')} (slope: {yc.get('slope', 'N/A')})")
         
-        adj = regime.get('equity_adjustment', 0)
-        if adj != 0:
-            lines.append("")
-            lines.append(f"**Recommendation:** Adjust equity by {adj:+.0%}")
     
     return lines
 
