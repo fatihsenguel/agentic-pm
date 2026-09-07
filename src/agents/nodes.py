@@ -1432,6 +1432,8 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             lines.extend(_format_backtest_response(sub_results))
         elif intent == "data_fetch" and "PortfolioAnalysisAgent" in sub_results:
             lines.extend(_format_analysis_response(decision, sub_results))
+        elif intent == "risk_analysis" and "PortfolioAnalysisAgent" in sub_results:
+            lines.extend(_format_analysis_response(decision, sub_results))
         elif intent == "risk_analysis":
             lines.extend(_format_risk_response(sub_results))
         elif intent == "combined":
@@ -1607,6 +1609,8 @@ def _format_analysis_response(decision: Dict, sub_results: Dict) -> List[str]:
         return _format_allocation_response(sub_results, parameters.get("group_by"))
     if measure == "position_pnl":
         return _format_pnl_response(sub_results, parameters.get("tickers") or [])
+    if measure == "portfolio_volatility":
+        return _format_portfolio_volatility_response(sub_results)
     raise ValueError(
         f"PortfolioAnalysisAgent ran but the router set measure={measure!r}. "
         "Nothing to select; see ExtractedParameters.measure."
@@ -1779,10 +1783,48 @@ def _format_risk_response(sub_results: Dict) -> List[str]:
         lines.append(f"  - {ticker:<6}{vol:>8.2%}")
 
     lines.append("")
-    lines.append("**Not done.** Portfolio volatility is not computed. It needs the")
-    lines.append("holding weights against the covariance matrix (expected_values.md")
-    lines.append("D7); the figures above are per holding, and averaging them is not")
-    lines.append("the same number. No as-of date is attached (benchmark 3.3).")
+    lines.append("**Not done.** These are per holding. The portfolio's own volatility")
+    lines.append("is a different number - weights against the covariance matrix -")
+    lines.append("and is answered when the question asks for it. No as-of date is")
+    lines.append("attached to the per-holding figures (benchmark 3.3).")
+    return lines
+
+
+def _format_portfolio_volatility_response(sub_results: Dict) -> List[str]:
+    """Format the portfolio volatility PortfolioAnalysisAgent computed.
+
+    Formats only. Benchmark 1.3 passes on the basis being traceable, so every
+    element of the basis is printed from the published summary: method,
+    window, observation count, weights basis and their pricing date, and the
+    annualisation factor. Nothing here is derived; a basis the synthesizer
+    computed would exist only as text.
+    """
+    analysis = sub_results.get("PortfolioAnalysisAgent", {})
+    if not analysis.get("success"):
+        return ["Portfolio volatility could not be computed.",
+                f"  {analysis.get('error', 'No error recorded.')}"]
+
+    pv = analysis.get("portfolio_volatility") or {}
+    if not pv:
+        return ["No portfolio volatility was published for this request."]
+
+    window = pv.get("window") or {}
+    lines = ["**PORTFOLIO VOLATILITY**", ""]
+    lines.append(f"**{pv['annualised']:.2%} annualised**")
+    lines.append("")
+    lines.append("**Basis:**")
+    lines.append(f"  - Method: sqrt(w'Σw) on a {pv.get('covariance_method') or 'unstated'} "
+                 f"covariance matrix of daily returns")
+    lines.append(f"  - Window: {window.get('start')} to {window.get('end')}, "
+                 f"{window.get('closes')} closes")
+    lines.append(f"  - Weights: {pv.get('weights_basis')}, priced as of "
+                 f"{pv.get('weights_as_of')}")
+    lines.append(f"  - Annualisation: x sqrt({pv.get('annualisation')})")
+    lines.append("")
+    lines.append("**Not done.** Cash is excluded from the weights, so this is the")
+    lines.append("volatility of the invested assets rather than of the total")
+    lines.append("portfolio. It is one window under one regime; it is not an")
+    lines.append("average of the per-holding volatilities.")
     return lines
 
 
