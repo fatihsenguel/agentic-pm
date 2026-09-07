@@ -230,3 +230,65 @@ def allocation_by_sector(
         total_value=sectored,
         denominator_label="sectored value (cash excluded, unsectored shown, D3)",
     )
+
+
+@dataclass
+class PositionPnL:
+    """Unrealised profit and loss of one position since purchase."""
+
+    ticker: str
+    quantity: float
+    average_price: float
+    price: float
+    cost_basis: float
+    market_value: float
+    pnl_abs: float
+    pnl_pct: float
+    purchase_date: Optional[str]
+
+
+def position_pnl(
+    holdings: Sequence[Dict],
+    prices: Dict[str, float],
+) -> Dict[str, PositionPnL]:
+    """
+    Unrealised P&L per position: market value against cost basis.
+
+    Reference: expected_values.md Part 1, and D4.
+
+      D4  PRICE return, not total return. Forced by the data model rather than
+          chosen: `Dividend` has no `portfolio_id`, so no dividend can be
+          attributed to a portfolio. Anything rendering these figures has to
+          say so - on JNJ, JPM, NEE, VNQ and TLT this understates the return.
+
+    Every position is computed, whichever one was asked about. Selecting is
+    the caller's job. Same inputs as the allocation functions: a holding's
+    quantity, average price and purchase date, and a price per ticker.
+
+    Raises through `_market_values` on a missing price, and here on a cost
+    basis of zero, where a percentage is undefined.
+    """
+    values = _market_values(holdings, prices)
+    costs = _cost_bases(holdings)
+
+    result: Dict[str, PositionPnL] = {}
+    for h in holdings:
+        ticker = h["ticker"]
+        cost = costs[ticker]
+        if cost <= 0:
+            raise AllocationError(
+                f"{ticker}: cost basis is {cost}, so P&L % is undefined."
+            )
+        value = values[ticker]
+        result[ticker] = PositionPnL(
+            ticker=ticker,
+            quantity=float(h["quantity"]),
+            average_price=float(h["average_price"]),
+            price=float(prices[ticker]),
+            cost_basis=cost,
+            market_value=value,
+            pnl_abs=value - cost,
+            pnl_pct=(value - cost) / cost,
+            purchase_date=h.get("purchase_date"),
+        )
+    return result
