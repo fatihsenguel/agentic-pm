@@ -587,7 +587,36 @@ Blocking nothing; do not chase it.
 directly. `scripts/update_all_assets.py:105` sets `asset_class` but not `sector`.
 Close the gap as Phase 1 work; until then seed via a script, not ad hoc row edits.
 
-### No portfolio-level volatility exists
+### No portfolio-level volatility exists — RESOLVED 7 September
+
+**Built. Do not rebuild this.** `portfolio_volatility(weights, cov_matrix)` and
+`portfolio_volatility_by_ticker` in `quant/risk_metrics.py`; `optimization/base.py`
+delegates to it. PortfolioAnalysisAgent computes it from market-value weights
+of the invested assets (cash excluded, Part 4) against `shared_data["covariance_matrix"]`
+and publishes `shared_data["portfolio_volatility"]` with the full basis: window
+(from `price_window`, which DataAgent now publishes as data), weights and their
+pricing date, covariance method, annualisation. `check_1_3` asserts every
+element reaches the prose and that the figure sits well below the weighted
+average of the single-name volatilities, so an average cannot pass.
+
+`tests/test_portfolio_volatility.py` reproduces 10.2936% two ways from the
+committed closes: numpy sample covariance, and the system's own
+`CovarianceEstimator`. The second is the one that matters - it shows the
+matrix DataAgent publishes carries the reference's conventions (simple daily
+returns, sample, x252), which expected_values.md was right not to assume.
+
+Live on 7 September: **10.40%** over 2025-09-05 to 2026-09-04 against the
+reference's 10.29% over 09-03 to 09-02. Two closes shifted, weights at Friday's
+prices. That is the pin working, and the basis in the answer is what lets a
+reader see it.
+
+**The count below was low.** `sqrt(w'Σw)` also sits inline in
+`optimization/constraints.py` (four times), `mean_variance.py` and
+`risk_parity.py` - inside objective and constraint functions evaluated on
+iterates that do not sum to one, so they cannot delegate to a function that
+validates the sum. Whether they should is open; see the hygiene entries.
+
+---
 
 Five implementations, none of which computes it:
 
