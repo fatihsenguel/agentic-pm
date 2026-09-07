@@ -89,7 +89,7 @@ names its limits is the actual result — including which of them are temporary.
 
 Must run without errors. Proves little, but a failure here damages everything that follows.
 
-**Status note: none of these are built.** All four currently route to DataAgent, which fetches prices and stops. There is no aggregation by asset class, no comparison of current price against `average_price`, no volatility calculation surfaced to the user, and no agent that reads holdings as positions rather than as a ticker list. This is the actual starting point of the project.
+**Status note, revised 7 September 2026: all four pass on `tests/benchmark/run_cases.py`.** The note that stood here from 2 September ("none of these are built") described the starting point; it is retired rather than kept because a status line that is false is worse than none. The status column below is not maintained by hand — the runner is the status.
 
 | # | Prompt | Passes when | Status |
 | --- | --- | --- | --- |
