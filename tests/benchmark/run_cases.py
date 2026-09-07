@@ -480,7 +480,7 @@ def blocked_on_portfolio_vol(state):
 def blocked_on_compliance(state):
     if "ComplianceAgent" in (state.get("sub_results") or {}):
         return None
-    return "no Compliance agent and no IPS; both are on wip/phase7-snapshot"
+    return "no Compliance agent and no IPS; built from the owner's document (handoff §7.2)"
 
 
 def blocked_on_delegation_trace(state):
