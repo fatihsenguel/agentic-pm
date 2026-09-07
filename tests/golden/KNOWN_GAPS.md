@@ -343,7 +343,28 @@ data holds, and it is not what Part 3b asks for. It would be a summary wrong for
 exactly the stalest holding - the repair-instead-of-raise shape applied to the
 field meant to prevent it.
 
-### The volatility window is anchored to today, not to the last settled close
+### The volatility window is anchored to today, not to the last settled close — RESOLVED 7 September
+
+**Fixed, on the third attempt. Do not rebuild this.** The fetch window is
+`[today - N - _FETCH_MARGIN_DAYS, today]`; the evaluation window is the last
+`years x trading_days_per_year` closes, applied before the frame is cached.
+Verified against a live run: the returned frame was 2023-08-31 to 2026-09-04,
+exactly 756 closes, ending at Friday's close rather than at a Labor Day on which
+the market never opened.
+
+**The two failed attempts are worth more than the fix.** A post-fetch trim alone
+was arithmetically inert — the frame arrives bounded by the fetch window, so its
+first row is already at or after the evaluation start and the filter dropped
+nothing. It passed `pytest`, the golden set and the runner. Separately, resolving
+`period` into the variable that keys `_prices_df_cache` split the namespace
+between `SPY_None` and `SPY_3Y` and every downstream tool missed; only the golden
+set's `errors` field caught it.
+
+The old window was short by three closes at 3Y and one at 1Y, which is why the
+frame got slightly *bigger* when it was fixed.
+
+---
+
 
 `data_agent.py`, `_calculate_period_dates`, sets `end_date = date.today()` and
 subtracts `config.data.period_days`. Nothing anchors it to a close.
