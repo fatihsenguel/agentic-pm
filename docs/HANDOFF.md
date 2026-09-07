@@ -119,8 +119,10 @@ answer").
 ### Branches and tags
 
 `baseline-v1` is the working branch. `wip/phase7-snapshot` holds Compliance/IPS
-code to pull forward (`ips_manager.py`, `esg_screener.py`,
-`compliance_agent.py`). `wip/rag-early` and tag `rag-early-parked` hold the
+code that was read on 7 September (fourth sitting) and rejected: a
+multi-client database engine with no clause identifiers, silent defaults
+and trade recommendations (KNOWN_GAPS, "`wip/phase7-snapshot` was read and
+rejected"). Nothing on it is scheduled. `wip/rag-early` and tag `rag-early-parked` hold the
 deleted RAG code. `master` (b327e80) has a fuller RAG version with a vector
 store. Tags on the remote: `baseline-v1-clean`, `baseline-v1-green`,
 `rag-early-parked`.
@@ -299,13 +301,20 @@ routing moved, not on the prompt string. Golden set twice.
 The intent vocabulary has the same problem in five places (KNOWN_GAPS). Not
 the same commit.
 
-### 2. The IPS from `wip/phase7-snapshot` (2.1–2.3, 3.1, 3.4)
+### 2. The IPS, built from the owner's document (2.1–2.3, 3.1, 3.4)
 
-`ips_manager.py`, `esg_screener.py`, `compliance_agent.py`, one file at a
-time, expecting stale imports and renamed config fields. Structured rules
-with clause identifiers, checked deterministically — not retrieval
-(benchmark.md Part 1). Wire `trace_tool` and `log_delegation` at the same
-time; 2.1 cannot pass without them. Rebalance targets come from here too,
+Not from `wip/phase7-snapshot`; that branch was read and rejected on
+7 September (fourth sitting), see KNOWN_GAPS. A prose IPS with numbered
+clauses, written by the owner; `ips.toml` at the repo root derived from it
+(clause id, a type from a closed vocabulary, parameters, clause text); a
+loader that raises on any type the checker cannot check; a pure checker over
+the allocation block PortfolioAnalysisAgent publishes to `shared_data`;
+expected_values.md Part 5 computed by hand first; runner checks written
+before the capability; the ComplianceAgent node last, entering `AGENTS`
+then. Structured rules with clause identifiers, checked deterministically —
+not retrieval (benchmark.md Part 1). Wire `trace_tool` and `log_delegation`
+with the node; 2.1 cannot pass without them. Three decisions are open before
+any TOML, listed at the end of the KNOWN_GAPS entry. Rebalance targets come from here too,
 which also closes the standing "No target weights" error on the golden
 rebalance query. The `OUT_OF_SCOPE_RESPONSE` constant moves into the IPS as
 a clause when there is one to cite.
