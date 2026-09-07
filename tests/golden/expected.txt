@@ -75,3 +75,17 @@ Q: Should I buy Nvidia? | pid=1
   agents_run: []
   errors: 0
 
+Q: How much did AAPL gain today? | pid=3
+  intent: out_of_scope
+  plan:   []
+  period: None
+  agents_run: []
+  errors: 0
+
+Q: Is my AAPL position too big? | pid=3
+  intent: out_of_scope
+  plan:   []
+  period: None
+  agents_run: []
+  errors: 0
+
