@@ -116,6 +116,10 @@ User: "How has my JPM position performed since I bought it?"
 User: "How are my positions doing?" (active portfolio)
 → intent: "data_fetch", agents: [DataAgent, PortfolioAnalysisAgent], measure: "position_pnl", tickers: [], confidence: 0.85
 
+User: "Is NEE up or down?" (active portfolio holding NEE)
+→ intent: "data_fetch", agents: [DataAgent, PortfolioAnalysisAgent], measure: "position_pnl", tickers: ["NEE"], confidence: 0.85
+   Reasoning: NEE is a holding, so this asks about the position's gain or loss, not about the stock - not a bare price fetch and not out_of_scope.
+
 User: "Portfolio"
 → intent: "clarification_needed", clarification_question: "Was möchten Sie mit Ihrem Portfolio tun? Optimieren, analysieren, oder rebalancen?"
 
