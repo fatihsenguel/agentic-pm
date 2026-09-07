@@ -1,8 +1,8 @@
 # AGENTIC_FINANCE — Session Handoff
 
-**Session date:** 4 September 2026 (second sitting)
+**Session date:** 7 September 2026 (second sitting)
 **Branch:** `baseline-v1`
-**State:** Green. 105 tests passing, golden set stable over four consecutive runs, working tree clean. For the benchmark count, run `python tests/benchmark/run_cases.py` — it is not quoted here, because it changes on every capability commit and this line was stale twice in two days.
+**State:** Green. 127 tests passing, golden set clean on both runs after the last prompt change, `expected.txt` moved once deliberately (the volatility query now plans PortfolioAnalysisAgent). For the benchmark count, run `python tests/benchmark/run_cases.py` — it is not quoted here. For the commit count, `git rev-list --count 270a916..HEAD`; the previous version of this file quoted one and it was off by one.
 
 Written for an LLM assistant picking up cold in a new conversation.
 
@@ -18,13 +18,14 @@ version of this file carried four wrong figures by the end of one session.
 |---|---|
 | `docs/benchmark.md` | **The definition of done.** 12 test cases across 3 levels, plus scope boundaries and the output contract. Part 3's Level 1 status note is now stale — 1.1 and 1.4 compute correctly; they fail on the output contract. |
 | `tests/benchmark/run_cases.py` | **The scoreboard.** Run it before believing anything about what works. Its docstring states what it asserts and what it deliberately does not. |
-| `tests/golden/KNOWN_GAPS.md` | Open decisions, resolved decisions, and why obvious fixes are wrong. 29 open entries. Long, and the most useful file in the repo. |
-| `tests/golden/expected_values.md` | Hand-computed expected answers for portfolio 3, plus eight decisions (D1–D8). `expected_values.xlsx` alongside it holds the formulas and the 252 closes. |
+| `tests/golden/KNOWN_GAPS.md` | Open decisions, resolved decisions, and why obvious fixes are wrong. Long, and the most useful file in the repo. Read the RESOLVED entries for P&L, portfolio volatility and the router override before touching any of them. |
+| `tests/golden/expected_values.md` | Hand-computed expected answers for portfolio 3, plus eight decisions (D1–D8). `expected_values.xlsx` holds the formulas; the 252 closes are also committed as `tests/golden/benchmark_closes.csv`, which two pytest files read. |
 | `docs/PM-Assistant — Roadmap.md` | Phased plan. Carries a header listing superseded points. Its ordering is now overridden by §7 below, which follows the counter. |
 
 **Do not update `expected_values` to match code output.** If they disagree, one
-of the two is wrong and that gets resolved deliberately. There is a live
-disagreement right now — see §7 item 2.
+of the two is wrong and that gets resolved deliberately. The live volatility
+figure (10.40% on 7 September) differs from Part 4's 10.29% because the window
+has moved two closes; that is the pin working, not a disagreement.
 
 ---
 
@@ -59,7 +60,10 @@ rather than under-delivery.
 ### How the owner works
 
 - `grep -rn "Name" src/ tests/` before deleting any symbol, including lazy
-  imports inside function bodies.
+  imports inside function bodies. **Grep for writers as well as readers**
+  before reasoning about where a value comes from — two prompt changes and a
+  reverted commit on 7 September were built against an unread line of code
+  that overwrote the value after the prompt was done.
 - Never infer a module's purpose or dependencies from its name.
 - One change per commit. **If the commit message needs an "and", it is two
   commits.**
@@ -67,8 +71,10 @@ rather than under-delivery.
   with `&&`, which hides failures.
 - Do not paste multi-line blocks containing interactive commands or trailing `#`
   comments into zsh; both get eaten. Patches: `git diff -U0` and
-  `git apply --unidiff-zero`, with `--check` first. Note `git commit -am` does
-  not stage a new file.
+  `git apply --unidiff-zero --ignore-whitespace`, with `--check` first —
+  without `--ignore-whitespace`, a patch removing an indented blank line fails
+  on the owner's machine. Every patch comes with its apply and commit
+  commands. Note `git commit -am` does not stage a new file.
 
 ### What the owner does NOT want
 
@@ -92,13 +98,15 @@ python tests/benchmark/run_cases.py
 python src/agents/cli.py --portfolio 3
 ```
 
-**Caveat on "105 passing":** `test_portfolio_integration.py` returns booleans
+**Caveat on "127 passing":** `test_portfolio_integration.py` returns booleans
 instead of asserting, so its seven blocks pass unconditionally, and TEST 7
-returns `True` in both branches. 105 means 105 collected and none errored, not
-105 things verified. 14 of the 105 are `test_allocation.py`, which does assert
-against hand-computed figures — and which is now the **only** place exact
-market-value figures are checked. See §7 item 1 for why they are not in the
-benchmark runner.
+returns `True` in both branches. 127 means 127 collected and none errored, not
+127 things verified. The ones that do assert against hand-computed figures are
+`test_allocation.py` (Parts 2–3), `test_position_pnl.py` (Part 1) and
+`test_portfolio_volatility.py` (Part 4, over the committed closes, via both
+numpy and the system's own `CovarianceEstimator`). Those three are the only
+places exact figures are checked; the runner asserts structure, static
+figures and invariants, deliberately.
 
 ### Branches and tags
 
@@ -172,83 +180,87 @@ silently give Haiku if selected. Never guess a model id; check
 
 ## 4. What this session did
 
-**Twenty-nine commits, 7 September.** Two capabilities and about twenty document
-corrections. All four loops green at the end: 105 tests, empty golden diff,
-2/12 on the runner, CLI verified by hand.
+**Second sitting of 7 September, from `270a916`.** Two capabilities, one
+structural change to the router's output, one code fix that two prompt
+patches had been standing in for, and the document sweep. All four loops
+green at the end; the runner moved from 2/12 to 5/12 and Level 1 is complete.
 
-**Data-age reporting, built (roadmap item 5).** `as_of_dates` per ticker from
-`data_agent.py`, `.index[-1]` on the same expression that already produced
-`latest_prices`. `portfolio_analysis_agent_node` reduces them to a worst case and
-publishes `allocation.as_of`; the synthesizer renders it. **1.1 and 1.4 moved
-from FAIL to PASS — the counter's first real movement.**
+**Position P&L, built (roadmap item 3; benchmark 1.2, 3.3).** `position_pnl`
+in `quant/allocation.py`, checked against Part 1. PortfolioAnalysisAgent
+computes every position on every run and publishes
+`shared_data["position_pnl"]` per ticker with a per-position `as_of`. The
+handoff's instruction to go through `get_portfolio_summary` was wrong —
+nothing called it — and its inline P&L was deleted instead.
 
-**The runner's as-of check was replaced in the same commit that built the
-field**, deliberately, so the two cases could not flip to PASS on the old
-date-shaped regex and leave nobody able to tell which had happened. It now
-asserts the structured value, that it is a date, and that that exact string
-reaches the answer.
+**Portfolio volatility, built (roadmap item 4; benchmark 1.3).**
+`portfolio_volatility` in `quant/risk_metrics.py`, the optimiser delegating to
+it, the 252 closes committed as a fixture, and the node publishing the figure
+with its whole basis: window (DataAgent now publishes `price_window` as data),
+weights and their date, covariance method, annualisation. The system's own
+covariance estimator reproduces the reference on the fixture, so the live
+matrix's conventions are tested rather than assumed.
 
-**The volatility window anchor, built on the third attempt.** Fetch window is
-`[today - N - _FETCH_MARGIN_DAYS, today]`; evaluation window is the last
-`years x trading_days_per_year` closes, trimmed before the frame is cached so
-covariance, returns and the per-name volatilities all read it. Verified live:
-756 closes exactly, ending at Friday's close rather than at Labor Day.
+**`measure` and `group_by` on `ExtractedParameters`.** The router now says
+which figure a question asks for; the synthesizer dispatches on it; the node
+computes everything regardless. This replaced the "sector on
+ExtractedParameters" item with the shape the KNOWN_GAPS entry argued for, and
+reserved a third axis (`filter`) without building it. Decision record is in
+KNOWN_GAPS under the old `group_by` entry.
 
-**Two of the three attempts failed, and how they failed is the useful part.**
-The first was arithmetically inert — a post-fetch trim cannot drop rows, because
-the frame arrives bounded by the fetch window. It passed `pytest`, the golden set
-and the runner, and would have shipped as a fix. The second split the
-`_prices_df_cache` key namespace by rebinding `period`; only the golden set's
-`errors` field caught it. **Neither would have been caught by reasoning about the
-code, and one was not caught by three of the four loops.**
+**The router was overwriting `tickers` with the portfolio after the LLM
+call.** A block in `smart_router.py`, no consumer until P&L read the field.
+Found only after two prompt changes failed to fix it and one of them regressed
+routing and was reverted. The record of those attempts is in KNOWN_GAPS and is
+the most useful thing this sitting produced: grep for writers, not just readers.
 
-**About twenty document corrections**, including two that were wrong in this
-file, one in `expected_values.md` and two in the roadmap. Listed in §5.
+**Two runner checks were wrong or blind.** `check_3_3` passed once with a
+padded `tickers`; it now requires the list empty. The 1.2 check was right from
+the start and is what caught the override.
+
+**Document corrections:** D8's stale "the code does not compute this"; the
+handoff's `get_portfolio_value` instruction; the roadmap's Phase 1 status;
+benchmark.md's Level 1 status note; KNOWN_GAPS's wrong cause for the
+nondeterministic ticker order, and its low count of inline volatility
+implementations.
 
 ---
 
 ## 5. Decisions taken this session
 
-**As-of is per holding at the source, reduced for aggregates by the agent.**
-`benchmark.md` Part 3b settles the shape — a date for every figure derived from
-market data. The reduction is computed in `portfolio_analysis_agent_node`, not
-the synthesizer, because anything the synthesizer derives exists only as text and
-the runner cannot assert on it. Compliance will need the same number.
+**`measure` values are `shared_data` keys.** `allocation`, `position_pnl`,
+`portfolio_volatility` — each is the key the node publishes under, so the
+router's vocabulary, the synthesizer's dispatch and the runner's probes share
+one word. A value with no computation behind it does not go in the Literal.
 
-**The stalest holding is named only when the dates differ.** `min` returns the
-first minimal element, so on the normal case — nine holdings, one close — naming
-a ticker invents a staleness distinction that does not exist.
+**The node computes everything; `measure` is a synthesizer signal.** Both
+allocations, all nine P&Ls and the portfolio volatility are published on every
+run. Selection is the synthesizer's job. `shared_data` grows by summary data
+only; the hot-potato violation is `price_data_json` and nothing added today.
 
-**D8 is a count of closes, not a calendar year.** 252, because that is D6's
-annualisation factor and D5's observation count, so the window and the
-annualisation cannot drift apart. Stated as "one calendar year" before, which is
-the same thing only on average and is exactly what the code was implementing when
-it came up short.
+**`group_by` narrows rendering, not computation.** Both breakdowns are always
+computed; the one asked for is printed. `industry` and `country` stay out of
+the enum until something groups by them.
 
-**Item 4's check is a pytest fixture, not a live comparison.** 10.2936% belongs
-to a window whose end has passed and no live run reaches it again. The fixture
-holds the 252 closes extracted from `expected_values.xlsx` and committed — not
-read from `data/portfolio.db`, which is untracked and would not survive a fresh
-clone. Same pattern as `test_allocation.py`.
+**`tickers` is what the user named, and empty means every position.** The
+router prompt says so (rule 2 no longer offers "defaults"), and the code that
+made it untrue is gone. `check_1_2` asserts exactly `["JPM"]`; `check_3_3`
+asserts exactly `[]`.
 
-**The fetch margin is not policy and is not in config.** Policy is something you
-would want to set differently; nobody has a preference about a fetch margin. It
-exists only because the fetch precedes knowledge of the last settled close. Named
-constant in `data_agent.py` with its reasoning attached. Its value need not be
-right, only sufficient, because a shortfall raises.
+**P&L's as-of is per position; volatility's is a window plus a weights date.**
+Each has its own accessor in the runner. No search for dates.
 
-**The benchmark count is no longer written in this file.** It changed on every
-capability commit and was stale twice in two days. §0 says to run the runner;
-a number copied into prose is the belief that outlives its evidence.
+**The optimiser delegates `sqrt(w'Σw)` to the canonical function; the
+inline copies inside objective functions do not.** They are evaluated on
+iterates that do not sum to one, and the canonical function raises on that.
+Open decision, recorded.
 
-**Deferred, with reasons, in KNOWN_GAPS:** spans versus counts for non-year
-windows; `group_by`/`filter` weighed against a `sector` field; whether the router
-stays a classifier or becomes a tool-caller. Each has a written reason for
-waiting and a note on what decides it.
+**The sweep happened before 3.2, not after.** Twenty-two commits and a
+finding list this long would have rotted across another capability.
 
-**Direction for `quant/`:** one tested implementation per formula, reachable from
-anywhere, never restated in a document. D8 claiming the code matched when it did
-not was that rule being broken.
+**Not decided, surfaced:** whether few-shot examples may quote benchmark
+prompts; whether the fast loop should print `measure` and `group_by`; whether
+`get_portfolio_value` is deleted; the ten-ticker cap on the published
+covariance matrix.
 
 ---
 
@@ -258,93 +270,67 @@ not was that rule being broken.
 python tests/benchmark/run_cases.py
 ```
 
-The count is deliberately not written down here. §0 says to run the runner before
-believing anything about what works, and a number copied into prose is exactly
-the belief that outlives its evidence. What follows is the shape of the gap,
-which moves more slowly than the count.
+The count is deliberately not written down here. What follows is the shape of
+the gap.
 
-**1.1 and 1.4 pass** as of the data-age commit. Every assertion holds against
-portfolio 3: labels, percentages summing to 1.0, all four cost bases against
-Part 2, Technology at 80,000 with AAPL and MSFT, unsectored reported at 147,000
-rather than dropped, sectored at 137,500, all nine tickers, cash inside the
-denominator with no percent-invested, the figures reaching the prose, and an
-as-of date asserted from `shared_data` rather than matched as a date shape in
-the answer.
+**Level 1 passes in full.** 1.1 and 1.4 on allocation with the structured
+as-of; 1.2 on JPM with `tickers == ["JPM"]`, the purchase date, the P&L figure
+and "price return" reaching the prose; 1.3 on the volatility figure with every
+basis element reaching the prose and the figure below the weighted average of
+the single names; 3.3 on all nine positions with `tickers == []`.
 
 **3.2 fails** on `intent: clarification_needed` where it needs `out_of_scope`.
-**3.3 is blocked** on position P&L. **1.2 and 1.3 are blocked** on P&L and
-portfolio volatility. **2.1, 2.2, 2.3, 3.1 and 3.4 are blocked** on the
-Compliance agent and the IPS. **3.5 is blocked** structurally — it needs a second
-turn and the runner sends one query per case.
+**2.1, 2.2, 2.3, 3.1 and 3.4 are blocked** on the Compliance agent and the IPS.
+**3.5 is blocked** structurally — it needs a second turn.
 
-The architecture is sound and this should not be re-litigated. The gap is the
-output contract plus the capabilities of Levels 2 and 3.
+The architecture is sound. The gap is now entirely Levels 2 and 3.
 
 ---
 
 ## 7. Next steps, in order
 
-**The ordering follows the counter.** Position P&L unblocks two cases (1.2, 3.3);
-portfolio volatility unblocks one (1.3). Both are Level 1 and both are now
-unblocked by this session's work — nothing above them remains.
+Roadmap Phase 1 is done. Items 1 and 2 below are the "Later" list from the
+previous handoff, now at the top. Neither is unblocked by anything left to
+build; both are decisions first.
 
-Roadmap item 5 (data-age) and the volatility window are **done**. Do not rebuild
-them; both are marked RESOLVED in KNOWN_GAPS with what was tried and what failed.
+### 1. `out_of_scope` router intent (benchmark 3.2)
 
-### 1. Position P&L (benchmark 1.2, unblocks 3.3)
+A new `IntentType`, a terminal branch in the graph, a synthesizer response
+that names the scope boundary, and a prompt change (golden set twice). Not
+better wording of `clarification_needed`. Two traps: `generate_taa_signal_tool`
+is a live path that returns allocation recommendations and contradicts 3.2 —
+resolve it in the same piece of work, not before; and the case has a known
+expiry (benchmark.md Part 2), so build the intent for the boundary as it is
+now, not for one that admits screening.
 
-`compute_position_pnl` goes in `quant/allocation.py` beside `_market_values` and
-`_cost_bases`, which are exactly its inputs. Check against `expected_values.md`
-Part 1. Per D4 it is **price return**, forced by the data model: `Dividend` has
-no `portfolio_id`. Before wiring anything to `get_portfolio_summary`, fix
-`get_portfolio_value` (`portfolio_manager.py`, search the name) to **raise**
-rather than log-and-skip on a missing price.
+Bring the intent's vocabulary and the terminal branch's shape as a decision
+before writing, the way `measure` was brought.
 
-**It carries an as-of, and that as-of does not live in `allocation`.** The
-runner's `_states_as_of` reads `shared_data["allocation"]["as_of"]` and is
-deliberately allocation-specific; a P&L answer needs a second accessor there, not
-a wider search. Searching for a date wherever one might live is what the regex
-version did.
+### 2. The IPS from `wip/phase7-snapshot` (2.1–2.3, 3.1, 3.4)
 
-### 2. Portfolio volatility (benchmark 1.3)
+`ips_manager.py`, `esg_screener.py`, `compliance_agent.py`, one file at a
+time, expecting stale imports and renamed config fields. Structured rules
+with clause identifiers, checked deterministically — not retrieval
+(benchmark.md Part 1). Wire `trace_tool` and `log_delegation` at the same
+time; 2.1 cannot pass without them. Rebalance targets come from here too.
 
-**No longer blocked** — the window work this session was done for it. Per D7 a
-new `portfolio_volatility(weights, cov_matrix)` goes in
-`src/portfolio_tool/quant/risk_metrics.py`. **It does not exist**; the roadmap
-said otherwise until this session. `shared_data["volatilities"]` carries
-return-series volatility per ticker, which is a different quantity.
-
-Its check is a **pytest fixture** over the 252 closes committed from
-`expected_values.xlsx`, asserting 10.2936% — not a live comparison. Extract and
-commit the fixture first; that is a prerequisite, not a follow-up, and it is a
-new file, so `git commit -am` will not stage it.
-
-### 3. `sector` on `ExtractedParameters` — but weigh `group_by` first
-
-Narrows the `data_fetch` branch from both breakdowns to the one asked for. Before
-building it, read the KNOWN_GAPS entry proposing `group_by` and `filter` instead:
-one field answers one question, a grouping parameter answers the class, and
-`Asset` already carries country and industry columns the seed writes. The prompt
-change costs the same either way. A prompt change is a specification change,
-therefore measured against the golden set twice — it has the Technology query at
-`pid=2` and can see it.
+The seventh agent triggers the roster-registry entry in KNOWN_GAPS — eight
+sites, and the eighth was missed last time. Do the registry first, as its own
+commit, expecting a golden diff that must be judged on routing rather than on
+prompt text.
 
 ### Later, with reasons
 
-- **`out_of_scope` router intent** (benchmark 3.2) — a new intent plus a terminal
-  branch, not better wording of the existing ones.
-- **The IPS from `wip/phase7-snapshot`** — unlocks 2.1–2.3, 3.1 and 3.4 at once.
-  Wire `trace_tool` and `log_delegation` at the same time; 2.1 cannot pass
-  without them.
-- **Generate the agent roster from a registry.** Eight sites. Before the seventh
-  agent, not now.
-- **README rewrite.** Keep its Design Principles section. It describes
-  RiskManagerAgent as an active supervisor and on that one point it is
-  *accurate* — do not delete the true sentence with the false ones.
-- **Widen the golden set to portfolio 3,** or decide deliberately that the fast
-  loop stays a routing instrument. Not while the synthesizer is changing.
-- **`test_portfolio_integration.py`**, which does not assert, and the five other
-  unguarded files.
+- **Conversation memory** for 3.5. `AgentState.messages` and
+  `build_router_prompt(conversation_history=...)` exist and are never
+  populated. The runner sends one query per case and will need a second turn.
+- **`filter` on `ExtractedParameters`** when a question restricts P&L by
+  sector. The slot is reserved; nothing is built.
+- **README rewrite.** Keep its Design Principles section and the one true
+  sentence about RiskManagerAgent.
+- **`test_portfolio_integration.py`** and the five other unguarded files.
+- **The inline `sqrt(w'Σw)` copies** in optimiser objectives — decide
+  whether a non-validating core exists or they stay scoped.
 
 ---
 
@@ -379,7 +365,21 @@ were computed on every request and discarded until this session.
 **Documents rot inside a single session.** The previous handoff was written on
 4 September and by the end of the same day carried a wrong migration count, wrong
 line numbers in four places, a wrong claim about portfolio 2, and a wrong
-"14 assertions" figure. Prefer symbol names to line numbers, and regenerate.
+"14 assertions" figure. The one before this carried a wrong commit count, a
+wrong instruction for the next task, and its §0 pointed at a document whose D8
+cell contradicted itself. Prefer symbol names to line numbers, and regenerate.
+
+**A prompt change is a hypothesis, not an edit.** Two of the three prompt
+patches on 7 September were predicted to change router behaviour and did not,
+because the behaviour was set in code after the prompt ran. Read everything
+between the LLM call and the state before attributing anything to the model,
+and treat "the prompt now says X" as a claim the runner tests.
+
+**A check that cannot distinguish two states passes in both.** `check_3_3`
+verified nine positions and their dates and passed while the router had
+padded `tickers` to all nine — because the formatter prints all nine either
+way. When a case's answer looks the same under the bug and under the fix,
+assert on the input that differs.
 
 ---
 
@@ -406,13 +406,15 @@ grep -rn "SymbolName" src/ tests/ --include='*.py'
 ```
 
 Note zsh eats `--include=*.py` unquoted, and swallows `#` comments pasted on
-command lines.
+command lines. Apply patches with
+`git apply --unidiff-zero --ignore-whitespace <file>` after `--check`; new
+files need `git add` before `git commit -m`.
 
 ### The four loops
 
 | Loop | Cost | Answers |
 |---|---|---|
-| `pytest` | ~35s | Do the components still work |
+| `pytest` | ~30s | Do the components still work |
 | CLI | ~4s | What is it actually doing |
 | Golden set | ~40s, cents | Did routing change anywhere |
 | Benchmark runner | ~1min, cents | How many cases pass |
