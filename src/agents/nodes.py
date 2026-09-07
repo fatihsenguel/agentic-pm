@@ -1564,12 +1564,6 @@ def _format_rebalance_response(sub_results: Dict) -> List[str]:
             
             lines.append("")
             lines.append(f"**Est. Transaction Cost:** €{rebal.get('total_cost', 0):.2f}")
-        
-        # TAA signal if available
-        taa = rebal.get("taa_signal")
-        if taa:
-            lines.append("")
-            lines.append(f"**Tactical Signal:** {taa.get('regime', 'N/A')} regime")
     
     return lines
 
