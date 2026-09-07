@@ -384,8 +384,33 @@ Always include in your responses:
             "warnings": warnings if warnings else None
         }
     
+    # Calendar days added to the fetch window so that it reliably contains the
+    # evaluation window. This is NOT policy and it is not tuned: nobody has a
+    # preference about it, and the only requirement is that it is large enough.
+    # A calendar span holds roughly five closes per seven days, so the 365 days
+    # of a "1Y" fetch yield about 251 closes against the 252 the reference
+    # needs - the shortfall the anchor bug was hiding. Thirty days buys about
+    # twenty closes of headroom at every period. It is safe to pick rather than
+    # derive only because a shortfall raises: see `_evaluation_window`.
+    _FETCH_MARGIN_DAYS = 30
+
     def _calculate_period_dates(self, period: str) -> tuple:
-        """Convert period string to start/end dates."""
+        """Resolve a period string to the FETCH window, plus the resolved period.
+
+        This is the fetch window, not the evaluation window. It ends at today
+        deliberately, because that is the only way a close that landed since the
+        last run is picked up at all, and it starts earlier than the period asks
+        for. The extra days are not slop: the evaluation window ends at the last
+        settled close, which is earlier than today, so the closes it needs at the
+        front were never inside a `[today - N, today]` fetch. A trim alone cannot
+        add them back.
+
+        Returns the resolved period as a third element so callers do not restate
+        `period or config.data.default_period`. Bind it to a NEW name: callers
+        pass the raw `period` on to `_prices_df_cache` keys and to nested
+        `fetch_prices_tool` calls, and rebinding it there splits the cache
+        namespace between "SPY_None" and "SPY_3Y".
+        """
         end_date = date.today()
 
         # No caller preference -> config decides (policy stays in config)
@@ -398,9 +423,51 @@ Always include in your responses:
                 f"Valid periods: {sorted(config.data.period_days)}"
             )
 
-        days = config.data.period_days[period.upper()]
+        days = config.data.period_days[period.upper()] + self._FETCH_MARGIN_DAYS
         start_date = end_date - timedelta(days=days)
-        return start_date, end_date
+        return start_date, end_date, period
+
+    def _evaluation_window(self, prices, period: str):
+        """Trim a fetched frame to the closes the figures are computed over.
+
+        The fetch window ends at today; the evaluation window ends at the last
+        close that actually settled, which is not known until the frame is in
+        hand. One date range was doing both jobs, which left the window sliding
+        by a calendar day every day the query ran.
+
+        Counted in closes, not calendar days, because that is what the reference
+        computes: expected_values.md Part 4 is 251 daily returns from 252 closes,
+        and D6 annualises by the same 252. `tail` is anchored to the end of the
+        frame by construction, so the last settled close needs no arithmetic.
+        Whether a window is better expressed as a span or a count is open for
+        non-year periods - see KNOWN_GAPS - but every period that exists today
+        is a year multiple and every one of them has a close count.
+
+        Applied before the frame is cached, so covariance, returns and the
+        per-name volatilities all read the evaluation window. Takes the resolved
+        period, since the caller's may be None.
+        """
+        if prices is None or prices.empty:
+            return prices
+
+        if not period.upper().endswith("Y"):
+            raise ValueError(
+                f"Evaluation window is defined in years only; got '{period}'. "
+                "Whether a non-year window is a span of days or a count of "
+                "closes is an open decision, recorded in KNOWN_GAPS. Guessing "
+                "here would settle it silently."
+            )
+
+        closes = int(period[:-1]) * config.data.trading_days_per_year
+        if len(prices) < closes:
+            raise ValueError(
+                f"Fetched {len(prices)} closes for period '{period}' but the "
+                f"evaluation window needs {closes}. The fetch window is too "
+                f"narrow: raise _FETCH_MARGIN_DAYS. Returning a shorter window "
+                f"is the silent failure this check exists to prevent."
+            )
+
+        return prices.tail(closes)
     
     # ==================== TOOL METHODS ====================
     
@@ -424,7 +491,11 @@ Always include in your responses:
             Dictionary with price data summary (NOT raw prices)
         """
         ticker_list = [t.strip().upper() for t in tickers.split(",")]
-        start_date, end_date = self._calculate_period_dates(period)
+        # `period` itself is deliberately NOT rebound: it keys _prices_df_cache
+        # below, and the covariance, returns and volatility tools build that key
+        # from their own unresolved argument. Rebinding splits the namespace and
+        # every one of them misses.
+        start_date, end_date, resolved_period = self._calculate_period_dates(period)
         
         try:
             # Step 1: Ensure prices are in database
@@ -442,6 +513,13 @@ Always include in your responses:
                     "error": f"No data found for tickers: {ticker_list}"
                 }
             
+            # The frame arrived on the fetch window, which is wider than the
+            # period asks for and ends at today. Every figure below is computed
+            # over the evaluation window. Trim before caching so the covariance,
+            # returns and volatility tools reading this cache see the same
+            # closes the summary reports.
+            prices = self._evaluation_window(prices, resolved_period)
+
             # Step 3: Cache the DataFrame for subsequent calculations
             cache_key = f"{','.join(sorted(ticker_list))}_{period}"
             self._prices_df_cache[cache_key] = prices
@@ -846,7 +924,11 @@ Always include in your responses:
             Dictionary with rolling volatility statistics
         """
         ticker = ticker.strip().upper()
-        start_date, end_date = self._calculate_period_dates(period)
+        # Fetch window only. This path does not trim to the evaluation window;
+        # it feeds regime detection, not a reference-checked figure. It does now
+        # receive _FETCH_MARGIN_DAYS more history than before. Unfixed,
+        # deliberately - the second anchor site, recorded in KNOWN_GAPS.
+        start_date, end_date, _resolved = self._calculate_period_dates(period)
         
         try:
             # Get prices from database
