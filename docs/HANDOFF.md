@@ -347,17 +347,33 @@ The direction was wrong too. The window is one trading day **short** at the
 front — 251 closes against D8's 252 — so the missing day was never fetched, and
 no trim adds rows.
 
-**The fetch window has to be wider than the evaluation window:**
+**The fetch window has to be wider than the evaluation window.** Built
+4 September:
 
-- fetch `[today - N - slack, today]`
-- trim to `[last_close - N, last_close]`, before the frame is cached, so
-  covariance, returns and the per-name volatilities read the evaluation window
+- fetch `[today - N - _FETCH_MARGIN_DAYS, today]`
+- trim to the last `years x trading_days_per_year` closes, before the frame is
+  cached, so covariance, returns and the per-name volatilities read the
+  evaluation window
 
-`slack` covers the gap between today and the last settled close: a weekend plus
-a holiday is four days, and a stale cache adds more, since
-`price_fetch_interval_days` lets an answer sit two closes behind. It is policy
-and belongs in `DataConfig` beside `period_days`. Over-fetching costs rows the
-trim discards; under-fetching silently reproduces this bug with no symptom.
+**The evaluation window is counted in closes, not calendar days.** That is what
+Part 4 computes — 251 returns from 252 closes — and what D6 annualises by.
+`tail` is anchored to the end of the frame by construction, so the last settled
+close needs no arithmetic and no calendar. Measured: 252 closes and 251 returns
+at 1Y, matching D8's shape.
+
+**An earlier draft of this section said the margin is policy belonging in
+`DataConfig`. It is not.** Policy is something you would want to set
+differently; nobody has a preference about a fetch margin. It exists only
+because the fetch has to happen before the last settled close is known. It is a
+named constant in `data_agent.py` with its reasoning attached, and config keeps
+holding the things that are actually choices — `trading_days_per_year`,
+`period_days`. A margin in the config file would only make config the place
+fudge factors go to look legitimate.
+
+Its value does not need to be right, only sufficient: 30 days buys 22 to 37
+closes of headroom across 1Y through 10Y, and a shortfall **raises** rather than
+silently narrowing the window. That raise is the point. The trim-only version
+had no symptom, which is how it passed pytest, the golden set and review.
 
 Item 1 shares no seam with this —
 item 1 adds an output field, `.index[-1]` on the expression that already
