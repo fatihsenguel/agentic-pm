@@ -966,6 +966,45 @@ look healthier would fabricate the precision that was just removed.
 The yield curve informs the regime (`_determine_regime`) but not the confidence in
 it. Making it contribute is a deliberate design change and its own commit.
 
+### Router parameters are restated by hand in two more places
+
+`nodes.py` `_decision_to_dict` listed `parameters` key by key, and would have
+validated `measure` in the schema and then dropped it before any node could
+read it - a field that exists and does nothing. Replaced with
+`parameters.model_dump()` on 7 September. `smart_router.py` `route_sync`'s
+return dict (search `"tickers": decision.parameters.tickers`) does the same
+and was not touched; check whether anything reads it before it drops a field
+for someone.
+
+### `CovarianceResult.to_dict` drops the matrix above ten tickers
+
+`covariance.py`: the covariance and correlation matrices are included in the
+dict only when `len(tickers) <= 10`, with a comment about output size. At
+eleven holdings `shared_data["covariance_matrix"]` is silently absent.
+PortfolioAnalysisAgent now raises on that rather than defaulting, which is
+loud and correct, but the limit is one holding away and documented nowhere
+but here. The matrix is a summary, not raw data; the hot-potato concern that
+motivated the cap is `price_data_json`, not this.
+
+### The returns convention is not published
+
+`portfolio_volatility` states its basis from `shared_data` - window, method,
+weights, annualisation - and cannot state whether the covariance is over
+simple or log returns, because DataAgent does not publish it. `data_agent.py`
+has both branches (`pct_change` and `np.log`, search both); the covariance
+path uses `pct_change`. The formatter says "daily returns" and no more. A
+`returns_type` beside `covariance_method` would close it.
+
+### Inline `sqrt(w'Σw)` inside optimiser objectives cannot delegate
+
+`optimization/constraints.py` (four sites), `mean_variance.py` and
+`risk_parity.py` compute the portfolio variance inline inside objective and
+constraint callables that SLSQP evaluates on iterates which do not sum to
+one. The canonical `portfolio_volatility` raises on that, correctly - so
+these cannot call it as written. Either a non-validating core the validated
+function wraps, or accept that objective internals are scoped like the
+backtest engine's inline volatility. Decide before the next optimiser change.
+
 ### `AgentConfig` fields declared but unenforced
 
 `log_tool_calls` and `max_tool_calls_per_turn` are read nowhere. The first reads
