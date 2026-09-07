@@ -126,6 +126,36 @@ class TestRouterDecision:
         with pytest.raises(ValueError):
             RouterDecision.model_validate(data)
 
+    def test_out_of_scope_rejects_a_plan(self):
+        """out_of_scope with agents planned must raise, not be trimmed."""
+        data = {
+            "intent": "out_of_scope",
+            "confidence": 0.9,
+            "agents_needed": [
+                {"agent": "DataAgent", "task_description": "Fetch NVDA", "priority": 1}
+            ],
+            "execution_order": ["DataAgent"],
+            "parameters": {},
+            "reasoning": "Asks whether to buy a security",
+        }
+
+        with pytest.raises(ValueError):
+            RouterDecision.model_validate(data)
+
+    def test_out_of_scope_with_empty_plan_validates(self):
+        data = {
+            "intent": "out_of_scope",
+            "confidence": 0.9,
+            "agents_needed": [],
+            "execution_order": [],
+            "parameters": {},
+            "reasoning": "Asks whether to buy a security",
+        }
+
+        decision = RouterDecision.model_validate(data)
+        assert decision.intent == "out_of_scope"
+        assert decision.execution_order == []
+
 
 class TestExtractedParameters:
     """Test parameter extraction validation."""

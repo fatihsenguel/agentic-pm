@@ -23,6 +23,7 @@ class IntentType(str, Enum):
     COMBINED = "combined"  # Multi-step workflows
     UNKNOWN = "unknown"
     CLARIFICATION_NEEDED = "clarification_needed"
+    OUT_OF_SCOPE = "out_of_scope"  # Clear request for something the system does not do
 
 
 class AgentName(str, Enum):
@@ -161,6 +162,19 @@ class RouterDecision(BaseModel):
         if self.intent == IntentType.CLARIFICATION_NEEDED and not self.clarification_question:
             raise ValueError(
                 "clarification_question is required when intent is clarification_needed"
+            )
+        return self
+
+    @model_validator(mode='after')
+    def validate_out_of_scope(self) -> 'RouterDecision':
+        """An out-of-scope request plans nothing. A plan alongside the
+        refusal would be trimmed by nothing downstream and run as planned,
+        so it is rejected here rather than repaired."""
+        if self.intent == IntentType.OUT_OF_SCOPE and (
+            self.agents_needed or self.execution_order
+        ):
+            raise ValueError(
+                "agents_needed and execution_order must be empty when intent is out_of_scope"
             )
         return self
 
