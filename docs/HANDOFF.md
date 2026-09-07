@@ -284,115 +284,14 @@ output contract plus the capabilities of Levels 2 and 3.
 
 ## 7. Next steps, in order
 
-**The ordering below follows the counter, not the roadmap.** Two of the three
-failing cases fail on data age, and the two blocked Level 1 cases will fail on it
-too once their arithmetic exists.
+**The ordering follows the counter.** Position P&L unblocks two cases (1.2, 3.3);
+portfolio volatility unblocks one (1.3). Both are Level 1 and both are now
+unblocked by this session's work — nothing above them remains.
 
-### 1. Data-age reporting (benchmark 3.3, roadmap item 5)
+Roadmap item 5 (data-age) and the volatility window are **done**. Do not rebuild
+them; both are marked RESOLVED in KNOWN_GAPS with what was tried and what failed.
 
-**The bottleneck.** Unlocks 1.1, 1.4 and 3.3, and is a precondition for 1.2 and
-1.3 passing Part 3b when they arrive. benchmark.md Part 4 already promoted it to
-second; the counter is now evidence rather than argument.
-
-**It opens with a decision, not with code.** `latest_prices` is built as
-`prices[ticker].dropna().iloc[-1]`, per ticker. A ticker missing the final close
-reports an older price than the frame's end date, and nothing marks it. A single
-`as_of` field on the output would therefore be a summary that is wrong for
-exactly the holding that is stalest. Decide whether as-of is per figure, per
-holding, or a stated worst case, **before** adding any field.
-
-Note the runner's current as-of check is a date-shaped regex over the prose. When
-the structured field exists, the check should assert on that instead.
-
-### 2. The volatility window, before item 4
-
-`_calculate_period_dates` sets `end_date = date.today()`. Observed 4 September:
-`period: 1Y` returned 2025-09-04 to 2026-09-02, 251 closes, against D8's
-2025-09-03 to 2026-09-02 and 252 closes. One trading day short at the front, and
-it moves every day the query runs.
-
-Item 4 checks `portfolio_volatility` against 10.2936% and will not reproduce it.
-**Do not resolve that by editing `expected_values.md`.** D8 is already a trailing
-window — one calendar year of daily closes ending at the last settled close — so
-anchoring the code to that close implements D8 rather than competing with it.
-There is no choice to make between the two; the earlier framing of this as
-"anchor the code or change D8" was wrong.
-
-What anchoring does not do is restore the 10.2936% check. That figure belongs to
-a window whose end has passed, and no live run reaches it again. Item 4's check
-is a pytest fixture over the 252 closes in `expected_values.xlsx`, with the
-window pinned inside the fixture — no end-date parameter, no live match, and the
-reference stays hand-computed. Same pattern as `test_allocation.py`, per §5. The
-fixture is committed rather than read from `data/portfolio.db`, which is
-untracked and would not survive a fresh clone.
-
-Anchoring is still worth doing on its own merits: the code does not implement
-D8's rule today.
-
-**It is not a change inside `_calculate_period_dates`.** That function runs
-before the fetch — line 427 computes the dates, 432 fetches against them, 437
-reads against them — so the dates it returns are what bounds the fetch that
-discovers the last settled close. It cannot know that date. Reading the database
-maximum before fetching would bound the fetch by yesterday's data and never pick
-up a new close.
-
-Separate the two windows, which is most of the fix:
-
-- The **fetch window** bounds what is asked of the provider and the database. It
-  ends at today, and must, because that is the only way a close that landed
-  since the last run is picked up at all.
-- The **evaluation window** is what the figures are computed over. It ends at
-  the last close that actually settled, which is `prices.index[-1]` and is not
-  known until the frame is in hand.
-
-One date range is currently doing both jobs, and that is the bug.
-
-**A post-fetch trim alone does nothing. Tried and reverted, 4 September.** The
-frame arrives bounded by the fetch window, so every row is already
-`>= today - N`. The evaluation start is `last_close - N`, and since
-`last_close <= today` that is always `<= today - N`. The filter's lower bound
-sits at or below the frame's first row every time, and it drops nothing. Zero
-rows removed on both 1Y and 3Y.
-
-The direction was wrong too. The window is one trading day **short** at the
-front — 251 closes against D8's 252 — so the missing day was never fetched, and
-no trim adds rows.
-
-**The fetch window has to be wider than the evaluation window.** Built
-4 September:
-
-- fetch `[today - N - _FETCH_MARGIN_DAYS, today]`
-- trim to the last `years x trading_days_per_year` closes, before the frame is
-  cached, so covariance, returns and the per-name volatilities read the
-  evaluation window
-
-**The evaluation window is counted in closes, not calendar days.** That is what
-Part 4 computes — 251 returns from 252 closes — and what D6 annualises by.
-`tail` is anchored to the end of the frame by construction, so the last settled
-close needs no arithmetic and no calendar. Measured: 252 closes and 251 returns
-at 1Y, matching D8's shape.
-
-**An earlier draft of this section said the margin is policy belonging in
-`DataConfig`. It is not.** Policy is something you would want to set
-differently; nobody has a preference about a fetch margin. It exists only
-because the fetch has to happen before the last settled close is known. It is a
-named constant in `data_agent.py` with its reasoning attached, and config keeps
-holding the things that are actually choices — `trading_days_per_year`,
-`period_days`. A margin in the config file would only make config the place
-fudge factors go to look legitimate.
-
-Its value does not need to be right, only sufficient: 30 days buys 22 to 37
-closes of headroom across 1Y through 10Y, and a shortfall **raises** rather than
-silently narrowing the window. That raise is the point. The trim-only version
-had no symptom, which is how it passed pytest, the golden set and review.
-
-Item 1 shares no seam with this —
-item 1 adds an output field, `.index[-1]` on the expression that already
-produces `latest_prices`. A caller-facing end-date parameter on
-`fetch_prices_tool` is only needed to pin a run to a fixed date, which the
-strict runner deliberately avoids needing. Do not build one for these two.
-
-### 3. Position P&L (benchmark 1.2, unblocks 3.3)
+### 1. Position P&L (benchmark 1.2, unblocks 3.3)
 
 `compute_position_pnl` goes in `quant/allocation.py` beside `_market_values` and
 `_cost_bases`, which are exactly its inputs. Check against `expected_values.md`
@@ -401,18 +300,34 @@ no `portfolio_id`. Before wiring anything to `get_portfolio_summary`, fix
 `get_portfolio_value` (`portfolio_manager.py`, search the name) to **raise**
 rather than log-and-skip on a missing price.
 
-### 4. Portfolio volatility (benchmark 1.3)
+**It carries an as-of, and that as-of does not live in `allocation`.** The
+runner's `_states_as_of` reads `shared_data["allocation"]["as_of"]` and is
+deliberately allocation-specific; a P&L answer needs a second accessor there, not
+a wider search. Searching for a date wherever one might live is what the regex
+version did.
 
-Blocked behind item 2. Per D7 a new `portfolio_volatility(weights, cov_matrix)`
-goes in `quant/risk_metrics.py`; none of the five existing implementations
-computes portfolio-level vol. `shared_data["volatilities"]` carries floats.
+### 2. Portfolio volatility (benchmark 1.3)
 
-### 5. `sector` on `ExtractedParameters`
+**No longer blocked** — the window work this session was done for it. Per D7 a
+new `portfolio_volatility(weights, cov_matrix)` goes in
+`src/portfolio_tool/quant/risk_metrics.py`. **It does not exist**; the roadmap
+said otherwise until this session. `shared_data["volatilities"]` carries
+return-series volatility per ticker, which is a different quantity.
 
-Narrows the `data_fetch` branch from both breakdowns to the one asked for. A
-prompt change, therefore a specification change, therefore measured against the
-golden set — which has the Technology query at `pid=2` and can see it. Expect a
-diff and judge it on whether routing moved.
+Its check is a **pytest fixture** over the 252 closes committed from
+`expected_values.xlsx`, asserting 10.2936% — not a live comparison. Extract and
+commit the fixture first; that is a prerequisite, not a follow-up, and it is a
+new file, so `git commit -am` will not stage it.
+
+### 3. `sector` on `ExtractedParameters` — but weigh `group_by` first
+
+Narrows the `data_fetch` branch from both breakdowns to the one asked for. Before
+building it, read the KNOWN_GAPS entry proposing `group_by` and `filter` instead:
+one field answers one question, a grouping parameter answers the class, and
+`Asset` already carries country and industry columns the seed writes. The prompt
+change costs the same either way. A prompt change is a specification change,
+therefore measured against the golden set twice — it has the Technology query at
+`pid=2` and can see it.
 
 ### Later, with reasons
 
