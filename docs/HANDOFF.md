@@ -172,72 +172,83 @@ silently give Haiku if selected. Never guess a model id; check
 
 ## 4. What this session did
 
-Fourteen commits. Roughly: corrected the documents, closed the last mile of
-Level 1's computation, and built the scoreboard.
+**Twenty-nine commits, 7 September.** Two capabilities and about twenty document
+corrections. All four loops green at the end: 105 tests, empty golden diff,
+2/12 on the runner, CLI verified by hand.
 
-**Corrected six document claims that were wrong.** The holdings gap moved to
-RESOLVED; the synthesizer entry was corrected to "no longer blocked, still open"
-rather than resolved; the roster heading became eight to match its own body; the
-stamp date, the migration count (eleven, not ten) and the runner entry were
-fixed. Line-number references in touched entries became symbol names, because
-`nodes.py` is 1500 lines and every commit moves them.
+**Data-age reporting, built (roadmap item 5).** `as_of_dates` per ticker from
+`data_agent.py`, `.index[-1]` on the same expression that already produced
+`latest_prices`. `portfolio_analysis_agent_node` reduces them to a worst case and
+publishes `allocation.as_of`; the synthesizer renders it. **1.1 and 1.4 moved
+from FAIL to PASS — the counter's first real movement.**
 
-**Added synthesizer branches for `data_fetch` and `risk_analysis`.** Two
-commits, two formatters, reading `sub_results["PortfolioAnalysisAgent"]` rather
-than `shared_data` — `mark_agent_complete` stores the node's result verbatim, the
-allocation object is already on it, and every existing formatter takes
-`sub_results`. `shared_data` is the channel between agents, not a second input to
-the synthesizer. Neither branch moved the golden set, as expected: the runner
-prints five routing fields and the synthesizer runs after routing.
+**The runner's as-of check was replaced in the same commit that built the
+field**, deliberately, so the two cases could not flip to PASS on the old
+date-shaped regex and leave nobody able to tell which had happened. It now
+asserts the structured value, that it is a date, and that that exact string
+reaches the answer.
 
-**Fixed a defect introduced by those branches.** The risk formatter reported a
-window it never named, so a query with no timeframe returned three-year figures
-under an unlabelled heading. `data_agent.py` already builds the observed range
-and observation count and both were being discarded. Now rendered, and it falls
-back to saying the window is unreported rather than omitting it.
+**The volatility window anchor, built on the third attempt.** Fetch window is
+`[today - N - _FETCH_MARGIN_DAYS, today]`; evaluation window is the last
+`years x trading_days_per_year` closes, trimmed before the frame is cached so
+covariance, returns and the per-name volatilities all read it. Verified live:
+756 closes exactly, ending at Friday's close rather than at Labor Day.
 
-**Built `tests/benchmark/run_cases.py`.** Twelve cases, one query each,
-PASS/FAIL/BLOCKED, printing n/12. Blocked cases probe for the capability they
-need rather than declaring themselves blocked, so they unblock automatically; a
-case that unblocks with no check written reports FAIL saying so.
+**Two of the three attempts failed, and how they failed is the useful part.**
+The first was arithmetically inert — a post-fetch trim cannot drop rows, because
+the frame arrives bounded by the fetch window. It passed `pytest`, the golden set
+and the runner, and would have shipped as a fix. The second split the
+`_prices_df_cache` key namespace by rebinding `period`; only the golden set's
+`errors` field caught it. **Neither would have been caught by reasoning about the
+code, and one was not caught by three of the four loops.**
 
-**Recorded six new findings** in KNOWN_GAPS at session end, plus two during the
-session because they gate queued work.
+**About twenty document corrections**, including two that were wrong in this
+file, one in `expected_values.md` and two in the roadmap. Listed in §5.
 
 ---
 
 ## 5. Decisions taken this session
 
-**The synthesizer reads `sub_results`, not `shared_data`.** Confirmed against
-`mark_agent_complete`, which stores the result dict verbatim. Not a trade-off —
-`sub_results` is already the synthesizer's input contract.
+**As-of is per holding at the source, reduced for aggregates by the agent.**
+`benchmark.md` Part 3b settles the shape — a date for every figure derived from
+market data. The reduction is computed in `portfolio_analysis_agent_node`, not
+the synthesizer, because anything the synthesizer derives exists only as text and
+the runner cannot assert on it. Compliance will need the same number.
 
-**The `data_fetch` branch prints both breakdowns.** `ExtractedParameters` has no
-`sector` field, so nothing in the decision distinguishes benchmark 1.1 from 1.4.
-Defaulting to asset class would answer 1.4 with the wrong table; inspecting the
-query text would put classification in the synthesizer. Printing both is never
-wrong, needs no prompt change, and narrows later. The CLI's identical-answer
-check fires on it, which is the instrument correctly reporting the stopgap.
+**The stalest holding is named only when the dates differ.** `min` returns the
+first minimal element, so on the normal case — nine holdings, one close — naming
+a ticker invents a staleness distinction that does not exist.
 
-**The benchmark counter uses the strict definition.** Full Part 3b compliance,
-including data age, asserted from the start. The counter reads 0/12 rather than
-reporting a number the benchmark's own text does not support. A counter that
-drifts ahead of its definition is the same failure shape as everything else being
-removed here.
+**D8 is a count of closes, not a calendar year.** 252, because that is D6's
+annualisation factor and D5's observation count, so the window and the
+annualisation cannot drift apart. Stated as "one calendar year" before, which is
+the same thing only on average and is exactly what the code was implementing when
+it came up short.
 
-**Exact market-value figures are not asserted in the runner.** They stay in
-`test_allocation.py`, where fixed inputs make them stable. Market values move
-with prices, `expected_values.md` is pinned to the 2026-09-02 closes, and no seam
-exists to pin a run against a date. The runner asserts what does not move:
-structure, invariants, static cost bases, the ticker set, whether the figures
-reached the prose, and whether Part 3b's as-of date is stated. This corrected an
-earlier KNOWN_GAPS entry that specified the expiring assertion.
+**Item 4's check is a pytest fixture, not a live comparison.** 10.2936% belongs
+to a window whose end has passed and no live run reaches it again. The fixture
+holds the 252 closes extracted from `expected_values.xlsx` and committed — not
+read from `data/portfolio.db`, which is untracked and would not survive a fresh
+clone. Same pattern as `test_allocation.py`.
 
-**Case 3.3 is blocked on position P&L, not merely failing on the date.** It
-routes `data_fetch` and returns the allocation table, so an as-of check alone
-would flip it to PASS the moment item 5 attaches a date, while the answer was
-still a portfolio-wide breakdown. Blocking it on `position_pnl` removes the
-false-pass path.
+**The fetch margin is not policy and is not in config.** Policy is something you
+would want to set differently; nobody has a preference about a fetch margin. It
+exists only because the fetch precedes knowledge of the last settled close. Named
+constant in `data_agent.py` with its reasoning attached. Its value need not be
+right, only sufficient, because a shortfall raises.
+
+**The benchmark count is no longer written in this file.** It changed on every
+capability commit and was stale twice in two days. §0 says to run the runner;
+a number copied into prose is the belief that outlives its evidence.
+
+**Deferred, with reasons, in KNOWN_GAPS:** spans versus counts for non-year
+windows; `group_by`/`filter` weighed against a `sector` field; whether the router
+stays a classifier or becomes a tool-caller. Each has a written reason for
+waiting and a note on what decides it.
+
+**Direction for `quant/`:** one tested implementation per formula, reachable from
+anywhere, never restated in a document. D8 claiming the code matched when it did
+not was that rule being broken.
 
 ---
 
