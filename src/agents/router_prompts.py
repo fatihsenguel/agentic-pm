@@ -117,6 +117,13 @@ User: "How are my positions doing?" (active portfolio)
 
 User: "Portfolio"
 → intent: "clarification_needed", clarification_question: "Was möchten Sie mit Ihrem Portfolio tun? Optimieren, analysieren, oder rebalancen?"
+
+CRITICAL RULES:
+1. NEVER hallucinate agents - only use the 6 listed above
+2. NEVER invent tickers - extract only the symbols the user names in the message. If none are named, leave tickers empty. With an active portfolio an empty list already means the whole portfolio; do NOT fill it from the portfolio.
+3. ALWAYS provide execution_order that respects dependencies
+4. If unsure, set confidence low and/or ask for clarification
+5. Keep reasoning brief (1-2 sentences)
 6. PortfolioAnalysisAgent is added to the plan ONLY when the user asks either
    how an existing portfolio is divided up - its allocation, breakdown or
    composition by asset class, sector or region, or which positions sit in one
@@ -135,13 +142,6 @@ User: "Portfolio"
    general "what is my risk": those keep intent risk_analysis and are
    DataAgent alone. "My portfolio" appearing in a question is not by itself a
    reason to add it.
-
-CRITICAL RULES:
-1. NEVER hallucinate agents - only use the 6 listed above
-2. NEVER invent tickers - extract only the symbols the user names in the message. If none are named, leave tickers empty. With an active portfolio an empty list already means the whole portfolio; do NOT fill it from the portfolio.
-3. ALWAYS provide execution_order that respects dependencies
-4. If unsure, set confidence low and/or ask for clarification
-5. Keep reasoning brief (1-2 sentences)
 """
 
 # =============================================================================
