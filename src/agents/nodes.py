@@ -804,6 +804,7 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
                     "cost_basis": round(line.cost_basis, 2),
                     "pct_of_denominator": line.pct_of_denominator,
                     "pct_of_invested": line.pct_of_invested,
+                    "pct_of_total": line.pct_of_total,
                     "tickers": line.tickers,
                 }
                 for line in allocation.lines
@@ -884,6 +885,7 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
                 "denominator": by_sector.denominator_label,
                 "invested_value": round(by_sector.invested_value, 2),
                 "sectored_value": round(by_sector.sectored_value, 2),
+                "total_value": round(by_sector.total_value, 2),
             },
             "as_of": {
                 "worst_case": as_of_dates[stalest],
