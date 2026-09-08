@@ -1486,6 +1486,40 @@ numbered 6 with no list around it. The ticker-padding fix was in code
 (`smart_router.py`) and stands regardless; the placement was fixed as its own
 commit before the 3.2 prompt change so that the 3.2 golden diff is clean.
 
+### "Is my AAPL position too big?" flips between compliance and risk_analysis
+
+Recorded 8 September (sixth sitting), after the compliance intent landed
+(979562f). Prediction for that commit: the line moves to `compliance` /
+`[DataAgent, PortfolioAnalysisAgent, ComplianceAgent]` / errors 0. Run 1
+gave exactly that. Run 2 gave `risk_analysis` / `[PortfolioAnalysisAgent]` /
+errors 1 - the analysis agent planned without DataAgent, which nothing in
+`validate_execution_order` rejects, and the node raised on missing
+holdings. A line that holds once in two has failed; this is the line's
+fourth failed prediction (three on the record above) and the sitting
+stopped there: no rewording.
+
+The cause is readable in the prompt and was not read before predicting.
+Rule 6 says concentration questions "keep intent risk_analysis and are
+DataAgent alone"; rule 7 (979562f) says "a position is too big" is
+compliance with the three-agent plan. "Too big" is both, and the router
+picks one per run. The second rule was written without re-reading the
+first.
+
+Pinned as run 1 - the designed routing - so a diff on this line is the
+known flip, the way the macro line pins its known error. Not pinned as
+the old `clarification_needed`, which no run has produced since.
+
+Next is a diagnostic, not a wording: two golden queries against portfolio
+3 that separate the causes - one naming the policy without "too big"
+("Is my AAPL position within my policy's limits?", predicted `compliance`,
+stable) and one naming concentration without the policy ("Is AAPL too
+concentrated?", predicted `risk_analysis` / `[DataAgent]` by rule 6). If
+both are stable the collision is the two rules alone, and reconciling rule
+6 with rule 7 - concentration now has a home - is one later, separate
+change with its own prediction. Also noted for that change: a plan naming
+PortfolioAnalysisAgent without DataAgent should be rejected by the
+validator, not discovered by the node.
+
 ### pytest warning inventory
 
 Recorded 7 September (third sitting), from a green run of 132. Twenty
