@@ -29,6 +29,11 @@ QUERIES = [
     # 8 September after the router refused the first of them in the CLI.
     # 3.2 cannot see a router that refuses too much; these can.
     ("How much did AAPL gain today?", 3),
+    # The diagnostic beside it (KNOWN_GAPS, pending decision 5): the same
+    # held ticker without the day, so the in-scope bare-ticker question has
+    # a line of its own. Extraction owns the ticker; the model decides the
+    # intent; "today" next to a change verb is a span the vocabulary lacks.
+    ("How much has AAPL gained?", 3),
     ("Is my AAPL position too big?", 3),
     # Diagnostics for the "too big" flip (KNOWN_GAPS, 8 September): the
     # policy word without "too big", and the concentration word without the
