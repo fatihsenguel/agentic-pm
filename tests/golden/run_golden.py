@@ -30,6 +30,12 @@ QUERIES = [
     # 3.2 cannot see a router that refuses too much; these can.
     ("How much did AAPL gain today?", 3),
     ("Is my AAPL position too big?", 3),
+    # Diagnostics for the "too big" flip (KNOWN_GAPS, 8 September): the
+    # policy word without "too big", and the concentration word without the
+    # policy. No prompt change; if both are stable, the flip is the rule 6 /
+    # rule 7 collision alone.
+    ("Is my AAPL position within my policy's limits?", 3),
+    ("Is AAPL too concentrated?", 3),
 ]
 
 
