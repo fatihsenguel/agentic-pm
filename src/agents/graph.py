@@ -225,8 +225,14 @@ async def run_agent_graph(user_message: str, request_id: str = None, portfolio_i
     # Get compiled graph
     graph = get_graph()
     
-    # Run the graph
-    final_state = await graph.ainvoke(state)
+    # One request span around the whole run, under the state's request id,
+    # so every node - Router included - traces into the same request and the
+    # stored trace shows the plan being executed, not only planned.
+    # stream_agent_graph has no caller and does not open one.
+    from observability import get_tracer
+
+    with get_tracer().trace_request(request_id=state["request_id"], user_input=user_message[:100]):
+        final_state = await graph.ainvoke(state)
     
     return final_state
 

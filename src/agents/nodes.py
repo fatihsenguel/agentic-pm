@@ -292,19 +292,18 @@ async def router_node(state: AgentState) -> Dict[str, Any]:
     from .smart_router import get_router
     
     tracer = get_tracer()
-    request_ctx = None
     agent_ctx = None
     
     try:
-        # Start tracing
-        if tracer:
-            request_ctx = tracer.trace_request(
-                request_id=state.get("request_id"),
-                user_input=get_user_message(state)[:100]
-            )
-            request_ctx.__enter__()
-            agent_ctx = request_ctx.trace_agent("Router")
-            agent_ctx.__enter__()
+        # The request span is owned by run_agent_graph, so it outlives this
+        # node and the agents after it trace into the same request. Opening
+        # it here closed it here, and every later node found no request:
+        # no agent spans, no tool calls, no handovers in any live trace.
+        if tracer and hasattr(tracer, "get_current_request"):
+            req = tracer.get_current_request()
+            if req:
+                agent_ctx = req.trace_agent("Router")
+                agent_ctx.__enter__()
         
         # Get user message
         user_message = get_user_message(state)
@@ -337,8 +336,6 @@ async def router_node(state: AgentState) -> Dict[str, Any]:
     finally:
         if agent_ctx:
             agent_ctx.__exit__(None, None, None)
-        if request_ctx:
-            request_ctx.__exit__(None, None, None)
 
 
 def _decision_to_dict(decision) -> Dict[str, Any]:
