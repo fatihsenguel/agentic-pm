@@ -2,21 +2,23 @@
 Compliance: the IPS applied to the allocation PortfolioAnalysisAgent published.
 
 Pure functions over dicts. No database, no LLM, no state, and no second
-arithmetic path: every market value, percentage and total is read from the
-allocation block and position P&L exactly as published to shared_data, and
-the only arithmetic here is one division per figure and one subtraction per
-finding. The checker does not know how the block was computed and does not
-recompute it; if the block is wrong the findings are wrong in the same way,
-which is the point - one computation, one place to be wrong.
+arithmetic path: every percentage and total is read from the allocation
+block and position P&L exactly as published to shared_data. The only
+arithmetic here is one subtraction per finding, plus one division per
+position for the concentration clauses until position P&L carries its own
+share of total. The checker does not know how the block was computed and
+does not recompute it; if the block is wrong the findings are wrong in the
+same way, which is the point - one computation, one place to be wrong.
 
 Reference: tests/golden/expected_values.md Part 7, computed by hand before
 this existed, and its decisions:
 
   D2  The denominator for every clause is total portfolio value including
-      cash: `by_asset_class.total_value`. Sector clauses in particular use
-      it and NOT either percentage the sector line carries - those are shares
-      of sectored and of invested value, both wrong for IPS-4.3 and both
-      plausible.
+      cash: `by_asset_class.total_value`. Every allocation line carries its
+      share of it as `pct_of_total`, and that is the one field the band and
+      sector clauses read. A sector line also carries shares of sectored and
+      of invested value; both are wrong for IPS-4.3 and both plausible, and
+      neither is read here.
   D9  Exactly at a limit passes. Strict, unrounded comparison - beyond the
       cent rounding the block already carries, which this module does not
       add to.
@@ -177,9 +179,12 @@ def _band(clause: Clause, class_lines: Mapping[str, Mapping], total: float) -> L
             f"{sorted(class_lines)}. An absent class is zero only if the label is "
             "right, and a wrong label would pass as an empty class."
         )
-    observed = line.get("pct_of_denominator")
+    observed = line.get("pct_of_total")
     if observed is None:
-        raise ComplianceError(f"{clause.id}: {label} carries no share of total value.")
+        raise ComplianceError(
+            f"{clause.id}: {label} carries no pct_of_total. The share of total "
+            "is published by PortfolioAnalysisAgent, not divided for here."
+        )
 
     out = []
     if "min" in clause.params:
@@ -230,11 +235,15 @@ def _per_sector(
                 "counted over directly held shares; a fund with a sector is a data "
                 "inconsistency, not a sector exposure."
             )
-        market_value = line.get("market_value")
-        if market_value is None:
-            raise ComplianceError(f"{clause.id}: sector {label!r} has no market_value.")
-        # Total value, not the sector block's own denominators (D2, Part 7).
-        out.append(_finding(clause, label, market_value / total, clause.params["max"], "max", total))
+        # The share of total (D2, Part 7), not either of the sector block's
+        # own denominators, and read rather than divided for.
+        observed = line.get("pct_of_total")
+        if observed is None:
+            raise ComplianceError(
+                f"{clause.id}: sector {label!r} carries no pct_of_total. The share "
+                "of total is published by PortfolioAnalysisAgent, not divided for here."
+            )
+        out.append(_finding(clause, label, observed, clause.params["max"], "max", total))
     return out
 
 
