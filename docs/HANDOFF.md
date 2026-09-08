@@ -1,10 +1,10 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 8 September 2026 (seventh sitting; the fifth and sixth were earlier the same day)
-**Branch:** `compliance`, cut from `baseline-v1` at the fifth sitting's handoff (afdc344). Not merged, not pushed by the assistant. The owner pushes and merges.
+**Branch:** `compliance`, cut from `baseline-v1` at the fifth sitting's handoff (afdc344). Not merged. The owner pushes and merges.
 **State:** Green. 232 tests passing at the last code change. Golden set: fifteen queries, clean on all five runs this sitting against `expected.txt`, no `retries` line on any; three lines pin failures (below). Runner: **11/12** — 2.3 passes (twice), 3.5 blocked on conversation memory. Commit count this sitting: `git rev-list --count fa5c34e..HEAD` = 8 before this file's commit.
 
-Written for an LLM assistant picking up cold in a new conversation.
+Written for whoever picks this up cold.
 
 **Regenerate this document at the end of each session rather than patching it.**
 Generated context files rot faster than the code they describe. The version this
