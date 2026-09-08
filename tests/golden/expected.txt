@@ -97,9 +97,9 @@ Q: Is my AAPL position within my policy's limits? | pid=3
   errors: 0
 
 Q: Is AAPL too concentrated? | pid=3
-  intent: risk_analysis
-  plan:   ['PortfolioAnalysisAgent']
+  intent: compliance
+  plan:   ['DataAgent', 'PortfolioAnalysisAgent', 'ComplianceAgent']
   period: None
-  agents_run: ['PortfolioAnalysisAgent']
-  errors: 1
+  agents_run: ['ComplianceAgent', 'DataAgent', 'PortfolioAnalysisAgent']
+  errors: 0
 
