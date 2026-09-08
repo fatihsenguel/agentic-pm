@@ -90,15 +90,24 @@ class TestRouterDecision:
             ],
             "execution_order": ["FakeAgent"],
             "parameters": {},
-            "reasoning": "Test",
+            "reasoning": "An agent the roster does not have",
         }
-        
+
         # Should raise validation error for unknown agent
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="FakeAgent"):
             RouterDecision.model_validate(data)
-    
-    def test_execution_order_mismatch(self):
-        """Test that execution_order must match agents_needed."""
+
+    def test_execution_order_mismatch_is_repaired_today(self):
+        """execution_order disagreeing with agents_needed is silently
+        overwritten from the task list, not rejected.
+
+        This test used to expect a raise and got one - from `reasoning`
+        being four characters, below the schema's minimum of ten. With a
+        valid reasoning the same data validates and the order is repaired,
+        which is what validate_execution_order does (KNOWN_GAPS,
+        "validate_execution_order repairs instead of raising"). Pinned as
+        it is so the test sees the validator it names; when the repair
+        becomes a raise, this becomes a pytest.raises."""
         data = {
             "intent": "optimization",
             "confidence": 0.9,
@@ -107,11 +116,11 @@ class TestRouterDecision:
             ],
             "execution_order": ["DataAgent", "OptimizationAgent"],  # Mismatch!
             "parameters": {},
-            "reasoning": "Test",
+            "reasoning": "The order names an agent the task list does not",
         }
-        
-        with pytest.raises(ValueError):
-            RouterDecision.model_validate(data)
+
+        decision = RouterDecision.model_validate(data)
+        assert decision.execution_order == ["DataAgent"]
     
     def test_clarification_requires_question(self):
         """Test that clarification_needed intent requires question."""
