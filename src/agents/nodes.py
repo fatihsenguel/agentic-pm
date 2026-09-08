@@ -1611,6 +1611,8 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             lines.extend(_format_risk_response(sub_results))
         elif intent == "out_of_scope":
             lines.extend(_format_out_of_scope_response())
+        elif intent == "compliance":
+            lines.extend(_format_compliance_response(sub_results))
         elif intent == "combined":
             # Combined: show all relevant results
             if "MacroAgent" in sub_results:
@@ -1648,6 +1650,141 @@ OUT_OF_SCOPE_RESPONSE = [
     "instrument, forecast prices or returns, assess tax, or place orders. "
     "No recommendation is given here.",
 ]
+
+
+def _format_compliance_response(sub_results: Dict) -> List[str]:
+    """Format the compliance block. Cites clause ids and the owner's clause
+    text; prints the figures the checker published and computes none - the
+    benchmark runner holds every percentage in this prose to a finding.
+
+    Three renderings, chosen by what the block carries: a topic lookup, a
+    hypothetical weight (no total was measured), or the portfolio check.
+    Every reading gives a condition or a citation and no recommendation.
+    """
+    result = sub_results.get("ComplianceAgent", {})
+    if not result.get("success"):
+        return ["⚠️ Compliance check failed", "", result.get("error", "unknown error")]
+    block = result.get("compliance") or {}
+    policy = block.get("policy") or {}
+    findings = block.get("findings") or []
+
+    if block.get("topic") is not None:
+        return _format_policy_lookup(block, policy)
+    if block.get("total_value") is None and findings:
+        return _format_hypothetical(findings, policy)
+    return _format_policy_check(block, policy, findings)
+
+
+def _format_policy_lookup(block: Dict, policy: Dict) -> List[str]:
+    """What the policy says about a topic. Nothing on it: one sentence, no
+    clause id, no nearest clause - the retrieval failure 3.4 exists to
+    refuse. Something on it: each clause, id and text verbatim."""
+    asked = (block.get("topic") or {}).get("asked", "")
+    clause_ids = (block.get("topic") or {}).get("clauses") or []
+    if block.get("no_clause") or not clause_ids:
+        return [
+            "📜 **INVESTMENT POLICY**",
+            "",
+            f"The investment policy contains nothing on {asked}.",
+            "",
+            f"It has {len(policy)} clauses and none of them is about this. "
+            "Nothing is read into the nearest clause.",
+        ]
+    lines = ["📜 **INVESTMENT POLICY**", "", f"What the policy says about {asked}:", ""]
+    for cid in clause_ids:
+        lines.append(f"**{cid}** — {policy.get(cid, {}).get('text', '')}")
+    return lines
+
+
+def _format_hypothetical(findings: List[Dict], policy: Dict) -> List[str]:
+    """A proposed weight in one position against the concentration limits.
+    Refused or permitted per clause, the clause text, the distance. No
+    weighing up: the vocabulary is the clause text and the figures."""
+    refused = [f for f in findings if f.get("status") == "refused"]
+    weight = findings[0].get("observed")
+    lines = [
+        "🚫 **NOT PERMITTED BY THE POLICY**" if refused else "✅ **PERMITTED BY THE POLICY**",
+        "",
+        f"A weight of {weight:.2%} of total value in one position:",
+        "",
+    ]
+    for f in findings:
+        lines.append(f"**{f['clause']}** — {policy.get(f['clause'], {}).get('text', '')}")
+        if f.get("status") == "refused":
+            lines.append(f"  {f['observed']:.2%} against a limit of {f['limit']:.0%}: "
+                         f"refused, {f['distance_pp']:+.2f} pp over the limit.")
+        else:
+            lines.append(f"  {f['observed']:.2%} against a limit of {f['limit']:.0%}: "
+                         "within the limit.")
+        lines.append("")
+    lines.append("**Not done:** no recommendation. The policy states the limit and the "
+                 "answer stops there.")
+    return lines
+
+
+def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict]) -> List[str]:
+    """The portfolio against every checkable clause, then the conditions
+    IPS-5.2 asks for, then the statements the check did not compute, so
+    "all rules" is visibly all of them."""
+    lines = ["📋 **INVESTMENT POLICY CHECK**", ""]
+
+    as_of = block.get("as_of") or {}
+    if as_of.get("worst_case"):
+        if as_of.get("uniform"):
+            lines.append(f"**Priced as of {as_of['worst_case']}** — the close "
+                         f"for every holding.")
+        else:
+            lines.append(f"**Priced as of {as_of['worst_case']}** — the oldest "
+                         f"close among the holdings ({as_of.get('stalest')}). "
+                         f"No figure below is fresher than that.")
+        lines.append("")
+    if block.get("total_value") is not None:
+        lines.append(f"**Total portfolio value:** {block['total_value']:,.2f} "
+                     "(including cash; every limit is a share of it)")
+        lines.append("")
+
+    by_clause: Dict[str, List[Dict]] = {}
+    for f in findings:
+        by_clause.setdefault(f["clause"], []).append(f)
+
+    lines.append("**Findings by clause**")
+    for cid, rows in by_clause.items():
+        lines.append("")
+        lines.append(f"**{cid}** — {policy.get(cid, {}).get('text', '')}")
+        for f in rows:
+            if f.get("status") == "exempt":
+                lines.append(f"  {f['subject']}: exempt — a fund, not attributed to an issuer.")
+            elif f.get("status") == "breach":
+                lines.append(f"  {f['subject']}: {f['observed']:.2%} of total against "
+                             f"{f['bound']} {f['limit']:.0%} → BREACH, "
+                             f"{f['distance_pp']:+.2f} pp ({f['distance_value']:,.2f}).")
+            else:
+                lines.append(f"  {f['subject']}: {f['observed']:.2%} of total against "
+                             f"{f['bound']} {f['limit']:.0%} → within.")
+
+    lines.append("")
+    breaches = [f for f in findings if f.get("status") == "breach"]
+    lines.append("**What would have to change** (IPS-5.2: the amount that returns each "
+                 "figure to its limit, stated as a condition, not a trade)")
+    if not breaches:
+        lines.append("  No limit is breached.")
+    for f in breaches:
+        direction = "down" if f["bound"] == "max" else "up"
+        lines.append(f"  {f['clause']} {f['subject']}: {direction} {f['distance_pp']:.2f} pp "
+                     f"of total ({f['distance_value']:,.2f} at unchanged total).")
+
+    statements = block.get("statements") or []
+    if statements:
+        lines.append("")
+        lines.append("**Policy statements** — cited, not computed")
+        for st in statements:
+            lines.append(f"  **{st['clause']}** — {st.get('text', '')}")
+
+    lines.append("")
+    lines.append("**Not done:** no recommendation, no target weight, no instrument to "
+                 "trade. Which instruments meet a condition is outside this document "
+                 "(IPS-5.2).")
+    return lines
 
 
 def _format_out_of_scope_response() -> List[str]:
