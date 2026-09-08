@@ -62,24 +62,29 @@ PORTFOLIO_DESCRIPTION = (
 )
 CASH_BALANCE = 15_500.00
 
-# ticker, name, asset_class, sector, industry, country, qty, avg_price, purchase_date
+# ticker, name, asset_class, sector, industry, country, instrument_type, qty, avg_price, purchase_date
+#
+# instrument_type is 'share' or 'fund' (expected_values.md Part 7): IPS-4.2
+# and 4.3 count directly held shares only. It is carried data, not inferred
+# from "has no sector", so a share with an unknown sector cannot turn into a
+# fund silently.
 POSITIONS = [
-    ("SPY",  "SPDR S&P 500 ETF Trust",             "Equity",       None,          None,                   "US", 100, 500.00, "2024-01-15"),
-    ("AAPL", "Apple Inc.",                          "Equity",       "Technology",  "Consumer Electronics", "US", 200, 200.00, "2024-02-20"),
-    ("MSFT", "Microsoft Corporation",               "Equity",       "Technology",  "Software",             "US", 100, 400.00, "2024-03-18"),
-    ("JNJ",  "Johnson & Johnson",                   "Equity",       "Healthcare",  "Pharmaceuticals",      "US", 150, 150.00, "2024-05-06"),
-    ("JPM",  "JPMorgan Chase & Co.",                "Equity",       "Financials",  "Banks",                "US", 100, 200.00, "2024-07-15"),
-    ("NEE",  "NextEra Energy Inc.",                 "Equity",       "Utilities",   "Electric Utilities",   "US", 200,  75.00, "2024-09-09"),
-    ("TLT",  "iShares 20+ Year Treasury Bond ETF",  "Fixed Income", None,          None,                   "US", 500,  90.00, "2025-01-13"),
-    ("GLD",  "SPDR Gold Shares",                    "Commodity",    None,          None,                   "US", 100, 250.00, "2025-03-10"),
-    ("VNQ",  "Vanguard Real Estate ETF",            "Real Estate",  None,          None,                   "US", 300,  90.00, "2025-06-02"),
+    ("SPY",  "SPDR S&P 500 ETF Trust",             "Equity",       None,          None,                   "US", "fund",  100, 500.00, "2024-01-15"),
+    ("AAPL", "Apple Inc.",                          "Equity",       "Technology",  "Consumer Electronics", "US", "share", 200, 200.00, "2024-02-20"),
+    ("MSFT", "Microsoft Corporation",               "Equity",       "Technology",  "Software",             "US", "share", 100, 400.00, "2024-03-18"),
+    ("JNJ",  "Johnson & Johnson",                   "Equity",       "Healthcare",  "Pharmaceuticals",      "US", "share", 150, 150.00, "2024-05-06"),
+    ("JPM",  "JPMorgan Chase & Co.",                "Equity",       "Financials",  "Banks",                "US", "share", 100, 200.00, "2024-07-15"),
+    ("NEE",  "NextEra Energy Inc.",                 "Equity",       "Utilities",   "Electric Utilities",   "US", "share", 200,  75.00, "2024-09-09"),
+    ("TLT",  "iShares 20+ Year Treasury Bond ETF",  "Fixed Income", None,          None,                   "US", "fund",  500,  90.00, "2025-01-13"),
+    ("GLD",  "SPDR Gold Shares",                    "Commodity",    None,          None,                   "US", "fund",  100, 250.00, "2025-03-10"),
+    ("VNQ",  "Vanguard Real Estate ETF",            "Real Estate",  None,          None,                   "US", "fund",  300,  90.00, "2025-06-02"),
 ]
 
 
 def summarise():
     """Print what will be written, plus the figures 0.2 has to reproduce by hand."""
     by_class, by_sector, total = {}, {}, 0.0
-    for _, _, acls, sector, _, _, qty, price, _ in POSITIONS:
+    for _, _, acls, sector, _, _, _, qty, price, _ in POSITIONS:
         cost = qty * price
         total += cost
         by_class[acls] = by_class.get(acls, 0.0) + cost
@@ -137,7 +142,7 @@ def seed(reset: bool) -> int:
             )
             print(f"  deleted {deleted} existing holdings")
 
-        for ticker, name, acls, sector, industry, country, qty, price, bought in POSITIONS:
+        for ticker, name, acls, sector, industry, country, kind, qty, price, bought in POSITIONS:
             asset = session.query(Asset).filter(Asset.ticker == ticker).one_or_none()
             if asset is None:
                 asset = Asset(ticker=ticker, name=name)
@@ -154,6 +159,7 @@ def seed(reset: bool) -> int:
             asset.industry = industry
             asset.country = country
             asset.currency = "USD"
+            asset.instrument_type = kind
             session.flush()
 
             purchase_date = datetime.date.fromisoformat(bought)
@@ -180,7 +186,7 @@ def seed(reset: bool) -> int:
                 holding.purchase_date = purchase_date
 
             print(f"      {qty:>5g} @ {price:>8,.2f}  bought {bought}  "
-                  f"{acls}/{sector or '-'}")
+                  f"{acls}/{sector or '-'}  {kind}")
 
         session.commit()
         print(f"\ncommitted. run the CLI with --portfolio {portfolio.id}")

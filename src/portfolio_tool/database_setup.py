@@ -33,6 +33,10 @@ class Asset(Base):
     industry = Column(String(50), nullable=True)
     country = Column(String(50), nullable=True)
     currency = Column(String(10), nullable=True)
+    # 'share' or 'fund'. IPS-4.2 and 4.3 count directly held shares only, so
+    # the checker needs to know and raises when this is NULL rather than guess
+    # (migration 05034c6316c8). Written by seed_portfolio.py.
+    instrument_type = Column(String(10), nullable=True)
     daily_prices = relationship('DailyPrice', back_populates='asset', cascade='all, delete-orphan')
     transactions = relationship('Transaction', back_populates='asset', cascade='all, delete-orphan')
     dividends = relationship('Dividend', back_populates='asset', cascade='all, delete-orphan')
