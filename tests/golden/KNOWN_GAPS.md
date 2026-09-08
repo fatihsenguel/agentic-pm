@@ -1104,6 +1104,14 @@ limit?" now carries `JNJ` in `tickers` from extraction and the compliance
 formatter still has no selection axis to read it (the "Four wrong-faced
 answers" entry).
 
+**9 September, a second shape for the selection axis.** "Which of my
+positions are over the limit?" routes to the portfolio check and answers
+with the full 63-line report; the answer is inside it. So the axis the
+compliance formatter lacks has at least two values: a named position
+("Is my JNJ position over any limit?", `tickers` carries it since f099101)
+and breaches only. The handoff names this the first code change of the
+next sitting.
+
 
 ## Where non-determinism is allowed to live
 
@@ -1656,6 +1664,11 @@ has no selection axis and answers with the full report - that half is the
 open item, with `filter` (the `group_by`/`filter` entry). "Could I put 11%
 into a new ETF?" still lacks the instrument type (pending decision 7).
 
+**9 September session.** "Could I put 11% into a new ETF?" seen again,
+refused under IPS-4.2 as before (pending decision 7). The JNJ question
+carries `tickers: ["JNJ"]` and still gets the full report (the selection
+axis, above).
+
 
 ### `ExtractedParameters` fields with no reader - grep, 8 September
 
@@ -2154,6 +2167,13 @@ reader changes, the projection exists and the rule is a closed vocabulary
 from the owner's own rows, not a world list; the risk to name then is a
 holding whose first word is an English word.
 
+**Seen in the 9 September session.** "How is my Apple Inc. position
+doing?" -> `data_fetch`, `position_pnl`, `tickers: []`, the P&L block for
+all nine positions, AAPL first only because the block is in the model's
+order. Owner's decision the same day (handoff §5 item 13): not resolved by
+extraction; item 16 is the path that would resolve it.
+
+
 ### The four phrase rules in extraction read English
 
 Recorded 9 September (between sittings). Intent in German works: the
@@ -2170,6 +2190,58 @@ and not a policy. The owner uses German occasionally. Logged, not built: the
 fix is the reader model that replaces the bridge, not German rows in four
 patterns, which would double a bridge that is meant to be deleted in one
 sitting. Until then a German span question is a known wrong face.
+
+**Seen in the 9 September session.** "Wie ist meine Allokation nach
+Anlageklasse?" answered correctly (intent and measure are the model's, in
+German). "Wie lief mein Portfolio im letzten Monat?" -> `position_pnl`,
+no period, the since-purchase block for all nine positions: the wrong face
+the English span rule prevents, in German.
+
+
+### The lookup sentence quotes the whole question
+
+Recorded 9 September, from the CLI session. Since f099101 the topic the
+compliance node receives is the user's whole message, and the lookup
+formatter's sentence was written for a phrase: "The investment policy
+contains nothing on what does my investment policy say about currency
+risk?." The answer is right and the runner's 3.4 still passes on "contains
+nothing on"; the sentence reads badly. A formatter wording, no arithmetic:
+say the policy contains nothing on this and name what was asked on its own
+line, or nothing at all. Logged, not chased.
+
+### One-figure questions get the whole block
+
+Recorded 9 September, from the CLI session. "How much is my portfolio
+worth?" is `measure: allocation` with no `group_by`, so the answer is the
+total on its third line and then all three allocation views, 31 lines, and
+the "Not done" line says the question named no breakdown. "What did I pay
+for my JPM shares?" is `position_pnl` for JPM: the cost basis is in the
+block's second line, and the CLI's identical-answer check fired because
+the block is the same one the P&L question got. Both answers carry the
+figure asked for; neither is shaped like the question. The `measure`
+vocabulary has no `total` and no `cost`; a total is published inside the
+allocation block and a cost inside each position, so either would be a
+rendering of an existing figure, not a computation, and belongs with the
+selection-axis decision rather than as new measures. Logged.
+
+### CLI session, 9 September: twenty-seven prompts
+
+Run after the eighth sitting's sweep, against portfolio 3, with the nine
+recorded CLI prompts, three typo pairs, three name-and-language prompts,
+four compliance phrasings in plain words, three span-and-figure prompts and
+two scope prompts. Nineteen answered the question asked, among them every
+case the sitting built: the sector share of total, the position table, the
+"last month" clarification with no model call, "APPL"/"yes" and
+"MSTF"/"no, JNJ" resolved, a new question after a clarification routed as
+new, "three years" as a 3Y window, German intent, two refusals. The eight
+that did not, each in its entry: the full report for a named position and
+for "which positions are over the limit" (the selection axis, above); the
+lookup miss "What are my policy's rules on cash?" (pinned as the honest
+miss under the derived lookup); the ETF refused as an issuer (pending
+decision 7); "Apple Inc." and the German span (the two bridge entries); the
+lookup sentence quoting the question; the whole block for one-figure
+questions. Every answer carried its as-of date. No golden or runner run was
+needed: nothing under `src/` changed.
 
 
 ### pytest warning inventory
