@@ -1084,18 +1084,16 @@ def blocked_on_portfolio_vol(state):
 
 
 def blocked_on_compliance(state):
+    """ComplianceAgent exists (8 September); a case is blocked now only when
+    the router did not plan it, which is a routing gap, not a missing agent."""
     if "ComplianceAgent" in (state.get("sub_results") or {}):
         return None
-    return "no Compliance agent and no IPS; built from the owner's document (handoff §7.2)"
+    plan = (state.get("router_decision") or {}).get("execution_order") or []
+    return (f"the router did not plan ComplianceAgent (intent {_intent(state)!r}, "
+            f"plan {plan}); the agent exists, the routing for this wording does not")
 
 
-def blocked_on_delegation_trace(state):
-    if "ComplianceAgent" in (state.get("sub_results") or {}):
-        return None
-    return (
-        "no Compliance agent, and log_delegation is never called, so the trace "
-        "cannot show contract handovers"
-    )
+blocked_on_delegation_trace = blocked_on_compliance
 
 
 def blocked_on_conversation_memory(state):
