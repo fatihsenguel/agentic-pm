@@ -3,6 +3,7 @@
 # Principle: Minimal state - only what's needed for the graph to function
 # Updated: Phase 6.2 - Full multi-agent state management
 
+import logging
 from typing import TypedDict, Annotated, Sequence, Optional, Dict, Any, List
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 from langgraph.graph.message import add_messages
@@ -121,18 +122,50 @@ def set_router_decision(state: AgentState, decision: Dict[str, Any]) -> Dict[str
 
 
 def mark_agent_complete(state: AgentState, agent_name: str, result: Dict[str, Any]) -> Dict[str, Any]:
-    """Mark an agent as complete and store its result."""
+    """Mark an agent as complete and store its result.
+
+    Also the hand-over point: the finishing agent's output is what the next
+    agent in the plan reads, through shared_data, so the trace records a
+    delegation from this agent to that one here, once, for every plan
+    (benchmark 2.1: "trace shows contract handovers").
+    """
     # Update sub_results
     new_results = {**state.get("sub_results", {}), agent_name: result}
     
     # Remove from agents_to_run
     remaining = [a for a in state.get("agents_to_run", []) if a != agent_name]
-    
+
+    _log_handover(agent_name, remaining, result)
+
     return {
         "sub_results": new_results,
         "agents_to_run": remaining,
         "execution_step": state.get("execution_step", 0) + 1,
     }
+
+
+def _log_handover(agent_name: str, remaining: List[str], result: Dict[str, Any]) -> None:
+    """Emit one DELEGATION trace event from `agent_name` to the next agent in
+    the plan, naming what was handed over: the keys of the result that are
+    data, which are the same keys the node published to shared_data.
+
+    Nothing is handed over by the last agent, and nothing is traced outside a
+    request (unit tests). A tracer failure is logged and never fails the run:
+    the trace describes the run, it is not part of it.
+    """
+    if not remaining:
+        return
+    try:
+        from observability import get_tracer
+
+        req = get_tracer().get_current_request()
+        if req is None:
+            return
+        published = sorted(k for k in result if k not in ("success", "agent_name", "error"))
+        task = ("via shared_data: " + ", ".join(published)) if published else "no data published"
+        req.trace_agent(agent_name).log_delegation(remaining[0], task)
+    except Exception as e:
+        logging.getLogger(__name__).warning(f"Handover trace from {agent_name} failed (ignoring): {e}")
 
 
 def add_shared_data(state: AgentState, key: str, value: Any) -> Dict[str, Any]:
