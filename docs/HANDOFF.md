@@ -131,7 +131,8 @@ pins the in-scope bare-ticker question as `data_fetch` with the analysis
 plan. The three compliance lines pin the three-agent plan and have held on
 every run since the derivation landed. `retries` has never printed.
 
-**Runner 12/12.** 3.5: "Hows my APPL doing?" then "yes".
+**Runner 12/12.** 3.5: "Hows my APPL doing?" then "yes". It asks, by
+decision (9 September, §5 item 15).
 
 ### Branches and tags
 
@@ -294,6 +295,29 @@ uninstantiated).
     commit via `git add`.
 11. "Optimization failed: None": the message, and the two-asset failure.
 12. A golden line for 2.3.
+13. **Company names in questions** ("How is my Apple Inc. position doing?"
+    answers for all nine positions). Not resolved by extraction, by the
+    owner's decision on 9 September: a name list is a bridge that grows;
+    the reader model resolves the name and the tool validates the ticker.
+    KNOWN_GAPS, "The extraction bridge reads symbols, not company names".
+14. **German phrasings.** The four phrase rules in `extraction.py` read
+    English; a German span question is a known wrong face until the reader
+    changes. Owner: occasional German use. KNOWN_GAPS, "The four phrase
+    rules in extraction read English".
+15. **The softer 3.5 - decided 9 September: no.** 3.5 stays as the
+    benchmark defines it; a typo of a holding is asked about. A stated
+    reading ("APPL read as AAPL") is the reader model's behaviour in the
+    end state, not the tool's, and the tool asks.
+16. **A stronger reader model producing a typed request, with extraction
+    reduced to validation.** The middle path between today's bridge and
+    DIRECTION.md's Order 5: the model reads the sentence (names, German,
+    typos) and emits the typed fields; extraction only validates them
+    against the vocabularies and asks on what fails. To be brought as a
+    decision next session with what it does to the golden set (a
+    nondeterministic reader behind pinned lines) and the cost per call
+    (`RouterConfig.use_stronger_model` exists; `ANTHROPIC_SONNET` still
+    points at the Haiku id). If taken, it is a dated change to
+    DIRECTION.md's Order.
 
 ---
 
@@ -313,10 +337,14 @@ type vocabulary grown one clause at a time; a Part 8 reference for the real
 portfolio before any figure about it is trusted. Each is a decision first,
 a hand-computed reference before code, and the loops named.
 
-Before or beside it, the small items from §5 that the sitting's work
-exposed: the compliance selection axis (1), the rename (2), and the
-deletions (5), which are the cheapest way to make the router's surface
-match what is read.
+**The first code change of the next sitting is the compliance selection
+axis (§5 item 1)**, ahead of the rename (2) and the deletions (5): the
+9 September CLI session put the full 63-line report in front of three
+different questions ("Is my JNJ position over any limit?", "Which of my
+positions are over the limit?", and the pinned lookup miss "What are my
+policy's rules on cash?"), and it is the one wrong face left that the
+sitting's own work made deterministic. Decision 16 is brought as a decision
+in the same sitting, before any code that widens the bridge.
 
 ### Later, with reasons
 
