@@ -1793,8 +1793,8 @@ A PowerShell here-string was written into it literally. Line 1 is `@"`, there is
 `"@ | Out-File -FilePath .gitignore -Encoding UTF8data/portfolio.db`. The DB is
 still ignored by later standalone entries, so nothing is leaking.
 
-**Not actionable by the assistant, 8 September (sixth sitting):** the standing rules
-now say `.gitignore` is never edited by the assistant. "Rewrite it" stands as a
+**Not actionable in a session, 8 September (sixth sitting):** the standing rules
+now say `.gitignore` is the owner's to edit. "Rewrite it" stands as a
 description of what the file needs and is the owner's to do.
 
 ### `portfolio_tool/__init__.py` opens a database connection at import
