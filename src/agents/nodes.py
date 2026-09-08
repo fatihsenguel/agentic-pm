@@ -2005,16 +2005,24 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
     if by_sector:
         if by_class:
             lines.append("")
-        lines.append(f"**By sector**, % of {by_sector['denominator']} "
-                     f"and of invested value {by_sector['invested_value']:,.2f}:")
+        # Three shares per line, each read from the block: of sectored value,
+        # of invested value (Part 3), and of total portfolio value including
+        # cash (Part 7, the IPS-4.3 figure and the answer to "what share of
+        # my portfolio"). The total is the sector block's own, so the column
+        # is labelled when the asset-class block is not rendered.
+        lines.append(f"**By sector**, % of {by_sector['denominator']}, "
+                     f"of invested value {by_sector['invested_value']:,.2f}, "
+                     f"and of total portfolio value {by_sector['total_value']:,.2f}:")
         for line in by_sector.get("lines", []):
             of_sectored = line.get("pct_of_denominator")
             of_invested = line.get("pct_of_invested")
+            of_total = line.get("pct_of_total")
             sectored_str = f"{of_sectored:.2%}" if of_sectored is not None else "n/a"
             invested_str = f"{of_invested:.2%}" if of_invested is not None else "n/a"
+            total_str = f"{of_total:.2%}" if of_total is not None else "n/a"
             held = ", ".join(line.get("tickers", []))
             lines.append(f"  - {line['label']:<13}{sectored_str:>8}{invested_str:>9}"
-                         f"{line['market_value']:>15,.2f}   {held}")
+                         f"{total_str:>9}{line['market_value']:>15,.2f}   {held}")
 
     lines.append("")
     if group_by is None:
