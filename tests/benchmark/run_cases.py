@@ -46,10 +46,16 @@ Blocked cases probe for the capability rather than declaring themselves blocked,
 so they unblock automatically when it arrives. A case that unblocks while its
 check is still unwritten reports FAIL saying so - "done" for a roadmap item
 means its case asserts, not that its arithmetic is right.
+
+A case may have several turns (3.5): the prompt is then a tuple, each turn
+runs after the previous turn's final state, and the probe and the check
+receive the list of states. The probe runs after the first turn, which for
+3.5 is a clarification extraction asks with no model call.
 """
 
 import argparse
 import contextlib
+import inspect
 import io
 import re
 
@@ -1102,11 +1108,62 @@ def blocked_on_compliance(state):
 blocked_on_delegation_trace = blocked_on_compliance
 
 
-def blocked_on_conversation_memory(state):
-    return (
-        "needs a second turn; run_agent_graph_sync carries no conversation "
-        "history and this runner sends one query per case"
-    )
+def blocked_on_conversation_memory(states):
+    """3.5 needs the second turn to see the first: the graph's entry point
+    has to accept the previous final state. Until it does the case is
+    blocked on the capability, whatever the first turn answered."""
+    if "previous" in inspect.signature(run_agent_graph_sync).parameters:
+        return None
+    return ("needs a second turn resolved against the first; run_agent_graph_sync "
+            "takes no previous state")
+
+
+def check_3_5(states):
+    """"Hows my APPL doing?" then "yes" - a typo of a held ticker. Passes
+    when the first turn asks back naming the holding instead of guessing,
+    and the second turn is the resolved question routed as if typed:
+    position P&L for AAPL and nothing else, with the resolution recorded on
+    the decision so the pass is memory's and not the model's reading of
+    APPL as AAPL.
+    """
+    first, second = states
+    fails = _ran_clean(first) + _ran_clean(second)
+
+    if _intent(first) != "clarification_needed":
+        fails.append(f"turn 1 intent is {_intent(first)!r}; a typo of a holding is asked "
+                     "about, not guessed")
+    if first.get("sub_results"):
+        fails.append(f"turn 1 ran agents {sorted(first['sub_results'])}; a clarification runs none")
+    asked = _answer(first)
+    for name in ("APPL", "AAPL"):
+        if name not in asked:
+            fails.append(f"turn 1 does not name {name} in what it asks back: {asked!r}")
+
+    decision = second.get("router_decision") or {}
+    params = decision.get("parameters") or {}
+    resolved = decision.get("resolved") or {}
+    if not resolved:
+        fails.append("turn 2 records no resolution; the reply was routed as a new message")
+    elif "AAPL" not in (resolved.get("message") or "") or "APPL" in (resolved.get("message") or ""):
+        fails.append(f"turn 2 resolved to {resolved.get('message')!r}, not the question with AAPL")
+    if _intent(second) != "data_fetch":
+        fails.append(f"turn 2 intent is {_intent(second)!r}, not data_fetch")
+    if params.get("measure") != "position_pnl":
+        fails.append(f"turn 2 measure is {params.get('measure')!r}, not 'position_pnl'")
+    if params.get("tickers") != ["AAPL"]:
+        fails.append(f"turn 2 tickers {params.get('tickers')} != ['AAPL']")
+
+    pnl = _shared(second).get("position_pnl") or {}
+    aapl = pnl.get("AAPL")
+    if not aapl:
+        return fails + ["turn 2 published no position_pnl.AAPL"]
+    answer = _answer(second)
+    if aapl.get("pnl_pct") is not None and f"{aapl['pnl_pct']:.2%}" not in answer:
+        fails.append(f"AAPL P&L {aapl['pnl_pct']:.2%} is in shared_data but never reaches the answer")
+    if "price return" not in answer.lower():
+        fails.append("answer does not say it is price return only (D4)")
+    fails += _states_pnl_as_of(second, ["AAPL"])
+    return fails
 
 
 # ---------------------------------------------------------------------------
@@ -1135,18 +1192,22 @@ CASES = [
      blocked_on_pnl, check_3_3),
     ("3.4", "What does my investment policy say about currency risk?",
      BENCHMARK_PORTFOLIO, blocked_on_compliance, check_3_4),
-    ("3.5", "Hows my APPL doing?", BENCHMARK_PORTFOLIO,
-     blocked_on_conversation_memory, None),
+    ("3.5", ("Hows my APPL doing?", "yes"), BENCHMARK_PORTFOLIO,
+     blocked_on_conversation_memory, check_3_5),
 ]
 
 
 def run_case(case_id, prompt, portfolio_id, blocked_probe, check):
+    turns = prompt if isinstance(prompt, tuple) else (prompt,)
+    multi = isinstance(prompt, tuple)
+    states = []
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
-        state = run_agent_graph_sync(prompt, portfolio_id=portfolio_id)
+        states.append(run_agent_graph_sync(turns[0], portfolio_id=portfolio_id))
 
+    subject = states if multi else states[0]
     if blocked_probe is not None:
-        reason = blocked_probe(state)
+        reason = blocked_probe(subject)
         if reason is not None:
             return "BLOCKED", [reason]
         if check is None:
@@ -1155,10 +1216,15 @@ def run_case(case_id, prompt, portfolio_id, blocked_probe, check):
                 "a roadmap item is not done until its case asserts"
             ]
 
+    with contextlib.redirect_stdout(buf):
+        for turn in turns[1:]:
+            states.append(run_agent_graph_sync(turn, portfolio_id=portfolio_id,
+                                               previous=states[-1]))
+
     if check is None:
         return "FAIL", ["no check written for this case"]
 
-    fails = check(state)
+    fails = check(states if multi else states[0])
     return ("PASS", []) if not fails else ("FAIL", fails)
 
 
@@ -1177,7 +1243,8 @@ def main():
     for case_id, prompt, portfolio_id, probe, check in cases:
         status, reasons = run_case(case_id, prompt, portfolio_id, probe, check)
         counts[status] += 1
-        print(f"{case_id}  {status:<8} {prompt}")
+        shown = " -> ".join(prompt) if isinstance(prompt, tuple) else prompt
+        print(f"{case_id}  {status:<8} {shown}")
         for reason in reasons:
             print(f"          - {reason}")
         print()
