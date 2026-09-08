@@ -13,10 +13,27 @@ from agents.schemas import AGENTS, INTENTS, ExtractedParameters, IntentType
 from portfolio_tool.ips import load_ips
 
 
-def test_roster_and_count_come_from_agents():
-    for i, (name, description) in enumerate(AGENTS.items(), 1):
-        assert f"{i}. {name} - {description}" in ROUTER_SYSTEM_PROMPT
-    assert f"only use the {len(AGENTS)} listed above" in ROUTER_SYSTEM_PROMPT
+def test_the_prompt_asks_for_no_plan_and_no_extracted_field():
+    """After extraction and derivation the model decides intent, measure,
+    group_by, the topic flag, confidence and a clarification. The prompt
+    no longer shows a roster, asks for a plan, or asks for what extraction
+    reads from the message."""
+    for prompt in (ROUTER_SYSTEM_PROMPT, REPAIR_PROMPT):
+        for absent in ("AVAILABLE AGENTS", "agents_needed", "execution_order", "is_multi_step",
+                       "requires_confirmation", '"tickers"', '"period"', '"max_volatility"',
+                       '"hypothetical_weight"', "EXECUTION ORDER", "EXTRACTION RULES"):
+            assert absent not in prompt, absent
+        for present in ('"measure"', '"group_by"', '"policy_topic"', '"clarification_question"'):
+            assert present in prompt, present
+
+
+def test_the_out_of_scope_wording_is_the_registrys_verbatim():
+    """The three failed prompt edits stay as they are (pending decision 6,
+    decided keep): the description is rendered from INTENTS unchanged and
+    the NEE example is kept. A change there is a fourth wording on a line
+    with three failed predictions."""
+    assert INTENTS["out_of_scope"] in ROUTER_SYSTEM_PROMPT
+    assert 'User: "Is NEE up or down?" (active portfolio holding NEE)' in ROUTER_SYSTEM_PROMPT
 
 
 def test_compliance_intent_is_in_both_prompts():
@@ -37,9 +54,10 @@ def test_the_router_is_never_shown_the_policy_vocabulary():
     assert "the user's own words" in ROUTER_SYSTEM_PROMPT
 
 
-def test_mode_parameters_are_in_the_output_format():
-    assert '"hypothetical_weight": null' in ROUTER_SYSTEM_PROMPT
+def test_the_output_format_carries_what_is_read():
     assert '"policy_topic": null' in ROUTER_SYSTEM_PROMPT
+    assert '"measure": null' in ROUTER_SYSTEM_PROMPT
+    assert '"group_by": null' in ROUTER_SYSTEM_PROMPT
 
 
 def test_group_by_line_names_every_value_the_schema_allows():

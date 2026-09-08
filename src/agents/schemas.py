@@ -259,8 +259,10 @@ class RouterDecision(BaseModel):
     intent: IntentType
     confidence: float = Field(..., ge=0.0, le=1.0)
     
-    # Agent execution plan
-    agents_needed: List[AgentTask]
+    # The plan: derived by the router from the intent and parameters through
+    # TERMINAL and REQUIRES, never asked of the model. Both default empty so
+    # a decision the model wrote without them validates on its own terms.
+    agents_needed: List[AgentTask] = Field(default_factory=list)
     execution_order: List[AgentName] = Field(default_factory=list)
     
     # Extracted information

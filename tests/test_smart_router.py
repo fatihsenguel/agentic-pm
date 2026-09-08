@@ -331,6 +331,15 @@ class TestDependencies:
             assert decision.execution_order == order
 
 
+def test_a_decision_needs_no_task_list():
+    """The model is not asked for agents_needed; the router derives it.
+    A decision without it validates, with the derived plan empty here."""
+    decision = RouterDecision.model_validate({
+        "intent": "out_of_scope", "confidence": 0.9, "parameters": {},
+        "reasoning": "asks whether to own a security"})
+    assert decision.agents_needed == [] and decision.execution_order == []
+
+
 def test_unknown_is_not_an_intent():
     """The prompt never offered "unknown" and nothing read it; a decision
     carrying it is a decision the graph cannot route, rejected at the schema."""
