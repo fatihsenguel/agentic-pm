@@ -18,6 +18,8 @@ from .schemas import (
     AgentName, 
     AgentTask,
     ExtractedParameters,
+    TERMINAL,
+    derive_plan,
     safe_parse_router_response
 )
 from .validators import (
@@ -470,7 +472,8 @@ class SmartRouter:
 
 
 def _with_extraction(raw: Dict[str, Any], extraction: Extraction, user_message: str) -> Dict[str, Any]:
-    """The model's JSON with the extracted fields written over its own.
+    """The model's JSON with the extracted fields and the derived plan
+    written over its own.
 
     Tickers, period, volatility cap and hypothetical weight are the message's,
     read deterministically; whatever the model put there is not read. The
@@ -487,7 +490,21 @@ def _with_extraction(raw: Dict[str, Any], extraction: Extraction, user_message: 
     parameters["hypothetical_weight"] = extraction.hypothetical_weight
     if parameters.get("policy_topic") is not None:
         parameters["policy_topic"] = user_message
-    return {**raw, "parameters": parameters}
+    out = {**raw, "parameters": parameters}
+
+    # The plan is derived from the intent and those parameters through
+    # schemas.TERMINAL and REQUIRES; the model's execution_order and
+    # agents_needed are not read, except under combined, which has no
+    # terminal. An intent the registry lacks is left for the schema to reject.
+    intent = raw.get("intent")
+    plan = derive_plan(intent, parameters) if intent in TERMINAL else None
+    if plan is not None:
+        out["execution_order"] = plan
+        out["agents_needed"] = [
+            {"agent": agent, "task_description": f"derived for intent {intent}", "priority": i + 1}
+            for i, agent in enumerate(plan)
+        ]
+    return out
 
 
 # =============================================================================

@@ -3,7 +3,7 @@
 # Principle: LLMs hallucinate. Pydantic catches it before it causes harm.
 # Phase: 6.12 - Output Parsers & Guardrails
 
-from typing import List, Dict, Optional, Any, Literal, Tuple
+from typing import List, Dict, Optional, Any, Literal, Tuple, Mapping
 from pydantic import BaseModel, Field, field_validator, model_validator
 from enum import Enum
 import re
@@ -84,15 +84,17 @@ AgentName = Enum(
 # entry is a raise verified at the node: PortfolioAnalysisAgent on missing
 # holdings, prices, as-of dates and cash; OptimizationAgent on missing
 # tickers, expected returns and covariance; BacktestAgent on missing
-# optimal_weights; RebalanceAgent on missing prices. RebalanceAgent's missing
+# optimal_weights; RebalanceAgent on missing prices; ComplianceAgent on a
+# missing allocation when it checks the portfolio. RebalanceAgent's missing
 # target is not an entry on the optimiser: the target is the IPS's to state
 # (KNOWN_GAPS, "Rebalance has no target allocation source"). ComplianceAgent's
-# needs depend on its mode and live in RouterDecision.validate_compliance.
+# two portfolio-free modes skip its entry: TERMINAL marks those rows unclosed.
 REQUIRES: Dict[str, Tuple[str, ...]] = {
     "PortfolioAnalysisAgent": ("DataAgent",),
     "OptimizationAgent": ("DataAgent",),
     "BacktestAgent": ("DataAgent", "OptimizationAgent"),
     "RebalanceAgent": ("DataAgent",),
+    "ComplianceAgent": ("PortfolioAnalysisAgent",),
 }
 
 _named_in_requires = set(REQUIRES) | {n for needs in REQUIRES.values() for n in needs}
@@ -171,6 +173,91 @@ class ExtractedParameters(BaseModel):
         return validated
 
 
+# The terminal-agent table: intent -> discriminator -> (terminal, closed).
+# The plan for a request is the terminal's requirement chain, closed upward
+# through REQUIRES in dependency order; the model's plan is never read for
+# these intents (docs/DIRECTION.md: plans derived from intent through a
+# dependency table, which becomes each tool's internal graph). The
+# discriminator is a parameter that decides the terminal: "" is the row with
+# none set; "measure" is the row for either analysis intent when the model
+# set a measure; the two compliance modes are the rows for a hypothetical
+# weight or a policy topic, which measure no portfolio and so are not closed
+# - ComplianceAgent runs alone. "combined" has no terminal: the two taught
+# macro sequences are the model's plan, held to REQUIRES like any other.
+TERMINAL: Dict[str, Optional[Dict[str, Tuple[Optional[str], bool]]]] = {
+    "optimization": {"": ("OptimizationAgent", True)},
+    "macro_analysis": {"": ("MacroAgent", True)},
+    "rebalancing": {"": ("RebalanceAgent", True)},
+    "backtest": {"": ("BacktestAgent", True)},
+    "data_fetch": {"": ("DataAgent", True), "measure": ("PortfolioAnalysisAgent", True)},
+    "risk_analysis": {"": ("DataAgent", True), "measure": ("PortfolioAnalysisAgent", True)},
+    "compliance": {
+        "": ("ComplianceAgent", True),
+        "hypothetical_weight": ("ComplianceAgent", False),
+        "policy_topic": ("ComplianceAgent", False),
+    },
+    "combined": None,
+    "clarification_needed": {"": (None, True)},
+    "out_of_scope": {"": (None, True)},
+}
+
+if set(TERMINAL) != set(INTENTS):
+    raise RuntimeError(
+        "intent registry and terminal table disagree: schemas.INTENTS has "
+        f"{sorted(INTENTS)}, TERMINAL has {sorted(TERMINAL)}. An intent is added to both or to neither."
+    )
+for _intent, _rows in TERMINAL.items():
+    for _key, (_terminal, _) in (_rows or {}).items():
+        if _key and _key not in ExtractedParameters.model_fields:
+            raise RuntimeError(f"TERMINAL[{_intent!r}] discriminates on {_key!r}, not a parameter")
+        if _terminal is not None and _terminal not in AGENTS:
+            raise RuntimeError(f"TERMINAL[{_intent!r}] names {_terminal!r}, not in the roster")
+
+
+def _closure(agent: str) -> List[str]:
+    """The agent after everything REQUIRES says it needs, transitively,
+    each name once, in dependency order."""
+    out: List[str] = []
+    for need in REQUIRES.get(agent, ()):
+        for name in _closure(need):
+            if name not in out:
+                out.append(name)
+    out.append(agent)
+    return out
+
+
+def _discriminator(intent: str, parameters: Mapping) -> str:
+    rows = TERMINAL[intent]
+    for key in rows:
+        if key and parameters.get(key) is not None:
+            return key
+    return ""
+
+
+def derive_plan(intent: str, parameters) -> Optional[List[str]]:
+    """The plan for an intent and its parameters, from TERMINAL and REQUIRES.
+
+    None for an intent with no terminal (combined), where the model's plan
+    stands. An empty list for an intent that runs nothing. KeyError on an
+    intent not in the registry.
+    """
+    parameters = parameters if isinstance(parameters, Mapping) else parameters.model_dump()
+    rows = TERMINAL[intent]
+    if rows is None:
+        return None
+    terminal, closed = rows[_discriminator(intent, parameters)]
+    if terminal is None:
+        return []
+    return _closure(terminal) if closed else [terminal]
+
+
+def _plan_qualifier(intent: str, parameters: Mapping) -> str:
+    key = _discriminator(intent, parameters)
+    if intent == "compliance":
+        return f" for {key}" if key else " over the portfolio"
+    return f" with {key} {parameters.get(key)!r}" if key else ""
+
+
 class RouterDecision(BaseModel):
     """
     Validated output from the Smart Router.
@@ -235,27 +322,6 @@ class RouterDecision(BaseModel):
         return self
 
     @model_validator(mode='after')
-    def validate_dependencies(self) -> 'RouterDecision':
-        """An agent runs only after every agent REQUIRES says it needs.
-
-        A plan naming PortfolioAnalysisAgent with no DataAgent before it
-        validated and ran until the node raised on missing holdings (the
-        "too big" flip and its diagnostics, KNOWN_GAPS, 8 September).
-        Rejected here instead, and never reordered: the error text goes back
-        to the router as the repair prompt, so it names what the plan lacks.
-        Runs after validate_execution_order, so an autofilled order is
-        checked too."""
-        order = [a if isinstance(a, str) else a.value for a in self.execution_order]
-        for i, agent in enumerate(order):
-            missing = [need for need in REQUIRES.get(agent, ()) if need not in order[:i]]
-            if missing:
-                raise ValueError(
-                    f"{agent} requires {', '.join(missing)} before it in "
-                    f"execution_order; the plan is {order}"
-                )
-        return self
-
-    @model_validator(mode='after')
     def validate_clarification(self) -> 'RouterDecision':
         """If clarification needed, must have question."""
         if self.intent == IntentType.CLARIFICATION_NEEDED and not self.clarification_question:
@@ -279,15 +345,10 @@ class RouterDecision(BaseModel):
 
     @model_validator(mode='after')
     def validate_compliance(self) -> 'RouterDecision':
-        """A compliance plan has one of three shapes, decided by its
-        parameters: the portfolio check needs the analysis agents before
-        ComplianceAgent; a hypothetical weight or a policy topic needs
-        ComplianceAgent alone, because no portfolio is measured. Any other
-        shape - or a mode parameter under another intent - is rejected here
-        rather than trimmed downstream and run as planned. So is
-        ComplianceAgent itself under any other intent: no formatter reads it
-        there, and planned alone the node raises on the missing allocation
-        (the "too concentrated" diagnostic, KNOWN_GAPS, 8 September)."""
+        """The compliance modes belong to intent compliance and at most one
+        is set; ComplianceAgent is planned under no other intent - no
+        formatter reads it there. The shape of a compliance plan itself is
+        validate_plan's, from the table."""
         modes = [k for k in ("hypothetical_weight", "policy_topic")
                  if getattr(self.parameters, k) is not None]
         order = [a if isinstance(a, str) else a.value for a in self.execution_order]
@@ -297,13 +358,6 @@ class RouterDecision(BaseModel):
                     "hypothetical_weight and policy_topic are two different questions; "
                     "a compliance request sets at most one"
                 )
-            wanted = ["ComplianceAgent"] if modes else [
-                "DataAgent", "PortfolioAnalysisAgent", "ComplianceAgent"]
-            if order != wanted:
-                what = f"for {modes[0]}" if modes else "over the portfolio"
-                raise ValueError(
-                    f"a compliance plan {what} is {wanted}, not {order}"
-                )
         elif modes:
             raise ValueError(
                 f"{modes} set under intent {self.intent!r}; they belong to intent compliance"
@@ -312,6 +366,36 @@ class RouterDecision(BaseModel):
             raise ValueError(
                 f"ComplianceAgent is planned only under intent compliance, not "
                 f"{self.intent!r}; the plan is {order}"
+            )
+        return self
+
+    @model_validator(mode='after')
+    def validate_plan(self) -> 'RouterDecision':
+        """The plan is the one TERMINAL and REQUIRES derive for the intent
+        and parameters, exactly. The router writes that plan over the
+        model's before validation, so a mismatch here is a hand-built
+        decision or a table change; the error names both plans. Under
+        combined, where the model's plan stands, every agent must follow
+        what REQUIRES says it needs - never reordered, the error going back
+        as the repair prompt (the "too big" flip and its diagnostics,
+        KNOWN_GAPS, 8 September). Runs last, after validate_execution_order's
+        autofill and the mode checks above."""
+        intent = self.intent if isinstance(self.intent, str) else self.intent.value
+        order = [a if isinstance(a, str) else a.value for a in self.execution_order]
+        parameters = self.parameters.model_dump()
+        derived = derive_plan(intent, parameters)
+        if derived is None:
+            for i, agent in enumerate(order):
+                missing = [need for need in REQUIRES.get(agent, ()) if need not in order[:i]]
+                if missing:
+                    raise ValueError(
+                        f"{agent} requires {', '.join(missing)} before it in "
+                        f"execution_order; the plan is {order}"
+                    )
+            return self
+        if order != derived:
+            raise ValueError(
+                f"a {intent} plan{_plan_qualifier(intent, parameters)} is {derived}, not {order}"
             )
         return self
 

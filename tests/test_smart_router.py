@@ -110,12 +110,18 @@ class TestRouterDecision:
         which is what validate_execution_order does (KNOWN_GAPS,
         "validate_execution_order repairs instead of raising"). Pinned as
         it is so the test sees the validator it names; when the repair
-        becomes a raise, this becomes a pytest.raises."""
+        becomes a raise, this becomes a pytest.raises.
+
+        On combined, since the terminal table: for every other intent the
+        router writes the derived plan over both fields before validation,
+        so the repair can only fire on the one intent whose plan is still
+        the model's."""
         data = {
-            "intent": "optimization",
+            "intent": "combined",
             "confidence": 0.9,
             "agents_needed": [
-                {"agent": "DataAgent", "task_description": "Fetch data", "priority": 1}
+                {"agent": "MacroAgent", "task_description": "Check regime", "priority": 1},
+                {"agent": "DataAgent", "task_description": "Fetch data", "priority": 2},
             ],
             "execution_order": ["DataAgent", "OptimizationAgent"],  # Mismatch!
             "parameters": {},
@@ -123,7 +129,7 @@ class TestRouterDecision:
         }
 
         decision = RouterDecision.model_validate(data)
-        assert decision.execution_order == ["DataAgent"]
+        assert decision.execution_order == ["MacroAgent", "DataAgent"]
     
     def test_clarification_requires_question(self):
         """Test that clarification_needed intent requires question."""
@@ -236,7 +242,7 @@ class TestDependencies:
     reorder would be the repair-instead-of-raise shape."""
 
     @staticmethod
-    def _plan(intent, order):
+    def _plan(intent, order, **parameters):
         return {
             "intent": intent,
             "confidence": 0.9,
@@ -245,7 +251,7 @@ class TestDependencies:
                 for i, a in enumerate(order)
             ],
             "execution_order": list(order),
-            "parameters": {},
+            "parameters": parameters,
             "reasoning": "a plan shape from the diagnostics",
         }
 
@@ -265,40 +271,54 @@ class TestDependencies:
             "OptimizationAgent": ("DataAgent",),
             "BacktestAgent": ("DataAgent", "OptimizationAgent"),
             "RebalanceAgent": ("DataAgent",),
+            "ComplianceAgent": ("PortfolioAnalysisAgent",),
         }
 
     def test_plans_the_nodes_would_raise_on_are_rejected(self):
         """The prompt's own examples plan [OptimizationAgent] alone and a
         backtest with no optimiser; both raise at the node today."""
         shapes = (
-            ("optimization", ["OptimizationAgent"], "OptimizationAgent requires DataAgent"),
-            ("backtest", ["DataAgent", "BacktestAgent"], "BacktestAgent requires OptimizationAgent"),
-            ("backtest", ["OptimizationAgent", "BacktestAgent"], "OptimizationAgent requires DataAgent"),
-            ("rebalancing", ["RebalanceAgent"], "RebalanceAgent requires DataAgent"),
+            ("optimization", ["OptimizationAgent"], r"is \['DataAgent', 'OptimizationAgent'\], not"),
+            ("backtest", ["DataAgent", "BacktestAgent"], r"is \['DataAgent', 'OptimizationAgent', 'BacktestAgent'\], not"),
+            ("backtest", ["OptimizationAgent", "BacktestAgent"], r"not \['OptimizationAgent', 'BacktestAgent'\]"),
+            ("rebalancing", ["RebalanceAgent"], r"is \['DataAgent', 'RebalanceAgent'\], not"),
         )
         for intent, order, message in shapes:
             with pytest.raises(ValueError, match=message):
                 RouterDecision.model_validate(self._plan(intent, order))
 
     def test_analysis_agent_alone_is_rejected(self):
-        with pytest.raises(ValueError, match="PortfolioAnalysisAgent requires DataAgent before it"):
+        """The flip plan. With a measure the derived plan has DataAgent first;
+        without one the analysis agent is not planned at all."""
+        with pytest.raises(ValueError, match=r"is \['DataAgent', 'PortfolioAnalysisAgent'\], not \['PortfolioAnalysisAgent'\]"):
+            RouterDecision.model_validate(self._plan("risk_analysis", ["PortfolioAnalysisAgent"],
+                                                     measure="portfolio_volatility"))
+        with pytest.raises(ValueError, match=r"is \['DataAgent'\], not \['PortfolioAnalysisAgent'\]"):
             RouterDecision.model_validate(self._plan("risk_analysis", ["PortfolioAnalysisAgent"]))
 
     def test_analysis_agent_before_data_agent_is_rejected_not_reordered(self):
-        with pytest.raises(ValueError, match="requires DataAgent before it"):
+        with pytest.raises(ValueError, match=r"not \['PortfolioAnalysisAgent', 'DataAgent'\]"):
             RouterDecision.model_validate(
-                self._plan("data_fetch", ["PortfolioAnalysisAgent", "DataAgent"]))
+                self._plan("data_fetch", ["PortfolioAnalysisAgent", "DataAgent"], measure="allocation"))
 
     def test_an_autofilled_order_is_checked(self):
-        data = self._plan("risk_analysis", ["PortfolioAnalysisAgent"])
+        data = self._plan("risk_analysis", ["PortfolioAnalysisAgent"], measure="portfolio_volatility")
         data["execution_order"] = []
-        with pytest.raises(ValueError, match="requires DataAgent before it"):
+        with pytest.raises(ValueError, match=r"not \['PortfolioAnalysisAgent'\]"):
             RouterDecision.model_validate(data)
 
     def test_analysis_agent_after_data_agent_validates(self):
         decision = RouterDecision.model_validate(
-            self._plan("data_fetch", ["DataAgent", "PortfolioAnalysisAgent"]))
+            self._plan("data_fetch", ["DataAgent", "PortfolioAnalysisAgent"], measure="allocation"))
         assert decision.execution_order == ["DataAgent", "PortfolioAnalysisAgent"]
+
+    def test_a_measure_decides_the_terminal(self):
+        """The same intent plans DataAgent alone with no measure and the
+        analysis agent with one; the discriminator is the parameter."""
+        with pytest.raises(ValueError, match=r"with measure 'allocation' is \['DataAgent', 'PortfolioAnalysisAgent'\]"):
+            RouterDecision.model_validate(self._plan("data_fetch", ["DataAgent"], measure="allocation"))
+        with pytest.raises(ValueError, match=r"a data_fetch plan is \['DataAgent'\], not"):
+            RouterDecision.model_validate(self._plan("data_fetch", ["DataAgent", "PortfolioAnalysisAgent"]))
 
     def test_compliance_agent_under_another_intent_is_rejected(self):
         shapes = (
@@ -310,9 +330,11 @@ class TestDependencies:
             with pytest.raises(ValueError, match="only under intent compliance"):
                 RouterDecision.model_validate(self._plan(intent, order))
 
-    def test_the_error_names_the_plan(self):
-        with pytest.raises(ValueError, match=r"the plan is \['PortfolioAnalysisAgent'\]"):
+    def test_the_error_names_both_plans(self):
+        with pytest.raises(ValueError, match=r"is \['DataAgent'\], not \['PortfolioAnalysisAgent'\]"):
             RouterDecision.model_validate(self._plan("risk_analysis", ["PortfolioAnalysisAgent"]))
+        with pytest.raises(ValueError, match=r"requires DataAgent before it in execution_order; the plan is \['MacroAgent', 'OptimizationAgent'\]"):
+            RouterDecision.model_validate(self._plan("combined", ["MacroAgent", "OptimizationAgent"]))
 
     def test_plans_still_accepted(self):
         """Shapes every node in them can run: rule 6's DataAgent alone, the
