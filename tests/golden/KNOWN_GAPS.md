@@ -1520,6 +1520,23 @@ change with its own prediction. Also noted for that change: a plan naming
 PortfolioAnalysisAgent without DataAgent should be rejected by the
 validator, not discovered by the node.
 
+**Diagnostic run, 8 September, two runs.** "Is my AAPL position within
+my policy's limits?" routed `compliance` / the three-agent plan / errors 0
+both times: the policy word is deterministic. "Is AAPL too concentrated?"
+routed `risk_analysis` both times and never produced a runnable plan:
+`[PortfolioAnalysisAgent]` alone on run 1 (no DataAgent, node raised on
+missing holdings), `[ComplianceAgent]` alone on run 2 (an agent no
+formatter reads under that intent, node raised on missing allocation).
+Rule 6's "DataAgent alone" appeared on neither. Pinned as run 1, a
+failure like the macro line. So the "too big" flip is the two wordings
+meeting, and beneath it is a code defect independent of wording:
+`validate_execution_order` accepts a plan that cannot run - an agent
+before what it requires, ComplianceAgent under another intent - and the
+node discovers it. The next change is that validator, with a dependency
+registry beside AGENTS, not a wording; the router's repair loop already
+carries a validation error back to the model, so a raise becomes a second
+attempt with the reason stated.
+
 ### pytest warning inventory
 
 Recorded 7 September (third sitting), from a green run of 132. Twenty
