@@ -123,9 +123,11 @@ class ExtractedParameters(BaseModel):
     # runner's probes share one word. A value with no computation behind it
     # does not belong here - the schema must not be wider than the code.
     measure: Optional[Literal["allocation", "position_pnl", "portfolio_volatility"]] = Field(default=None)
-    # How to break an allocation down. Only dimensions that are computed;
-    # industry and country exist on Asset but nothing groups by them yet.
-    group_by: Optional[Literal["asset_class", "sector"]] = Field(default=None)
+    # How to break an allocation down. Each value is a view the agent
+    # publishes under allocation.by_<value>; position is Part 7's IPS-4.1
+    # table, largest first. Only dimensions that are computed: industry and
+    # country exist on Asset but nothing groups by them yet.
+    group_by: Optional[Literal["asset_class", "sector", "position"]] = Field(default=None)
 
     # The compliance modes (intent "compliance"), decided by which of these is
     # set. Neither: check the existing portfolio against the policy.

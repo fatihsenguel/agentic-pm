@@ -85,7 +85,7 @@ EXTRACTION RULES:
 - Volatility: Extract percentages mentioned with "volatility" (12% vol → 0.12)
 - Portfolio Value: Extract amounts (€100,000 → 100000)
 - Measure: set ONLY when PortfolioAnalysisAgent is in the plan. "allocation" for how the portfolio is divided up or which positions sit in a bucket; "position_pnl" for how a position or the holdings have performed, gained, lost or done since purchase; "portfolio_volatility" for the volatility of the portfolio as a whole. Otherwise null.
-- Group by: with measure "allocation", "asset_class" or "sector" when the user names one; null when they do not. Always null for any other measure.
+- Group by: with measure "allocation", "asset_class", "sector" or "position" when the user names one; null when they do not. Always null for any other measure.
 - Hypothetical weight: ONLY with intent compliance, when the user proposes putting a share of the portfolio into ONE position ("15% into a single stock" -> 0.15). Otherwise null.
 - Policy topic: ONLY with intent compliance, when the user asks what the policy says about something: the user's own words for that something, verbatim ("what does my policy say about margin loans" -> "margin loans"). Never a paraphrase and never a substitute term - the policy is matched on the user's words, and a substituted word would match a clause the user did not ask about. Otherwise null.
 

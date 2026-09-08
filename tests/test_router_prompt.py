@@ -4,8 +4,10 @@ roster and its count from AGENTS, the policy topics from ips.toml. A word
 that exists in one place and not the other is the drift these tests refuse.
 """
 
+from typing import get_args
+
 from agents.router_prompts import ROUTER_SYSTEM_PROMPT, REPAIR_PROMPT, build_router_prompt
-from agents.schemas import AGENTS, IntentType
+from agents.schemas import AGENTS, ExtractedParameters, IntentType
 from portfolio_tool.ips import load_ips
 
 
@@ -36,3 +38,15 @@ def test_the_router_is_never_shown_the_policy_vocabulary():
 def test_mode_parameters_are_in_the_output_format():
     assert '"hypothetical_weight": null' in ROUTER_SYSTEM_PROMPT
     assert '"policy_topic": null' in ROUTER_SYSTEM_PROMPT
+
+
+def test_group_by_line_names_every_value_the_schema_allows():
+    """The Group-by extraction rule and ExtractedParameters.group_by are two
+    statements of one vocabulary; a value in the schema the prompt does not
+    name is one the router is never told it may emit."""
+    annotation = ExtractedParameters.model_fields["group_by"].annotation
+    literal = [a for a in get_args(annotation) if get_args(a)][0]
+    line = [l for l in ROUTER_SYSTEM_PROMPT.splitlines() if l.startswith("- Group by:")][0]
+    for value in get_args(literal):
+        assert f'"{value}"' in line, value
+

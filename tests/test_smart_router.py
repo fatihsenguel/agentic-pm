@@ -344,6 +344,14 @@ class TestExtractedParameters:
         with pytest.raises(ValueError):
             ExtractedParameters(max_volatility=1.5)  # > 100%
 
+    def test_group_by_names_the_three_published_views(self):
+        """Each value is a view PortfolioAnalysisAgent publishes under
+        allocation.by_<value>; a dimension nothing groups by is rejected."""
+        for view in ("asset_class", "sector", "position"):
+            assert ExtractedParameters(group_by=view).group_by == view
+        with pytest.raises(ValueError):
+            ExtractedParameters(group_by="industry")
+
 
 class TestPortfolioWeights:
     """Test portfolio weights validation."""
