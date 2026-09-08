@@ -1537,6 +1537,15 @@ registry beside AGENTS, not a wording; the router's repair loop already
 carries a validation error back to the model, so a raise becomes a second
 attempt with the reason stated.
 
+**Moved on 13d3364, 8 September.** The commit that took the topic
+vocabulary out of the prompt predicted all fifteen lines hold; "Is AAPL
+too concentrated?" moved to `compliance` / the three-agent plan / errors 0
+and held there on both runs, where it had been pinned as a failure. Second
+failed prediction on the line; stopped, and pinned as observed. No cause
+is recorded because none was established: the only removed text that
+named concentration was the rendered topic list, and that is an
+observation, not a model.
+
 ### pytest warning inventory
 
 Recorded 7 September (third sitting), from a green run of 132. Twenty
