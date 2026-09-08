@@ -1,18 +1,16 @@
 # AGENTIC_FINANCE — Session Handoff
 
-**Session date:** 8 September 2026 (seventh sitting; the fifth and sixth were earlier the same day)
-**Branch:** `compliance`, cut from `baseline-v1` at the fifth sitting's handoff (afdc344). Not merged. The owner pushes and merges.
-**State:** Green. 232 tests passing at the last code change. Golden set: fifteen queries, clean on all five runs this sitting against `expected.txt`, no `retries` line on any; three lines pin failures (below). Runner: **11/12** — 2.3 passes (twice), 3.5 blocked on conversation memory. Commit count this sitting: `git rev-list --count fa5c34e..HEAD` = 8 before this file's commit.
+**Session date:** 8 September 2026 (seventh sitting; regenerated after the merge and `docs/DIRECTION.md`)
+**Branch:** `baseline-v1`. `compliance` was merged into it by the owner (fast-forward, all 41 commits, tip cc7f740); 5840cd6 renamed the inspection note; df1bcef added `docs/DIRECTION.md`; 51c3c70 is the sweep; this file follows. The owner pushes and merges.
+**State:** Green. 232 tests passing at the last code change. Golden set: fifteen queries, clean on all five runs this sitting against `expected.txt`, no `retries` line on any; three lines pin failures (below). Runner: **11/12** — 2.3 passes (twice), 3.5 blocked on conversation memory. Nine CLI prompts after the runner found four wrong-faced answers behind that 11/12 (KNOWN_GAPS). Commit count this sitting: `git rev-list --count fa5c34e..HEAD` = 15 before this file's commit.
 
 Written for whoever picks this up cold.
 
 **Regenerate this document at the end of each session rather than patching it.**
 Generated context files rot faster than the code they describe. The version this
-replaces said 2.3 was blocked because "no word in it names the policy" (§4:
-the router named the policy itself; the mode was the problem) and called the
-dependency validator's prediction the least certain on the list (§4: it held,
-and the rejection was never exercised live). Check every claim here against
-the code before acting on it.
+replaces said the branch was unmerged and listed the merge as pending (both
+false since 5840cd6), and its §7 order is superseded by `docs/DIRECTION.md`
+(§7 below). Check every claim here against the code before acting on it.
 
 ---
 
@@ -20,14 +18,15 @@ the code before acting on it.
 
 | File | What it is |
 |---|---|
+| `docs/DIRECTION.md` | **The end state and the invariants.** Written by the owner, dated, not regenerated. Wins over this file on direction; this file wins on state. Its last section says when to stop and ask. |
 | `docs/benchmark.md` | **The definition of done.** 12 cases across 3 levels. Its Level 2 status note still says 2.3 is blocked; the runner is the status, and it says PASS. |
-| `tests/benchmark/run_cases.py` | **The scoreboard.** Every case but 3.5 has a check. Its docstring says what it asserts and what it deliberately does not. A compliance case that blocks on a clarification now prints the question the router asked back. |
-| `tests/golden/KNOWN_GAPS.md` | Open decisions, resolved decisions, and why obvious fixes are wrong. Read at minimum: "`RouterDecision.validate_execution_order` repairs" (the second gap built, the first still open), "A router failure becomes a clarification" (corrected; and the context-free repair prompt beneath it), the four hygiene entries dated the seventh sitting, and the two entries under Hygiene on "Is my AAPL position too big?" and on 2.3 (RESOLVED, with the corrected cause). |
-| `tests/golden/expected_values.md` | Hand-computed reference for portfolio 3, Parts 1–7. Part 7 is the compliance reference; `tests/test_compliance.py` reproduces it to the cent. **Never update it to match code output.** |
+| `tests/benchmark/run_cases.py` | **The scoreboard.** Every case but 3.5 has a check. Its docstring says what it asserts and what it deliberately does not. A compliance case that blocks on a clarification prints the question the router asked back. |
+| `tests/golden/KNOWN_GAPS.md` | Open decisions, resolved decisions, and why obvious fixes are wrong. Read at minimum: "Four wrong-faced answers behind 11/12, from the CLI" (the block-shape decisions in §5 come from it), "`ExtractedParameters` fields with no reader" and "BaseAgent's tool-calling loop has no live caller" (the router restructure's two greps), "`RouterDecision.validate_execution_order` repairs" (the second gap built, the first still open), "A router failure becomes a clarification" (corrected; and the context-free repair prompt beneath it), and "Does the router stay a classifier" (answered by DIRECTION.md). |
+| `tests/golden/expected_values.md` | Hand-computed reference for portfolio 3, Parts 1–7. Part 7 is the compliance reference; `tests/test_compliance.py` reproduces it to the cent. Part 7's IPS-4.3 column is the reference for the sector share of total; its IPS-4.1 column for the per-position share of total. **Never update it to match code output.** |
 | `docs/IPS.md` | The owner's policy, synthetic, IPS-1.1 to IPS-6.2. `ips.toml` is derived from it and `tests/test_ips.py` holds the two together. Do not edit `docs/IPS.md`. |
-| `docs/PM-Assistant — Roadmap.md` | Phased plan, stale in places, with a header listing what is superseded. §7 below overrides its ordering. |
+| `docs/PM-Assistant — Roadmap.md` | Phased plan, stale in places, with a header listing what is superseded. DIRECTION.md's Order supersedes its ordering. |
 
-Two Part 7 figures are decided by cents (MSFT 12.11% v 12%, JNJ 10.06% v 10%) and sit wherever the day's closes put them; the runner asserts structure and does not care. The live `as_of` was not read this sitting.
+Two Part 7 figures are decided by cents (MSFT 12.11% v 12%, JNJ 10.06% v 10%) and sit wherever the day's closes put them; the runner asserts structure and does not care. The live `as_of` was 2026-09-04 on the owner's CLI session.
 
 ---
 
@@ -135,9 +134,12 @@ diff elsewhere is a regression or the nondeterminism.
 
 ### Branches and tags
 
-`compliance` is this sitting's branch, 38 commits on `baseline-v1` before this
-file's commit. `wip/phase7-snapshot` holds rejected Compliance/IPS code;
-nothing on it is scheduled, do not read it for ideas. `wip/rag-early` and tag
+`baseline-v1` is the working branch and matches `origin/baseline-v1` at the
+last fetch. `compliance` is merged into it and no longer diverges; its 41
+commits are `afdc344..cc7f740`. On top: 5840cd6 (rename of the inspection
+note), df1bcef (`docs/DIRECTION.md`), the sweep, this file.
+`wip/phase7-snapshot` holds rejected Compliance/IPS code; nothing on it is
+scheduled, do not read it for ideas. `wip/rag-early` and tag
 `rag-early-parked` hold the deleted RAG code.
 
 ### Database
@@ -180,13 +182,13 @@ Not touched this sitting.
 
 ## 4. What the seventh sitting did
 
-`git log --oneline fa5c34e..HEAD` for the list, 8 commits. By topic:
+`git log --oneline fa5c34e..HEAD` for the list. By topic:
 
 **Stale hashes.** The branch had been rebased after the sixth handoff; the
 thirteen hashes cited in HANDOFF and KNOWN_GAPS were replaced (011c744).
 benchmark.md and the runner cited none of them.
 
-**The dependency validator, §7 item 1, in three commits after two findings.**
+**The dependency validator, in three commits after two findings.**
 Reading before writing found that (a) the repair retry sends `REPAIR_PROMPT`
 alone — no roster, no rules, no portfolio context — and (b) no loop could see
 a retry: `router_node` computed its validation warnings and dropped the
@@ -209,8 +211,8 @@ specific position weight…" — the router had the intent and could not choose
 the mode. One sentence in rule 7 (a3bad06): the hypothetical shape needs a
 weight stated in the message; with none, a question about complying, limits
 or what must change is the portfolio check. Predicted fifteen lines hold and
-2.3 PASS; held on golden twice, runner 11/12, and 2.3 again alone. Declared
-the last prompt edit for 2.3.
+2.3 PASS; held on golden twice, runner 11/12, and 2.3 again alone. Recorded
+in KNOWN_GAPS as the last prompt rule of its kind under DIRECTION.md.
 
 **A test passing for the wrong reason.** `test_execution_order_mismatch`
 raised on a four-character `reasoning`, not on the order; with a valid
@@ -220,6 +222,19 @@ the later raise named.
 **KNOWN_GAPS swept (36fe55e):** two corrections to its own record (2.3's
 cause; three rejections end in a "Router error", not the fallback
 clarification), four new hygiene entries, the resolved warnings entry.
+
+**After the merge.** The two docs lost their workflow "assistant" wording
+before the push (53fc445, cc7f740). The owner merged `compliance` into
+`baseline-v1`, renamed the inspection note (5840cd6) and wrote
+`docs/DIRECTION.md` (df1bcef). The owner ran nine CLI prompts; four answered
+a different question from the one asked, with a plausible face, behind a
+runner at 11/12. Swept into KNOWN_GAPS with the exact prompts, the
+hypothetical mode's missing instrument type, the allocation formatter's
+false "named no breakdown" line, the two greps the restructure needs
+(BaseAgent's loop has no live caller; `target_return`, `rebalance_threshold`
+and `parameters.portfolio_id` have no reader), the rule 7 sentence recorded
+as the last prompt rule, and the classifier-or-tool-caller question marked
+answered by DIRECTION.md.
 
 ---
 
@@ -237,21 +252,48 @@ clarification), four new hygiene entries, the resolved warnings entry.
   `validate_execution_order` stays as it is until its own commit.
 - `retries` is printed only when nonzero, so `expected.txt` did not move.
 - The third prompt edit for 2.3 was taken, aimed at the cause the diagnostic
-  found, and is the last: a regression there goes to conversation memory.
+  found, and is the last prompt rule added to fix a routing defect
+  (DIRECTION.md). A regression there goes to conversation memory.
+- The router's direction: scaffolding, replaced by tool calling in the end
+  state (DIRECTION.md, answering the deferred KNOWN_GAPS question).
 
-**Pending, owner's call — bring them up before writing code.**
-1. A golden line for 2.3, so its routing is pinned somewhere. A benchmark
-   prompt in the golden set, as 3.2 and the four Level 1 prompts already are;
-   moves `expected.txt` by one query.
-2. The diagnostic golden query "How much has AAPL gained?" (pid 3), one line,
+**Pending, owner's call — bring them up before writing code.** Each comes as
+the shape, a recommendation, the rejected alternatives, which loop sees it
+and what it will show.
+1. **Share of total on the sector line.** A block widening with two consumers
+   already: the IPS-4.3 check divides for it, and "what share of my portfolio
+   is technology" has no answer without it. One figure the checker then reads
+   instead of computing. Reference: Part 7's IPS-4.3 column.
+2. **The concentration measure.** Its trigger fired ("what's my biggest
+   position?"). Per-position share of total from published market values;
+   the IPS-4.1 check reads the same figure. Includes what `group_by` or
+   `measure` value names it and which formatter prints it. Reference: Part
+   7's IPS-4.1 column.
+3. **The router restructure, four separate decisions and commits, in order:**
+   the intent registry (predict zero golden diff, the way the roster did);
+   deterministic extraction of tickers, weights, periods and topics before
+   the LLM (golden once, predict zero diff, since `period` is a printed
+   field); plans derived from intent and the extracted parameters through a
+   terminal-agent table closed by `REQUIRES` (predict every pinned plan
+   holds; a diff is brought with both readings, wrong pin or wrong table,
+   and `expected.txt` moves only on a yes); then the prompt shrink, golden
+   twice. The JNJ ticker defect and the period-to-1Y repair are extraction.
+   Before the first of these, confirm from the code the two greps KNOWN_GAPS
+   now records.
+4. A golden line for 2.3, so its routing is pinned somewhere. Moves
+   `expected.txt` by one query.
+5. The diagnostic golden query "How much has AAPL gained?" (pid 3), one line,
    no prompt change, to separate "bare ticker" from "today". Still untaken.
-3. Keep or revert the three failed prompt edits (6e68c47, d8cd0d6, 31ce272).
-4. A target-weights clause in the IPS and `OUT_OF_SCOPE_RESPONSE` moving into
+6. Keep or revert the three failed prompt edits (6e68c47, d8cd0d6, 31ce272).
+   Under DIRECTION.md they are prompt rules; the prompt shrink is where they
+   are decided.
+7. The hypothetical mode's instrument type ("11% into a new ETF" is refused
+   under IPS-4.2 today, wrongly).
+8. A target-weights clause in the IPS and `OUT_OF_SCOPE_RESPONSE` moving into
    the IPS — both edit `docs/IPS.md`, which is the owner's.
-5. D9's wording ("unrounded" means "not rounded beyond the cent-rounded block").
-6. The workbook: D8 and D9 in its `Decisions` sheet, `C91`, own commit via
-   `git add`.
-7. Merge `compliance` into `baseline-v1`, or not.
+9. D9's wording ("unrounded" means "not rounded beyond the cent-rounded block").
+10. The workbook: D8 and D9 in its `Decisions` sheet, `C91`, own commit via
+    `git add`.
 
 ---
 
@@ -266,45 +308,57 @@ next touches that file.
 
 ## 7. Next steps, in order
 
-### 1. Pending decision 1 — pin 2.3's routing
+**`docs/DIRECTION.md`'s Order 1 supersedes the §7 that stood here** (the 2.3
+golden line, conversation memory, the intent registry). Its order:
 
-One golden line, no prompt change, own commit, `expected.txt` updated with a
-yes. Until it exists, a regression on 2.3 is visible only on the runner.
+### 1. The block shapes the CLI questions exposed
 
-### 2. Conversation memory, for 3.5
+Pending decisions 1 and 2 in §5: the sector share of total, then the
+concentration measure. Each is a decision first, then a hand-checked
+reference (Part 7 already carries both figures), then the block, the
+checker reading the figure instead of dividing, the formatter, the runner.
+The CLI is the loop that sees the answer change; the runner sees 2.1, 2.2
+and 2.3 keep passing; pytest holds Part 7 to the cent.
 
-`AgentState.messages` and `build_router_prompt(conversation_history=)` exist
-and are never populated; `run_agent_graph_sync` never passes prior turns. The
-runner sends one query per case, so 3.5 needs a two-turn case shape as well.
-Note `_decision_to_dict` drops `clarification_question` (KNOWN_GAPS): a
-second turn needs the question the first turn asked, and today only
-`final_response` carries it.
+### 2. The router restructure
 
-### 3. The intent-vocabulary registry
+Pending decision 3 in §5, in its four steps: registry → extraction →
+derived plans → prompt shrink. Each its own decision and commit. Stop after
+the second failed prediction on any golden line and bring a diagnostic. If
+a step makes the router smarter rather than smaller, stop and ask.
 
-Five sites, the roster registry is the pattern, `compliance` touched all five
-in one commit. Own commit, zero golden diff predicted when rendered byte-identically.
+### 3. Conversation memory, as an extraction rule
+
+Only after 2. Write the runner's two-turn case shape for 3.5 first so it
+can fail for the right reason; 3.5 is a typo of a ticker the portfolio does
+not hold, so the first turn is a clarification naming AAPL and the second
+turn is the owner's reply resolved against the question that was asked.
+`AgentState.messages` and `build_router_prompt(conversation_history=)`
+exist and are never populated; `_decision_to_dict` drops
+`clarification_question`, and today only `final_response` carries it.
 
 ### Later, with reasons
 
-- **The repair prompt carrying the full system prompt plus the error.** Not
-  before a retry has been observed live: the first `retries: 1` on a golden
-  line is the first data on what the context-free repair produces, and the
-  change is a hypothesis about that.
+- Pending decisions 4–10 in §5, each small.
 - `validate_execution_order`'s reorder-repair → raise, now that the
   dependency validator shows the shape.
-- Rule 6 and rule 7 still collide on "too big"; reconciling them is a prompt
-  change with its own prediction.
-- Pending decisions 2–6 in §5, each small.
+- The repair prompt carrying the full system prompt plus the error was listed
+  here before DIRECTION.md. It makes the router smarter; under DIRECTION.md it
+  is debt, and the prompt shrink is where a retry's fate is decided. Not
+  before a retry has been observed live.
+- Rule 6 and rule 7 still collide on "too big"; under DIRECTION.md the
+  resolution is derivation, not a reconciled sentence.
 - Deletions, each its own commit after a grep for every re-export:
   `prompts.py`, `build_router_prompt(available_agents=)`, `get_graph_mermaid`,
   the unreachable check in `_validate_decision`, `IntentType.UNKNOWN`,
   `stream_agent_graph`, `AgentTask.depends_on`, `state.add_warning` (no
-  caller since 0f86384).
+  caller since 0f86384), `target_return`, `rebalance_threshold`,
+  `parameters.portfolio_id` (no reader), `route_sync` and
+  `detect_intent_simple` (no caller in the graph).
 - `_decision_to_dict` carrying `reasoning` and `clarification_question`, so
   the CLI's two lines for them print.
-- Replace the two verbatim few-shots (1.1, 1.3).
-- The period rule's "nearest valid value" → `clarification_needed`.
+- Replace the two verbatim few-shots (1.1, 1.3); under DIRECTION.md the
+  prompt shrink may remove them instead.
 - README rewrite; `test_portfolio_integration.py`; the inline `sqrt(w'Σw)` copies.
 
 ---
