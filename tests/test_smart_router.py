@@ -156,6 +156,62 @@ class TestRouterDecision:
         assert decision.intent == "out_of_scope"
         assert decision.execution_order == []
 
+    # --- compliance: three plan shapes, decided by the parameters ---------
+
+    @staticmethod
+    def _compliance(plan, **params):
+        return {
+            "intent": "compliance",
+            "confidence": 0.9,
+            "agents_needed": [
+                {"agent": a, "task_description": "check the policy", "priority": i + 1}
+                for i, a in enumerate(plan)
+            ],
+            "execution_order": plan,
+            "parameters": params,
+            "reasoning": "policy question",
+        }
+
+    def test_compliance_portfolio_check_needs_the_analysis_agents(self):
+        full = ["DataAgent", "PortfolioAnalysisAgent", "ComplianceAgent"]
+        decision = RouterDecision.model_validate(self._compliance(full))
+        assert decision.execution_order == full
+        with pytest.raises(ValueError, match="over the portfolio"):
+            RouterDecision.model_validate(self._compliance(["ComplianceAgent"]))
+        with pytest.raises(ValueError, match="over the portfolio"):
+            RouterDecision.model_validate(self._compliance(["DataAgent", "ComplianceAgent"]))
+
+    def test_compliance_hypothetical_is_compliance_agent_alone(self):
+        decision = RouterDecision.model_validate(
+            self._compliance(["ComplianceAgent"], hypothetical_weight=0.15))
+        assert decision.parameters.hypothetical_weight == 0.15
+        with pytest.raises(ValueError, match="for hypothetical_weight"):
+            RouterDecision.model_validate(self._compliance(
+                ["DataAgent", "PortfolioAnalysisAgent", "ComplianceAgent"], hypothetical_weight=0.15))
+
+    def test_compliance_topic_is_compliance_agent_alone(self):
+        decision = RouterDecision.model_validate(
+            self._compliance(["ComplianceAgent"], policy_topic="currency risk"))
+        assert decision.parameters.policy_topic == "currency risk"
+        with pytest.raises(ValueError, match="for policy_topic"):
+            RouterDecision.model_validate(self._compliance(
+                ["DataAgent", "PortfolioAnalysisAgent", "ComplianceAgent"], policy_topic="cash"))
+
+    def test_compliance_rejects_both_modes(self):
+        with pytest.raises(ValueError, match="at most one"):
+            RouterDecision.model_validate(self._compliance(
+                ["ComplianceAgent"], hypothetical_weight=0.15, policy_topic="cash"))
+
+    def test_mode_parameters_belong_to_compliance(self):
+        data = self._compliance(["DataAgent"], hypothetical_weight=0.15)
+        data["intent"] = "data_fetch"
+        with pytest.raises(ValueError, match="belong to intent compliance"):
+            RouterDecision.model_validate(data)
+
+    def test_hypothetical_weight_is_a_fraction(self):
+        with pytest.raises(ValueError):
+            RouterDecision.model_validate(self._compliance(["ComplianceAgent"], hypothetical_weight=15))
+
 
 class TestExtractedParameters:
     """Test parameter extraction validation."""

@@ -35,6 +35,7 @@ INTENT TYPES:
 - backtest: User wants historical simulation
 - data_fetch: User wants raw price data or metrics
 - risk_analysis: User wants risk metrics (VaR, volatility, drawdown)
+- compliance: User asks about their Investment Policy Statement: whether the portfolio complies with it or breaks a rule, whether a position is too big, what would have to change to be within its limits, whether a proposed weight in one position is allowed, or what the policy says about a topic
 - combined: Multi-step workflow requiring multiple agents in sequence
 - clarification_needed: Request is in scope but too vague to plan, need to ask user
 - out_of_scope: Request is clear, and what it asks for is something this system does not do: a judgement about whether to own a security (should I buy/sell/hold X, is X a good investment, what should I buy, screening or finding candidates), a price or return forecast, tax assessment, or placing an order. Whether the security is held makes no difference to refusing that judgement - and no difference the other way: a question about a held position's own figures is in scope, below. Plan NO agents, leave clarification_question null. Questions about a portfolio the user already holds - its allocation, P&L, risk, drift, whether and how to rebalance it, whether it complies with their policy - are IN scope and keep their normal intent: "Should I rebalance my portfolio?" is rebalancing, not out_of_scope and not clarification_needed, because it asks about mechanics on holdings already chosen, not about whether to own a security. A question about how a ticker the active portfolio holds has performed, gained or lost, or how large it is, is a question about that position even without the word "my": data_fetch with PortfolioAnalysisAgent, measure "position_pnl" or "allocation", tickers [that symbol] - not out_of_scope. If a request could be either an in-scope question or an out-of-scope one (e.g. "analyze X" could mean price data), that is clarification_needed, not out_of_scope: ambiguity wins over refusal.
@@ -54,7 +55,7 @@ EXECUTION ORDER RULES:
 OUTPUT FORMAT:
 You MUST respond with valid JSON matching this schema:
 {
-  "intent": "optimization|macro_analysis|rebalancing|backtest|data_fetch|risk_analysis|combined|clarification_needed|out_of_scope",
+  "intent": "optimization|macro_analysis|rebalancing|backtest|data_fetch|risk_analysis|compliance|combined|clarification_needed|out_of_scope",
   "confidence": 0.0-1.0,
   "agents_needed": [
     {"agent": "AgentName", "task_description": "What this agent should do", "priority": 1-10}
@@ -68,7 +69,9 @@ You MUST respond with valid JSON matching this schema:
     "portfolio_value": null,
     "rebalance_threshold": null,
     "measure": null,
-    "group_by": null
+    "group_by": null,
+    "hypothetical_weight": null,
+    "policy_topic": null
   },
   "is_multi_step": false,
   "requires_confirmation": false,
@@ -83,6 +86,8 @@ EXTRACTION RULES:
 - Portfolio Value: Extract amounts (€100,000 → 100000)
 - Measure: set ONLY when PortfolioAnalysisAgent is in the plan. "allocation" for how the portfolio is divided up or which positions sit in a bucket; "position_pnl" for how a position or the holdings have performed, gained, lost or done since purchase; "portfolio_volatility" for the volatility of the portfolio as a whole. Otherwise null.
 - Group by: with measure "allocation", "asset_class" or "sector" when the user names one; null when they do not. Always null for any other measure.
+- Hypothetical weight: ONLY with intent compliance, when the user proposes putting a share of the portfolio into ONE position ("15% into a single stock" -> 0.15). Otherwise null.
+- Policy topic: ONLY with intent compliance, when the user asks what the policy says about something. Use the matching word from POLICY TOPICS below; if none fits, the user's own words for the topic. Otherwise null.
 
 CONFIDENCE GUIDELINES:
 - 0.9+: Clear, unambiguous request with all info provided
@@ -127,6 +132,13 @@ User: "Lohnt es sich, jetzt in Siemens einzusteigen?"
 → intent: "out_of_scope", agents: [], tickers: [], confidence: 0.95
    Reasoning: Asks whether to own a security; the system makes no such judgement.
 
+User: "Darf ich 20% in eine einzelne Aktie stecken?" (active portfolio)
+→ intent: "compliance", agents: [ComplianceAgent], hypothetical_weight: 0.20, confidence: 0.9
+   Reasoning: A proposed weight in one position is checked against the policy's limits; no portfolio figure is needed.
+
+User: "Was sagt meine Anlagerichtlinie zu Hebelprodukten?"
+→ intent: "compliance", agents: [ComplianceAgent], policy_topic: "leverage", confidence: 0.9
+
 CRITICAL RULES:
 1. NEVER hallucinate agents - only use the """
 
@@ -153,7 +165,26 @@ _PROMPT_AFTER_COUNT = """ listed above
    general "what is my risk": those keep intent risk_analysis and are
    DataAgent alone. "My portfolio" appearing in a question is not by itself a
    reason to add it.
+7. A compliance plan has exactly one of three shapes. Whether the existing
+   portfolio complies, breaks a rule, is within its limits, or a position is
+   too big: [DataAgent, PortfolioAnalysisAgent, ComplianceAgent]. A proposed
+   weight in one position (hypothetical_weight set): [ComplianceAgent] alone,
+   no portfolio is measured. What the policy says about a topic (policy_topic
+   set): [ComplianceAgent] alone. Never set both parameters.
 """
+
+
+_POLICY_TOPICS: Optional[List[str]] = None
+
+
+def _policy_topics() -> List[str]:
+    """The closed topic vocabulary from ips.toml, loaded once per process."""
+    global _POLICY_TOPICS
+    if _POLICY_TOPICS is None:
+        from portfolio_tool.ips import load_ips
+
+        _POLICY_TOPICS = load_ips().topics
+    return _POLICY_TOPICS
 
 
 def _render_roster() -> str:
@@ -271,6 +302,13 @@ def build_router_prompt(
         Complete prompt string
     """
     parts = [ROUTER_SYSTEM_PROMPT]
+
+    # The policy's topic vocabulary, rendered from ips.toml the way the roster
+    # is rendered from AGENTS. Appended here, not in the constant, so the IPS
+    # is loaded on the first route and not at import (the same seam the
+    # period vocabulary is meant to use; see KNOWN_GAPS).
+    parts.append("\nPOLICY TOPICS (for policy_topic; the policy has clauses on exactly these):")
+    parts.append(", ".join(_policy_topics()))
     
     # Add few-shot examples if requested
     if include_examples:
@@ -311,7 +349,7 @@ ERROR: {error}
 
 Please fix and return ONLY valid JSON matching this schema:
 {{
-  "intent": "optimization|macro_analysis|rebalancing|backtest|data_fetch|risk_analysis|combined|clarification_needed|out_of_scope",
+  "intent": "optimization|macro_analysis|rebalancing|backtest|data_fetch|risk_analysis|compliance|combined|clarification_needed|out_of_scope",
   "confidence": 0.0-1.0,
   "agents_needed": [{{"agent": "AgentName", "task_description": "...", "priority": 1}}],
   "execution_order": ["AgentName"],

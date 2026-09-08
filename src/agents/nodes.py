@@ -943,10 +943,13 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
     (clause, subject, bound), and the `no_clause` marker. The synthesizer
     formats and cites; this node does not.
 
-    One mode until the compliance intent carries parameters: a check of the
-    portfolio. A hypothetical weight (benchmark 3.1) and a policy topic
-    (3.4) are not yet distinguishable from here and are checked as the
-    portfolio, which their runner checks refuse.
+    Three modes, decided by the router's parameters and nothing else:
+    neither set is a check of the portfolio; `hypothetical_weight` is a
+    proposed weight in one position, refused or permitted with no portfolio
+    measured (3.1); `policy_topic` is a lookup, answered by exact membership
+    of the topic in the policy's own vocabulary (3.4) - no similarity, no
+    nearest clause. The last two publish no total and no as-of, because
+    nothing was priced.
 
     Reference: expected_values.md Part 7, decisions D2 and D9.
     """
@@ -968,63 +971,101 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
 
     try:
         shared = state.get("shared_data", {})
-
-        # STRICT: every input is PortfolioAnalysisAgent's output. No fallback;
-        # a check against figures nobody computed is a verdict nobody asked for.
-        allocation = shared.get("allocation")
-        position_pnl = shared.get("position_pnl")
-        holdings = shared.get("holdings")
-        for key, value in (("allocation", allocation), ("position_pnl", position_pnl),
-                           ("holdings", holdings)):
-            if not value:
-                raise DataCalculationError(
-                    f"No {key} in shared_data.\n"
-                    "ComplianceAgent requires DataAgent and PortfolioAnalysisAgent "
-                    "to run first. Check the plan puts both before ComplianceAgent."
-                )
+        params = (state.get("router_decision") or {}).get("parameters") or {}
+        weight = params.get("hypothetical_weight")
+        topic = params.get("policy_topic")
+        if weight is not None and topic is not None:
+            raise DataCalculationError(
+                "Both hypothetical_weight and policy_topic are set; the router's "
+                "validator rejects this, so it did not run."
+            )
 
         from contextlib import nullcontext
         from dataclasses import asdict
 
-        from portfolio_tool.compliance import check
-        from portfolio_tool.ips import load_ips
+        from portfolio_tool.compliance import check, refuse
+        from portfolio_tool.ips import load_ips, normalise_topic
 
         ips = load_ips()
-        instrument_types = {h["ticker"]: h.get("instrument_type") for h in holdings}
+        total_value = None
+        as_of = None
+        no_clause = False
+        topic_block = None
+        by_status = {}
 
-        # The checker is this agent's one tool call, traced as one: inputs
-        # and outputs as counts, never the findings themselves (hot potato).
-        # A raise inside leaves the trace with the exception recorded.
-        with (agent_ctx.trace_tool("check_ips") if agent_ctx else nullcontext()) as tool_ctx:
-            if tool_ctx:
-                tool_ctx.set_input({
-                    "policy": ips.path,
-                    "clauses": len(ips),
-                    "checkable": len(ips.checkable),
-                    "positions": len(position_pnl),
-                })
-            findings = check(ips, allocation, position_pnl, instrument_types)
-            by_status = {}
+        if topic is not None:
+            # Lookup: membership in the policy's own vocabulary, nothing else.
+            on_topic = ips.clauses_on(topic)
+            findings = []
+            no_clause = not on_topic
+            topic_block = {"asked": normalise_topic(topic), "clauses": [c.id for c in on_topic]}
+            print(f"  topic {topic_block['asked']!r}: "
+                  + (", ".join(topic_block["clauses"]) if on_topic else "no clause"))
+
+        elif weight is not None:
+            # A proposed weight in one position: no portfolio, no total, no date.
+            with (agent_ctx.trace_tool("refuse_ips") if agent_ctx else nullcontext()) as tool_ctx:
+                if tool_ctx:
+                    tool_ctx.set_input({"policy": ips.path, "weight": weight})
+                findings = refuse(ips, weight)
+                for f in findings:
+                    by_status[f.status] = by_status.get(f.status, 0) + 1
+                if tool_ctx:
+                    tool_ctx.set_output({"findings": by_status})
+            print(f"  hypothetical {weight:.2%} in one position: "
+                  + ", ".join(f"{k} {v}" for k, v in sorted(by_status.items())))
+
+        else:
+            # STRICT: every input is PortfolioAnalysisAgent's output. No fallback;
+            # a check against figures nobody computed is a verdict nobody asked for.
+            allocation = shared.get("allocation")
+            position_pnl = shared.get("position_pnl")
+            holdings = shared.get("holdings")
+            for key, value in (("allocation", allocation), ("position_pnl", position_pnl),
+                               ("holdings", holdings)):
+                if not value:
+                    raise DataCalculationError(
+                        f"No {key} in shared_data.\n"
+                        "ComplianceAgent requires DataAgent and PortfolioAnalysisAgent "
+                        "to run first. Check the plan puts both before ComplianceAgent."
+                    )
+            instrument_types = {h["ticker"]: h.get("instrument_type") for h in holdings}
+
+            # The checker is this agent's one tool call, traced as one: inputs
+            # and outputs as counts, never the findings themselves (hot potato).
+            # A raise inside leaves the trace with the exception recorded.
+            with (agent_ctx.trace_tool("check_ips") if agent_ctx else nullcontext()) as tool_ctx:
+                if tool_ctx:
+                    tool_ctx.set_input({
+                        "policy": ips.path,
+                        "clauses": len(ips),
+                        "checkable": len(ips.checkable),
+                        "positions": len(position_pnl),
+                    })
+                findings = check(ips, allocation, position_pnl, instrument_types)
+                for f in findings:
+                    by_status[f.status] = by_status.get(f.status, 0) + 1
+                if tool_ctx:
+                    tool_ctx.set_output({"findings": by_status})
+            total_value = allocation["by_asset_class"]["total_value"]
+            as_of = allocation.get("as_of")
+
+            print(f"  {len(ips.checkable)} checkable clauses, {len(ips.statements)} statements")
+            print("  findings: " + ", ".join(f"{k} {v}" for k, v in sorted(by_status.items())))
             for f in findings:
-                by_status[f.status] = by_status.get(f.status, 0) + 1
-            if tool_ctx:
-                tool_ctx.set_output({"findings": by_status})
+                if f.status == "breach":
+                    print(f"    {f.clause:<8} {f.subject:<14} {f.observed:>7.2%} vs "
+                          f"{f.limit:.0%} {f.bound}  {f.distance_pp:+.2f} pp")
 
         compliance_summary = {
             "policy": {c.id: {"type": c.type, "text": c.text} for c in ips},
             "statements": [{"clause": c.id, "text": c.text} for c in ips.statements],
-            "total_value": allocation["by_asset_class"]["total_value"],
-            "as_of": allocation.get("as_of"),
+            "total_value": total_value,
+            "as_of": as_of,
             "findings": [asdict(f) for f in findings],
-            "no_clause": False,
+            "no_clause": no_clause,
+            "topic": topic_block,
         }
-
-        print(f"  {len(ips.checkable)} checkable clauses, {len(ips.statements)} statements")
-        print("  findings: " + ", ".join(f"{k} {v}" for k, v in sorted(by_status.items())))
-        for f in findings:
-            if f.status == "breach":
-                print(f"    {f.clause:<8} {f.subject:<14} {f.observed:>7.2%} vs "
-                      f"{f.limit:.0%} {f.bound}  {f.distance_pp:+.2f} pp")
 
         result = {
             "success": True,

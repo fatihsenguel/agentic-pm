@@ -25,6 +25,7 @@ class IntentType(str, Enum):
     UNKNOWN = "unknown"
     CLARIFICATION_NEEDED = "clarification_needed"
     OUT_OF_SCOPE = "out_of_scope"  # Clear request for something the system does not do
+    COMPLIANCE = "compliance"  # The portfolio, a proposed weight, or the policy itself, against the IPS
 
 
 # The agent roster, stated once. Name -> the one-line description the router
@@ -101,6 +102,17 @@ class ExtractedParameters(BaseModel):
     # How to break an allocation down. Only dimensions that are computed;
     # industry and country exist on Asset but nothing groups by them yet.
     group_by: Optional[Literal["asset_class", "sector"]] = Field(default=None)
+
+    # The compliance modes (intent "compliance"), decided by which of these is
+    # set. Neither: check the existing portfolio against the policy.
+    # hypothetical_weight: the share of total the user proposes to put into one
+    # position, as a fraction; refused or permitted against the concentration
+    # limits with no portfolio measured (benchmark 3.1). policy_topic: what the
+    # user asks the policy about - one of the topics ips.toml carries, or the
+    # user's own words when none fits, in which case the policy contains
+    # nothing on it (3.4). Both set is a contradiction and is rejected.
+    hypothetical_weight: Optional[float] = Field(default=None, gt=0, le=1.0)
+    policy_topic: Optional[str] = Field(default=None)
 
     @field_validator('tickers')
     @classmethod
@@ -197,6 +209,36 @@ class RouterDecision(BaseModel):
         ):
             raise ValueError(
                 "agents_needed and execution_order must be empty when intent is out_of_scope"
+            )
+        return self
+
+    @model_validator(mode='after')
+    def validate_compliance(self) -> 'RouterDecision':
+        """A compliance plan has one of three shapes, decided by its
+        parameters: the portfolio check needs the analysis agents before
+        ComplianceAgent; a hypothetical weight or a policy topic needs
+        ComplianceAgent alone, because no portfolio is measured. Any other
+        shape - or a mode parameter under another intent - is rejected here
+        rather than trimmed downstream and run as planned."""
+        modes = [k for k in ("hypothetical_weight", "policy_topic")
+                 if getattr(self.parameters, k) is not None]
+        order = [a if isinstance(a, str) else a.value for a in self.execution_order]
+        if self.intent == IntentType.COMPLIANCE:
+            if len(modes) == 2:
+                raise ValueError(
+                    "hypothetical_weight and policy_topic are two different questions; "
+                    "a compliance request sets at most one"
+                )
+            wanted = ["ComplianceAgent"] if modes else [
+                "DataAgent", "PortfolioAnalysisAgent", "ComplianceAgent"]
+            if order != wanted:
+                what = f"for {modes[0]}" if modes else "over the portfolio"
+                raise ValueError(
+                    f"a compliance plan {what} is {wanted}, not {order}"
+                )
+        elif modes:
+            raise ValueError(
+                f"{modes} set under intent {self.intent!r}; they belong to intent compliance"
             )
         return self
 
