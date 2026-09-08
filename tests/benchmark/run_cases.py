@@ -922,8 +922,12 @@ def check_3_4(state):
     fails += _compliance_block_invariants(state)
 
     if not block.get("no_clause"):
+        # Name what the node matched, so the reason says whether the router
+        # kept the user's words or mapped them onto a vocabulary member.
+        topic = block.get("topic") or {}
         fails.append("no_clause is not set; a policy with no clause on the topic "
-                     "has to say so as data, not only as prose")
+                     "has to say so as data, not only as prose "
+                     f"(topic asked {topic.get('asked')!r}, matched {topic.get('clauses')})")
     findings = block.get("findings") or []
     if findings:
         fails.append(f"{len(findings)} findings on a topic lookup; nothing was "
