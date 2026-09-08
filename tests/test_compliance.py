@@ -61,7 +61,7 @@ def allocation():
                 {"label": label, "market_value": v, "cost_basis": 0.0,
                  "pct_of_denominator": v / TOTAL,
                  "pct_of_invested": (v / invested if label != "Cash" else None),
-                 "tickers": tickers}
+                 "tickers": list(tickers)}
                 for label, v, tickers in CLASSES
             ],
             "denominator": "total value including cash",
@@ -74,7 +74,7 @@ def allocation():
                 {"label": label, "market_value": v, "cost_basis": 0.0,
                  "pct_of_denominator": (v / sectored if label != "(no sector)" else None),
                  "pct_of_invested": v / invested,
-                 "tickers": tickers}
+                 "tickers": list(tickers)}
                 for label, v, tickers in SECTORS
             ],
             "denominator": "sectored value",
