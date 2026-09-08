@@ -26,6 +26,10 @@ including cash (D2). That is the figure every IPS limit is written against
 (Part 7): on an asset-class line it is the same number as `pct_of_denominator`,
 on a sector line it is a third figure that neither Part 3 column gives. It is
 computed here so that no reader - the checker, a formatter - divides for it.
+
+A third view, by position, is Part 7's IPS-4.1 table: one line per holding,
+largest first. Concentration is allocation by position, so it is a view here
+and not a second computation elsewhere.
 """
 
 from dataclasses import dataclass, field
@@ -253,6 +257,65 @@ def allocation_by_sector(
         total_value=total,
         denominator_label="sectored value (cash excluded, unsectored shown, D3)",
         sectored_value=sectored,
+    )
+
+
+def allocation_by_position(
+    holdings: Sequence[Dict],
+    prices: Dict[str, float],
+    cash_balance: float,
+) -> Allocation:
+    """
+    Allocation by position: one line per holding, labelled by ticker, largest
+    market value first, so the biggest position is the first line and no
+    reader sorts. Reference: expected_values.md Part 7, the IPS-4.1 table.
+
+    The denominator is total portfolio value including cash (D2), the same
+    as the asset-class view, so `pct_of_denominator` equals `pct_of_total`.
+    No cash line: cash is not a holding and IPS-4.1 is about instruments; it
+    is inside the denominator and reported on the Allocation.
+
+    Args:
+        holdings: summary dicts carrying ticker, quantity, average_price
+        prices: current price per ticker
+        cash_balance: portfolio cash, inside the total
+
+    Returns:
+        Allocation whose lines plus cash sum to 100% of total_value.
+    """
+    values = _market_values(holdings, prices)
+    costs = _cost_bases(holdings)
+    cash = float(cash_balance)
+
+    invested = sum(values.values())
+    total = invested + cash
+
+    if total <= 0:
+        raise AllocationError(
+            f"Total portfolio value is {total}, so percentages are undefined."
+        )
+
+    lines = [
+        AllocationLine(
+            label=h["ticker"],
+            market_value=values[h["ticker"]],
+            cost_basis=costs[h["ticker"]],
+            tickers=[h["ticker"]],
+        )
+        for h in holdings
+    ]
+    lines.sort(key=lambda l: -l.market_value)
+    for line in lines:
+        line.pct_of_total = line.market_value / total
+        line.pct_of_denominator = line.pct_of_total
+        line.pct_of_invested = line.market_value / invested if invested else None
+
+    return Allocation(
+        lines=lines,
+        invested_value=invested,
+        cash_balance=cash,
+        total_value=total,
+        denominator_label="total portfolio value (cash included, D2)",
     )
 
 

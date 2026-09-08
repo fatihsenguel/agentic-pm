@@ -14,6 +14,7 @@ import pytest
 from portfolio_tool.quant.allocation import (
     AllocationError,
     allocation_by_asset_class,
+    allocation_by_position,
     allocation_by_sector,
 )
 
@@ -202,6 +203,68 @@ def test_sectored_percentages_sum_to_one():
     assert sum(l.pct_of_denominator for l in sectored) == pytest.approx(1.0, abs=1e-9)
 
 
+# --- Part 7: position (IPS-4.1 column) --------------------------------------
+
+# Part 7, IPS-4.1, every holding, % of total - in the table's order, which is
+# market value descending.
+IPS_4_1 = [
+    ("SPY", 0.1865), ("AAPL", 0.1584), ("MSFT", 0.1211), ("JNJ", 0.1006),
+    ("TLT", 0.0999), ("GLD", 0.0982), ("JPM", 0.0868), ("VNQ", 0.0700),
+    ("NEE", 0.0405),
+]
+
+
+def test_position_denominators():
+    """The same three denominators as the other views; no sectored value."""
+    a = allocation_by_position(HOLDINGS, PRICES, CASH)
+    assert a.invested_value == pytest.approx(394700.50, abs=0.01)
+    assert a.cash_balance == pytest.approx(15500.00, abs=0.01)
+    assert a.total_value == pytest.approx(410200.50, abs=0.01)
+    assert a.sectored_value is None
+
+
+def test_position_lines_are_the_ips_4_1_column_largest_first():
+    """Part 7, IPS-4.1: one line per holding, share of total, largest first,
+    so "what is my biggest position" is the first line and no reader sorts."""
+    a = allocation_by_position(HOLDINGS, PRICES, CASH)
+    assert [l.label for l in a.lines] == [t for t, _ in IPS_4_1]
+    for line, (ticker, share) in zip(a.lines, IPS_4_1):
+        assert line.pct_of_total == pytest.approx(share, abs=0.00005), ticker
+        assert line.pct_of_denominator == line.pct_of_total
+        assert line.tickers == [ticker]
+
+
+def test_position_market_value_and_cost_basis():
+    """Part 1, SPY and NEE rows."""
+    lines = _by_label(allocation_by_position(HOLDINGS, PRICES, CASH))
+    assert lines["SPY"].market_value == pytest.approx(76516.00, abs=0.01)
+    assert lines["SPY"].cost_basis == pytest.approx(50000.00, abs=0.01)
+    assert lines["NEE"].market_value == pytest.approx(16620.00, abs=0.01)
+    assert lines["NEE"].cost_basis == pytest.approx(15000.00, abs=0.01)
+
+
+def test_position_percent_of_invested():
+    """Part 5, 1.4: AAPL 16.47% and MSFT 12.59% of invested."""
+    lines = _by_label(allocation_by_position(HOLDINGS, PRICES, CASH))
+    assert lines["AAPL"].pct_of_invested == pytest.approx(0.1647, abs=0.00005)
+    assert lines["MSFT"].pct_of_invested == pytest.approx(0.1259, abs=0.00005)
+
+
+def test_position_view_has_no_cash_line():
+    """Cash is not a holding (IPS-4.1 is about instruments); it is in the
+    denominator and in the header, not a line."""
+    a = allocation_by_position(HOLDINGS, PRICES, CASH)
+    assert "Cash" not in {l.label for l in a.lines}
+    assert len(a.lines) == 9
+
+
+def test_position_shares_of_total_and_cash_sum_to_one():
+    positions = allocation_by_position(HOLDINGS, PRICES, CASH)
+    cash = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH))["Cash"]
+    total = sum(l.pct_of_total for l in positions.lines) + cash.pct_of_total
+    assert total == pytest.approx(1.0, abs=1e-9)
+
+
 # --- Failure modes --------------------------------------------------------
 
 def test_missing_price_raises_rather_than_skipping():
@@ -218,3 +281,9 @@ def test_missing_price_raises_rather_than_skipping():
 def test_empty_holdings_raises():
     with pytest.raises(AllocationError):
         allocation_by_asset_class([], PRICES, CASH)
+
+
+def test_position_missing_price_raises():
+    partial = {k: v for k, v in PRICES.items() if k != "GLD"}
+    with pytest.raises(AllocationError, match="GLD"):
+        allocation_by_position(HOLDINGS, partial, CASH)
