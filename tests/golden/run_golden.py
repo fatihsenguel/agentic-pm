@@ -39,6 +39,23 @@ QUERIES = [
 ]
 
 
+def retries(state):
+    """How many router attempts the schema rejected before this decision.
+
+    Each rejection reaches state["warnings"] as "Validation: Attempt N: ..."
+    (router_node, since the attempts were carried into the state). A routing
+    that was rejected and repaired back to the pinned plan prints the same
+    five fields as one accepted first time; this is the field that tells them
+    apart. Printed only when nonzero, so a line that routes first time is
+    unchanged. JSON-parse failures and ticker errors carry no "Attempt"
+    prefix and are not counted here.
+    """
+    return sum(
+        1 for w in state.get("warnings") or []
+        if w.startswith("Validation: Attempt ")
+    )
+
+
 def main():
     for q, pid in QUERIES:
         buf = io.StringIO()
@@ -51,6 +68,8 @@ def main():
         print(f"  period: {(d.get('parameters') or {}).get('period')}")
         print(f"  agents_run: {sorted((r.get('sub_results') or {}).keys())}")
         print(f"  errors: {len(r.get('errors') or [])}")
+        if retries(r):
+            print(f"  retries: {retries(r)}")
         print()
 
 
