@@ -109,6 +109,19 @@ CLAUSE_ID = re.compile(r"IPS-\d+\.\d+")
 # precision, so a check can ask where each one came from.
 PCT_FIGURE = re.compile(r"(\d+(?:\.(\d+))?)\s*(?:%|pp\b|percentage points)")
 
+# Weighing-up words. 3.1 passes on a refusal with "no commentary, no weighing
+# up" and Part 7 says 'no "depends"'. A short closed list of the words that
+# open a deliberation; "could" and "might" are left out because the IPS-4.2
+# condition ("if the position would be a directly held share") is legitimately
+# stated in the conditional.
+HEDGE = re.compile(
+    r"\b(depends|however|consider|alternatively|weigh|on balance|that said|trade-?off)\b",
+    re.IGNORECASE,
+)
+
+# The weight 3.1 asks about. Static: it is in the prompt, not the market.
+HYPOTHETICAL_WEIGHT = 0.15
+
 
 # ---------------------------------------------------------------------------
 # Accessors
@@ -499,12 +512,15 @@ def _compliance_block_invariants(state):
       - every finding's clause exists in the loaded policy, and no finding
         names a statement (a clause with no number cannot be checked, and a
         finding on one is the checker inventing arithmetic)
-      - `total_value` is the asset-class denominator (D2), so one number is
-        the denominator for every clause and it is the number the allocation
-        published, not a second computation
+      - `total_value`, when present, is the asset-class denominator (D2), so
+        one number is the denominator for every clause and it is the number
+        the allocation published, not a second computation. It is absent for
+        a hypothetical weight (3.1), which names no portfolio, and then no
+        finding may carry a currency distance: a figure in currency needs a
+        total somebody measured
       - status is in the closed set
       - an `exempt` finding carries no arithmetic (Part 7)
-      - on every other finding the three distance figures reconcile: signed so
+      - on every other finding the distance figures reconcile: signed so
         that positive is a breach, `distance_pp = (observed - limit) x 100`
         against a max bound and `(limit - observed) x 100` against a min, and
         `distance_value = distance_pp / 100 x total_value` (Part 7's eight
@@ -530,14 +546,12 @@ def _compliance_block_invariants(state):
 
     total = block.get("total_value")
     denominator = _allocation(state, "by_asset_class").get("total_value")
-    if total is None:
-        fails.append("no total_value in shared_data['compliance']; distances "
-                     "cannot be reconciled without the denominator")
-    elif denominator is None or abs(total - denominator) > CENT:
+    if total is not None and (denominator is None or abs(total - denominator) > CENT):
         fails.append(f"compliance total_value {total} != allocation "
                      f"by_asset_class.total_value {denominator} (D2)")
 
     arithmetic = ("observed", "limit", "bound", "distance_pp", "distance_value")
+    required = arithmetic if total is not None else arithmetic[:-1]
     bounds_seen = {}
     for f in findings:
         clause, subject, status = f.get("clause"), f.get("subject"), f.get("status")
@@ -562,10 +576,13 @@ def _compliance_block_invariants(state):
                 fails.append(f"exempt finding {where} carries arithmetic: {carried}")
             continue
 
-        missing = [k for k in arithmetic if f.get(k) is None]
+        missing = [k for k in required if f.get(k) is None]
         if missing:
             fails.append(f"finding {where} ({status}) lacks {missing}")
             continue
+        if total is None and f.get("distance_value") is not None:
+            fails.append(f"finding {where} carries distance_value "
+                         f"{f['distance_value']} with no total_value to price it against")
 
         observed, limit, bound = f["observed"], f["limit"], f["bound"]
         if bound not in ("min", "max"):
@@ -586,8 +603,9 @@ def _compliance_block_invariants(state):
                          f"!= distance_pp / 100 x total_value")
 
         # D9: exactly at the limit passes; strict, unrounded beyond the block.
-        if status == "breach" and not signed > 0:
-            fails.append(f"finding {where} is a breach with distance {signed * 100:.4f} pp")
+        # A refusal is a breach of a weight nobody holds yet, so the same sign.
+        if status in ("breach", "refused") and not signed > 0:
+            fails.append(f"finding {where} is {status} with distance {signed * 100:.4f} pp")
         if status == "ok" and signed > 0:
             fails.append(f"finding {where} is ok while {signed * 100:.4f} pp over its limit")
 
@@ -792,6 +810,83 @@ def check_2_3(state):
     return fails
 
 
+def check_3_1(state):
+    """"I want to put 15% into a single position, is that allowed?" passes
+    on a refusal citing the specific clause, no commentary, no weighing up.
+
+    The checker applied to a hypothetical weight, not to holdings: every
+    finding is `refused`, none is ok, breach or exempt, because the portfolio
+    was not checked and a verdict on it would be an answer to a different
+    question. The position is unnamed, so its instrument type is unknown and
+    both concentration clauses apply: a refused finding at 0.15 on every
+    `max_instrument_weight` and `max_issuer_weight` clause in the policy
+    (Part 7: IPS-4.1 at 3.00 pp over, IPS-4.2 at 5.00 pp over), each id
+    reaching the answer. The IPS-4.2 condition is the clause's own text, so
+    nothing here asks how it is phrased.
+
+    No denominator: the question names no portfolio, so `total_value` is
+    absent and no finding prices its distance. Every percentage in the
+    answer is the asked weight, a limit or a distance; a hedge word is a
+    weighing-up; a trade line is a recommendation.
+    """
+    fails = _ran_clean(state)
+    block = _compliance(state)
+    if not block:
+        return fails + ["no compliance in shared_data"]
+
+    fails += _compliance_block_invariants(state)
+
+    if block.get("no_clause"):
+        fails.append("no_clause is set; 3.1 is a check against a clause that exists")
+    if block.get("total_value") is not None:
+        fails.append(f"total_value {block['total_value']} is set; a hypothetical "
+                     "weight names no portfolio to measure against")
+
+    findings = block.get("findings") or []
+    policy = block.get("policy") or {}
+    if not findings:
+        fails.append("no findings; a refusal is a finding with status refused")
+
+    not_refused = sorted(f"{f.get('clause')}/{f.get('subject')} ({f.get('status')})"
+                         for f in findings if f.get("status") != "refused")
+    if not_refused:
+        fails.append(f"findings on the portfolio in a hypothetical check: {not_refused}")
+
+    concentration = {c for c, e in policy.items()
+                     if e.get("type") in ("max_instrument_weight", "max_issuer_weight")}
+    if not concentration:
+        fails.append("the policy has no max_instrument_weight or max_issuer_weight "
+                     "clause; 3.1 has nothing to refuse against")
+    refused_at_weight = {
+        f.get("clause") for f in findings
+        if f.get("status") == "refused"
+        and f.get("observed") is not None
+        and abs(f["observed"] - HYPOTHETICAL_WEIGHT) < 1e-9
+        and f.get("bound") == "max"
+    }
+    if concentration - refused_at_weight:
+        fails.append(f"no refused finding at {HYPOTHETICAL_WEIGHT} against "
+                     f"{sorted(concentration - refused_at_weight)}; an unnamed "
+                     "position may be a share or a fund, so both limits apply")
+
+    answer = _answer(state)
+    for f in findings:
+        if f.get("status") == "refused" and f.get("clause") not in answer:
+            fails.append(f"refused on {f.get('clause')} but the id never reaches "
+                         "the answer; a refusal cites the specific clause")
+    invented = sorted(set(CLAUSE_ID.findall(answer)) - set(policy))
+    if invented:
+        fails.append(f"answer cites clause ids not in the policy: {invented}")
+
+    hedges = sorted({m.group(0).lower() for m in HEDGE.finditer(answer)})
+    if hedges:
+        fails.append(f"answer weighs up: {hedges}; a refusal has no commentary")
+
+    fails += _unexplained_percentages(state, findings)
+    fails += _no_trade_lines(state)
+    return fails
+
+
 # ---------------------------------------------------------------------------
 # Blocked probes. Each returns a reason while the capability is absent, and
 # None once it exists, so the case unblocks itself.
@@ -851,7 +946,7 @@ CASES = [
     ("2.3", "What would have to change for me to be within the limits again?",
      BENCHMARK_PORTFOLIO, blocked_on_compliance, check_2_3),
     ("3.1", "I want to put 15% into a single position, is that allowed?",
-     BENCHMARK_PORTFOLIO, blocked_on_compliance, None),
+     BENCHMARK_PORTFOLIO, blocked_on_compliance, check_3_1),
     ("3.2", "Should I buy Nvidia?", BENCHMARK_PORTFOLIO, None, check_3_2),
     ("3.3", "How is my position doing today?", BENCHMARK_PORTFOLIO,
      blocked_on_pnl, check_3_3),
