@@ -215,12 +215,16 @@ async def stream_agent_graph(user_input: str, portfolio_id: int = None) -> Async
 # CONVENIENCE FUNCTIONS (REQUIRED FOR TESTS)
 # =============================================================================
 
-async def run_agent_graph(user_message: str, request_id: str = None, portfolio_id: int = None) -> Dict[str, Any]:
+async def run_agent_graph(user_message: str, request_id: str = None, portfolio_id: int = None,
+                          previous: Dict[str, Any] = None) -> Dict[str, Any]:
     """
-    Run the full agent graph for a user message.
+    Run the full agent graph for a user message. `previous` is the final
+    state of the turn before, when there is one: its messages and, if it
+    asked back, the record of what it asked are carried into this turn.
     """
     # Create initial state with portfolio context
-    state = create_initial_state(user_message, request_id, portfolio_id=portfolio_id)
+    state = create_initial_state(user_message, request_id, portfolio_id=portfolio_id,
+                                 previous=previous)
     
     # Get compiled graph
     graph = get_graph()
@@ -237,7 +241,8 @@ async def run_agent_graph(user_message: str, request_id: str = None, portfolio_i
     return final_state
 
 
-def run_agent_graph_sync(user_message: str, request_id: str = None, portfolio_id: int = None) -> Dict[str, Any]:
+def run_agent_graph_sync(user_message: str, request_id: str = None, portfolio_id: int = None,
+                         previous: Dict[str, Any] = None) -> Dict[str, Any]:
     """
     Synchronous version of run_agent_graph.
     """
@@ -249,7 +254,7 @@ def run_agent_graph_sync(user_message: str, request_id: str = None, portfolio_id
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
     
-    return loop.run_until_complete(run_agent_graph(user_message, request_id, portfolio_id))
+    return loop.run_until_complete(run_agent_graph(user_message, request_id, portfolio_id, previous))
 
 
 # =============================================================================

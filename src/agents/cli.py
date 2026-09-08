@@ -207,7 +207,9 @@ def main():
 
         started = time.time()
         try:
-            last_state = run_agent_graph_sync(line, portfolio_id=portfolio_id)
+            # The previous turn's state goes in with every turn, so a reply
+            # to a clarification is resolved against what was asked.
+            last_state = run_agent_graph_sync(line, portfolio_id=portfolio_id, previous=last_state)
         except Exception as exc:
             print(f"\n!! {type(exc).__name__}: {exc}")
             import traceback

@@ -277,6 +277,11 @@ class RouterDecision(BaseModel):
     
     # Clarification
     clarification_question: Optional[str] = Field(default=None)
+    # The record of what extraction asked back - kind, token, candidate, the
+    # message - for the next turn to resolve the reply against. Written by
+    # the router from extraction, never by the model: the router drops any
+    # value the model sends.
+    pending: Optional[Dict[str, Any]] = Field(default=None)
     
     class Config:
         use_enum_values = True

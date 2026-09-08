@@ -364,6 +364,11 @@ def _decision_to_dict(decision) -> Dict[str, Any]:
         # before any node could read it.
         "parameters": decision.parameters.model_dump(),
         "execution_order": decision.execution_order,
+        # What was asked back, as text for the CLI and as the record the next
+        # turn resolves the reply against. Both used to be dropped here, so
+        # the CLI's "asked back" line never printed (KNOWN_GAPS).
+        "clarification_question": decision.clarification_question,
+        "pending": getattr(decision, "pending", None),
     }
 
 

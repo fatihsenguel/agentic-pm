@@ -35,6 +35,13 @@ class AgentState(TypedDict):
     
     # Router decision (from Smart Router - Phase 6.1)
     router_decision: Optional[Dict[str, Any]]
+
+    # What the previous turn asked back, as a record extraction wrote (kind,
+    # token, candidate, message), carried in so this turn's reply can be
+    # resolved against it without re-reading prose. None when the previous
+    # turn answered, or when there was none. Conversation memory is an
+    # extraction rule (docs/DIRECTION.md); the model never sees the history.
+    pending: Optional[Dict[str, Any]]
     
     portfolio_id: Optional[int]  # Which portfolio is being analyzed
     portfolio_holdings: Optional[List[Dict[str, Any]]]  # Cached holdings data
@@ -75,6 +82,7 @@ def create_initial_state(
     user_message: str,
     request_id: Optional[str] = None,
     portfolio_id: Optional[int] = None,
+    previous: Optional[Dict[str, Any]] = None,
 ) -> AgentState:
     """
     Create a fresh initial state for a new request.
@@ -82,14 +90,31 @@ def create_initial_state(
     Args:
         user_message: The user's input message
         request_id: Unique identifier for this request (for tracing)
+        portfolio_id: the portfolio the request is about
+        previous: the previous turn's final state, if this is a second
+            turn. Its messages are carried forward with its answer, and if
+            it ended by asking back, the record of what it asked is carried
+            as `pending` for extraction to resolve the reply against.
     
     Returns:
         Initialized AgentState
     """
     from uuid import uuid4
-    
+
+    messages: List[BaseMessage] = []
+    pending = None
+    if previous:
+        messages.extend(previous.get("messages") or [])
+        if previous.get("final_response"):
+            messages.append(AIMessage(content=previous["final_response"]))
+        decision = previous.get("router_decision") or {}
+        if decision.get("intent") == "clarification_needed":
+            pending = decision.get("pending")
+    messages.append(HumanMessage(content=user_message))
+
     return AgentState(
-        messages=[HumanMessage(content=user_message)],
+        messages=messages,
+        pending=pending,
         router_decision=None,
         current_agent=None,
         execution_step=0,
@@ -239,9 +264,10 @@ def get_shared_data(state: AgentState, key: str, default: Any = None) -> Any:
 
 
 def get_user_message(state: AgentState) -> str:
-    """Get the original user message."""
+    """The current turn's message: the last human message. The first one
+    is the previous turn's question when a history is carried."""
     messages = state.get("messages", [])
-    for msg in messages:
+    for msg in reversed(messages):
         if isinstance(msg, HumanMessage):
             return msg.content
     return ""

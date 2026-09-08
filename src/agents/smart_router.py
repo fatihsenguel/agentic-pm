@@ -491,6 +491,8 @@ def _with_extraction(raw: Dict[str, Any], extraction: Extraction, user_message: 
     parameters["hypothetical_weight"] = extraction.hypothetical_weight
     parameters["policy_topic"] = user_message if extraction.policy_lookup else None
     out = {**raw, "parameters": parameters}
+    # The record of a clarification is extraction's; the model writes none.
+    out["pending"] = None
 
     # The plan is derived from the intent and those parameters through
     # schemas.TERMINAL and REQUIRES; the model's execution_order and
