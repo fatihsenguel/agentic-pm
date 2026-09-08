@@ -304,6 +304,16 @@ class TestDependencies:
             assert decision.execution_order == order
 
 
+def test_unknown_is_not_an_intent():
+    """The prompt never offered "unknown" and nothing read it; a decision
+    carrying it is a decision the graph cannot route, rejected at the schema."""
+    decision = {"intent": "unknown", "confidence": 0.5, "agents_needed": [],
+                "execution_order": [], "parameters": {},
+                "reasoning": "a router never emits this value"}
+    with pytest.raises(ValueError):
+        RouterDecision.model_validate(decision)
+
+
 class TestExtractedParameters:
     """Test parameter extraction validation."""
     

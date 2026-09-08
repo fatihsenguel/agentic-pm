@@ -22,7 +22,6 @@ class IntentType(str, Enum):
     DATA_FETCH = "data_fetch"
     RISK_ANALYSIS = "risk_analysis"
     COMBINED = "combined"  # Multi-step workflows
-    UNKNOWN = "unknown"
     CLARIFICATION_NEEDED = "clarification_needed"
     OUT_OF_SCOPE = "out_of_scope"  # Clear request for something the system does not do
     COMPLIANCE = "compliance"  # The portfolio, a proposed weight, or the policy itself, against the IPS
