@@ -3,22 +3,22 @@ Compliance: the IPS applied to the allocation PortfolioAnalysisAgent published.
 
 Pure functions over dicts. No database, no LLM, no state, and no second
 arithmetic path: every percentage and total is read from the allocation
-block and position P&L exactly as published to shared_data. The only
-arithmetic here is one subtraction per finding, plus one division per
-position for the concentration clauses until position P&L carries its own
-share of total. The checker does not know how the block was computed and
-does not recompute it; if the block is wrong the findings are wrong in the
-same way, which is the point - one computation, one place to be wrong.
+block exactly as published to shared_data, and the only arithmetic here is
+one subtraction per finding. The checker does not know how the block was
+computed and does not recompute it; if the block is wrong the findings are
+wrong in the same way, which is the point - one computation, one place to
+be wrong.
 
 Reference: tests/golden/expected_values.md Part 7, computed by hand before
 this existed, and its decisions:
 
   D2  The denominator for every clause is total portfolio value including
       cash: `by_asset_class.total_value`. Every allocation line carries its
-      share of it as `pct_of_total`, and that is the one field the band and
-      sector clauses read. A sector line also carries shares of sectored and
-      of invested value; both are wrong for IPS-4.3 and both plausible, and
-      neither is read here.
+      share of it as `pct_of_total`, and that is the one field every clause
+      reads - bands over `by_asset_class`, the concentration clauses over
+      `by_position`, the sector clause over `by_sector`. A sector line also
+      carries shares of sectored and of invested value; both are wrong for
+      IPS-4.3 and both plausible, and neither is read here.
   D9  Exactly at a limit passes. Strict, unrounded comparison - beyond the
       cent rounding the block already carries, which this module does not
       add to.
@@ -110,7 +110,6 @@ def _exempt(clause: Clause, subject: str) -> Finding:
 def check(
     ips: IPS,
     allocation: Mapping,
-    position_pnl: Mapping[str, Mapping],
     instrument_types: Mapping[str, Optional[str]],
 ) -> List[Finding]:
     """Every checkable clause applied to the portfolio, in policy order.
@@ -118,8 +117,8 @@ def check(
     Args:
         ips: the loaded policy
         allocation: `shared_data["allocation"]` as PortfolioAnalysisAgent
-            publishes it - `by_asset_class` and `by_sector` with their lines
-        position_pnl: `shared_data["position_pnl"]`, ticker -> figures
+            publishes it - `by_asset_class`, `by_sector` and `by_position`,
+            each line carrying `pct_of_total`
         instrument_types: ticker -> 'share' | 'fund', one per position
 
     Returns:
@@ -127,6 +126,7 @@ def check(
     """
     by_class = allocation.get("by_asset_class") or {}
     by_sector = allocation.get("by_sector") or {}
+    by_position = allocation.get("by_position") or {}
     total = by_class.get("total_value")
     if not by_class.get("lines") or total is None:
         raise ComplianceError(
@@ -135,13 +135,16 @@ def check(
         )
     if total <= 0:
         raise ComplianceError(f"Total value is {total}; percentages are undefined.")
-    if not position_pnl:
-        raise ComplianceError("No positions to check.")
+    if not by_position.get("lines"):
+        raise ComplianceError(
+            "No by_position lines in the allocation; the concentration clauses "
+            "are checked over the positions PortfolioAnalysisAgent published."
+        )
 
     unknown = sorted(
-        f"{t}={instrument_types.get(t)!r}"
-        for t in position_pnl
-        if instrument_types.get(t) not in INSTRUMENT_TYPES
+        f"{line['label']}={instrument_types.get(line['label'])!r}"
+        for line in by_position["lines"]
+        if instrument_types.get(line["label"]) not in INSTRUMENT_TYPES
     )
     if unknown:
         raise ComplianceError(
@@ -157,9 +160,9 @@ def check(
         if clause.type == "asset_class_band":
             findings += _band(clause, class_lines, total)
         elif clause.type == "max_instrument_weight":
-            findings += _per_position(clause, position_pnl, total, instrument_types, exempt_funds=False)
+            findings += _per_position(clause, by_position, total, instrument_types, exempt_funds=False)
         elif clause.type == "max_issuer_weight":
-            findings += _per_position(clause, position_pnl, total, instrument_types, exempt_funds=True)
+            findings += _per_position(clause, by_position, total, instrument_types, exempt_funds=True)
         elif clause.type == "max_sector_weight":
             findings += _per_sector(clause, by_sector, total, instrument_types)
         else:
@@ -196,20 +199,24 @@ def _band(clause: Clause, class_lines: Mapping[str, Mapping], total: float) -> L
 
 def _per_position(
     clause: Clause,
-    position_pnl: Mapping[str, Mapping],
+    by_position: Mapping,
     total: float,
     instrument_types: Mapping[str, Optional[str]],
     exempt_funds: bool,
 ) -> List[Finding]:
     out = []
-    for ticker, pos in position_pnl.items():
+    for line in by_position["lines"]:
+        ticker = line["label"]
         if exempt_funds and instrument_types[ticker] == FUND:
             out.append(_exempt(clause, ticker))
             continue
-        market_value = pos.get("market_value")
-        if market_value is None:
-            raise ComplianceError(f"{clause.id}: {ticker} has no market_value in position_pnl.")
-        out.append(_finding(clause, ticker, market_value / total, clause.params["max"], "max", total))
+        observed = line.get("pct_of_total")
+        if observed is None:
+            raise ComplianceError(
+                f"{clause.id}: {ticker} carries no pct_of_total. The share of total "
+                "is published by PortfolioAnalysisAgent, not divided for here."
+            )
+        out.append(_finding(clause, ticker, observed, clause.params["max"], "max", total))
     return out
 
 

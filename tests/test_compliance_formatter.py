@@ -17,7 +17,7 @@ from agents.nodes import _format_compliance_response
 from portfolio_tool.compliance import check, refuse
 from portfolio_tool.ips import load_ips
 
-from test_compliance import INSTRUMENT_TYPES, TOTAL, allocation, position_pnl
+from test_compliance import INSTRUMENT_TYPES, TOTAL, allocation
 
 
 TICKERS = set(INSTRUMENT_TYPES)
@@ -60,7 +60,7 @@ def _unexplained(answer, findings):
 def test_portfolio_check_answer():
     ips = load_ips()
     alloc = allocation()
-    findings = check(ips, alloc, position_pnl(), INSTRUMENT_TYPES)
+    findings = check(ips, alloc, INSTRUMENT_TYPES)
     answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"]))
 
     for c in ips:

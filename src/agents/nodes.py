@@ -950,9 +950,9 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
     """
     Compliance Agent node - the IPS applied to the published allocation.
 
-    Reads only `shared_data`: the allocation block and position P&L that
-    PortfolioAnalysisAgent published, and the holdings summary for each
-    position's instrument type. No database, no provider, no recomputation
+    Reads only `shared_data`: the allocation block PortfolioAnalysisAgent
+    published, and the holdings summary for each position's instrument
+    type. No database, no provider, no recomputation
     (tests/golden/KNOWN_GAPS.md, "wip/phase7-snapshot was read and rejected").
     Loads the policy from ips.toml on every run, so a broken policy file
     fails the run that needs it and not the import of everything.
@@ -1040,10 +1040,8 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
             # STRICT: every input is PortfolioAnalysisAgent's output. No fallback;
             # a check against figures nobody computed is a verdict nobody asked for.
             allocation = shared.get("allocation")
-            position_pnl = shared.get("position_pnl")
             holdings = shared.get("holdings")
-            for key, value in (("allocation", allocation), ("position_pnl", position_pnl),
-                               ("holdings", holdings)):
+            for key, value in (("allocation", allocation), ("holdings", holdings)):
                 if not value:
                     raise DataCalculationError(
                         f"No {key} in shared_data.\n"
@@ -1061,9 +1059,9 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
                         "policy": ips.path,
                         "clauses": len(ips),
                         "checkable": len(ips.checkable),
-                        "positions": len(position_pnl),
+                        "positions": len((allocation.get("by_position") or {}).get("lines") or []),
                     })
-                findings = check(ips, allocation, position_pnl, instrument_types)
+                findings = check(ips, allocation, instrument_types)
                 for f in findings:
                     by_status[f.status] = by_status.get(f.status, 0) + 1
                 if tool_ctx:

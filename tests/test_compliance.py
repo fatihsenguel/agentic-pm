@@ -7,10 +7,10 @@ sheet to the cent. If a test fails, the checker or the reference is wrong
 and that gets resolved deliberately. Do NOT update these figures to match
 code output.
 
-The fixture is the allocation block and position P&L in the shape
-PortfolioAnalysisAgent publishes, typed from Parts 1-3 by hand rather than
-produced by allocation.py, so this test depends on nothing but the checker
-and the loaded policy.
+The fixture is the allocation block in the shape PortfolioAnalysisAgent
+publishes - three views, each line with its share of total - typed from
+Parts 1-3 and 7 by hand rather than produced by allocation.py, so this test
+depends on nothing but the checker and the loaded policy.
 """
 
 import pytest
@@ -84,12 +84,23 @@ def allocation():
             "sectored_value": sectored,
             "total_value": TOTAL,
         },
+        # Part 7, the IPS-4.1 table: one line per holding, largest first.
+        "by_position": {
+            "lines": [
+                {"label": t, "market_value": v, "cost_basis": 0.0,
+                 "pct_of_denominator": v / TOTAL,
+                 "pct_of_invested": v / invested,
+                 "pct_of_total": v / TOTAL,
+                 "tickers": [t]}
+                for t, v in sorted(MV.items(), key=lambda kv: -kv[1])
+            ],
+            "denominator": "total value including cash",
+            "invested_value": invested,
+            "cash_balance": 15_500.00,
+            "total_value": TOTAL,
+        },
         "as_of": {"worst_case": "2026-09-02", "stalest": "SPY", "uniform": True},
     }
-
-
-def position_pnl():
-    return {t: {"market_value": v, "as_of": "2026-09-02"} for t, v in MV.items()}
 
 
 @pytest.fixture(scope="module")
@@ -99,7 +110,7 @@ def ips():
 
 @pytest.fixture(scope="module")
 def findings(ips):
-    return check(ips, allocation(), position_pnl(), INSTRUMENT_TYPES)
+    return check(ips, allocation(), INSTRUMENT_TYPES)
 
 
 def by_key(findings):
@@ -196,8 +207,20 @@ def test_sector_reads_the_published_share_and_does_not_divide(ips):
     line["market_value"] = 1.0
     line["pct_of_denominator"] = None
     line["pct_of_invested"] = None
-    tech = by_key(check(ips, alloc, position_pnl(), INSTRUMENT_TYPES))[("IPS-4.3", "Technology", "max")]
+    tech = by_key(check(ips, alloc, INSTRUMENT_TYPES))[("IPS-4.3", "Technology", "max")]
     assert tech.observed * 100 == pytest.approx(27.96, abs=CENT)
+
+
+def test_position_reads_the_published_share_and_does_not_divide(ips):
+    """IPS-4.1 and 4.2 read `pct_of_total` from the position line; the
+    market value is not divided. Same falsifier as the sector arm."""
+    alloc = allocation()
+    line = _line(alloc, "by_position", "JPM")
+    line["market_value"] = 1.0
+    line["pct_of_denominator"] = None
+    keys = by_key(check(ips, alloc, INSTRUMENT_TYPES))
+    assert keys[("IPS-4.1", "JPM", "max")].observed * 100 == pytest.approx(8.68, abs=CENT)
+    assert keys[("IPS-4.2", "JPM", "max")].observed * 100 == pytest.approx(8.68, abs=CENT)
 
 
 def test_band_reads_the_same_field(ips):
@@ -207,7 +230,7 @@ def test_band_reads_the_same_field(ips):
     line = _line(alloc, "by_asset_class", "Equity")
     line["market_value"] = 1.0
     line["pct_of_denominator"] = 0.5
-    equity = by_key(check(ips, alloc, position_pnl(), INSTRUMENT_TYPES))[("IPS-3.1", "Equity", "max")]
+    equity = by_key(check(ips, alloc, INSTRUMENT_TYPES))[("IPS-3.1", "Equity", "max")]
     assert equity.observed * 100 == pytest.approx(69.41, abs=CENT)
 
 
@@ -223,9 +246,9 @@ def test_distances_reconcile(findings):
 
 def test_at_the_limit_passes(ips):
     """D9. A position at exactly 12.00% of total is ok under IPS-4.1."""
-    pnl = position_pnl()
-    pnl["JPM"] = {"market_value": 0.12 * TOTAL, "as_of": "2026-09-02"}
-    f = by_key(check(ips, allocation(), pnl, INSTRUMENT_TYPES))[("IPS-4.1", "JPM", "max")]
+    alloc = allocation()
+    _line(alloc, "by_position", "JPM")["pct_of_total"] = 0.12
+    f = by_key(check(ips, alloc, INSTRUMENT_TYPES))[("IPS-4.1", "JPM", "max")]
     assert f.status == OK and f.distance_pp == pytest.approx(0.0, abs=1e-9)
 
 
@@ -234,10 +257,10 @@ def test_at_the_limit_passes(ips):
 def test_unknown_instrument_type_raises(ips):
     types = {**INSTRUMENT_TYPES, "JNJ": None}
     with pytest.raises(ComplianceError, match="JNJ=None"):
-        check(ips, allocation(), position_pnl(), types)
+        check(ips, allocation(), types)
     types = {**INSTRUMENT_TYPES, "JNJ": "etf"}
     with pytest.raises(ComplianceError, match="JNJ='etf'"):
-        check(ips, allocation(), position_pnl(), types)
+        check(ips, allocation(), types)
 
 
 def test_missing_asset_class_line_raises(ips):
@@ -246,30 +269,38 @@ def test_missing_asset_class_line_raises(ips):
         if line["label"] == "Real Estate":
             line["label"] = "Real estate"
     with pytest.raises(ComplianceError, match="names asset class 'Real Estate'"):
-        check(ips, alloc, position_pnl(), INSTRUMENT_TYPES)
+        check(ips, alloc, INSTRUMENT_TYPES)
 
 
 def test_fund_inside_a_sector_raises(ips):
     alloc = allocation()
     alloc["by_sector"]["lines"][0]["tickers"].append("SPY")
     with pytest.raises(ComplianceError, match="contains funds \\['SPY'\\]"):
-        check(ips, alloc, position_pnl(), INSTRUMENT_TYPES)
+        check(ips, alloc, INSTRUMENT_TYPES)
 
 
-@pytest.mark.parametrize("view, label", [("by_asset_class", "Equity"), ("by_sector", "Technology")])
+@pytest.mark.parametrize("view, label", [
+    ("by_asset_class", "Equity"), ("by_sector", "Technology"), ("by_position", "SPY")])
 def test_missing_share_of_total_raises(ips, view, label):
     """A line without `pct_of_total` is not divided for; the checker raises."""
     alloc = allocation()
     del _line(alloc, view, label)["pct_of_total"]
     with pytest.raises(ComplianceError, match=f"{label}.*pct_of_total"):
-        check(ips, alloc, position_pnl(), INSTRUMENT_TYPES)
+        check(ips, alloc, INSTRUMENT_TYPES)
+
+
+def test_missing_position_view_raises(ips):
+    alloc = allocation()
+    del alloc["by_position"]
+    with pytest.raises(ComplianceError, match="by_position"):
+        check(ips, alloc, INSTRUMENT_TYPES)
 
 
 def test_missing_total_raises(ips):
     alloc = allocation()
     del alloc["by_asset_class"]["total_value"]
     with pytest.raises(ComplianceError, match="total_value"):
-        check(ips, alloc, position_pnl(), INSTRUMENT_TYPES)
+        check(ips, alloc, INSTRUMENT_TYPES)
 
 
 # --- refuse: the hypothetical weight of 3.1 ----------------------------------

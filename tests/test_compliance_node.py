@@ -2,9 +2,9 @@
 compliance_agent_node over a synthetic state: what it publishes, and that
 it refuses to run without PortfolioAnalysisAgent's output.
 
-No database, no LLM. The allocation and position P&L are the Part 7
-fixture from test_compliance.py; the holdings summary carries the
-instrument types the way build_holdings_summary publishes them.
+No database, no LLM. The allocation is the Part 7 fixture from
+test_compliance.py; the holdings summary carries the instrument types the
+way build_holdings_summary publishes them.
 """
 
 import pytest
@@ -12,7 +12,7 @@ import pytest
 from agents.nodes import compliance_agent_node
 from agents.state import create_initial_state
 
-from test_compliance import INSTRUMENT_TYPES, TOTAL, allocation, position_pnl
+from test_compliance import INSTRUMENT_TYPES, TOTAL, allocation
 
 
 def holdings():
@@ -34,7 +34,7 @@ BLOCK_KEYS = {"policy", "statements", "total_value", "as_of", "findings", "no_cl
 
 async def test_publishes_the_compliance_block():
     out = await compliance_agent_node(
-        state_with(allocation=allocation(), position_pnl=position_pnl(), holdings=holdings())
+        state_with(allocation=allocation(), holdings=holdings())
     )
     assert out.get("errors") is None
     block = out["shared_data"]["compliance"]
@@ -54,9 +54,9 @@ async def test_publishes_the_compliance_block():
     assert out["agents_to_run"] == []
 
 
-@pytest.mark.parametrize("missing", ["allocation", "position_pnl", "holdings"])
+@pytest.mark.parametrize("missing", ["allocation", "holdings"])
 async def test_refuses_without_the_analysis_output(missing):
-    shared = {"allocation": allocation(), "position_pnl": position_pnl(), "holdings": holdings()}
+    shared = {"allocation": allocation(), "holdings": holdings()}
     del shared[missing]
     out = await compliance_agent_node(state_with(**shared))
     assert "compliance" not in (out.get("shared_data") or {})
@@ -70,7 +70,7 @@ async def test_an_unknown_instrument_type_is_an_error_not_a_verdict():
     rows = holdings()
     rows[1]["instrument_type"] = None
     out = await compliance_agent_node(
-        state_with(allocation=allocation(), position_pnl=position_pnl(), holdings=rows)
+        state_with(allocation=allocation(), holdings=rows)
     )
     assert "compliance" not in (out.get("shared_data") or {})
     [error] = out["errors"]
