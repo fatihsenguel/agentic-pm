@@ -122,6 +122,12 @@ HEDGE = re.compile(
 # The weight 3.1 asks about. Static: it is in the prompt, not the market.
 HYPOTHETICAL_WEIGHT = 0.15
 
+# The sentence the formatter emits when the policy has no clause on a topic
+# (Part 7, 3.4: "the policy contains nothing on currency risk"). Repeated
+# here rather than imported, as SCOPE_BOUNDARY is, so the check can fail
+# before the formatter exists.
+NO_CLAUSE = "contains nothing on"
+
 
 # ---------------------------------------------------------------------------
 # Accessors
@@ -887,6 +893,58 @@ def check_3_1(state):
     return fails
 
 
+def check_3_4(state):
+    """"What does my investment policy say about currency risk?" - the clause
+    does not exist - passes when the answer says the policy contains nothing
+    on this and invents nothing.
+
+    "Nothing" is only an answer over a full policy, so the block must carry
+    the loaded policy with its statements (the invariants check that) and
+    the `no_clause` marker, set by the node from the router's decision - the
+    pure checker sees no query and cannot know a topic was asked about.
+    Without the marker, "nothing to report" and "checked and all ok" are the
+    same empty list, which is the false pass this case exists to refuse.
+
+    Invents nothing, concretely: no findings (nothing was checked), no
+    `total_value` (nothing was measured), no IPS id in the answer at all -
+    not even a real one, since the nearest clause by topic is none and
+    citing IPS-2.1 for currency is the retrieval failure benchmark.md Part 1
+    names - no percentage, no holding. And the fixed sentence reaches the
+    answer, so the intent label alone cannot pass.
+    """
+    fails = _ran_clean(state)
+    block = _compliance(state)
+    if not block:
+        return fails + ["no compliance in shared_data"]
+
+    fails += _compliance_block_invariants(state)
+
+    if not block.get("no_clause"):
+        fails.append("no_clause is not set; a policy with no clause on the topic "
+                     "has to say so as data, not only as prose")
+    findings = block.get("findings") or []
+    if findings:
+        fails.append(f"{len(findings)} findings on a topic lookup; nothing was "
+                     "asked about the portfolio")
+    if block.get("total_value") is not None:
+        fails.append(f"total_value {block['total_value']} is set; a topic lookup "
+                     "measures nothing")
+
+    answer = _answer(state)
+    cited = sorted(set(CLAUSE_ID.findall(answer)))
+    if cited:
+        fails.append(f"answer cites {cited}; the policy has no clause on this "
+                     "and the nearest one by topic is none")
+    named = sorted(t for t in TICKERS if re.search(rf"\b{t}\b", answer))
+    if named:
+        fails.append(f"answer names holdings {named}; a policy question is not "
+                     "about the portfolio")
+    fails += _unexplained_percentages(state, findings)
+    if NO_CLAUSE not in answer:
+        fails.append(f"answer does not say the policy {NO_CLAUSE!r} this")
+    return fails
+
+
 # ---------------------------------------------------------------------------
 # Blocked probes. Each returns a reason while the capability is absent, and
 # None once it exists, so the case unblocks itself.
@@ -951,7 +1009,7 @@ CASES = [
     ("3.3", "How is my position doing today?", BENCHMARK_PORTFOLIO,
      blocked_on_pnl, check_3_3),
     ("3.4", "What does my investment policy say about currency risk?",
-     BENCHMARK_PORTFOLIO, blocked_on_compliance, None),
+     BENCHMARK_PORTFOLIO, blocked_on_compliance, check_3_4),
     ("3.5", "Hows my APPL doing?", BENCHMARK_PORTFOLIO,
      blocked_on_conversation_memory, None),
 ]
