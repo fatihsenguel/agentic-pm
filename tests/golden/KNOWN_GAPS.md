@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 8 September 2026, seventh sitting.
+Last updated 8 September 2026, seventh sitting, swept again after the merge to `baseline-v1`.
 
 ---
 
@@ -1459,6 +1459,98 @@ tests. Registration, not reachability, one level down from the span:
 the helper existed, the call existed, the value went nowhere.
 `state.add_warning` now has no caller.
 
+### Four wrong-faced answers behind 11/12, from the CLI, 8 September
+
+Recorded 8 September (seventh sitting, after the merge). The owner ran nine
+prompts in `cli.py` against portfolio 3. Four came back correct, one was the
+pinned false refusal ("How much did AAPL gain today?"), and four answered a
+different question from the one asked, each with a plausible face - while
+the runner stood at 11/12. No loop asks these questions: the golden set pins
+routing, the runner asks its twelve, pytest asks components. The CLI is the
+loop that found them, which is what it is for. Prompts verbatim:
+
+- **"Is my JNJ position over any limit?"** - the full policy report, thirty
+  lines, flagged by the CLI as identical to the answer for "What
+  concentration risk do I have, and is it compatible with my investment
+  policy?". Two defects. The router returned `tickers: []` although JNJ is
+  named (rule 2 says extract what the user names), so the decision carries
+  no selection. And the compliance formatter has no selection axis: the
+  "one report serves 2.1, 2.2 and 2.3" note under the synthesizer entry said
+  a measure-like axis for compliance is a decision when a case needs one.
+  A question needs one. Under `docs/DIRECTION.md` the ticker half is
+  extraction, not a prompt sentence.
+- **"What's my biggest position?"** - both allocation breakdowns; SPY's
+  18.74% of total appears nowhere in the answer. No per-position view is
+  published: allocation is by class and by sector, and the only per-position
+  shares of total are inside the IPS-4.1 findings. This is the trigger the
+  sixth sitting set for the deferred `concentration` measure - a
+  concentration question with no policy attached - and it has fired. Also:
+  the formatter's "Not done" line said "The question named no breakdown, so
+  both are shown", which is false for a question that names positions; the
+  line is emitted whenever `group_by` is null and does not read the question.
+- **"What share of my portfolio is technology?"** - 54.84% of sectored value
+  and 28.82% of invested value. "My portfolio" under D2 is total value
+  including cash, and that figure, 27.73%, is computed only inside the
+  IPS-4.3 check, which divides `by_sector.lines[].market_value` by
+  `by_asset_class.total_value` itself. The sixth handoff recorded that both
+  percentages the sector line carries are wrong for the checker; they are
+  also wrong for the plain question. Part 7's IPS-4.3 column is the
+  hand-computed reference for the missing figure (27.96% at the 09-02
+  closes).
+- **"How has my portfolio done over the last month?"** - position P&L since
+  purchase, with `period` silently set to `1Y`. Two recorded gaps meeting:
+  the period rule's "nearest valid value" repair ("last week becomes 1Y",
+  under Configuration) and the absence of any window return. The header
+  says "since purchase"; nothing says the month was not answered. Under
+  `docs/DIRECTION.md` the period half is extraction: a span the vocabulary
+  lacks is a clarification naming the spans it has.
+
+Two more from the same session, correct answers with a limit worth naming:
+
+- **"Could I put 11% into a new stock?"** was refused under IPS-4.2, correctly:
+  a stock is a directly held share. But the hypothetical mode carries no
+  instrument type - an unnamed position is treated as possibly a share, so
+  "11% into a new ETF" would be refused the same way and wrongly. The mode
+  needs the type when the user states it, and the schema has no field for
+  it. A decision, not built.
+- The nine prompts fetched nothing from the provider (every series cached)
+  and every answer priced as of 2026-09-04, two closes past the reference.
+
+### `ExtractedParameters` fields with no reader - grep, 8 September
+
+Recorded 8 September (seventh sitting, after the merge), from
+`grep -rnE '(parameters|params)(\.get\("F"|\["F"\]|\.F\b)' src/` for each
+field F, excluding the schema and the router prompt. Readers exist for
+`tickers` (`nodes.py` portfolio context and the P&L formatter), `period`
+(DataAgent node), `max_volatility` (optimization node), `portfolio_value`
+(backtest node), `measure`, `group_by` (`_format_analysis_response`),
+`hypothetical_weight` and `policy_topic` (ComplianceAgent node). No reader:
+
+- `target_return` - extracted, validated, read nowhere.
+- `rebalance_threshold` - the same.
+- `portfolio_id` - written by `SmartRouter.route` after the LLM call and
+  never read from `parameters`: every node reads `state["portfolio_id"]`.
+  A field that exists so that a copy of a value can be made.
+
+`route_sync`'s return dict in `smart_router.py` restates `tickers`, `period`
+and `max_volatility` by hand (recorded under Configuration); it is reached
+only through `detect_intent_simple`, and both are convenience functions
+with no caller in the graph. Relevant to the router restructure: extraction
+before the LLM should carry only fields something reads.
+
+### BaseAgent's tool-calling loop has no live caller - confirmed, 8 September
+
+Grep run 8 September (seventh sitting, after the merge): `.process(` is
+called on an agent nowhere in `src/`; the only caller is
+`tests/test_phase5_4_integration.py:332`. `get_tools` is called from
+`tests/test_rebalance.py` only. The graph's nodes in `nodes.py` call the
+agents' tool functions directly and never the loop. This is the same fact
+the macro `equity_adjustment` entry records ("the BaseAgent tool-calling
+loop ... has no caller from the graph. Its only caller is
+`tests/test_phase5_4_integration.py`"); it is confirmed here because the
+router restructure under `docs/DIRECTION.md` must know that nothing live
+depends on `BaseAgent.process`, `get_system_prompt` or `tool_map`.
+
 ### Roster sites the registry does not read
 
 Recorded 7 September (fourth sitting), while building the registry. Each
@@ -1776,6 +1868,15 @@ and moves `expected.txt` by one query - the owner's decision, alongside the
 back to the clarification, the next step is conversation memory, not a
 fourth edit.
 
+**The last prompt rule of its kind.** `docs/DIRECTION.md` (df1bcef, written
+the same day, after a3bad06) says: do not add prompt rules to fix a routing
+defect; move the defect into extraction or derivation, or log it. The rule 7
+sentence predates the document, held its prediction on every loop, and is
+not reverted. It is recorded here as the last prompt rule added to fix a
+routing defect. The two defects of that shape found since - JNJ dropped from
+`tickers`, "last month" repaired to `1Y` - go to extraction, not to the
+prompt.
+
 ### pytest warning inventory
 
 Recorded 7 September (third sitting), from a green run of 132. Twenty
@@ -1913,7 +2014,24 @@ covariance, returns and per-ticker volatility.
 
 ## Directions, and decisions deferred with reasons
 
-### Does the router stay a classifier, or become a tool-caller?
+### Does the router stay a classifier, or become a tool-caller? - ANSWERED by docs/DIRECTION.md, 8 September
+
+**Answered, 8 September (seventh sitting, after the merge), by
+`docs/DIRECTION.md` (df1bcef).** In the end state the router does not
+exist: a strong model chooses tools by function calling, the tools validate
+their own inputs, and each tool's internal graph is derived from a
+dependency table. The router is scaffolding until then, and work on it
+counts only when it moves toward the tool boundary: deterministic
+extraction before any LLM, plans derived from intent and the extracted
+parameters through a terminal-agent table closed by `REQUIRES`, and the
+prompt shrunk to the one decision an LLM should make. What survives from
+the reasoning below is the second point - the tool shape is being chosen
+now, and a parameterised quant layer is what the tools will call. The
+"nothing stable to diff" worry is answered by the invariants: every number
+traces to a tool output, and the pipelines under the tools stay fixed and
+pinned.
+
+The entry as it stood before the answer:
 
 **Deferred until Level 1 passes and the IPS lands. Not now.**
 
