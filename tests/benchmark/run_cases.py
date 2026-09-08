@@ -54,6 +54,8 @@ import io
 import re
 
 from agents.graph import run_agent_graph_sync
+from observability import get_tracer
+from observability.tracer import TraceEventType
 
 
 BENCHMARK_PORTFOLIO = 3
@@ -945,6 +947,121 @@ def check_3_4(state):
     return fails
 
 
+COMPLIANCE_PLAN = ["DataAgent", "PortfolioAnalysisAgent", "ComplianceAgent"]
+CONCENTRATION_TYPES = {"max_instrument_weight", "max_issuer_weight", "max_sector_weight"}
+
+
+def _trace_for(state):
+    """The stored trace of this run, by request id. The tracer keeps completed
+    traces in memory; the runner reads the last one and refuses a neighbour's."""
+    traces = get_tracer().get_traces()
+    wanted = state.get("request_id")
+    if not traces or traces[-1].request_id != wanted:
+        return None, [f"no stored trace for request {wanted!r}; the last stored "
+                      f"is {traces[-1].request_id!r}" if traces else
+                      "no stored trace at all"]
+    return traces[-1], []
+
+
+def _trace_shows_handovers(state, plan):
+    """benchmark 2.1: "trace shows contract handovers". Each planned agent
+    opened a span, in plan order; each agent but the last delegated to the
+    next; ComplianceAgent's check ran as a traced tool call."""
+    trace, fails = _trace_for(state)
+    if trace is None:
+        return fails
+
+    started = [e.agent_name for e in trace.events
+               if e.event_type == TraceEventType.AGENT_START and e.agent_name in plan]
+    if started != plan:
+        fails.append(f"agents in trace: {started}; the plan {plan} is not what the "
+                     "trace shows ran")
+
+    handovers = [(e.agent_name, e.metadata.get("to_agent"))
+                 for e in trace.events if e.event_type == TraceEventType.DELEGATION]
+    expected = list(zip(plan, plan[1:]))
+    missing = [h for h in expected if h not in handovers]
+    if missing:
+        fails.append(f"handovers missing from the trace: {missing}; found {handovers}")
+
+    tools = [(e.agent_name, e.tool_name) for e in trace.events
+             if e.event_type == TraceEventType.TOOL_START]
+    if ("ComplianceAgent", "check_ips") not in tools:
+        fails.append(f"no traced check_ips tool call under ComplianceAgent; tools: {tools}")
+    return fails
+
+
+def check_2_1(state):
+    """"What concentration risk do I have, and is it compatible with my
+    investment policy?" passes when Data, Risk and Compliance agents all run
+    and the trace shows contract handovers.
+
+    Risk is PortfolioAnalysisAgent (decision, 8 September). So: the three
+    agents planned in order and each successful; the trace carrying their
+    spans, the two handovers and the checker's tool call; the block sound;
+    and the answer carrying the concentration clauses - each 4.x breach's
+    distance and clause id, each exempt fund named (Part 7: funds are
+    counted at fund level and not attributed to issuers), the as-of date -
+    with no figure the policy does not state and no trade line.
+
+    Which subjects breach is not asserted.
+    """
+    fails = _ran_clean(state)
+    plan = (state.get("router_decision") or {}).get("execution_order") or []
+    if plan != COMPLIANCE_PLAN:
+        fails.append(f"plan {plan} != {COMPLIANCE_PLAN}; Data, Risk (PortfolioAnalysisAgent) "
+                     "and Compliance in that order")
+    sub = state.get("sub_results") or {}
+    not_ok = [a for a in COMPLIANCE_PLAN if not (sub.get(a) or {}).get("success")]
+    if not_ok:
+        fails.append(f"agents that did not run successfully: {not_ok}")
+
+    fails += _trace_shows_handovers(state, COMPLIANCE_PLAN)
+
+    block = _compliance(state)
+    if not block:
+        return fails + ["no compliance in shared_data"]
+    fails += _compliance_block_invariants(state)
+    if block.get("no_clause"):
+        fails.append("no_clause is set on a portfolio check")
+
+    findings = block.get("findings") or []
+    policy = block.get("policy") or {}
+    refused = [f for f in findings if f.get("status") == "refused"]
+    if refused:
+        fails.append(f"{len(refused)} refused findings on a portfolio check")
+
+    answer = _answer(state)
+    concentration = [f for f in findings if f.get("type") in CONCENTRATION_TYPES]
+    if not concentration:
+        fails.append("no findings under a concentration clause")
+    for clause in sorted({f["clause"] for f in concentration}):
+        if clause not in answer:
+            fails.append(f"concentration clause {clause} never reaches the answer")
+    for f in concentration:
+        where = f"{f.get('clause')}/{f.get('subject')}"
+        if f.get("status") == "breach" and f"{f['distance_pp']:.2f}" not in answer:
+            fails.append(f"breach {where}: distance {f['distance_pp']:.2f} pp never "
+                         "reaches the answer")
+        if f.get("status") == "exempt" and not re.search(rf"\b{f['subject']}\b", answer):
+            fails.append(f"exempt {where} is not named in the answer; funds are "
+                         "counted at fund level and the answer has to say so")
+
+    invented = sorted(set(CLAUSE_ID.findall(answer)) - set(policy))
+    if invented:
+        fails.append(f"answer cites clause ids not in the policy: {invented}")
+    fails += _unexplained_percentages(state, findings)
+    fails += _no_trade_lines(state)
+
+    as_of = (block.get("as_of") or {}).get("worst_case")
+    if not as_of:
+        fails.append("no as_of.worst_case in shared_data['compliance'] "
+                     "(benchmark.md Part 3b)")
+    else:
+        fails += _date_reaches_answer(state, as_of, "compliance.as_of.worst_case")
+    return fails
+
+
 # ---------------------------------------------------------------------------
 # Blocked probes. Each returns a reason while the capability is absent, and
 # None once it exists, so the case unblocks itself.
@@ -998,7 +1115,7 @@ CASES = [
     ("1.4", "What positions do I hold in the Technology sector?", BENCHMARK_PORTFOLIO,
      None, check_1_4),
     ("2.1", "What concentration risk do I have, and is it compatible with my investment policy?",
-     BENCHMARK_PORTFOLIO, blocked_on_delegation_trace, None),
+     BENCHMARK_PORTFOLIO, blocked_on_delegation_trace, check_2_1),
     ("2.2", "Does my current allocation violate any rule of my investment policy?",
      BENCHMARK_PORTFOLIO, blocked_on_compliance, check_2_2),
     ("2.3", "What would have to change for me to be within the limits again?",
