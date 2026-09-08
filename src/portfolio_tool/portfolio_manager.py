@@ -412,6 +412,7 @@ class PortfolioManager:
                     "average_price": float(holding.average_price),
                     "asset_class": asset.asset_class,
                     "sector": asset.sector,
+                    "instrument_type": asset.instrument_type,
                     "industry": asset.industry,
                     "country": asset.country,
                     "currency": asset.currency,

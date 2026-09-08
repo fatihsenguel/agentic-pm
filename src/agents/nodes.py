@@ -194,6 +194,12 @@ def build_holdings_summary(holdings: Optional[List[Dict]]) -> List[Dict[str, Any
     `sector` stays None where the asset has none. Per expected_values.md D3,
     unsectored holdings are reported explicitly rather than bucketed.
 
+    `instrument_type` ('share' or 'fund') stays None where the asset has
+    none, and is published as None rather than dropped: the compliance
+    checker raises on a holding whose type it does not know (IPS-4.2 counts
+    directly held shares only), and it can only do that if the absence
+    reaches it.
+
     Args:
         holdings: Rows from PortfolioManager.get_holdings, or None
 
@@ -210,6 +216,7 @@ def build_holdings_summary(holdings: Optional[List[Dict]]) -> List[Dict[str, Any
             "average_price": float(h["average_price"]),
             "asset_class": h.get("asset_class"),
             "sector": h.get("sector"),
+            "instrument_type": h.get("instrument_type"),
             "purchase_date": (
                 h["purchase_date"].isoformat() if h.get("purchase_date") else None
             ),
