@@ -262,10 +262,31 @@ class TestDependencies:
             RouterDecision.model_validate(
                 self._plan("data_fetch", ["PortfolioAnalysisAgent", "DataAgent"], measure="allocation"))
 
-    def test_an_autofilled_order_is_checked(self):
+    def test_an_empty_order_is_not_filled_in(self):
+        """validate_execution_order used to autofill an empty order from the
+        task list and overwrite a disagreeing one from it (KNOWN_GAPS,
+        "validate_execution_order repairs instead of raising"). Both are
+        gone: the order is the derived plan or the decision is rejected."""
         data = self._plan("risk_analysis", ["PortfolioAnalysisAgent"], measure="portfolio_volatility")
         data["execution_order"] = []
-        with pytest.raises(ValueError, match=r"not \['PortfolioAnalysisAgent'\]"):
+        with pytest.raises(ValueError, match=r"not \[\]"):
+            RouterDecision.model_validate(data)
+
+    def test_an_order_disagreeing_with_the_task_list_is_rejected_not_rewritten(self):
+        """The repair's own case: two tasks, an order naming one of them.
+        It used to be overwritten from the task list and validate."""
+        data = self._plan("optimization", ["DataAgent", "OptimizationAgent"])
+        data["execution_order"] = ["DataAgent"]
+        with pytest.raises(ValueError, match=r"is \['DataAgent', 'OptimizationAgent'\], not \['DataAgent'\]"):
+            RouterDecision.model_validate(data)
+
+    def test_execution_plan_is_not_an_alias(self):
+        """The model was allowed to send execution_plan for execution_order;
+        nothing asks it for either now, and a plan under another name is
+        not read."""
+        data = self._plan("macro_analysis", ["MacroAgent"])
+        data["execution_plan"] = data.pop("execution_order")
+        with pytest.raises(ValueError, match=r"not \[\]"):
             RouterDecision.model_validate(data)
 
     def test_analysis_agent_after_data_agent_validates(self):

@@ -280,41 +280,6 @@ class RouterDecision(BaseModel):
         use_enum_values = True
         extra = "ignore"  # Ignore unexpected fields from LLM
     
-    # ✅ FIX: ALIAS PROPERTY
-    # This allows nodes.py to call decision.execution_plan safely
-    @property
-    def execution_plan(self) -> List[str]:
-        return [str(agent) for agent in self.execution_order]
-
-    @model_validator(mode='before')
-    @classmethod
-    def handle_aliased_fields(cls, data: Any) -> Any:
-        """Allow LLM to send 'execution_plan' OR 'execution_order'."""
-        if isinstance(data, dict):
-            # If LLM sent 'execution_plan', map it to 'execution_order'
-            if 'execution_plan' in data and 'execution_order' not in data:
-                data['execution_order'] = data['execution_plan']
-        return data
-
-    @model_validator(mode='after')
-    def validate_execution_order(self) -> 'RouterDecision':
-        """Ensure execution_order matches agents_needed."""
-        # Extract agent names from tasks
-        task_agents = {task.agent for task in self.agents_needed}
-        
-        # If execution_order is empty but agents exist, autofill it
-        if not self.execution_order and self.agents_needed:
-            self.execution_order = [task.agent for task in self.agents_needed]
-            
-        # Verify consistency
-        order_names = set(self.execution_order)
-        if task_agents != order_names:
-            # Auto-correct if possible (LLM often gets this wrong)
-            if len(task_agents) == len(self.agents_needed):
-                self.execution_order = [task.agent for task in self.agents_needed]
-        
-        return self
-
     @model_validator(mode='after')
     def validate_clarification(self) -> 'RouterDecision':
         """If clarification needed, must have question."""
