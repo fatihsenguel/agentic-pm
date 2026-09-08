@@ -1089,8 +1089,14 @@ def blocked_on_compliance(state):
     if "ComplianceAgent" in (state.get("sub_results") or {}):
         return None
     plan = (state.get("router_decision") or {}).get("execution_order") or []
-    return (f"the router did not plan ComplianceAgent (intent {_intent(state)!r}, "
-            f"plan {plan}); the agent exists, the routing for this wording does not")
+    reason = (f"the router did not plan ComplianceAgent (intent {_intent(state)!r}, "
+              f"plan {plan}); the agent exists, the routing for this wording does not")
+    if _intent(state) == "clarification_needed":
+        # What the router asked back is the diagnostic: it names what the
+        # router could not resolve in the wording. router_node writes the
+        # question to final_response; the decision dict does not carry it.
+        reason += f"; it asked back: {_answer(state)!r}"
+    return reason
 
 
 blocked_on_delegation_trace = blocked_on_compliance
