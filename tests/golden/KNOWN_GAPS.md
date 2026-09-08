@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 8 September 2026, seventh sitting, swept again after the merge to `baseline-v1`.
+Last updated 8 September 2026, eighth sitting, on branch `vocabulary`, after DIRECTION.md's Order 1 was built.
 
 ---
 
@@ -271,6 +271,14 @@ intent dispatch chain, or any other formatter; the note in §8 of the handoff
 that pytest "collects nothing that exercises synthesizer_node" is still true
 of the node.
 
+**8 September (eighth sitting).** Sixteen queries: "How much has AAPL gained?" (pid 3) entered as the
+diagnostic beside "gain today". `period` is now extraction's on every line,
+so the field the runner prints is deterministic for the two `1Y` lines; it
+still cannot see `measure`, `group_by` or `tickers`, and the prompt shrink
+showed why that matters: the model's `policy_topic` flag moved two plan lines
+and only the plan told. The runner is the loop that saw the mode.
+
+
 ### `trace_tool` and `log_delegation` are never called — RESOLVED 8 September (sixth sitting)
 
 **Built, and the sentence below about the agent layer was wrong.** The
@@ -380,7 +388,7 @@ The recurring failure shape in this codebase: repair instead of raise, so a wron
 answer arrives with a plausible face instead of an error. Same family as bugs 5,
 6 and 9 from the recovery session.
 
-### `RouterDecision.validate_execution_order` repairs instead of raising
+### `RouterDecision.validate_execution_order` repairs instead of raising - RESOLVED 8 September (eighth sitting)
 
 Recorded 7 September (third sitting). When `execution_order` disagrees with `agents_needed`
 and the two have the same length, the validator overwrites `execution_order`
@@ -428,6 +436,16 @@ characters, below the schema's minimum, not on the order; with a valid
 reasoning the mismatched order validates and is repaired. Pinned as it is
 in 8f99b04 so the test sees the validator it names.
 
+**Resolved by deletion, 8 September (eighth sitting), e86841c.** Once every plan is derived from the
+terminal table (bc2b555) the router writes `execution_order` and
+`agents_needed` before validation, and after `combined` was retired
+(ce7032f) no intent's plan was the model's; the repair had nothing to fire
+on. Deleted with the `execution_plan` alias validator and property, which
+accepted a plan under another name from a model no longer asked for one.
+`validate_plan` replaces it: a derived intent must carry its derived plan
+exactly, the error naming both plans; nothing reorders.
+
+
 ### A router failure becomes a clarification with confidence 0.0
 
 Recorded 7 September (third sitting). `SmartRouter.route` catches every exception and returns
@@ -456,6 +474,15 @@ validator landed. When one does, the repaired plan is the first observation
 of what this path produces, and if it is runnable but wrong the fix is
 structural - the repair carrying the full system prompt plus the error -
 not a wording.
+
+**A third face, 8 September (eighth sitting).** Extraction now returns a `clarification_needed`
+decision of its own, at confidence 1.0, with no model call, for a typo of a
+holding, a span the vocabulary lacks, or two weights; it carries a
+`reasoning` beginning "Extraction could not resolve" and, for the typo, a
+`pending` record. So three paths produce the intent: extraction's (honest,
+deterministic), the model's, and the fallback above (an exception wearing a
+question). The fallback is still confidence 0.0 with the German apology.
+
 
 ### CostCalculator reports costs for the wrong model
 
@@ -695,6 +722,14 @@ and 2.3 - they ask the same check from three angles and the router carries
 no sub-measure for compliance. Recorded, not hidden; a `measure`-like axis
 for compliance is a decision when a case needs one.
 
+**8 September (eighth sitting).** The `combined` branch is gone with the intent (ce7032f). The stub
+below is still reached by a price fetch with no analysis agent, and now also
+by any derived plan whose agents all fail: "Backtest SPY and TLT over 5
+years" ran DataAgent, OptimizationAgent and BacktestAgent, the optimiser
+failed, and the answer was a header with nothing under it (its own entry
+under Hygiene, "Optimization failed: None").
+
+
 ### `shared_data` carries 160KB of raw prices — hot potato violated
 
 `price_data_json` was 67,190 characters of daily OHLC on the 3Y queries and
@@ -729,6 +764,13 @@ which was read and rejected (entry below). The IPS is built (8 September);
 a target-weights clause is a change to `docs/IPS.md`, which is the owner's,
 and a new clause type for the loader. Owner's decision, still open. The
 same is true of moving `OUT_OF_SCOPE_RESPONSE` into the IPS (handoff §7.7).
+
+**8 September (eighth sitting).** `REQUIRES` was closed to what the nodes raise on (0d60f18) and
+deliberately carries no entry from RebalanceAgent to the optimiser; the
+derived plan for `rebalancing` is `[DataAgent, RebalanceAgent]` and the
+golden line keeps its pinned `errors: 1`. The target is still the IPS's to
+state (pending decision 8).
+
 
 ### `wip/phase7-snapshot` was read and rejected - DECIDED 7 September (fourth sitting)
 
@@ -838,6 +880,18 @@ inside the runner's tolerance, visible in prose. The wording of D9 in
 expected_values.md is the owner's to adjust; noted, not changed.
 
 The branch stays where it is. Nothing on it is scheduled.
+
+**8 September (eighth sitting).** The deferred `concentration` measure's trigger fired ("What's my
+biggest position?") and it was built as a view of the one allocation
+computation, `allocation.by_position`, Part 7's IPS-4.1 table largest first
+(d361520, 7958af5), with `group_by: position` naming it (f465e13). Every
+allocation line now carries `pct_of_total` (4b003be) and the checker reads
+it for every clause: the sector arm (62ddbcd) and the concentration arms
+(9c11bd1) stopped dividing, `position_pnl` left the checker's inputs, and
+the module's only arithmetic is one subtraction per finding. The three
+compliance modes are derived too: the weight from the message (f099101),
+the lookup from its phrasing (55dd80c), otherwise the portfolio check.
+
 
 ### RiskManagerAgent is not a risk agent - it is an unused second orchestrator
 
@@ -977,6 +1031,11 @@ coverage check that both assume period strings. Adding an end date to
 `fetch_prices_tool` because the volatility window is inconvenient would buy one
 figure and leave the router still unable to ask the question.
 
+**8 September (eighth sitting).** "since 2021" is no longer repaired to `5Y`: extraction treats an
+absolute year as a span the vocabulary lacks and asks naming the spans
+(56caa2c). The gap itself - a defined window as an input - is unchanged.
+
+
 ### When `sector` comes up, weigh `group_by` and `filter` against it first — DECIDED 7 September
 
 **Decided when position P&L arrived, which was this entry's own trigger.**
@@ -1037,6 +1096,14 @@ differing only in their grouping key, and a `sector` field ratifies that shape.
 Country and industry would make four.
 
 ---
+
+**8 September (eighth sitting).** `group_by` gained `position` (f465e13), the third view, each value
+still the key the agent publishes under (`by_asset_class`, `by_sector`,
+`by_position`). `filter` is still not built; "Is my JNJ position over any
+limit?" now carries `JNJ` in `tickers` from extraction and the compliance
+formatter still has no selection axis to read it (the "Four wrong-faced
+answers" entry).
+
 
 ## Where non-determinism is allowed to live
 
@@ -1207,6 +1274,16 @@ conflicting values was WRONG: line 28 is `DataConfig` ("3Y") and line 132 is
 `RiskManagerConfig:154` — with the same value. Soft duplication, no current
 conflict. Decide which owns it before either changes.
 
+**8 September (eighth sitting).** The prompt's period line is gone with the shrink (9364d24);
+extraction reads `config.data.period_days.keys()` and never restates them
+(56caa2c), so "last week becomes 1Y" is resolved: a span the vocabulary
+lacks, months, weeks, days, an absolute year, "today" next to a change verb
+(9c9be90), is a clarification naming the spans, before any model call. Two
+sites remain: `nodes.py`'s dead `"3Y"` default on the period read, and the
+schema's `^\d+[YMD]$` pattern, wider than the config, now unreachable
+because extraction only ever writes a vocabulary key or None.
+
+
 ### The agent roster is restated in eight places — RESOLVED 7 September (fourth sitting)
 
 Recorded 4 September, while adding the sixth agent. Nothing is broken today;
@@ -1315,7 +1392,7 @@ look healthier would fabricate the precision that was just removed.
 The yield curve informs the regime (`_determine_regime`) but not the confidence in
 it. Making it contribute is a deliberate design change and its own commit.
 
-### The intent vocabulary is restated in five places
+### The intent vocabulary is restated in five places - RESOLVED 8 September (eighth sitting)
 
 Recorded 7 September (third sitting), while adding `out_of_scope`. `IntentType` in
 `schemas.py`; the `INTENT TYPES` list in `ROUTER_SYSTEM_PROMPT`; the
@@ -1330,6 +1407,17 @@ one mapping in `schemas.py`, the prompt rendered from it, the chain in
 Adding `compliance` on 8 September (sixth sitting) touched all five sites in
 one commit (b0807f5) plus `validate_compliance`, which is per-intent logic
 rather than a restatement. Still five sites, still by hand, still pending.
+
+**Resolved 8 September (eighth sitting), 8c35dee.** `INTENTS` in `schemas.py`, value to prompt
+description in prompt order; `IntentType` built from it; the INTENT TYPES
+block and the schema's intent line in both prompts rendered from it;
+`nodes.SYNTHESIZER_INTENTS` held to it at import, checked and not derived
+(three branches condition on what ran). The rendered prompt was captured
+before and compared after: byte-identical, zero golden diff. Six sites read
+one statement. `UNKNOWN` was deleted first on its own (795f5e8), the way
+`AgentName.ROUTER` was; `combined` was retired later (ce7032f) as a
+vocabulary decision, being the last intent whose plan was the model's.
+
 
 ### Router parameters are restated by hand in two more places
 
@@ -1400,12 +1488,37 @@ went into the golden set, not the prompt. Replacing the two existing verbatim
 examples is its own commit, later, golden set twice, and the runner is the
 loop that shows whether 1.1 and 1.3 survive without recognition.
 
-### A second turn after a clarification hits the stub
+**8 September (eighth sitting).** Still there, now as intent examples: the shrink (9364d24) stripped
+every `agents:`, `tickers:`, `period:` and weight field from the examples
+and left the wordings. Replacing the two verbatim ones is still its own
+commit. New: the third few-shot dictionary the builder appends ("Mein
+Portfolio ist SPY 45%, TLT 25%, GLD 20%, VWO 10% ...") names four
+percentages, which extraction would now ask about if a user typed it; it
+teaches an intent from a shape the system cannot route. Logged, not changed.
+
+
+### A second turn after a clarification hits the stub - RESOLVED 8 September (eighth sitting)
 
 CLI, 7 September: "How is my position doing today?" (before the routing fix)
 asked which position; the reply "AAPL for today" routed `data_fetch` with
 `[DataAgent]` alone and produced the header-only stub. Conversation memory,
 not a P&L defect; recorded so the shape is on file when 3.5 is built.
+
+**Resolved 8 September (eighth sitting)**, as an extraction rule and not as prompt context
+(docs/DIRECTION.md). The runner's two-turn case came first (7c7fb16): "Hows
+my APPL doing?" then "yes", the check demanding a resolution recorded on the
+decision so the pass is memory's and not the model reading the typo. Then
+the state carries the previous turn's messages and the record of what it
+asked (1e00bc2: `state["pending"]`, `run_agent_graph(previous=)`,
+`get_user_message` now the last human message - it returned the first),
+and extraction resolves the reply against the record before anything else
+(5fca3bd): a confirmation or a named ticker substitutes into the original
+question, which is routed as if typed; anything else is a new message. The
+model never sees the history; `conversation_history` on the prompt builder
+is dead. Runner 12/12. Only the unknown-ticker clarification has a record
+and a rule; a reply to a span or a two-weights clarification is a new
+message until a case asks for more.
+
 
 ### Patches that delete whitespace-only lines need `--ignore-whitespace`
 
@@ -1413,12 +1526,16 @@ not a P&L defect; recorded so the shape is on file when 3.5 is built.
 indented blank lines failed on 7 September on the owner's machine and applied
 with `--ignore-whitespace`; every patch since has been applied that way.
 
-### `IntentType.UNKNOWN` has no reader
+### `IntentType.UNKNOWN` has no reader - RESOLVED 8 September (eighth sitting)
 
 Recorded 7 September (third sitting). In the enum, absent from the prompt, referenced
 nowhere (`_create_fallback_decision` uses `CLARIFICATION_NEEDED`). Deletion is
 safe. Not done alongside adding `out_of_scope`: two vocabulary changes, one
 case behind them.
+
+**Resolved 8 September (eighth sitting), 795f5e8.** Deleted on its own before the registry; a
+decision carrying it is rejected at the schema.
+
 
 ### `_decision_to_dict` drops `reasoning` and `clarification_question`
 
@@ -1430,6 +1547,11 @@ answer. The runner's blocked reason reads it from `final_response` for the
 same reason (60f4b62). Putting the two keys back is a state-shape change,
 own commit, and would make the CLI's lines reachable.
 
+**8 September (eighth sitting).** `clarification_question` is carried since 1e00bc2, with the new
+`pending` record, and `resolved` since 5fca3bd; the CLI's "asked back" line
+printed for the first time. `reasoning` is still dropped.
+
+
 ### `AgentTask.depends_on` has no reader
 
 Recorded 8 September (seventh sitting). Declared on the schema, filled by
@@ -1437,6 +1559,13 @@ the model if it chooses, read nowhere. The dependency validator holds the
 plan to `REQUIRES`, the code's facts, and deliberately not to this field,
 which is the model asserting its own dependencies. Deletion is safe; own
 commit.
+
+**8 September (eighth sitting).** Wider now: the whole `agents_needed` list is written by the router
+from the derived plan (`task_description` "derived for intent X", `priority`
+by position) and the model is not asked for it; `AgentTask` exists to carry
+three fields nothing reads. Deletion of the task list is a state-shape
+change, own decision.
+
 
 ### `SmartRouter.route` opens its own request span behind the observability flag
 
@@ -1516,6 +1645,18 @@ Two more from the same session, correct answers with a limit worth naming:
 - The nine prompts fetched nothing from the provider (every series cached)
   and every answer priced as of 2026-09-04, two closes past the reference.
 
+**8 September (eighth sitting), each addressed, one half open.** "What share of my portfolio is
+technology?" answers 27.73% of total beside the two Part 3 shares (4b003be
+to dbb8bc2). "What's my biggest position?" answers the position table
+largest first, SPY at its share of total (d361520 to f465e13). "How has my
+portfolio done over the last month?" asks which of the five spans, with no
+model call (56caa2c, f099101). "Is my JNJ position over any limit?" now
+carries `tickers: ["JNJ"]` from extraction; the compliance formatter still
+has no selection axis and answers with the full report - that half is the
+open item, with `filter` (the `group_by`/`filter` entry). "Could I put 11%
+into a new ETF?" still lacks the instrument type (pending decision 7).
+
+
 ### `ExtractedParameters` fields with no reader - grep, 8 September
 
 Recorded 8 September (seventh sitting, after the merge), from
@@ -1538,6 +1679,16 @@ only through `detect_intent_simple`, and both are convenience functions
 with no caller in the graph. Relevant to the router restructure: extraction
 before the LLM should carry only fields something reads.
 
+**8 September (eighth sitting).** The model is no longer asked for any of `tickers`, `period`,
+`max_volatility`, `hypothetical_weight`, `policy_topic`, `target_return`,
+`portfolio_value`, `rebalance_threshold`, `is_multi_step` or
+`requires_confirmation` (9364d24, 4d69e47): the first five are extraction's,
+the rest are dead on both ends. `portfolio_value` keeps its reader in the
+backtest node and no writer. `portfolio_id` on `parameters` is still written
+by the router and read by nothing. Deletion candidates, each its own commit
+after the grep.
+
+
 ### BaseAgent's tool-calling loop has no live caller - confirmed, 8 September
 
 Grep run 8 September (seventh sitting, after the merge): `.process(` is
@@ -1550,6 +1701,12 @@ loop ... has no caller from the graph. Its only caller is
 `tests/test_phase5_4_integration.py`"); it is confirmed here because the
 router restructure under `docs/DIRECTION.md` must know that nothing live
 depends on `BaseAgent.process`, `get_system_prompt` or `tool_map`.
+
+**Corrected 8 September (eighth sitting).** "Called nowhere in `src/`" was one file short: `.process(`
+is called at four sites in `risk_manager_agent.py`, which is itself never
+instantiated (its own entry). The conclusion stands: nothing the graph runs
+reaches the loop.
+
 
 ### Roster sites the registry does not read
 
@@ -1575,6 +1732,13 @@ The per-node strings (`mark_agent_complete(state, "MacroAgent", ...)`,
 `trace_agent("MacroAgent")`, the formatters' `sub_results.get("MacroAgent")`)
 are each agent's own identity, three or four times inside its own node, not
 the roster. The registry does not fix a typo there and was not meant to.
+
+**8 September (eighth sitting).** The prompt no longer renders the roster at all (9364d24): the model
+names no agent, so `build_router_prompt(available_agents=)` is dead twice
+over, and `conversation_history=` joined it when memory became an extraction
+rule. The out-of-scope description in `INTENTS` still names DataAgent and
+PortfolioAnalysisAgent in one sentence (d8cd0d6's), left verbatim on purpose.
+
 
 ### `get_agent_prompt`, `build_agent_prompt` and `build_system_prompt` have no caller
 
@@ -1627,6 +1791,11 @@ synthesizer choosing the text. Aligning clarification with that shape would
 move its text out of the LLM's `clarification_question` and into a formatter,
 which is a conversation-memory question (3.5), not a 3.2 one.
 
+**8 September (eighth sitting).** Extraction's clarifications take the same exit, and now carry the
+question in the decision dict as well as in `final_response`. Unchanged
+otherwise.
+
+
 ### `taa_signal` is still attached to the rebalance result
 
 `rebalance_agent_node` copies `shared_data["macro_regime"]`'s regime and
@@ -1656,7 +1825,7 @@ Note the query's `errors: 1` was and is real: RebalanceAgent runs with no
 target source (see "Rebalance has no target allocation source"). The golden
 set pins the routing, not the outcome.
 
-### The router refuses in-scope questions that name a held ticker
+### The router refuses in-scope questions that name a held ticker - RESOLVED 8 September (eighth sitting)
 
 Recorded 8 September. A CLI session on the evening of 7 September routed
 "How much did AAPL gain today?" to `out_of_scope` at confidence 0.95, with
@@ -1757,6 +1926,18 @@ numbered 6 with no list around it. The ticker-padding fix was in code
 (`smart_router.py`) and stands regardless; the placement was fixed as its own
 commit before the 3.2 prompt change so that the 3.2 golden diff is clean.
 
+**Resolved 8 September (eighth sitting), by extraction and a pin that moved on a yes.** Extraction
+reads the ticker (f099101); the shrink (9364d24) moved "How much did AAPL
+gain today?" off the refusal to the position, answering P&L since purchase
+for a question about the day; "today" next to a change verb is now a span
+the vocabulary lacks (9c9be90) and the line is pinned as the deterministic
+clarification (c086cd7), with "How much has AAPL gained?" beside it pinned
+`data_fetch` with the analysis plan - the in-scope bare-ticker question
+routed as designed. Pending decision 6 decided keep: the two sentence edits
+are registry text and the NEE few-shot an intent example, and a change to
+either is a fourth wording on this line.
+
+
 ### "Is my AAPL position too big?" flips between compliance and risk_analysis
 
 Recorded 8 September (sixth sitting), after the compliance intent landed
@@ -1826,6 +2007,15 @@ runs this sitting, so the line has held at its pin and the repair path has
 no live observation yet. Rule 6 and rule 7 still collide on "too big";
 reconciling them is still the later, separate change.
 
+**8 September (eighth sitting).** The flip is derived away: the plan is the table's for the intent and
+parameters (bc2b555), so `[PortfolioAnalysisAgent]` alone cannot reach the
+graph under any intent, with or without a retry. What remains is the
+intent, and rule 6 and rule 7 (rules 3 and 4 since the shrink) still both
+speak to "too big"; the line has held on every run this sitting. "Is AAPL
+too concentrated?" took its third failed prediction on the shrink and is
+the subject of the next entry.
+
+
 ### 2.3 does not route to ComplianceAgent, two failed predictions, stopped - RESOLVED 8 September (seventh sitting)
 
 Recorded 8 September (sixth sitting). "What would have to change for me to
@@ -1877,6 +2067,69 @@ routing defect. The two defects of that shape found since - JNJ dropped from
 `tickers`, "last month" repaired to `1Y` - go to extraction, not to the
 prompt.
 
+### The prompt shrink moved two lines: the plan text was doing the mode's work
+
+Recorded 8 September (eighth sitting). The shrink (9364d24) predicted all fifteen golden lines hold.
+Two moved, identically on both runs, and the runner fell to 10/12: "Is AAPL
+too concentrated?" and runner 2.1 both came back as `[ComplianceAgent]`
+alone, the lookup, answering "The investment policy contains nothing on is
+aapl too concentrated?". One CLI session read the model's own output: it
+set `policy_topic` on both. Rule 7's plan brackets had been holding the flag
+in place - the model chose the three-agent bracket for a portfolio question
+and the flag followed the plan - and with the brackets gone the flag was the
+only lever, pulled on any sentence naming the policy. "Too concentrated"
+was on its third failed prediction; stopped, no wording. Fixed forward, not
+reverted: the lookup became extraction's (55dd80c, a saying verb after
+"policy", "IPS" or "investment policy statement", or "anything in my
+policy about"), whose miss is the fuller check rather than "nothing on
+this"; then the topic left the prompt as dead text (4d69e47). Lesson for
+the record: prose that names a plan can classify by proxy, and a shrink
+that removes it is a hypothesis about every line the proxy touched, not
+only the lines that mention it.
+
+### "Optimization failed: None": the node formats an absent error key
+
+Recorded 8 September (eighth sitting), from the CLI. "Backtest SPY and TLT over 5 years" with no
+portfolio ran the derived plan `[DataAgent, OptimizationAgent,
+BacktestAgent]`; the optimiser returned `success: False` with no `error`
+key, the node raised `Optimization failed: None`, and the backtest raised
+correctly on missing weights. Two things: the optimiser's failure on a
+two-asset five-year set is undiagnosed (the pinned golden line optimises
+three assets with no period and succeeds), and the node's message hides
+its cause. Before the derived plan the prompt's example planned the
+backtest without the optimiser and the run raised on missing weights every
+time, so this is a failure made visible, not a regression. Not chased.
+
+### No window return exists, so "last month" and "today" clarify
+
+Recorded 8 September (eighth sitting). "How has my portfolio done over the last month?" and "How
+much did AAPL gain today?" are now honest clarifications naming the five
+spans, because the only return the system computes is P&L since purchase
+and the only windows it knows are year multiples for volatility. A return
+over a stated span is a capability, a measure with a reference in
+expected_values.md, not an extraction rule; the clarification is what the
+system can say until it exists. The change-verb list that reads "today" as
+a span is in `extraction.py`; its miss is the since-purchase answer.
+
+### `measure` set by the model under intent compliance is unread
+
+Recorded 8 September (eighth sitting). On "Is my JNJ position over any limit?" the model set
+`measure: allocation, group_by: position` under `compliance`; the terminal
+table discriminates compliance rows on the mode only and the compliance
+formatter reads neither field. Harmless, and a sign the measure rule's
+"ONLY for a question about an existing portfolio's own figures" reads a
+compliance question as one. Logged for the `filter` decision, where a
+selection axis for the compliance report would give the field a reader.
+
+### No pytest reached the analysis node's allocation call - RESOLVED 8 September (eighth sitting)
+
+Found when `allocation_by_sector` gained a parameter (4b003be): the suite
+stayed green with the node's call site broken, since nothing ran the node.
+`tests/test_analysis_node.py` (60c0df0) runs it on a synthetic state and
+holds the published block to Part 7; it is the instrument that then caught
+each later change to the block.
+
+
 ### pytest warning inventory
 
 Recorded 7 September (third sitting), from a green run of 132. Twenty
@@ -1909,7 +2162,7 @@ Confirmed by execution 4 September: importing `quant/allocation.py`, which is
 pure arithmetic over dicts and imports only `dataclasses` and `typing`, failed on
 a missing `sqlalchemy`.
 
-### `Allocation.total_value` means two different things
+### `Allocation.total_value` means two different things - RESOLVED 8 September (eighth sitting)
 
 In `allocation_by_asset_class` it is invested plus cash. In
 `allocation_by_sector` it is sectored value, cash and unsectored excluded.
@@ -1920,6 +2173,17 @@ carries two meanings depending on which constructor produced it.
 Same family as the fields that read as live and are not: the name says one thing
 at one call site and another at the other, and only the mapping in the node
 keeps it honest.
+
+**Resolved 8 September (eighth sitting), 4b003be.** `total_value` is the D2 total in every view,
+`cash_balance` is real in the sector view, and the sector view's own
+denominator is `sectored_value`, None elsewhere. What the fix left is a
+duplicate in the other direction: on the two views whose denominator is the
+total, `pct_of_denominator` equals `pct_of_total`, two names for one figure
+on each asset-class and position line. The checker reads `pct_of_total`
+only. The rename to named denominators (`pct_of_sectored`, no
+`pct_of_denominator`) is its own later decision; it touches the runner, two
+fixtures and the formatter.
+
 
 ### Router parameter ordering is nondeterministic — RESOLVED 7 September
 
@@ -2052,6 +2316,17 @@ and then is one more thing to unpick.
 
 Related: the group_by entry above, and the router's inability to express an
 absolute date range.
+
+**Built to the answer, 8 September (eighth sitting), Order 1 of DIRECTION.md.** The model now decides
+intent, `measure`, `group_by`, confidence and a clarification question, and
+nothing it emits beyond those is read: tickers, periods, percentages and the
+compliance mode are extraction's (56caa2c, f099101, 55dd80c, 9c9be90), the
+plan is the terminal table's closed by `REQUIRES` (0d60f18, bc2b555), the
+vocabularies are registries (8c35dee, `TERMINAL`), and the prompt shrank
+from 1574 to 1063 words (9364d24, 4d69e47). Memory is an extraction rule
+(5fca3bd). What the tool boundary still lacks: `measure` and `group_by` are
+the model's, and a defined window is not an input.
+
 
 ### Direction for `quant/`: one implementation per formula
 
