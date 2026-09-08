@@ -97,12 +97,23 @@ class IPS:
         """The closed topic vocabulary: every topic any clause carries."""
         return sorted({t for c in self for t in c.topics})
 
-    def clauses_on(self, topic: str):
-        """Clauses carrying exactly this topic. Membership, not similarity:
-        a topic no clause carries returns [], which is the honest answer to
-        "what does the policy say about X" when X is not in it."""
-        wanted = normalise_topic(topic)
-        return [c for c in self if wanted in c.topics]
+    def clauses_on(self, asked: str):
+        """Clauses whose topics occur, as whole words or phrases, inside the
+        user's own words for what they asked about. Containment of the
+        owner's vocabulary in the question, never the reverse and never
+        similarity: "concentration risk" carries "concentration", "currency
+        risk" carries nothing, and the answer to the second is that the
+        policy contains nothing on it. The error this can make is a miss
+        ("too concentrated" does not carry "concentration") - a config gap
+        closed by adding the word to the clause in ips.toml, never a clause
+        cited for a topic it is not about."""
+        words = normalise_topic(asked)
+        return [c for c in self if any(_contains_phrase(words, t) for t in c.topics)]
+
+
+def _contains_phrase(text: str, phrase: str) -> bool:
+    """Whole-word containment of a normalised phrase in a normalised text."""
+    return re.search(rf"(?<![a-z0-9]){re.escape(phrase)}(?![a-z0-9])", text) is not None
 
 
 def normalise_topic(topic: str) -> str:

@@ -85,12 +85,19 @@ def test_every_clause_carries_topics(ips):
         assert clause.topics, clause.id
 
 
-def test_topics_are_membership_not_similarity(ips):
-    assert [c.id for c in ips.clauses_on("concentration")] == ["IPS-4.1", "IPS-4.2", "IPS-4.3"]
-    assert [c.id for c in ips.clauses_on("  Concentration ")] == ["IPS-4.1", "IPS-4.2", "IPS-4.3"]
-    assert ips.clauses_on("concentration risk") == []   # not a member; the router is shown the set
+def test_topics_are_containment_not_similarity(ips):
+    """The owner's words inside the user's words, whole, never the reverse."""
+    concentration = ["IPS-4.1", "IPS-4.2", "IPS-4.3"]
+    assert [c.id for c in ips.clauses_on("concentration")] == concentration
+    assert [c.id for c in ips.clauses_on("  Concentration ")] == concentration
+    assert [c.id for c in ips.clauses_on("my concentration risk")] == concentration
     assert [c.id for c in ips.clauses_on("allocation")] == ["IPS-3.1", "IPS-3.2", "IPS-3.3", "IPS-3.4", "IPS-3.5"]
-    assert [c.id for c in ips.clauses_on("leverage")] == ["IPS-2.1", "IPS-2.2"]
+    assert [c.id for c in ips.clauses_on("leveraged products")] == []   # "leverage" is not a whole word of it
+    assert [c.id for c in ips.clauses_on("using leverage")] == ["IPS-2.1", "IPS-2.2"]
+    assert ips.clauses_on("cashflow") == []                              # whole word, not substring
+    assert [c.id for c in ips.clauses_on("holding cash")] == ["IPS-3.5"]
+    assert ips.clauses_on("too concentrated") == []                      # a miss, closed in ips.toml, not in code
+    assert ips.clauses_on("currency risk") == []
 
 
 def test_topic_vocabulary_is_the_union(ips):
