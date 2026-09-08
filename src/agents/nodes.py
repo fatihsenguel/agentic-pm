@@ -24,7 +24,6 @@ from .state import (
     mark_agent_complete,
     add_shared_data,
     add_error,
-    add_warning,
     set_final_response,
     get_next_agent,
     get_user_message,
@@ -315,20 +314,27 @@ async def router_node(state: AgentState) -> Dict[str, Any]:
         router = get_router()
         portfolio_id = state.get("portfolio_id")
         decision, validation = await router.route(user_message, portfolio_id=portfolio_id)
-        
-        # Log validation issues
-        for error in validation.errors:
-            add_warning(state, f"Validation: {error}")
-        
+
+        # Every attempt the router rejected before this decision, carried in
+        # the state so a repaired route is visible to the CLI and the golden
+        # runner. This loop used to call add_warning and drop what it
+        # returned, so no retry ever reached state["warnings"].
+        warnings = list(state.get("warnings", []))
+        warnings.extend(f"Validation: {error}" for error in validation.errors)
+
         # Check if clarification needed
         if decision.intent == "clarification_needed":
             return {
                 **set_final_response(state, decision.clarification_question or "Could you please clarify your request?"),
                 "router_decision": _decision_to_dict(decision),
+                "warnings": warnings,
             }
-        
+
         # Set router decision and initialize execution
-        return set_router_decision(state, _decision_to_dict(decision))
+        return {
+            **set_router_decision(state, _decision_to_dict(decision)),
+            "warnings": warnings,
+        }
         
     except Exception as e:
         return add_error(state, f"Router error: {str(e)}")
