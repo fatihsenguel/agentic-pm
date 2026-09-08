@@ -44,7 +44,7 @@ Either build RAG to match the bullet, or change the bullet to describe determini
 | --- | --- |
 | Data access | Own positions, price history, master data; data age known and reportable per query |
 | Investment policy | Written document, queryable, clauses individually citable |
-| Agents | Quant, Risk, Compliance, Data — with intent-based routing |
+| Agents | Quant, Risk, Compliance, Data — with intent-based routing. Roles, not node names: Data is DataAgent; Quant and Risk are PortfolioAnalysisAgent (allocation, P&L, portfolio volatility, and the figures every concentration limit is one division from); Compliance is ComplianceAgent (decided 8 September 2026) |
 | Contracts | Communication exclusively via Pydantic-validated structures |
 | Guardrails | Rule violations are blocked, not commented on; with clause citation |
 | Tracing | Routing decision, tool calls and result readable per run |
@@ -109,7 +109,7 @@ Must run without errors. Proves little, but a failure here damages everything th
 
 Questions requiring several agents in one run.
 
-**Status note, revised 7 September 2026:** requires the Compliance agent and the IPS, built from the owner's document (`docs/HANDOFF.md` §7.2), not pulled from `wip/phase7-snapshot`. Neither exists on the working branch. RiskManagerAgent is not the "Risk" agent 2.1 names — it is an unused supervisor with no graph node, no routing entry and no mention in the router prompt (`KNOWN_GAPS.md`); which agent plays that role is an open decision.
+**Status note, revised 8 September 2026:** the IPS (`docs/IPS.md`, `ips.toml`) and ComplianceAgent exist, built from the owner's document. The "Risk" agent 2.1 names is PortfolioAnalysisAgent (decided 8 September; RiskManagerAgent is an unused supervisor, `KNOWN_GAPS.md`). 2.1 and 2.2 pass on the runner; 2.3 is blocked on routing — the router does not plan ComplianceAgent for its wording, two failed predictions, stopped (`KNOWN_GAPS.md`).
 
 | # | Prompt | Passes when | Status |
 | --- | --- | --- | --- |
@@ -165,7 +165,7 @@ Work through it and stop when time runs out. Sorted by effect, not by effort.
 5. **Minimal conversation history** — enough to close the clarification loop for test case 3.5.
 6. **Eval set, 20–30 questions** with expected answer and expected source per question. Produces the figure quoted in the CV. Moved last not because it matters least, but because it is the only item that cannot be built before the things it measures.
 
-**Tracing (previously point 3) is largely done.** `src/observability/tracer.py` already produces per-run readable output showing the routing decision and agent execution. Verify it covers tool calls and contract handovers; do not rebuild it.
+**Tracing (previously point 3) is done, and the sentence that stood here was wrong.** Until 8 September 2026 the router node opened the request span and closed it in its own `finally`, so a live trace showed the routing decision and nothing after it — no agent spans, no tool calls, no handovers (`KNOWN_GAPS.md`). `run_agent_graph` now owns the span; agents trace their spans, ComplianceAgent traces its checker call, and `mark_agent_complete` records a handover to the next agent in the plan. Case 2.1 asserts all three on the stored trace.
 
 **Do not build while 1–6 are open:** further agents, frontend, database restructuring, additional data sources, multi-user support. Each enlarges the attack surface in conversation without meeting the expectation.
 
