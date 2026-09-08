@@ -128,7 +128,7 @@ rebalance my portfolio?" (`errors: 1`, no target source). Pinned this sitting,
 all to `compliance` with the three-agent plan: "Is my AAPL position too big?"
 (known to flip to `risk_analysis` / `[PortfolioAnalysisAgent]` / errors 1 on
 some runs — KNOWN_GAPS), "Is my AAPL position within my policy's limits?"
-(stable), "Is AAPL too concentrated?" (stable after 13d3364, unpredicted). Any
+(stable), "Is AAPL too concentrated?" (stable after b7a92bd, unpredicted). Any
 diff on those lines is the known behaviour; any diff elsewhere is a regression
 or the nondeterminism.
 
@@ -226,7 +226,7 @@ which is a validator gap, not a wording (§7 item 1).
 
 **Corrections to documents:** benchmark.md (roster roles, Level 2 status,
 the tracing claim); the runner's blocked reason ("no Compliance agent" was
-false after f7ad273; it now prints the intent and plan the router produced);
+false after bb52a01; it now prints the intent and plan the router produced);
 KNOWN_GAPS swept.
 
 ---

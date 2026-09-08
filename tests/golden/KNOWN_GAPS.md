@@ -267,13 +267,13 @@ router node opened the request span and closed it in its own `finally`
 node after the router asked `get_current_request()` and got None: no
 agent spans, no tool calls, no handovers in any live trace, `agents_used`
 == `["Router"]`. The 13 `trace_agent` call sites were reachable inside the
-router only. Fixed in 9e9b041: `run_agent_graph` owns one span under the
+router only. Fixed in a07c523: `run_agent_graph` owns one span under the
 state's request id, the router traces its own span like every other node.
 `ComplianceAgent` traces its checker call (`trace_tool("check_ips")`,
-f7ad273) and `mark_agent_complete` emits one DELEGATION event to the next
-agent in the plan, naming the result keys handed over (a9f6d5c). `check_2_1`
+bb52a01) and `mark_agent_complete` emits one DELEGATION event to the next
+agent in the plan, naming the result keys handed over (8e32a25). `check_2_1`
 reads the stored trace by request id and asserts spans, handovers and the
-tool call; 2.1 passes. Two commit messages (a9f6d5c, f7ad273) claimed the
+tool call; 2.1 passes. Two commit messages (8e32a25, bb52a01) claimed the
 CLI would show the new events before the span was fixed; both were
 registration, not reachability, and are corrected here, not rewritten.
 
@@ -768,11 +768,11 @@ with the lookup mode. expected_values.md Part 7 and the workbook's
 unrounded) came from the sheet.
 
 **Built, 8 September (sixth sitting), in §7's order:** the four runner
-checks first (20206b9..795818e, each seen failing offline for its reason),
-`ips.toml` and the loader (ea3eef7), `Asset.instrument_type` (c57bd9a,
-bff17aa), the checker (19e9b51, Part 7 to the cent), the node (f7ad273),
+checks first (3567e0e..18b5fbe, each seen failing offline for its reason),
+`ips.toml` and the loader (92639af), `Asset.instrument_type` (2ceea01,
+22f3e41), the checker (30af89c, Part 7 to the cent), the node (bb52a01),
 the compliance intent with `hypothetical_weight` and `policy_topic`
-(979562f, 13d3364), the formatter (ad8ea85). Runner: 6/12 -> 10/12. Two
+(b0807f5, b7a92bd), the formatter (6128c4f). Runner: 6/12 -> 10/12. Two
 things learned on the way are their own entries: the request span (tracing
 entry above) and the topic vocabulary (below, under "Is my AAPL position
 too big?").
@@ -1275,7 +1275,7 @@ one mapping in `schemas.py`, the prompt rendered from it, the chain in
 `synthesizer_node` checked against it at import rather than derived.
 
 Adding `compliance` on 8 September (sixth sitting) touched all five sites in
-one commit (979562f) plus `validate_compliance`, which is per-intent logic
+one commit (b0807f5) plus `validate_compliance`, which is per-intent logic
 rather than a restatement. Still five sites, still by hand, still pending.
 
 ### Router parameters are restated by hand in two more places
@@ -1559,7 +1559,7 @@ compliance one, and "too big" and "gain today" get their next prediction
 there, not before. The false refusal stays pinned meanwhile, like the
 macro line.
 
-**8 September (sixth sitting).** The compliance intent (979562f) predicted
+**8 September (sixth sitting).** The compliance intent (b0807f5) predicted
 "too big" moves to `compliance` and "gain today" holds at `out_of_scope`.
 "Gain today" held on every run since - still the pinned false refusal, its
 diagnostic query still the pending decision. "Too big" moved and flipped;
@@ -1576,7 +1576,7 @@ commit before the 3.2 prompt change so that the 3.2 golden diff is clean.
 ### "Is my AAPL position too big?" flips between compliance and risk_analysis
 
 Recorded 8 September (sixth sitting), after the compliance intent landed
-(979562f). Prediction for that commit: the line moves to `compliance` /
+(b0807f5). Prediction for that commit: the line moves to `compliance` /
 `[DataAgent, PortfolioAnalysisAgent, ComplianceAgent]` / errors 0. Run 1
 gave exactly that. Run 2 gave `risk_analysis` / `[PortfolioAnalysisAgent]` /
 errors 1 - the analysis agent planned without DataAgent, which nothing in
@@ -1587,7 +1587,7 @@ stopped there: no rewording.
 
 The cause is readable in the prompt and was not read before predicting.
 Rule 6 says concentration questions "keep intent risk_analysis and are
-DataAgent alone"; rule 7 (979562f) says "a position is too big" is
+DataAgent alone"; rule 7 (b0807f5) says "a position is too big" is
 compliance with the three-agent plan. "Too big" is both, and the router
 picks one per run. The second rule was written without re-reading the
 first.
@@ -1624,7 +1624,7 @@ registry beside AGENTS, not a wording; the router's repair loop already
 carries a validation error back to the model, so a raise becomes a second
 attempt with the reason stated.
 
-**Moved on 13d3364, 8 September.** The commit that took the topic
+**Moved on b7a92bd, 8 September.** The commit that took the topic
 vocabulary out of the prompt predicted all fifteen lines hold; "Is AAPL
 too concentrated?" moved to `compliance` / the three-agent plan / errors 0
 and held there on both runs, where it had been pinned as a failure. Second
@@ -1637,12 +1637,12 @@ observation, not a model.
 
 Recorded 8 September (sixth sitting). "What would have to change for me to
 be within the limits again?" was predicted to plan ComplianceAgent twice:
-on the roster line (f7ad273) and on the compliance intent (979562f), whose
+on the roster line (bb52a01) and on the compliance intent (b0807f5), whose
 INTENT TYPES entry names "what would have to change to be within its
 limits" in so many words. It stayed BLOCKED both times - the router does
 not read that wording as a policy question; no word in it names the
 policy. Stopped after the second miss. The runner's blocked reason now
-prints the intent and plan the router did produce (3327f5a), so the next
+prints the intent and plan the router did produce (d79bd0f), so the next
 sitting starts from what it routes to, not from a guess. Its next
 prediction rides on a structural change - the dependency validator, or a
 diagnostic query naming the limits without the policy - never on a
