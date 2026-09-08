@@ -4,7 +4,7 @@ Portfolio allocation.
 Pure arithmetic over holdings, prices and cash. No database, no LLM, no state.
 An agent supplies the inputs and publishes the output; this module only computes.
 
-Reference: tests/golden/expected_values.md Parts 2 and 3, and decisions D1-D3.
+Reference: tests/golden/expected_values.md Parts 2, 3 and 7, and decisions D1-D3.
 
   D1  Allocation is measured on MARKET VALUE, not cost basis. Cost basis is
       returned alongside because Part 2 tabulates both, but the answer to
@@ -20,6 +20,12 @@ rather than an oversight: asset-class percentages are of TOTAL (cash included,
 per D2), sector percentages are of INVESTED (cash excluded, because cash has no
 sector). Part 3 carries both a "% sectored" and a "% invested" column for the
 same reason.
+
+Every line also carries `pct_of_total`, its share of total portfolio value
+including cash (D2). That is the figure every IPS limit is written against
+(Part 7): on an asset-class line it is the same number as `pct_of_denominator`,
+on a sector line it is a third figure that neither Part 3 column gives. It is
+computed here so that no reader - the checker, a formatter - divides for it.
 """
 
 from dataclasses import dataclass, field
@@ -47,17 +53,25 @@ class AllocationLine:
     # e.g. cash has no "% invested" and unsectored holdings have no "% sectored".
     pct_of_denominator: Optional[float] = None
     pct_of_invested: Optional[float] = None
+    # Share of total portfolio value including cash (D2), on every line.
+    pct_of_total: Optional[float] = None
 
 
 @dataclass
 class Allocation:
-    """A full breakdown, plus the denominators it was computed against."""
+    """A full breakdown, plus the denominators it was computed against.
+
+    `total_value` is total portfolio value including cash (D2) in both views.
+    `sectored_value` is the sector view's own denominator and None in the
+    asset-class view, which has no such quantity.
+    """
 
     lines: List[AllocationLine]
     invested_value: float
     cash_balance: float
     total_value: float
     denominator_label: str
+    sectored_value: Optional[float] = None
 
 
 def _market_values(
@@ -144,6 +158,7 @@ def allocation_by_asset_class(
     for line in lines:
         line.pct_of_denominator = line.market_value / total
         line.pct_of_invested = line.market_value / invested if invested else None
+        line.pct_of_total = line.pct_of_denominator
 
     # Cash last, and with no "% invested" - it is not invested.
     lines.append(
@@ -154,6 +169,7 @@ def allocation_by_asset_class(
             tickers=[],
             pct_of_denominator=cash / total,
             pct_of_invested=None,
+            pct_of_total=cash / total,
         )
     )
 
@@ -169,21 +185,24 @@ def allocation_by_asset_class(
 def allocation_by_sector(
     holdings: Sequence[Dict],
     prices: Dict[str, float],
+    cash_balance: float,
 ) -> Allocation:
     """
-    Allocation by sector, over invested value only.
+    Allocation by sector, over invested value, with each sector's share of total.
 
-    Cash is excluded because cash has no sector. Holdings without a sector get
-    their own explicit line (D3) and are counted in the invested denominator,
-    but not in the sectored one.
+    Cash is excluded from the sector denominators because cash has no sector.
+    Holdings without a sector get their own explicit line (D3) and are counted
+    in the invested denominator, but not in the sectored one.
 
-    Each line carries two percentages: `pct_of_denominator` is of sectored
-    value, `pct_of_invested` is of all invested value. The unsectored line has
-    only the second.
+    Each line carries three percentages: `pct_of_denominator` is of sectored
+    value, `pct_of_invested` is of all invested value, `pct_of_total` is of
+    total portfolio value including cash (D2) - the IPS-4.3 figure, Part 7.
+    The unsectored line has the second and third only.
 
     Args:
         holdings: summary dicts carrying ticker, quantity, average_price, sector
         prices: current price per ticker
+        cash_balance: portfolio cash, needed for the total and nothing else
 
     Returns:
         Allocation whose sectored lines sum to 100% of sectored value.
@@ -207,6 +226,8 @@ def allocation_by_sector(
 
     sectored = sum(line.market_value for line in buckets.values())
     invested = sectored + unsectored.market_value
+    cash = float(cash_balance)
+    total = invested + cash
 
     if invested <= 0:
         raise AllocationError(
@@ -217,18 +238,21 @@ def allocation_by_sector(
     for line in lines:
         line.pct_of_denominator = line.market_value / sectored if sectored else None
         line.pct_of_invested = line.market_value / invested
+        line.pct_of_total = line.market_value / total
 
     if unsectored.market_value > 0:
         unsectored.pct_of_denominator = None
         unsectored.pct_of_invested = unsectored.market_value / invested
+        unsectored.pct_of_total = unsectored.market_value / total
         lines.append(unsectored)
 
     return Allocation(
         lines=lines,
         invested_value=invested,
-        cash_balance=0.0,
-        total_value=sectored,
+        cash_balance=cash,
+        total_value=total,
         denominator_label="sectored value (cash excluded, unsectored shown, D3)",
+        sectored_value=sectored,
     )
 
 

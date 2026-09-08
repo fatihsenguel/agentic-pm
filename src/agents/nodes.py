@@ -763,7 +763,7 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
         )
 
         by_class = allocation_by_asset_class(holdings, prices, cash_balance)
-        by_sector = allocation_by_sector(holdings, prices)
+        by_sector = allocation_by_sector(holdings, prices, cash_balance)
         pnl = position_pnl(holdings, prices)
 
         # An allocation line aggregates several holdings, so no single holding's
@@ -883,7 +883,7 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
                 "lines": _lines(by_sector),
                 "denominator": by_sector.denominator_label,
                 "invested_value": round(by_sector.invested_value, 2),
-                "sectored_value": round(by_sector.total_value, 2),
+                "sectored_value": round(by_sector.sectored_value, 2),
             },
             "as_of": {
                 "worst_case": as_of_dates[stalest],
