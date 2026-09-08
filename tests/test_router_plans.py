@@ -4,8 +4,7 @@ SmartRouter replaces the model's plan with the derived one on every attempt.
 Stubbed model, stubbed portfolio manager, no LLM, no database. The model's
 execution_order and agents_needed are never read for a derived intent: the
 flip plan ([PortfolioAnalysisAgent] alone) and a compliance check planned
-as DataAgent alone both come out as the derived plan with no repair. Under
-combined the model's plan is kept and validated against REQUIRES.
+as DataAgent alone both come out as the derived plan with no repair.
 """
 
 import json
@@ -103,21 +102,3 @@ async def test_a_weight_under_the_wrong_intent_is_repaired_by_changing_the_inten
     assert decision.intent == "compliance"
     assert decision.execution_order == ["ComplianceAgent"]
     assert len(validation.errors) == 1 and "belong to intent compliance" in validation.errors[0]
-
-
-async def test_combined_keeps_the_models_plan(router):
-    plan = ["MacroAgent", "DataAgent", "OptimizationAgent"]
-    router._llm = _FakeLLM(_json("combined", plan))
-    decision, validation = await router.route("Optimize SPY and TLT for the current regime")
-    assert decision.execution_order == plan
-    assert validation.errors == []
-
-
-async def test_combined_still_answers_to_requires(router):
-    router._llm = _FakeLLM(
-        _json("combined", ["MacroAgent", "OptimizationAgent"]),
-        _json("combined", ["MacroAgent", "DataAgent", "OptimizationAgent"]),
-    )
-    decision, validation = await router.route("Optimize SPY and TLT for the current regime")
-    assert decision.execution_order == ["MacroAgent", "DataAgent", "OptimizationAgent"]
-    assert len(validation.errors) == 1 and "requires DataAgent" in validation.errors[0]

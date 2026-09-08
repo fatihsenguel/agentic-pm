@@ -42,17 +42,16 @@ def test_the_table_derives_each_plan(intent, params, plan):
     assert derive_plan(intent, ExtractedParameters(**params)) == plan
 
 
-def test_combined_keeps_the_models_plan():
-    """No terminal: the two taught sequences are the model's, validated
-    against REQUIRES like any other plan."""
-    assert derive_plan("combined", ExtractedParameters()) is None
+def test_every_intent_derives_a_plan():
+    """No intent keeps the model's plan: combined, the last one that did,
+    is retired. derive_plan never returns None."""
+    for intent in INTENTS:
+        assert isinstance(derive_plan(intent, ExtractedParameters()), list)
 
 
 def test_every_intent_has_a_row_and_every_terminal_is_an_agent():
     assert set(TERMINAL) == set(INTENTS)
     for intent, rows in TERMINAL.items():
-        if rows is None:
-            continue
         for discriminator, (terminal, closed) in rows.items():
             assert discriminator == "" or discriminator in ExtractedParameters.model_fields
             assert terminal is None or terminal in AGENTS

@@ -28,7 +28,6 @@ INTENTS: Dict[str, str] = {
     'data_fetch': 'User wants raw price data or metrics',
     'risk_analysis': 'User wants risk metrics (VaR, volatility, drawdown)',
     'compliance': 'User asks about their Investment Policy Statement: whether the portfolio complies with it or breaks a rule, whether a position is too big, what would have to change to be within its limits, whether a proposed weight in one position is allowed, or what the policy says about a topic',
-    'combined': 'Multi-step workflow requiring multiple agents in sequence',
     'clarification_needed': 'Request is in scope but too vague to plan, need to ask user',
     'out_of_scope': 'Request is clear, and what it asks for is something this system does not do: a judgement about whether to own a security (should I buy/sell/hold X, is X a good investment, what should I buy, screening or finding candidates), a price or return forecast, tax assessment, or placing an order. Whether the security is held makes no difference to refusing that judgement - and no difference the other way: a question about a held position\'s own figures is in scope, below. Plan NO agents, leave clarification_question null. Questions about a portfolio the user already holds - its allocation, P&L, risk, drift, whether and how to rebalance it, whether it complies with their policy - are IN scope and keep their normal intent: "Should I rebalance my portfolio?" is rebalancing, not out_of_scope and not clarification_needed, because it asks about mechanics on holdings already chosen, not about whether to own a security. A question about how a ticker the active portfolio holds has performed, gained or lost, or how large it is, is a question about that position even without the word "my": data_fetch with PortfolioAnalysisAgent, measure "position_pnl" or "allocation", tickers [that symbol] - not out_of_scope. If a request could be either an in-scope question or an out-of-scope one (e.g. "analyze X" could mean price data), that is clarification_needed, not out_of_scope: ambiguity wins over refusal.',
 }
@@ -182,9 +181,9 @@ class ExtractedParameters(BaseModel):
 # none set; "measure" is the row for either analysis intent when the model
 # set a measure; the two compliance modes are the rows for a hypothetical
 # weight or a policy topic, which measure no portfolio and so are not closed
-# - ComplianceAgent runs alone. "combined" has no terminal: the two taught
-# macro sequences are the model's plan, held to REQUIRES like any other.
-TERMINAL: Dict[str, Optional[Dict[str, Tuple[Optional[str], bool]]]] = {
+# - ComplianceAgent runs alone. Every intent has a row: the model writes no
+# plan (combined, the last intent whose plan was the model's, is retired).
+TERMINAL: Dict[str, Dict[str, Tuple[Optional[str], bool]]] = {
     "optimization": {"": ("OptimizationAgent", True)},
     "macro_analysis": {"": ("MacroAgent", True)},
     "rebalancing": {"": ("RebalanceAgent", True)},
@@ -196,7 +195,6 @@ TERMINAL: Dict[str, Optional[Dict[str, Tuple[Optional[str], bool]]]] = {
         "hypothetical_weight": ("ComplianceAgent", False),
         "policy_topic": ("ComplianceAgent", False),
     },
-    "combined": None,
     "clarification_needed": {"": (None, True)},
     "out_of_scope": {"": (None, True)},
 }
@@ -207,7 +205,7 @@ if set(TERMINAL) != set(INTENTS):
         f"{sorted(INTENTS)}, TERMINAL has {sorted(TERMINAL)}. An intent is added to both or to neither."
     )
 for _intent, _rows in TERMINAL.items():
-    for _key, (_terminal, _) in (_rows or {}).items():
+    for _key, (_terminal, _) in _rows.items():
         if _key and _key not in ExtractedParameters.model_fields:
             raise RuntimeError(f"TERMINAL[{_intent!r}] discriminates on {_key!r}, not a parameter")
         if _terminal is not None and _terminal not in AGENTS:
@@ -234,18 +232,14 @@ def _discriminator(intent: str, parameters: Mapping) -> str:
     return ""
 
 
-def derive_plan(intent: str, parameters) -> Optional[List[str]]:
+def derive_plan(intent: str, parameters) -> List[str]:
     """The plan for an intent and its parameters, from TERMINAL and REQUIRES.
 
-    None for an intent with no terminal (combined), where the model's plan
-    stands. An empty list for an intent that runs nothing. KeyError on an
-    intent not in the registry.
+    An empty list for an intent that runs nothing. KeyError on an intent
+    not in the registry.
     """
     parameters = parameters if isinstance(parameters, Mapping) else parameters.model_dump()
-    rows = TERMINAL[intent]
-    if rows is None:
-        return None
-    terminal, closed = rows[_discriminator(intent, parameters)]
+    terminal, closed = TERMINAL[intent][_discriminator(intent, parameters)]
     if terminal is None:
         return []
     return _closure(terminal) if closed else [terminal]
@@ -374,25 +368,13 @@ class RouterDecision(BaseModel):
         """The plan is the one TERMINAL and REQUIRES derive for the intent
         and parameters, exactly. The router writes that plan over the
         model's before validation, so a mismatch here is a hand-built
-        decision or a table change; the error names both plans. Under
-        combined, where the model's plan stands, every agent must follow
-        what REQUIRES says it needs - never reordered, the error going back
-        as the repair prompt (the "too big" flip and its diagnostics,
-        KNOWN_GAPS, 8 September). Runs last, after validate_execution_order's
-        autofill and the mode checks above."""
+        decision or a table change; the error names both plans. Never
+        reordered (the "too big" flip and its diagnostics, KNOWN_GAPS,
+        8 September). Runs last, after the mode checks above."""
         intent = self.intent if isinstance(self.intent, str) else self.intent.value
         order = [a if isinstance(a, str) else a.value for a in self.execution_order]
         parameters = self.parameters.model_dump()
         derived = derive_plan(intent, parameters)
-        if derived is None:
-            for i, agent in enumerate(order):
-                missing = [need for need in REQUIRES.get(agent, ()) if need not in order[:i]]
-                if missing:
-                    raise ValueError(
-                        f"{agent} requires {', '.join(missing)} before it in "
-                        f"execution_order; the plan is {order}"
-                    )
-            return self
         if order != derived:
             raise ValueError(
                 f"a {intent} plan{_plan_qualifier(intent, parameters)} is {derived}, not {order}"

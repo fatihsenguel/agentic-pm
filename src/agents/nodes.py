@@ -1595,13 +1595,13 @@ async def backtest_agent_node(state: AgentState) -> Dict[str, Any]:
 # The intents the chain in synthesizer_node formats, stated once beside it. A
 # second statement of schemas.INTENTS, checked at import rather than derived,
 # as graph.AGENT_NODES is against AGENTS: three branches condition on what
-# ran and `combined` fans out to several formatters, so a mapping would not
-# be the chain. clarification_needed is the one registry value with no
+# ran, so a mapping would not be the chain. clarification_needed is the one
+# registry value with no
 # branch - router_node writes its final_response and the graph exits before
 # the synthesizer (KNOWN_GAPS, "Clarification exits the graph on a proxy").
 SYNTHESIZER_INTENTS = frozenset({
     "optimization", "macro_analysis", "rebalancing", "backtest", "data_fetch",
-    "risk_analysis", "out_of_scope", "compliance", "combined",
+    "risk_analysis", "out_of_scope", "compliance",
 })
 _UNSYNTHESIZED_INTENTS = frozenset({"clarification_needed"})
 
@@ -1659,15 +1659,6 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             lines.extend(_format_out_of_scope_response())
         elif intent == "compliance":
             lines.extend(_format_compliance_response(sub_results))
-        elif intent == "combined":
-            # Combined: show all relevant results
-            if "MacroAgent" in sub_results:
-                lines.extend(_format_macro_response(sub_results))
-                lines.append("")
-            if "RebalanceAgent" in sub_results:
-                lines.extend(_format_rebalance_response(sub_results))
-            if "OptimizationAgent" in sub_results:
-                lines.extend(_format_optimization_response(sub_results))
         else:
             lines.append("Analysis complete. See details below:")
             for agent, result in sub_results.items():

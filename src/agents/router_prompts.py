@@ -35,12 +35,6 @@ INTENT TYPES:
 
 _PROMPT_AFTER_INTENTS = """
 
-MULTI-STEP WORKFLOWS (combined):
-Some requests require agents to run in sequence:
-- "Optimize portfolio based on current market regime" → MacroAgent THEN OptimizationAgent
-- "Backtest with macro overlay" → MacroAgent THEN BacktestAgent
-The first agent's output informs the second.
-
 EXECUTION ORDER RULES:
 - DataAgent usually runs first (provides data for others)
 - MacroAgent runs before OptimizationAgent when regime-aware

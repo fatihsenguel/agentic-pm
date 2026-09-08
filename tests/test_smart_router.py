@@ -60,29 +60,6 @@ class TestRouterDecision:
         assert decision.confidence == 0.9
         assert len(decision.agents_needed) == 1
     
-    def test_valid_multi_step_decision(self):
-        """Test a multi-step workflow decision. The plan carried DataAgent
-        from the day REQUIRES named it for RebalanceAgent: the January shape,
-        macro then rebalance with no prices, validated and could not run."""
-        data = {
-            "intent": "combined",
-            "confidence": 0.85,
-            "agents_needed": [
-                {"agent": "MacroAgent", "task_description": "Check regime", "priority": 1},
-                {"agent": "DataAgent", "task_description": "Fetch prices", "priority": 2},
-                {"agent": "RebalanceAgent", "task_description": "Generate TAA signal", "priority": 3}
-            ],
-            "execution_order": ["MacroAgent", "DataAgent", "RebalanceAgent"],
-            "parameters": {"tickers": ["SPY", "TLT"]},
-            "is_multi_step": True,
-            "requires_confirmation": False,
-            "reasoning": "Multi-step: macro then rebalance",
-        }
-        
-        decision = RouterDecision.model_validate(data)
-        assert decision.is_multi_step is True
-        assert len(decision.execution_order) == 3
-    
     def test_invalid_agent_name(self):
         """Test that invalid agent names are rejected."""
         data = {
@@ -100,37 +77,21 @@ class TestRouterDecision:
         with pytest.raises(ValueError, match="FakeAgent"):
             RouterDecision.model_validate(data)
 
-    def test_execution_order_mismatch_is_repaired_today(self):
-        """execution_order disagreeing with agents_needed is silently
-        overwritten from the task list, not rejected.
-
-        This test used to expect a raise and got one - from `reasoning`
-        being four characters, below the schema's minimum of ten. With a
-        valid reasoning the same data validates and the order is repaired,
-        which is what validate_execution_order does (KNOWN_GAPS,
-        "validate_execution_order repairs instead of raising"). Pinned as
-        it is so the test sees the validator it names; when the repair
-        becomes a raise, this becomes a pytest.raises.
-
-        On combined, since the terminal table: for every other intent the
-        router writes the derived plan over both fields before validation,
-        so the repair can only fire on the one intent whose plan is still
-        the model's."""
+    def test_combined_is_not_an_intent(self):
+        """Retired: it was the one intent whose plan stayed the model's, for
+        two macro-overlay sequences nothing pinned and a macro path that has
+        not answered since 3 September. With it goes the last plan the
+        model could write, and the reorder-repair has nothing left to fire
+        on (its deletion is the next commit)."""
         data = {
-            "intent": "combined",
-            "confidence": 0.9,
-            "agents_needed": [
-                {"agent": "MacroAgent", "task_description": "Check regime", "priority": 1},
-                {"agent": "DataAgent", "task_description": "Fetch data", "priority": 2},
-            ],
-            "execution_order": ["DataAgent", "OptimizationAgent"],  # Mismatch!
-            "parameters": {},
-            "reasoning": "The order names an agent the task list does not",
+            "intent": "combined", "confidence": 0.9,
+            "agents_needed": [{"agent": "MacroAgent", "task_description": "regime", "priority": 1}],
+            "execution_order": ["MacroAgent"], "parameters": {},
+            "reasoning": "a multi-step plan the model wrote",
         }
+        with pytest.raises(ValueError):
+            RouterDecision.model_validate(data)
 
-        decision = RouterDecision.model_validate(data)
-        assert decision.execution_order == ["MacroAgent", "DataAgent"]
-    
     def test_clarification_requires_question(self):
         """Test that clarification_needed intent requires question."""
         data = {
@@ -324,7 +285,6 @@ class TestDependencies:
         shapes = (
             ("risk_analysis", ["ComplianceAgent"]),
             ("data_fetch", ["DataAgent", "PortfolioAnalysisAgent", "ComplianceAgent"]),
-            ("combined", ["DataAgent", "ComplianceAgent"]),
         )
         for intent, order in shapes:
             with pytest.raises(ValueError, match="only under intent compliance"):
@@ -333,8 +293,6 @@ class TestDependencies:
     def test_the_error_names_both_plans(self):
         with pytest.raises(ValueError, match=r"is \['DataAgent'\], not \['PortfolioAnalysisAgent'\]"):
             RouterDecision.model_validate(self._plan("risk_analysis", ["PortfolioAnalysisAgent"]))
-        with pytest.raises(ValueError, match=r"requires DataAgent before it in execution_order; the plan is \['MacroAgent', 'OptimizationAgent'\]"):
-            RouterDecision.model_validate(self._plan("combined", ["MacroAgent", "OptimizationAgent"]))
 
     def test_plans_still_accepted(self):
         """Shapes every node in them can run: rule 6's DataAgent alone, the

@@ -494,11 +494,11 @@ def _with_extraction(raw: Dict[str, Any], extraction: Extraction, user_message: 
 
     # The plan is derived from the intent and those parameters through
     # schemas.TERMINAL and REQUIRES; the model's execution_order and
-    # agents_needed are not read, except under combined, which has no
-    # terminal. An intent the registry lacks is left for the schema to reject.
+    # agents_needed are not read. An intent the registry lacks is left for
+    # the schema to reject.
     intent = raw.get("intent")
-    plan = derive_plan(intent, parameters) if intent in TERMINAL else None
-    if plan is not None:
+    if intent in TERMINAL:
+        plan = derive_plan(intent, parameters)
         out["execution_order"] = plan
         out["agents_needed"] = [
             {"agent": agent, "task_description": f"derived for intent {intent}", "priority": i + 1}
