@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from .config import get_llm, LLMConfig, OPENAI_FULL, ACTIVE_LLM_CONFIG
+from .extraction import Extraction, extract
 from .router_prompts import build_router_prompt, build_repair_prompt
 from .schemas import (
     RouterDecision, 
@@ -144,12 +145,23 @@ class SmartRouter:
     ) -> Tuple[RouterDecision, ValidationResult]:
         """
         Route a user message to the appropriate agent(s).
+
+        Extraction runs first (agents/extraction.py): tickers, period,
+        volatility cap and hypothetical weight are read from the message
+        deterministically, and the model's values for those fields are never
+        read - every attempt's JSON has them replaced before validation. If
+        the message asks for something the vocabularies cannot express, the
+        clarification is returned here and the model is not called. The
+        model decides intent, plan, measure and group_by, and whether the
+        question asks what the policy says; for that last case the topic it
+        emits is replaced by the user's own words, which is what the policy
+        is matched against.
         
         Args:
             user_message: The user's request
             conversation_history: Previous conversation messages
             available_agents: List of currently available agents
-            portfolio_id: Optional portfolio ID to analyze (overrides tickers from LLM)
+            portfolio_id: Optional portfolio ID to analyze
         
         Returns:
             Tuple of (RouterDecision, ValidationResult)
@@ -182,6 +194,13 @@ class SmartRouter:
                     logger.error(f"Failed to load portfolio {portfolio_id}: {e}")
                     # Continue without portfolio - LLM will extract tickers from message
             
+            extraction = extract(
+                user_message, portfolio_tickers or [], app_config.data.period_days.keys()
+            )
+            if extraction.clarification:
+                self.stats["clarifications_requested"] += 1
+                return self._clarification_from_extraction(extraction), ValidationResult()
+
             # Build prompt
             prompt = build_router_prompt(
                 user_message=user_message,
@@ -206,7 +225,8 @@ class SmartRouter:
             # Call LLM
             decision, validation = await self._call_llm_with_retry(
                 prompt=prompt,
-                user_message=user_message
+                user_message=user_message,
+                extraction=extraction,
             )
             
             # parameters.tickers is what the user named, and nothing else. A
@@ -253,10 +273,14 @@ class SmartRouter:
     async def _call_llm_with_retry(
         self,
         prompt: str,
-        user_message: str
+        user_message: str,
+        extraction: Extraction,
     ) -> Tuple[Optional[RouterDecision], ValidationResult]:
         """
-        Call LLM and retry on parsing failures.
+        Call LLM and retry on parsing failures. Every attempt's parameters
+        are overwritten from `extraction` before validation, so a validator
+        that rejects a mode under the wrong intent is asking the model to
+        change the intent, the one thing it still decides.
         """
         last_error = None
         validation = ValidationResult()
@@ -285,6 +309,7 @@ class SmartRouter:
                 
                 # Parse response
                 raw_json = self._extract_json(response.content)
+                raw_json = _with_extraction(raw_json, extraction, user_message)
                 decision, error = safe_parse_router_response(raw_json)
                 
                 if decision:
@@ -370,6 +395,28 @@ class SmartRouter:
         
         return validation
     
+    def _clarification_from_extraction(self, extraction: Extraction) -> RouterDecision:
+        """The message asked for something outside the vocabularies - a typo
+        of a holding, a span the period vocabulary lacks, two weights. The
+        question is extraction's, deterministic, and no model is consulted:
+        a model shown the message would either guess or ask the same."""
+        return RouterDecision(
+            intent=IntentType.CLARIFICATION_NEEDED,
+            confidence=1.0,
+            agents_needed=[],
+            execution_order=[],
+            parameters=ExtractedParameters(
+                tickers=extraction.tickers,
+                period=extraction.period,
+                max_volatility=extraction.max_volatility,
+                hypothetical_weight=extraction.hypothetical_weight,
+            ),
+            is_multi_step=False,
+            requires_confirmation=False,
+            reasoning=f"Extraction could not resolve the message: {extraction.clarification}"[:1000],
+            clarification_question=extraction.clarification,
+        )
+
     def _create_fallback_decision(
         self,
         user_message: str,
@@ -420,6 +467,27 @@ class SmartRouter:
             "success_rate": self.stats["successful_routes"] / total if total > 0 else 0,
             "clarification_rate": self.stats["clarifications_requested"] / total if total > 0 else 0,
         }
+
+
+def _with_extraction(raw: Dict[str, Any], extraction: Extraction, user_message: str) -> Dict[str, Any]:
+    """The model's JSON with the extracted fields written over its own.
+
+    Tickers, period, volatility cap and hypothetical weight are the message's,
+    read deterministically; whatever the model put there is not read. The
+    policy topic is the model's signal that the question asks what the
+    policy says - kept as a signal, its value replaced by the user's own
+    words, which the compliance node matches the owner's topic vocabulary
+    against. A paraphrase there would match a clause the user did not ask
+    about (KNOWN_GAPS, runner 3.4).
+    """
+    parameters = dict(raw.get("parameters") or {})
+    parameters["tickers"] = list(extraction.tickers)
+    parameters["period"] = extraction.period
+    parameters["max_volatility"] = extraction.max_volatility
+    parameters["hypothetical_weight"] = extraction.hypothetical_weight
+    if parameters.get("policy_topic") is not None:
+        parameters["policy_topic"] = user_message
+    return {**raw, "parameters": parameters}
 
 
 # =============================================================================
