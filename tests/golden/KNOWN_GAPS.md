@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 8 September 2026, sixth sitting.
+Last updated 8 September 2026, seventh sitting.
 
 ---
 
@@ -245,6 +245,18 @@ and would move `expected.txt` for every query.
 The CLI truncates `parameters` at roughly 260 characters, which is before
 `measure` and `group_by`. It cannot show the field that selects the answer.
 
+**A sixth field, 8 September (seventh sitting), printed only when nonzero.**
+`retries: N` counts the router attempts the schema rejected before the
+printed decision (83de9d9), read from the `Validation: Attempt N:` warnings
+the router node now carries into the state (0f86384; it used to compute
+them and drop them). Before this, a plan rejected by a validator and
+repaired back to the pinned routing printed the same five fields as one
+accepted first time, and the dependency validator below would have had no
+instrument. Nonzero-only so that `expected.txt` did not move: zero diff on
+the run after the commit, and no `retries` line on any of the five golden
+runs this sitting. Parse failures and ticker errors carry no `Attempt`
+prefix and are not counted.
+
 **7 September (third sitting): a CLI check that could not distinguish two
 states.** Two formatter lines were deleted (macro Recommendation, rebalance
 Tactical Signal) and the instruction was to confirm in the CLI. Both live
@@ -396,6 +408,26 @@ retries with `REPAIR_PROMPT` carrying the error text. Golden twice, with the
 prediction written first; it is the least certain prediction on the list
 because it changes what the router is told after a mistake.
 
+**The second gap is built, 8 September (seventh sitting), d4c102d.**
+`REQUIRES` beside `AGENTS`, one entry, checked against the roster at
+import; `validate_dependencies` raises when an agent precedes what it
+requires, never reorders; `validate_compliance`'s non-compliance branch
+raises on ComplianceAgent under any other intent. The error names the plan
+and was seen reaching the repair prompt's ERROR line. Eight tests hold the
+three diagnostic shapes rejected and six shapes deliberately still
+accepted - `[OptimizationAgent]` alone and a backtest with no optimiser are
+what the prompt's own examples plan, so those dependencies contradict a
+shown example and wait for their own prompt commits. Golden twice: all
+fifteen lines held, no `retries`; the flip did not occur on either run, so
+the rejection was exercised offline only. The prediction that mattered was
+the falsifier - no line may show a rejected shape - and it held.
+
+**The first gap stays open.** The reorder-repair is untouched. Note that
+`test_execution_order_mismatch` had been passing on `reasoning` being four
+characters, below the schema's minimum, not on the order; with a valid
+reasoning the mismatched order validates and is repaired. Pinned as it is
+in 8f99b04 so the test sees the validator it names.
+
 ### A router failure becomes a clarification with confidence 0.0
 
 Recorded 7 September (third sitting). `SmartRouter.route` catches every exception and returns
@@ -403,6 +435,27 @@ Recorded 7 September (third sitting). `SmartRouter.route` catches every exceptio
 German apology. Any failure between the LLM call and the decision - parse,
 validation, network - reaches the user as "could you be more specific" and
 reaches the trace as a routed clarification. Same shape as above.
+
+**Not quite, read again 8 September (seventh sitting).** Three rejected
+attempts do not reach the fallback. `_call_llm_with_retry` returns
+`(None, validation)` without raising, `route` passes the None through, and
+`router_node` then fails on `decision.intent` and records "Router error:
+'NoneType' object has no attribute 'intent'". On the golden set that is
+`intent: None`, `plan: None`, no agents, `errors: 1`. The fallback above is
+reached only by an exception inside `route` itself. Two failure paths, two
+faces, neither naming the three rejections; the warnings carrying them
+(0f86384) are lost on this path because the node returns before merging
+them. Not chased.
+
+**The repair prompt is context-free.** Attempts 2 and 3 send
+`REPAIR_PROMPT` alone: the error, a schema skeleton, the original request.
+No roster, no rules 1-7, no few-shots, no portfolio context. A validator
+rejection is therefore answered by a model that has never seen the rule it
+broke. Untested live: no golden line has retried since the dependency
+validator landed. When one does, the repaired plan is the first observation
+of what this path produces, and if it is runnable but wrong the fix is
+structural - the repair carrying the full system prompt plus the error -
+not a wording.
 
 ### CostCalculator reports costs for the wrong model
 
@@ -1367,6 +1420,45 @@ nowhere (`_create_fallback_decision` uses `CLARIFICATION_NEEDED`). Deletion is
 safe. Not done alongside adding `out_of_scope`: two vocabulary changes, one
 case behind them.
 
+### `_decision_to_dict` drops `reasoning` and `clarification_question`
+
+Recorded 8 September (seventh sitting). The dict `router_node` stores
+carries intent, confidence, agents_needed, parameters and execution_order.
+`cli.py` prints `reasoning` and "asked back" from that dict, so neither
+line has ever printed; the clarification text reaches the CLI only as the
+answer. The runner's blocked reason reads it from `final_response` for the
+same reason (60f4b62). Putting the two keys back is a state-shape change,
+own commit, and would make the CLI's lines reachable.
+
+### `AgentTask.depends_on` has no reader
+
+Recorded 8 September (seventh sitting). Declared on the schema, filled by
+the model if it chooses, read nowhere. The dependency validator holds the
+plan to `REQUIRES`, the code's facts, and deliberately not to this field,
+which is the model asserting its own dependencies. Deletion is safe; own
+commit.
+
+### `SmartRouter.route` opens its own request span behind the observability flag
+
+Recorded 8 September (seventh sitting). `route` calls
+`self.tracer.trace_request(...)` and closes it in its own `finally` when
+`self.tracer` is set, and `self.tracer` is set only when
+`config.features.observability_enabled` is true. It is false here, so the
+router traces nothing and `run_agent_graph`'s span survives. Turned on, the
+router's `__exit__` would set `_current_trace = None` three nodes early -
+the exact bug a07c523 fixed, one environment variable away.
+`test_request_span.py` stubs the router and cannot see it.
+
+### `router_node` computed its validation warnings and dropped them - RESOLVED 8 September (seventh sitting)
+
+The loop `for error in validation.errors: add_warning(state, ...)` discarded
+the dict `add_warning` returned, so no rejected router attempt ever reached
+`state["warnings"]`, the CLI's WARNINGS section or the golden runner.
+Fixed in 0f86384: the list is built once and returned on both paths, four
+tests. Registration, not reachability, one level down from the span:
+the helper existed, the call existed, the value went nowhere.
+`state.add_warning` now has no caller.
+
 ### Roster sites the registry does not read
 
 Recorded 7 September (fourth sitting), while building the registry. Each
@@ -1633,7 +1725,16 @@ is recorded because none was established: the only removed text that
 named concentration was the rendered topic list, and that is an
 observation, not a model.
 
-### 2.3 does not route to ComplianceAgent, two failed predictions, stopped
+**The validator is built, 8 September (seventh sitting), d4c102d.** The
+flip's plan, `[PortfolioAnalysisAgent]` alone, is now rejected before the
+graph runs and sent back to the router as a repair attempt with the reason
+stated; a flip run prints `retries: 1` and the repaired plan instead of an
+unrunnable one. The flip itself was not observed on any of the five golden
+runs this sitting, so the line has held at its pin and the repair path has
+no live observation yet. Rule 6 and rule 7 still collide on "too big";
+reconciling them is still the later, separate change.
+
+### 2.3 does not route to ComplianceAgent, two failed predictions, stopped - RESOLVED 8 September (seventh sitting)
 
 Recorded 8 September (sixth sitting). "What would have to change for me to
 be within the limits again?" was predicted to plan ComplianceAgent twice:
@@ -1647,6 +1748,33 @@ sitting starts from what it routes to, not from a guess. Its next
 prediction rides on a structural change - the dependency validator, or a
 diagnostic query naming the limits without the policy - never on a
 rewording of the intent line.
+
+**The sentence above about the cause was wrong.** The dependency validator
+(d4c102d) did not move 2.3 and could not have: the runner showed its first
+attempt was `clarification_needed` with an empty plan, which validates.
+The runner then learned to print what the router asked back (60f4b62), and
+one `--case 2.3` run showed it: "Are you asking whether your current
+portfolio complies with your Investment Policy Statement, or are you
+proposing a specific position weight and want to know if it would be
+allowed?" The router names the policy unprompted and offers two compliance
+readings. The intent was never the problem after the second edit; the mode
+was. Rule 7 gives compliance exactly one of three shapes, the message states
+no weight, and the router asked about a weight rather than choose the
+portfolio check. Neither failed prediction had addressed the mode.
+
+**Third prompt edit, a3bad06, aimed at that cause and declared the last.**
+One sentence in rule 7: the hypothetical shape needs a weight stated in the
+message; with none, a question about complying, limits or what must change
+is the portfolio check, not a clarification. No benchmark wording quoted.
+Prediction: fifteen golden lines hold, no `retries`; 2.3 PASS, 11/12. Held:
+golden clean twice, runner 11/12, and 2.3 PASS again on a second `--case`
+run. Two of two is all the record has; 2.3's routing is pinned nowhere,
+since no golden line carries it. A golden line for 2.3 is a benchmark
+prompt in the golden set, as 3.2 and the four Level 1 prompts already are,
+and moves `expected.txt` by one query - the owner's decision, alongside the
+"How much has AAPL gained?" diagnostic still pending. If 2.3 ever flips
+back to the clarification, the next step is conversation memory, not a
+fourth edit.
 
 ### pytest warning inventory
 
