@@ -38,7 +38,7 @@ CLEAN = [
     ("Analyze ZZZZFAKE for me", NONE, [], None, None, None),
     ("help", NONE, [], None, None, None),
     ("Should I buy Nvidia?", P1, [], None, None, None),
-    ("How much did AAPL gain today?", P3, ["AAPL"], None, None, None),
+    ("How much has AAPL gained?", P3, ["AAPL"], None, None, None),    # the diagnostic golden query
     ("Is my AAPL position too big?", P3, ["AAPL"], None, None, None),
     ("Is my AAPL position within my policy's limits?", P3, ["AAPL"], None, None, None),
     ("Is AAPL too concentrated?", P3, ["AAPL"], None, None, None),
@@ -48,7 +48,8 @@ CLEAN = [
     ("Does my current allocation violate any rule of my investment policy?", P3, [], None, None, None),
     ("What would have to change for me to be within the limits again?", P3, [], None, None, None),
     ("I want to put 15% into a single position, is that allowed?", P3, [], None, None, 0.15),
-    ("How is my position doing today?", P3, [], None, None, None),
+    ("How is my position doing today?", P3, [], None, None, None),   # benchmark 3.3: "today" as "as of now"
+    ("Is NEE up or down?", P3, ["NEE"], None, None, None),            # the prompt's example
     ("What does my investment policy say about currency risk?", P3, [], None, None, None),
     # CLI prompts from KNOWN_GAPS
     ("Is my JNJ position over any limit?", P3, ["JNJ"], None, None, None),
@@ -91,6 +92,12 @@ CLARIFY = [
     ("Put 15% into AAPL and 20% into MSFT", P3, ["15%", "20%"]),
     ("Put 150% into one stock", P3, ["150%"]),
     ("Over 1 year and 3 years", P1, ["1 year", "3 years"]),
+    # "today" with a change verb asks for a one-day move, a span the
+    # vocabulary lacks; the pinned false refusal, then a since-purchase
+    # answer with a plausible face (KNOWN_GAPS, 8 September).
+    ("How much did AAPL gain today?", P3, ["today", "1Y", "10Y"]),
+    ("Is NEE up or down today?", P3, ["today"]),
+    ("What did I lose yesterday?", P3, ["yesterday"]),
 ]
 
 

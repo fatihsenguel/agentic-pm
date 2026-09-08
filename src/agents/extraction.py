@@ -22,7 +22,9 @@ is needed, because ETF, IPS and VIX are not one edit from anything held.
 Periods. The caller's vocabulary is year-multiples ("1Y", "2Y", ...). A span
 in years that the vocabulary has is that value; twelve months is a year; any
 other span - months, weeks, days, a year the vocabulary lacks, an absolute
-year - is a clarification naming the spans it has. No span is None.
+year, "today" next to a change verb - is a clarification naming the spans it
+has. "today" with no change verb means "as of now" and is not a span. No
+span is None.
 
 Percentages. A figure with a percent sign next to "vol" or "volatility" is
 the volatility cap; any other single percentage is the hypothetical weight
@@ -90,6 +92,16 @@ _BARE_SPAN = re.compile(
     re.IGNORECASE,
 )
 _SINCE_YEAR = re.compile(r"\bsince\s+(19|20)\d{2}\b", re.IGNORECASE)
+# "gain today", "up or down today", "lost yesterday": a change verb with a
+# day word asks for a one-day move, a span the vocabulary lacks. "today"
+# without a change verb ("how is my position doing today?", benchmark 3.3)
+# means "as of now" and is not a span.
+_DAY = r"(?:today|yesterday)"
+_CHANGE = r"(?:gain|gained|gains|lose|lost|loses|up|down|move|moved|moves|change|changed|changes|rise|rose|risen|fall|fell|fallen)"
+_DAY_MOVE = re.compile(
+    rf"\b{_CHANGE}\b[^.?!]*\b{_DAY}\b|\b{_DAY}\b[^.?!]*\b{_CHANGE}\b",
+    re.IGNORECASE,
+)
 _YTD = re.compile(r"\b(year\s+to\s+date|ytd)\b", re.IGNORECASE)
 
 _PERCENT = re.compile(r"(\d+(?:[.,]\d+)?)\s*(?:%|percent\b)", re.IGNORECASE)
@@ -208,6 +220,9 @@ def _period(message: str, vocabulary: List[str]):
     for pattern in (_SINCE_YEAR, _YTD):
         for m in pattern.finditer(message):
             found.append((m.group(0).strip(), None))
+    if _DAY_MOVE.search(message):
+        day = re.search(rf"\b{_DAY}\b", message, re.IGNORECASE)
+        found.append((day.group(0).lower(), None))
 
     if not found:
         return None, None
