@@ -1972,9 +1972,11 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
     it. Whether those dates agree is read too, for the same reason - the one
     branch below selects wording, it does not compare dates.
 
-    `group_by` narrows the rendering, not the computation: both breakdowns are
-    always computed and published, and the one the user named is the one
-    printed. With no `group_by` both are printed.
+    `group_by` narrows the rendering, not the computation: all three views
+    are always computed and published, and the one the user named is the one
+    printed. With no `group_by` all three are printed. The position view is
+    Part 7's IPS-4.1 table, largest first, so "what is my biggest position"
+    is its first line.
     """
     analysis = sub_results.get("PortfolioAnalysisAgent", {})
     if not analysis.get("success"):
@@ -1984,8 +1986,10 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
     allocation = analysis.get("allocation") or {}
     by_class = allocation.get("by_asset_class") if group_by in (None, "asset_class") else None
     by_sector = allocation.get("by_sector") if group_by in (None, "sector") else None
+    by_position = allocation.get("by_position") if group_by in (None, "position") else None
     by_class = by_class or {}
     by_sector = by_sector or {}
+    by_position = by_position or {}
 
     lines = ["**PORTFOLIO ALLOCATION**", ""]
 
@@ -2034,9 +2038,25 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
             lines.append(f"  - {line['label']:<13}{sectored_str:>8}{invested_str:>9}"
                          f"{total_str:>9}{line['market_value']:>15,.2f}   {held}")
 
+    if by_position:
+        if by_class or by_sector:
+            lines.append("")
+        # One line per holding, largest first as published; two shares, of
+        # total portfolio value (the IPS-4.1 figure) and of invested value.
+        lines.append(f"**By position**, largest first, % of {by_position['denominator']} "
+                     f"{by_position['total_value']:,.2f} and of invested value "
+                     f"{by_position['invested_value']:,.2f}:")
+        for line in by_position.get("lines", []):
+            of_total = line.get("pct_of_total")
+            of_invested = line.get("pct_of_invested")
+            total_str = f"{of_total:.2%}" if of_total is not None else "n/a"
+            invested_str = f"{of_invested:.2%}" if of_invested is not None else "n/a"
+            lines.append(f"  - {line['label']:<13}{total_str:>8}{invested_str:>9}"
+                         f"{line['market_value']:>15,.2f}")
+
     lines.append("")
     if group_by is None:
-        lines.append("**Not done.** The question named no breakdown, so both are")
+        lines.append("**Not done.** The question named no breakdown, so all three are")
         lines.append("shown. Fund holdings are counted at fund level; there is no")
         lines.append("look-through.")
     else:

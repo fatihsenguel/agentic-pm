@@ -42,3 +42,34 @@ def test_share_of_total_is_read_not_divided():
     text = _answer(alloc, group_by="sector")
     assert "12.34%" in text
     assert "27.96%" not in text
+
+
+def test_position_view_prints_largest_first_with_share_of_total():
+    """Part 7, IPS-4.1 column: "what is my biggest position" is the first
+    line, with its share of total; the header names the total."""
+    text = _answer(allocation(), group_by="position")
+    lines = [l for l in text.splitlines() if l.startswith("  - ")]
+    assert lines[0].startswith("  - SPY")
+    assert "18.65%" in lines[0]
+    assert "4.05%" in lines[-1] and lines[-1].startswith("  - NEE")
+    assert len(lines) == 9
+    assert "410,200.50" in text
+    assert "By sector" not in text and "By asset class" not in text
+
+
+def test_position_share_is_read_not_divided():
+    alloc = allocation()
+    spy = next(l for l in alloc["by_position"]["lines"] if l["label"] == "SPY")
+    spy["pct_of_total"] = 0.4321
+    text = _answer(alloc, group_by="position")
+    assert "43.21%" in text
+    assert "18.65%" not in text
+
+
+def test_no_group_by_renders_all_three_views():
+    text = _answer(allocation())
+    assert "By asset class" in text
+    assert "By sector" in text
+    assert "By position" in text
+    assert "so all three are" in text   # the sentence wraps after "are"
+
