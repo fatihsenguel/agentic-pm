@@ -82,8 +82,29 @@ COST_INVESTED = 284_500.00
 TICKERS = {"SPY", "AAPL", "MSFT", "JNJ", "JPM", "NEE", "TLT", "GLD", "VNQ"}
 UNSECTORED_LABEL = "(no sector)"
 
+# expected_values.md Part 7: which holdings are funds is seeded data
+# (`Asset.instrument_type`), static like the cost bases above. IPS-4.2 counts
+# issuers over directly held shares only, so these four are exempt from it.
+FUNDS = {"SPY", "TLT", "GLD", "VNQ"}
+SHARES = TICKERS - FUNDS
+
+# The closed status set of a compliance finding (Part 7, and the
+# shared_data["compliance"] shape decided 8 September). `refused` is for a
+# hypothetical weight (3.1), never for a holding.
+COMPLIANCE_STATUSES = {"ok", "breach", "exempt", "refused"}
+
+# A trade verb and a held ticker on one line is a recommendation, which no
+# compliance answer may contain (benchmark.md Part 2: "gives no recommendation").
+# The verbs are the ones that name an order, not a condition: "Equity down
+# 4.41 pp" is a condition (IPS-5.2), "sell AAPL" is a trade.
+TRADE_LINE = re.compile(
+    r"\b(buy|sell|purchase|trim|liquidate|short)\b.*\b(" + "|".join(sorted(TICKERS)) + r")\b",
+    re.IGNORECASE,
+)
+
 CENT = 0.005
 AS_OF = re.compile(r"\d{4}-\d{2}-\d{2}")
+CLAUSE_ID = re.compile(r"IPS-\d+\.\d+")
 
 
 # ---------------------------------------------------------------------------
@@ -100,6 +121,10 @@ def _allocation(state, view):
 
 def _by_label(block):
     return {line["label"]: line for line in block.get("lines", [])}
+
+
+def _compliance(state):
+    return _shared(state).get("compliance") or {}
 
 
 def _answer(state):
@@ -460,6 +485,212 @@ def check_3_3(state):
     return fails
 
 
+def _compliance_block_invariants(state):
+    """What every compliance block must satisfy, whichever case produced it.
+
+    Structure only, never which clauses breach: two of Part 7's eight breaches
+    are decided by cents and sit on the other side of their limit on a live
+    run. What is asserted instead is that the block is internally consistent
+    with itself and with the allocation block it was computed from:
+
+      - every finding's clause exists in the loaded policy, and no finding
+        names a statement (a clause with no number cannot be checked, and a
+        finding on one is the checker inventing arithmetic)
+      - `total_value` is the asset-class denominator (D2), so one number is
+        the denominator for every clause and it is the number the allocation
+        published, not a second computation
+      - status is in the closed set
+      - an `exempt` finding carries no arithmetic (Part 7)
+      - on every other finding the three distance figures reconcile: signed so
+        that positive is a breach, `distance_pp = (observed - limit) x 100`
+        against a max bound and `(limit - observed) x 100` against a min, and
+        `distance_value = distance_pp / 100 x total_value` (Part 7's eight
+        breaches reproduce this to the cent); and status agrees with the sign,
+        with exactly-at-the-limit passing (D9)
+      - a band clause emits one finding per bound (min and max), never a
+        "nearer bound" chosen by the checker
+    """
+    fails = []
+    block = _compliance(state)
+    policy = block.get("policy") or {}
+    findings = block.get("findings") or []
+    statements = block.get("statements") or []
+
+    if not policy:
+        return ["no policy in shared_data['compliance']; the answer cannot cite"]
+
+    statement_ids = {c for c, entry in policy.items() if entry.get("type") == "statement"}
+    listed = {s.get("clause") for s in statements}
+    if listed != statement_ids:
+        fails.append(f"statements {sorted(listed)} != the policy's statement "
+                     f"clauses {sorted(statement_ids)}")
+
+    total = block.get("total_value")
+    denominator = _allocation(state, "by_asset_class").get("total_value")
+    if total is None:
+        fails.append("no total_value in shared_data['compliance']; distances "
+                     "cannot be reconciled without the denominator")
+    elif denominator is None or abs(total - denominator) > CENT:
+        fails.append(f"compliance total_value {total} != allocation "
+                     f"by_asset_class.total_value {denominator} (D2)")
+
+    arithmetic = ("observed", "limit", "bound", "distance_pp", "distance_value")
+    bounds_seen = {}
+    for f in findings:
+        clause, subject, status = f.get("clause"), f.get("subject"), f.get("status")
+        where = f"{clause}/{subject}"
+
+        if clause not in policy:
+            fails.append(f"finding {where} cites a clause not in the loaded policy")
+            continue
+        if clause in statement_ids:
+            fails.append(f"finding {where} is on a statement; statements have no findings")
+        if f.get("type") != policy[clause].get("type"):
+            fails.append(f"finding {where} type {f.get('type')!r} != policy "
+                         f"type {policy[clause].get('type')!r}")
+        if status not in COMPLIANCE_STATUSES:
+            fails.append(f"finding {where} status {status!r} not in "
+                         f"{sorted(COMPLIANCE_STATUSES)}")
+            continue
+
+        if status == "exempt":
+            carried = [k for k in arithmetic if f.get(k) is not None]
+            if carried:
+                fails.append(f"exempt finding {where} carries arithmetic: {carried}")
+            continue
+
+        missing = [k for k in arithmetic if f.get(k) is None]
+        if missing:
+            fails.append(f"finding {where} ({status}) lacks {missing}")
+            continue
+
+        observed, limit, bound = f["observed"], f["limit"], f["bound"]
+        if bound not in ("min", "max"):
+            fails.append(f"finding {where} bound {bound!r} is not 'min' or 'max'")
+            continue
+        for k in ("observed", "limit"):
+            if not 0 <= f[k] <= 1:
+                fails.append(f"finding {where} {k} {f[k]} is not a fraction; "
+                             "percentages in shared_data are fractions")
+
+        signed = (observed - limit) if bound == "max" else (limit - observed)
+        if abs(signed * 100 - f["distance_pp"]) > 1e-6:
+            fails.append(f"finding {where}: distance_pp {f['distance_pp']} != "
+                         f"{signed * 100:.6f} from observed {observed}, limit "
+                         f"{limit}, bound {bound}")
+        if total is not None and abs(f["distance_pp"] / 100 * total - f["distance_value"]) > CENT:
+            fails.append(f"finding {where}: distance_value {f['distance_value']} "
+                         f"!= distance_pp / 100 x total_value")
+
+        # D9: exactly at the limit passes; strict, unrounded beyond the block.
+        if status == "breach" and not signed > 0:
+            fails.append(f"finding {where} is a breach with distance {signed * 100:.4f} pp")
+        if status == "ok" and signed > 0:
+            fails.append(f"finding {where} is ok while {signed * 100:.4f} pp over its limit")
+
+        bounds_seen.setdefault((clause, subject), []).append(bound)
+
+    for key, bounds in bounds_seen.items():
+        if len(bounds) != len(set(bounds)):
+            fails.append(f"finding {key[0]}/{key[1]} has duplicate bounds {bounds}")
+
+    return fails
+
+
+def _no_trade_lines(state):
+    lines = [l for l in _answer(state).splitlines() if TRADE_LINE.search(l)]
+    if lines:
+        return [f"answer names a trade: {lines[0].strip()!r}"]
+    return []
+
+
+def check_2_2(state):
+    """"Does my current allocation violate any rule of my investment policy?"
+    passes on a systematic check of all rules, not just the obvious ones.
+
+    "All rules" is asserted as coverage, not as verdicts: every checkable
+    clause type has a finding on every subject the portfolio has for it, and
+    every clause in the policy - statements included - is named in the answer,
+    so the reader can see the rules that were not computed as well as the
+    ones that were. Which subjects breach is Part 7's business and moves with
+    prices; which subjects exist does not.
+
+    Subjects per type are the static seed facts the Level 1 checks already
+    pin: the five asset classes, the nine tickers (with the four funds exempt
+    under the issuer clause), the four sectors. The unsectored line is
+    reported and not counted (IPS-4.3), so it has no finding.
+    """
+    fails = _ran_clean(state)
+    block = _compliance(state)
+    if not block:
+        return fails + ["no compliance in shared_data"]
+
+    fails += _compliance_block_invariants(state)
+
+    if block.get("no_clause"):
+        fails.append("no_clause is set; 2.2 is a check of the portfolio, not a "
+                     "topic lookup")
+
+    findings = block.get("findings") or []
+    policy = block.get("policy") or {}
+    by_type = {}
+    for f in findings:
+        by_type.setdefault(f.get("type"), {}).setdefault(f.get("status"), set()).add(f.get("subject"))
+
+    def subjects(kind, *statuses):
+        statuses = statuses or tuple(COMPLIANCE_STATUSES)
+        return set().union(*(by_type.get(kind, {}).get(s, set()) for s in statuses))
+
+    expected = {
+        "asset_class_band": set(COST_BY_CLASS),
+        "max_instrument_weight": TICKERS,
+        "max_sector_weight": set(COST_BY_SECTOR),
+    }
+    for kind, want in expected.items():
+        got = subjects(kind)
+        if got != want:
+            fails.append(f"{kind} findings cover {sorted(got)}, not {sorted(want)}")
+
+    if subjects("max_issuer_weight", "ok", "breach") != SHARES:
+        fails.append(f"max_issuer_weight is checked on "
+                     f"{sorted(subjects('max_issuer_weight', 'ok', 'breach'))}, "
+                     f"not the five directly held shares {sorted(SHARES)}")
+    if subjects("max_issuer_weight", "exempt") != FUNDS:
+        fails.append(f"max_issuer_weight exempts "
+                     f"{sorted(subjects('max_issuer_weight', 'exempt'))}, "
+                     f"not the four funds {sorted(FUNDS)} (IPS-4.2)")
+
+    refused = sorted(f"{f.get('clause')}/{f.get('subject')}"
+                     for f in findings if f.get("status") == "refused")
+    if refused:
+        fails.append(f"refused findings {refused} on a portfolio check; refused "
+                     "is for a hypothetical (3.1)")
+
+    checkable = {c for c, e in policy.items() if e.get("type") != "statement"}
+    covered = {f.get("clause") for f in findings}
+    if checkable - covered:
+        fails.append(f"checkable clauses with no finding: {sorted(checkable - covered)}")
+
+    answer = _answer(state)
+    uncited = sorted(c for c in policy if c not in answer)
+    if uncited:
+        fails.append(f"clauses never named in the answer: {uncited}; all rules "
+                     "means visibly all of them")
+    invented = sorted(set(CLAUSE_ID.findall(answer)) - set(policy))
+    if invented:
+        fails.append(f"answer cites clause ids not in the policy: {invented}")
+
+    fails += _no_trade_lines(state)
+
+    as_of = (block.get("as_of") or {}).get("worst_case")
+    if not as_of:
+        fails.append("no as_of.worst_case in shared_data['compliance'] "
+                     "(benchmark.md Part 3b)")
+    else:
+        fails += _date_reaches_answer(state, as_of, "compliance.as_of.worst_case")
+    return fails
+
+
 # ---------------------------------------------------------------------------
 # Blocked probes. Each returns a reason while the capability is absent, and
 # None once it exists, so the case unblocks itself.
@@ -515,7 +746,7 @@ CASES = [
     ("2.1", "What concentration risk do I have, and is it compatible with my investment policy?",
      BENCHMARK_PORTFOLIO, blocked_on_delegation_trace, None),
     ("2.2", "Does my current allocation violate any rule of my investment policy?",
-     BENCHMARK_PORTFOLIO, blocked_on_compliance, None),
+     BENCHMARK_PORTFOLIO, blocked_on_compliance, check_2_2),
     ("2.3", "What would have to change for me to be within the limits again?",
      BENCHMARK_PORTFOLIO, blocked_on_compliance, None),
     ("3.1", "I want to put 15% into a single position, is that allowed?",
