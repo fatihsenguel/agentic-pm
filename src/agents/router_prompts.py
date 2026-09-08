@@ -169,8 +169,10 @@ _PROMPT_AFTER_COUNT = """ listed above
    portfolio complies, breaks a rule, is within its limits, or a position is
    too big: [DataAgent, PortfolioAnalysisAgent, ComplianceAgent]. A proposed
    weight in one position (hypothetical_weight set): [ComplianceAgent] alone,
-   no portfolio is measured. What the policy says about a topic (policy_topic
-   set): [ComplianceAgent] alone. Never set both parameters.
+   no portfolio is measured. That shape needs a weight stated in the message;
+   with none, a question about complying, limits, or what must change is the
+   portfolio check, not a clarification. What the policy says about a topic
+   (policy_topic set): [ComplianceAgent] alone. Never set both parameters.
 """
 
 
