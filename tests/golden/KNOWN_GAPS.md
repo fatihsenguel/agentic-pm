@@ -2130,6 +2130,48 @@ holds the published block to Part 7; it is the instrument that then caught
 each later change to the block.
 
 
+### The extraction bridge reads symbols, not company names
+
+Recorded 9 September (between sittings), from conversation with the owner.
+`agents/extraction.py` recognises a holding by its symbol only: an all-caps
+token that is held or known. "How is my Apple Inc. position doing?" extracts
+no ticker; the model classifies position P&L; an empty ticker list means
+every position; the answer is the P&L table for all nine holdings under a
+header that never names Apple. Under a compliance phrasing ("Is my Apple
+Inc. position too big?") it is the full policy report. Before the restructure
+Haiku sometimes put AAPL into `tickers` from the name and sometimes not; now
+the miss is deterministic, and its direction is the bad one.
+
+The fix that was brought and rejected: match the message against the names
+of the held positions, from `Asset.name`, which
+`PortfolioManager.get_holdings` already projects and `build_holdings_summary`
+drops on purpose because nothing reads it. The owner's objection: "what if
+there is a completely new stock? do I have to add every combination of
+names?" - a name list is a bridge that grows with every holding, and under
+`docs/DIRECTION.md` resolving a name is the reader model's job while the tool
+validates the ticker. Logged, not built. If it is ever wanted before the
+reader changes, the projection exists and the rule is a closed vocabulary
+from the owner's own rows, not a world list; the risk to name then is a
+holding whose first word is an English word.
+
+### The four phrase rules in extraction read English
+
+Recorded 9 September (between sittings). Intent in German works: the
+prompt's few-shots are German and the model reads it. Tickers, percentages
+and the typo rule are language-free. Four rules read English phrasing and
+nothing else: the span patterns (`_SPAN`, `_BARE_SPAN`, `_SINCE_YEAR`,
+`_YTD`), the change-verb-with-"today" rule (`_DAY_MOVE`), the policy
+saying-verb pattern (`_POLICY_SAYS`) and the reply confirmations
+(`_CONFIRM`). "Wie lief mein Portfolio im letzten Monat?" sees no span and
+answers P&L since purchase with a plausible face, which is the miss the
+English span rule was written to prevent; "was sagt meine Policy zu Cash?"
+runs the full portfolio check; "ja" happens to be in `_CONFIRM`, an accident
+and not a policy. The owner uses German occasionally. Logged, not built: the
+fix is the reader model that replaces the bridge, not German rows in four
+patterns, which would double a bridge that is meant to be deleted in one
+sitting. Until then a German span question is a known wrong face.
+
+
 ### pytest warning inventory
 
 Recorded 7 September (third sitting), from a green run of 132. Twenty
