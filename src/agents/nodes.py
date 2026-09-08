@@ -758,12 +758,14 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
 
         from portfolio_tool.quant.allocation import (
             allocation_by_asset_class,
+            allocation_by_position,
             allocation_by_sector,
             position_pnl,
         )
 
         by_class = allocation_by_asset_class(holdings, prices, cash_balance)
         by_sector = allocation_by_sector(holdings, prices, cash_balance)
+        by_position = allocation_by_position(holdings, prices, cash_balance)
         pnl = position_pnl(holdings, prices)
 
         # An allocation line aggregates several holdings, so no single holding's
@@ -886,6 +888,16 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
                 "invested_value": round(by_sector.invested_value, 2),
                 "sectored_value": round(by_sector.sectored_value, 2),
                 "total_value": round(by_sector.total_value, 2),
+            },
+            # Part 7's IPS-4.1 table: concentration as a view of the same
+            # computation. The checker reads each line's share of total
+            # under IPS-4.1 and 4.2; the formatter prints it largest first.
+            "by_position": {
+                "lines": _lines(by_position),
+                "denominator": by_position.denominator_label,
+                "invested_value": round(by_position.invested_value, 2),
+                "cash_balance": round(by_position.cash_balance, 2),
+                "total_value": round(by_position.total_value, 2),
             },
             "as_of": {
                 "worst_case": as_of_dates[stalest],

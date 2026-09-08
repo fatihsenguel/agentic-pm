@@ -89,6 +89,28 @@ async def test_asset_class_lines_carry_the_share_of_total_under_the_same_name(pu
         assert line["pct_of_total"] == line["pct_of_denominator"]
 
 
+async def test_position_view_is_published_largest_first(published):
+    """Part 7, IPS-4.1 column, as published: one line per holding, largest
+    first, share of total - the block the checker and the formatter read."""
+    by_position = published["by_position"]
+    assert [l["label"] for l in by_position["lines"]] == [
+        "SPY", "AAPL", "MSFT", "JNJ", "TLT", "GLD", "JPM", "VNQ", "NEE"]
+    lines = _by_label(by_position)
+    assert lines["SPY"]["pct_of_total"] == pytest.approx(0.1865, abs=0.00005)
+    assert lines["MSFT"]["pct_of_total"] == pytest.approx(0.1211, abs=0.00005)
+    assert lines["NEE"]["pct_of_total"] == pytest.approx(0.0405, abs=0.00005)
+    assert lines["SPY"]["tickers"] == ["SPY"]
+    assert "Cash" not in lines
+
+
+async def test_position_block_carries_the_same_denominators(published):
+    by_position, by_class = published["by_position"], published["by_asset_class"]
+    assert by_position["total_value"] == by_class["total_value"]
+    assert by_position["invested_value"] == by_class["invested_value"]
+    assert by_position["cash_balance"] == by_class["cash_balance"]
+    assert by_position["total_value"] == pytest.approx(410200.50, abs=0.01)
+
+
 async def test_part_3_columns_are_unchanged(published):
     """Adding a third figure moved neither of the first two."""
     lines = _by_label(published["by_sector"])
