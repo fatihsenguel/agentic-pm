@@ -12,31 +12,42 @@
 # the policy is silent on - currency, for one - has no clause and no type, and
 # the answer to a question about it is that the policy contains nothing on it.
 #
+# `topics` are the owner's words for what a clause is about, lowercase. The
+# router is shown the full set and names one for a policy question, or the
+# user's own words when none fits; the node then answers by exact membership
+# in this set, never by similarity. A topic no clause carries - currency, for
+# one - is how "the policy contains nothing on this" is decided as data.
+#
 # tests/test_ips.py holds this file to the document: same clause ids, same text.
 
 [[clause]]
 id = "IPS-1.1"
 type = "statement"
+topics = ["horizon", "purpose", "growth", "drawdown"]
 text = """The portfolio is a single long-term investment account with a horizon of ten years or more. Its purpose is capital growth with a level of risk the owner can hold through a drawdown without selling."""
 
 [[clause]]
 id = "IPS-1.2"
 type = "statement"
+topics = ["benchmark", "index", "performance"]
 text = """The portfolio is judged against this document, not against a market index. Underperforming an index while inside every limit is not a policy failure. Being outside a limit while outperforming is."""
 
 [[clause]]
 id = "IPS-2.1"
 type = "statement"
+topics = ["instruments", "equities", "funds", "bonds", "options", "futures", "leverage", "private investments", "digital assets"]
 text = """The portfolio holds only exchange-listed equities and exchange-traded funds, plus cash. Individual bonds, options, futures, leveraged or inverse products, private investments and digital assets are not held."""
 
 [[clause]]
 id = "IPS-2.2"
 type = "statement"
+topics = ["margin", "borrowing", "leverage"]
 text = """No position is held on margin. No borrowing against the portfolio."""
 
 [[clause]]
 id = "IPS-3.1"
 type = "asset_class_band"
+topics = ["allocation", "equity"]
 asset_class = "Equity"
 min = 0.40
 max = 0.65
@@ -45,6 +56,7 @@ text = """Equity, including equity index funds: no less than 40% and no more tha
 [[clause]]
 id = "IPS-3.2"
 type = "asset_class_band"
+topics = ["allocation", "fixed income", "bonds"]
 asset_class = "Fixed Income"
 min = 0.08
 max = 0.30
@@ -53,6 +65,7 @@ text = """Fixed income: no less than 8% and no more than 30%."""
 [[clause]]
 id = "IPS-3.3"
 type = "asset_class_band"
+topics = ["allocation", "commodities"]
 asset_class = "Commodity"
 max = 0.15
 text = """Commodities: no more than 15%."""
@@ -60,6 +73,7 @@ text = """Commodities: no more than 15%."""
 [[clause]]
 id = "IPS-3.4"
 type = "asset_class_band"
+topics = ["allocation", "real estate"]
 asset_class = "Real Estate"
 max = 0.15
 text = """Real estate: no more than 15%."""
@@ -67,6 +81,7 @@ text = """Real estate: no more than 15%."""
 [[clause]]
 id = "IPS-3.5"
 type = "asset_class_band"
+topics = ["allocation", "cash"]
 asset_class = "Cash"
 min = 0.03
 text = """Cash: no less than 3%."""
@@ -74,42 +89,50 @@ text = """Cash: no less than 3%."""
 [[clause]]
 id = "IPS-4.1"
 type = "max_instrument_weight"
+topics = ["concentration", "position size", "instrument", "funds"]
 max = 0.12
 text = """No single instrument exceeds 12% of total portfolio value. This applies to every holding, funds included: a fund is one instrument regardless of what it holds."""
 
 [[clause]]
 id = "IPS-4.2"
 type = "max_issuer_weight"
+topics = ["concentration", "position size", "issuer"]
 max = 0.10
 text = """No single issuer exceeds 10% of total portfolio value. Exposure to an issuer is counted through directly held shares only; a diversified index fund is not attributed to its constituents."""
 
 [[clause]]
 id = "IPS-4.3"
 type = "max_sector_weight"
+topics = ["concentration", "sector", "unsectored"]
 max = 0.25
 text = """No single sector, counted over directly held shares, exceeds 25% of total portfolio value. Holdings without a sector — index funds, bond funds, commodity and real-estate funds — are outside this count and are reported as unsectored."""
 
 [[clause]]
 id = "IPS-5.1"
 type = "statement"
+topics = ["rebalancing", "review", "quarterly"]
 text = """The portfolio is checked against sections 3 and 4 at least quarterly and after any purchase or sale."""
 
 [[clause]]
 id = "IPS-5.2"
 type = "statement"
+topics = ["rebalancing", "breach", "required change", "targets"]
 text = """When a limit is breached, the required change is the amount that returns the figure to the limit — not to the midpoint of a band and not to a target the policy does not state. What must change is stated as a condition on the portfolio; which instruments to trade to meet it is not decided by this document."""
 
 [[clause]]
 id = "IPS-5.3"
 type = "statement"
+topics = ["rebalancing", "new money", "contributions"]
 text = """New money is allocated first to whatever restores a breached limit, then to whichever asset class is furthest below the middle of its band."""
 
 [[clause]]
 id = "IPS-6.1"
 type = "statement"
+topics = ["review", "policy change"]
 text = """This document is reviewed once a year and after any change in the owner's circumstances. A change to a number in sections 3 or 4 is a policy change and is dated."""
 
 [[clause]]
 id = "IPS-6.2"
 type = "statement"
+topics = ["drift", "breach", "market movement", "quarterly"]
 text = """A position that has drifted outside a limit through market movement alone is not a policy failure; leaving it there past the next quarterly check is."""

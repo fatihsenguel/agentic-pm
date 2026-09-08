@@ -76,6 +76,26 @@ def test_statements_carry_nothing(ips):
 
 def test_no_clause_on_currency(ips):
     assert not any("currenc" in c.text.lower() for c in ips)
+    assert "currency" not in ips.topics
+    assert ips.clauses_on("currency risk") == []
+
+
+def test_every_clause_carries_topics(ips):
+    for clause in ips:
+        assert clause.topics, clause.id
+
+
+def test_topics_are_membership_not_similarity(ips):
+    assert [c.id for c in ips.clauses_on("concentration")] == ["IPS-4.1", "IPS-4.2", "IPS-4.3"]
+    assert [c.id for c in ips.clauses_on("  Concentration ")] == ["IPS-4.1", "IPS-4.2", "IPS-4.3"]
+    assert ips.clauses_on("concentration risk") == []   # not a member; the router is shown the set
+    assert [c.id for c in ips.clauses_on("allocation")] == ["IPS-3.1", "IPS-3.2", "IPS-3.3", "IPS-3.4", "IPS-3.5"]
+    assert [c.id for c in ips.clauses_on("leverage")] == ["IPS-2.1", "IPS-2.2"]
+
+
+def test_topic_vocabulary_is_the_union(ips):
+    assert ips.topics == sorted({t for c in ips for t in c.topics})
+    assert "concentration" in ips.topics and "cash" in ips.topics
 
 
 # --- the loader's raises, over inline TOML -----------------------------------
@@ -84,6 +104,7 @@ GOOD = '''
 [[clause]]
 id = "IPS-4.1"
 type = "max_instrument_weight"
+topics = ["concentration", "instrument"]
 max = 0.12
 text = "No single instrument exceeds 12% of total portfolio value."
 '''
@@ -115,12 +136,17 @@ def test_missing_file_is_an_error_not_an_empty_policy(tmp_path):
     (GOOD.replace('"IPS-4.1"', '"4.1"'), "does not match"),
     (GOOD.replace('text = "No single instrument exceeds 12% of total portfolio value."', 'text = ""'),
      "lacks \\['text'\\]"),
-    ('[[clause]]\nid = "IPS-3.5"\ntype = "asset_class_band"\nasset_class = "Cash"\ntext = "Cash."',
+    ('[[clause]]\nid = "IPS-3.5"\ntype = "asset_class_band"\ntopics = ["cash"]\n'
+     'asset_class = "Cash"\ntext = "Cash."',
      "min, max or both"),
-    ('[[clause]]\nid = "IPS-3.1"\ntype = "asset_class_band"\nasset_class = "Equity"\n'
+    ('[[clause]]\nid = "IPS-3.1"\ntype = "asset_class_band"\ntopics = ["equity"]\nasset_class = "Equity"\n'
      'min = 0.65\nmax = 0.40\ntext = "Equity."', "not below max"),
     ('[policy]\ntitle = "x"\n' + GOOD, "nothing reads"),
     ("not = [toml", "not valid TOML"),
+    (GOOD.replace('topics = ["concentration", "instrument"]\n', ""), "lacks \\['topics'\\]"),
+    (GOOD.replace('["concentration", "instrument"]', "[]"), "non-empty list"),
+    (GOOD.replace('["concentration", "instrument"]', '["Concentration"]'), "lowercase"),
+    (GOOD.replace('["concentration", "instrument"]', '["a", "a"]'), "duplicate topics"),
 ])
 def test_loader_raises(tmp_path, body, message):
     with pytest.raises(IPSError, match=message):

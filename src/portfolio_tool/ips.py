@@ -47,7 +47,7 @@ CLAUSE_TYPES: Mapping[str, tuple] = MappingProxyType({
     "max_sector_weight": (("max",), ()),
 })
 
-_HEADER = ("id", "type", "text")
+_HEADER = ("id", "type", "text", "topics")
 _LIMITS = ("min", "max")
 
 
@@ -60,6 +60,7 @@ class Clause:
     id: str
     type: str
     text: str
+    topics: tuple = ()
     params: Mapping[str, Any] = field(default_factory=dict)
 
     @property
@@ -90,6 +91,24 @@ class IPS:
     @property
     def checkable(self):
         return [c for c in self if not c.is_statement]
+
+    @property
+    def topics(self):
+        """The closed topic vocabulary: every topic any clause carries."""
+        return sorted({t for c in self for t in c.topics})
+
+    def clauses_on(self, topic: str):
+        """Clauses carrying exactly this topic. Membership, not similarity:
+        a topic no clause carries returns [], which is the honest answer to
+        "what does the policy say about X" when X is not in it."""
+        wanted = normalise_topic(topic)
+        return [c for c in self if wanted in c.topics]
+
+
+def normalise_topic(topic: str) -> str:
+    """One normalisation for topics wherever they are compared: the file is
+    held to this form by the loader, the router's word is brought to it."""
+    return " ".join(str(topic).lower().split())
 
 
 def load_ips(path: Optional[str] = None) -> IPS:
@@ -123,12 +142,26 @@ def load_ips(path: Optional[str] = None) -> IPS:
 
 def _parse_clause(entry: Dict[str, Any], n: int) -> Clause:
     where = f"[[clause]] #{n}"
-    missing = [k for k in _HEADER if not isinstance(entry.get(k), str) or not entry[k].strip()]
+    missing = [k for k in ("id", "type", "text")
+               if not isinstance(entry.get(k), str) or not entry[k].strip()]
+    if "topics" not in entry:
+        missing.append("topics")
     if missing:
-        raise IPSError(f"{where} lacks {missing}; every clause has an id, a type and its text.")
+        raise IPSError(f"{where} lacks {missing}; every clause has an id, a type, its "
+                       "text and its topics.")
 
     clause_id, clause_type, text = entry["id"], entry["type"], entry["text"].strip()
     where = clause_id
+    topics = entry["topics"]
+    if (not isinstance(topics, list) or not topics
+            or any(not isinstance(t, str) or not t.strip() for t in topics)):
+        raise IPSError(f"{where}: topics must be a non-empty list of words; a clause "
+                       "nobody can ask about is not citable.")
+    off_form = [t for t in topics if t != normalise_topic(t)]
+    if off_form:
+        raise IPSError(f"{where}: topics are lowercase, single-spaced, stripped: {off_form}")
+    if len(set(topics)) != len(topics):
+        raise IPSError(f"{where}: duplicate topics {topics}")
     if not CLAUSE_ID.match(clause_id):
         raise IPSError(f"{where}: id does not match IPS-<section>.<number>.")
     if clause_type not in CLAUSE_TYPES:
@@ -167,4 +200,5 @@ def _parse_clause(entry: Dict[str, Any], n: int) -> Clause:
     ):
         raise IPSError(f"{where}: asset_class must name an allocation label.")
 
-    return Clause(id=clause_id, type=clause_type, text=text, params=MappingProxyType(params))
+    return Clause(id=clause_id, type=clause_type, text=text, topics=tuple(topics),
+                  params=MappingProxyType(params))
