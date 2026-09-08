@@ -21,9 +21,10 @@ def test_the_prompt_asks_for_no_plan_and_no_extracted_field():
     for prompt in (ROUTER_SYSTEM_PROMPT, REPAIR_PROMPT):
         for absent in ("AVAILABLE AGENTS", "agents_needed", "execution_order", "is_multi_step",
                        "requires_confirmation", '"tickers"', '"period"', '"max_volatility"',
-                       '"hypothetical_weight"', "EXECUTION ORDER", "EXTRACTION RULES"):
+                       '"hypothetical_weight"', "policy_topic", "EXECUTION ORDER",
+                       "EXTRACTION RULES"):
             assert absent not in prompt, absent
-        for present in ('"measure"', '"group_by"', '"policy_topic"', '"clarification_question"'):
+        for present in ('"measure"', '"group_by"', '"clarification_question"'):
             assert present in prompt, present
 
 
@@ -51,11 +52,11 @@ def test_the_router_is_never_shown_the_policy_vocabulary():
     prompt = build_router_prompt("what does my policy say about cash?", include_examples=True)
     assert "POLICY TOPICS" not in prompt
     assert ", ".join(load_ips().topics) not in prompt
-    assert "the user's own words" in ROUTER_SYSTEM_PROMPT
 
 
 def test_the_output_format_carries_what_is_read():
-    assert '"policy_topic": null' in ROUTER_SYSTEM_PROMPT
+    """measure and group_by are the model's; the topic is extraction's
+    since 55dd80c and is not asked for."""
     assert '"measure": null' in ROUTER_SYSTEM_PROMPT
     assert '"group_by": null' in ROUTER_SYSTEM_PROMPT
 

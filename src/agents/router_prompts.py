@@ -19,13 +19,13 @@ from .schemas import INTENTS
 #
 # What the model decides, and all the prompt asks for: the intent; for a
 # question about an existing portfolio's own figures, which measure and
-# which breakdown; for a compliance question, whether it asks what the
-# policy says; a clarification question; confidence; a short reasoning.
-# Tickers, periods and percentages are extracted from the message before
-# the model sees it, and the plan is derived from the intent and those
-# parameters (agents/extraction.py, schemas.TERMINAL), so the prompt names
-# no agent, asks for no plan and no extracted field. docs/DIRECTION.md: the
-# router reduced to the one decision an LLM should make.
+# which breakdown; a clarification question; confidence; a short reasoning.
+# Tickers, periods, percentages and the compliance mode are extracted from
+# the message before the model sees it, and the plan is derived from the
+# intent and those parameters (agents/extraction.py, schemas.TERMINAL), so
+# the prompt names no agent, asks for no plan, no extracted field and no
+# mode. docs/DIRECTION.md: the router reduced to the one decision an LLM
+# should make.
 
 _PROMPT_BEFORE_INTENTS = """You are the Intent Router for a Quant Portfolio Management system.
 
@@ -46,8 +46,7 @@ _PROMPT_AFTER_INTENT_LINE = """\",
   "confidence": 0.0-1.0,
   "parameters": {
     "measure": null,
-    "group_by": null,
-    "policy_topic": null
+    "group_by": null
   },
   "reasoning": "Brief explanation of your routing decision",
   "clarification_question": null
@@ -56,7 +55,6 @@ _PROMPT_AFTER_INTENT_LINE = """\",
 PARAMETER RULES:
 - Measure: set ONLY for a question about an existing portfolio's own figures. "allocation" for how the portfolio is divided up, which positions sit in a bucket, or how large a position is; "position_pnl" for how a position or the holdings have performed, gained, lost or done since purchase; "portfolio_volatility" for the volatility of the portfolio as a whole. Otherwise null.
 - Group by: with measure "allocation", "asset_class", "sector" or "position" when the user names one; null when they do not. Always null for any other measure.
-- Policy topic: ONLY with intent compliance, when the user asks what the policy says about something: what they asked about, in their words. Its exact wording is not used - the policy is matched on the user's own words. Otherwise null.
 
 CONFIDENCE GUIDELINES:
 - 0.9+: Clear, unambiguous request with all info provided
@@ -106,7 +104,7 @@ User: "Darf ich 20% in eine einzelne Aktie stecken?" (active portfolio)
    Reasoning: A proposed weight in one position is checked against the policy's limits; no portfolio figure is needed.
 
 User: "What does my policy say about borrowing against the account?"
-→ intent: "compliance", policy_topic: "borrowing against the account", confidence: 0.9
+→ intent: "compliance", confidence: 0.9
 
 CRITICAL RULES:
 1. If unsure, set confidence low and/or ask for clarification
@@ -130,8 +128,8 @@ CRITICAL RULES:
    position: no portfolio is measured. That reading needs a weight stated
    in the message; with none, a question about complying, limits, or what
    must change is the portfolio check, not a clarification. What the policy
-   says about a topic: set policy_topic. Never set policy_topic for the
-   other two.
+   says about a topic: the lookup. All three are intent compliance; which
+   one is read from the message.
 """
 
 
@@ -161,7 +159,7 @@ ROUTER_FEW_SHOT_EXAMPLES = [
         "response": {
             "intent": "optimization",
             "confidence": 0.9,
-            "parameters": {"measure": None, "group_by": None, "policy_topic": None},
+            "parameters": {"measure": None, "group_by": None},
             "reasoning": "User wants a portfolio optimised over four ETFs.",
         }
     },
@@ -170,7 +168,7 @@ ROUTER_FEW_SHOT_EXAMPLES = [
         "response": {
             "intent": "macro_analysis",
             "confidence": 0.95,
-            "parameters": {"measure": None, "group_by": None, "policy_topic": None},
+            "parameters": {"measure": None, "group_by": None},
             "reasoning": "Clear request for macro analysis - VIX and regime assessment.",
         }
     },
@@ -179,7 +177,7 @@ ROUTER_FEW_SHOT_EXAMPLES = [
         "response": {
             "intent": "rebalancing",
             "confidence": 0.95,
-            "parameters": {"measure": None, "group_by": None, "policy_topic": None},
+            "parameters": {"measure": None, "group_by": None},
             "reasoning": "User provided current and target weights and asks whether to rebalance.",
         }
     }
@@ -254,7 +252,7 @@ Please fix and return ONLY valid JSON matching this schema:
 
 _REPAIR_AFTER_INTENT_LINE = """\",
   "confidence": 0.0-1.0,
-  "parameters": {{"measure": null, "group_by": null, "policy_topic": null}},
+  "parameters": {{"measure": null, "group_by": null}},
   "reasoning": "...",
   "clarification_question": null
 }}
