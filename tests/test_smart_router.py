@@ -10,6 +10,8 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from agents.schemas import (
+    AGENTS,
+    REQUIRES,
     RouterDecision,
     IntentType,
     AgentName,
@@ -211,6 +213,86 @@ class TestRouterDecision:
     def test_hypothetical_weight_is_a_fraction(self):
         with pytest.raises(ValueError):
             RouterDecision.model_validate(self._compliance(["ComplianceAgent"], hypothetical_weight=15))
+
+
+class TestDependencies:
+    """REQUIRES: an agent runs only after what it needs, and ComplianceAgent
+    only under intent compliance. The plan shapes below are the ones the
+    "too big" flip and its two diagnostics produced on 8 September
+    (KNOWN_GAPS): each validated and ran until a node raised on missing
+    input. A rejection here is a repair attempt with the reason stated; a
+    reorder would be the repair-instead-of-raise shape."""
+
+    @staticmethod
+    def _plan(intent, order):
+        return {
+            "intent": intent,
+            "confidence": 0.9,
+            "agents_needed": [
+                {"agent": a, "task_description": "do the planned thing", "priority": i + 1}
+                for i, a in enumerate(order)
+            ],
+            "execution_order": list(order),
+            "parameters": {},
+            "reasoning": "a plan shape from the diagnostics",
+        }
+
+    def test_requires_names_only_roster_agents(self):
+        for agent, needs in REQUIRES.items():
+            assert agent in AGENTS
+            assert set(needs) <= set(AGENTS)
+        assert REQUIRES["PortfolioAnalysisAgent"] == ("DataAgent",)
+
+    def test_analysis_agent_alone_is_rejected(self):
+        with pytest.raises(ValueError, match="PortfolioAnalysisAgent requires DataAgent before it"):
+            RouterDecision.model_validate(self._plan("risk_analysis", ["PortfolioAnalysisAgent"]))
+
+    def test_analysis_agent_before_data_agent_is_rejected_not_reordered(self):
+        with pytest.raises(ValueError, match="requires DataAgent before it"):
+            RouterDecision.model_validate(
+                self._plan("data_fetch", ["PortfolioAnalysisAgent", "DataAgent"]))
+
+    def test_an_autofilled_order_is_checked(self):
+        data = self._plan("risk_analysis", ["PortfolioAnalysisAgent"])
+        data["execution_order"] = []
+        with pytest.raises(ValueError, match="requires DataAgent before it"):
+            RouterDecision.model_validate(data)
+
+    def test_analysis_agent_after_data_agent_validates(self):
+        decision = RouterDecision.model_validate(
+            self._plan("data_fetch", ["DataAgent", "PortfolioAnalysisAgent"]))
+        assert decision.execution_order == ["DataAgent", "PortfolioAnalysisAgent"]
+
+    def test_compliance_agent_under_another_intent_is_rejected(self):
+        shapes = (
+            ("risk_analysis", ["ComplianceAgent"]),
+            ("data_fetch", ["DataAgent", "PortfolioAnalysisAgent", "ComplianceAgent"]),
+            ("combined", ["DataAgent", "ComplianceAgent"]),
+        )
+        for intent, order in shapes:
+            with pytest.raises(ValueError, match="only under intent compliance"):
+                RouterDecision.model_validate(self._plan(intent, order))
+
+    def test_the_error_names_the_plan(self):
+        with pytest.raises(ValueError, match=r"the plan is \['PortfolioAnalysisAgent'\]"):
+            RouterDecision.model_validate(self._plan("risk_analysis", ["PortfolioAnalysisAgent"]))
+
+    def test_plans_still_accepted(self):
+        """Shapes the router is shown or produces today and REQUIRES does not
+        touch: rule 6's DataAgent alone, the prompt's own [OptimizationAgent]
+        alone and backtest with no optimiser, the rebalance with no target.
+        Whether they can run is the node's business until an entry is added."""
+        shapes = (
+            ("risk_analysis", ["DataAgent"]),
+            ("optimization", ["OptimizationAgent"]),
+            ("optimization", ["DataAgent", "OptimizationAgent"]),
+            ("backtest", ["DataAgent", "BacktestAgent"]),
+            ("rebalancing", ["DataAgent", "RebalanceAgent"]),
+            ("macro_analysis", ["MacroAgent"]),
+        )
+        for intent, order in shapes:
+            decision = RouterDecision.model_validate(self._plan(intent, order))
+            assert decision.execution_order == order
 
 
 class TestExtractedParameters:

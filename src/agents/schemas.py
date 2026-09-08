@@ -3,7 +3,7 @@
 # Principle: LLMs hallucinate. Pydantic catches it before it causes harm.
 # Phase: 6.12 - Output Parsers & Guardrails
 
-from typing import List, Dict, Optional, Any, Literal
+from typing import List, Dict, Optional, Any, Literal, Tuple
 from pydantic import BaseModel, Field, field_validator, model_validator
 from enum import Enum
 import re
@@ -59,6 +59,30 @@ AgentName = Enum(
     {_enum_member_name(name): name for name in AGENTS},
     type=str,
 )
+
+
+# What an agent needs to have run before it, stated once beside the roster.
+# Every node raises on input an earlier agent did not publish, but only the
+# validator sees the plan before anything runs: an entry here turns a raise
+# discovered mid-run into a rejection the router is asked to repair. One
+# entry, the dependency verified to raise at the node (missing holdings,
+# prices, as-of dates, cash). OptimizationAgent, RebalanceAgent and
+# BacktestAgent raise the same way and are absent on purpose: the router
+# prompt's own examples plan [OptimizationAgent] alone and a backtest with no
+# optimiser, so each of those entries contradicts a shown example and is a
+# prompt change with its own golden prediction, one per commit.
+# ComplianceAgent's needs depend on its mode and live in
+# RouterDecision.validate_compliance.
+REQUIRES: Dict[str, Tuple[str, ...]] = {
+    "PortfolioAnalysisAgent": ("DataAgent",),
+}
+
+_named_in_requires = set(REQUIRES) | {n for needs in REQUIRES.values() for n in needs}
+if _named_in_requires - set(AGENTS):
+    raise RuntimeError(
+        "REQUIRES names agents not in the roster: "
+        f"{sorted(_named_in_requires - set(AGENTS))}; schemas.AGENTS has {sorted(AGENTS)}"
+    )
 
 
 class TradeAction(str, Enum):
@@ -189,7 +213,28 @@ class RouterDecision(BaseModel):
                 self.execution_order = [task.agent for task in self.agents_needed]
         
         return self
-    
+
+    @model_validator(mode='after')
+    def validate_dependencies(self) -> 'RouterDecision':
+        """An agent runs only after every agent REQUIRES says it needs.
+
+        A plan naming PortfolioAnalysisAgent with no DataAgent before it
+        validated and ran until the node raised on missing holdings (the
+        "too big" flip and its diagnostics, KNOWN_GAPS, 8 September).
+        Rejected here instead, and never reordered: the error text goes back
+        to the router as the repair prompt, so it names what the plan lacks.
+        Runs after validate_execution_order, so an autofilled order is
+        checked too."""
+        order = [a if isinstance(a, str) else a.value for a in self.execution_order]
+        for i, agent in enumerate(order):
+            missing = [need for need in REQUIRES.get(agent, ()) if need not in order[:i]]
+            if missing:
+                raise ValueError(
+                    f"{agent} requires {', '.join(missing)} before it in "
+                    f"execution_order; the plan is {order}"
+                )
+        return self
+
     @model_validator(mode='after')
     def validate_clarification(self) -> 'RouterDecision':
         """If clarification needed, must have question."""
@@ -219,7 +264,10 @@ class RouterDecision(BaseModel):
         ComplianceAgent; a hypothetical weight or a policy topic needs
         ComplianceAgent alone, because no portfolio is measured. Any other
         shape - or a mode parameter under another intent - is rejected here
-        rather than trimmed downstream and run as planned."""
+        rather than trimmed downstream and run as planned. So is
+        ComplianceAgent itself under any other intent: no formatter reads it
+        there, and planned alone the node raises on the missing allocation
+        (the "too concentrated" diagnostic, KNOWN_GAPS, 8 September)."""
         modes = [k for k in ("hypothetical_weight", "policy_topic")
                  if getattr(self.parameters, k) is not None]
         order = [a if isinstance(a, str) else a.value for a in self.execution_order]
@@ -239,6 +287,11 @@ class RouterDecision(BaseModel):
         elif modes:
             raise ValueError(
                 f"{modes} set under intent {self.intent!r}; they belong to intent compliance"
+            )
+        elif "ComplianceAgent" in order:
+            raise ValueError(
+                f"ComplianceAgent is planned only under intent compliance, not "
+                f"{self.intent!r}; the plan is {order}"
             )
         return self
 
