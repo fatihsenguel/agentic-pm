@@ -946,10 +946,11 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
     Three modes, decided by the router's parameters and nothing else:
     neither set is a check of the portfolio; `hypothetical_weight` is a
     proposed weight in one position, refused or permitted with no portfolio
-    measured (3.1); `policy_topic` is a lookup, answered by exact membership
-    of the topic in the policy's own vocabulary (3.4) - no similarity, no
-    nearest clause. The last two publish no total and no as-of, because
-    nothing was priced.
+    measured (3.1); `policy_topic` is the user's own words for a topic, and
+    the lookup is which clauses' topics occur inside those words (3.4) - the
+    owner's vocabulary contained in the question, no similarity, no nearest
+    clause, and the router is never shown the vocabulary. The last two
+    publish no total and no as-of, because nothing was priced.
 
     Reference: expected_values.md Part 7, decisions D2 and D9.
     """
@@ -994,7 +995,7 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
         by_status = {}
 
         if topic is not None:
-            # Lookup: membership in the policy's own vocabulary, nothing else.
+            # Lookup: the owner's topic words inside the user's words, nothing else.
             on_topic = ips.clauses_on(topic)
             findings = []
             no_clause = not on_topic

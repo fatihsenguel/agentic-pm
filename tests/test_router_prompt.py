@@ -23,12 +23,14 @@ def test_compliance_intent_is_in_both_prompts():
     assert IntentType.COMPLIANCE.value == "compliance"
 
 
-def test_policy_topics_are_rendered_from_the_ips():
-    prompt = build_router_prompt("what does my policy say about cash?", include_examples=False)
-    assert "POLICY TOPICS" in prompt
-    topics_line = prompt.split("\nPOLICY TOPICS (", 1)[1].splitlines()[1]
-    assert topics_line == ", ".join(load_ips().topics)
-    assert "currency" not in topics_line
+def test_the_router_is_never_shown_the_policy_vocabulary():
+    """Shown a list, the model maps the user's words onto its nearest member
+    ("currency risk" -> instruments -> IPS-2.1, runner 3.4, 8 September).
+    The words stay the user's; the node matches them against ips.toml."""
+    prompt = build_router_prompt("what does my policy say about cash?", include_examples=True)
+    assert "POLICY TOPICS" not in prompt
+    assert ", ".join(load_ips().topics) not in prompt
+    assert "the user's own words" in ROUTER_SYSTEM_PROMPT
 
 
 def test_mode_parameters_are_in_the_output_format():

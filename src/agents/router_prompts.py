@@ -87,7 +87,7 @@ EXTRACTION RULES:
 - Measure: set ONLY when PortfolioAnalysisAgent is in the plan. "allocation" for how the portfolio is divided up or which positions sit in a bucket; "position_pnl" for how a position or the holdings have performed, gained, lost or done since purchase; "portfolio_volatility" for the volatility of the portfolio as a whole. Otherwise null.
 - Group by: with measure "allocation", "asset_class" or "sector" when the user names one; null when they do not. Always null for any other measure.
 - Hypothetical weight: ONLY with intent compliance, when the user proposes putting a share of the portfolio into ONE position ("15% into a single stock" -> 0.15). Otherwise null.
-- Policy topic: ONLY with intent compliance, when the user asks what the policy says about something. Use the matching word from POLICY TOPICS below; if none fits, the user's own words for the topic. Otherwise null.
+- Policy topic: ONLY with intent compliance, when the user asks what the policy says about something: the user's own words for that something, verbatim ("what does my policy say about margin loans" -> "margin loans"). Never a paraphrase and never a substitute term - the policy is matched on the user's words, and a substituted word would match a clause the user did not ask about. Otherwise null.
 
 CONFIDENCE GUIDELINES:
 - 0.9+: Clear, unambiguous request with all info provided
@@ -136,8 +136,8 @@ User: "Darf ich 20% in eine einzelne Aktie stecken?" (active portfolio)
 → intent: "compliance", agents: [ComplianceAgent], hypothetical_weight: 0.20, confidence: 0.9
    Reasoning: A proposed weight in one position is checked against the policy's limits; no portfolio figure is needed.
 
-User: "Was sagt meine Anlagerichtlinie zu Hebelprodukten?"
-→ intent: "compliance", agents: [ComplianceAgent], policy_topic: "leverage", confidence: 0.9
+User: "What does my policy say about borrowing against the account?"
+→ intent: "compliance", agents: [ComplianceAgent], policy_topic: "borrowing against the account", confidence: 0.9
 
 CRITICAL RULES:
 1. NEVER hallucinate agents - only use the """
@@ -172,19 +172,6 @@ _PROMPT_AFTER_COUNT = """ listed above
    no portfolio is measured. What the policy says about a topic (policy_topic
    set): [ComplianceAgent] alone. Never set both parameters.
 """
-
-
-_POLICY_TOPICS: Optional[List[str]] = None
-
-
-def _policy_topics() -> List[str]:
-    """The closed topic vocabulary from ips.toml, loaded once per process."""
-    global _POLICY_TOPICS
-    if _POLICY_TOPICS is None:
-        from portfolio_tool.ips import load_ips
-
-        _POLICY_TOPICS = load_ips().topics
-    return _POLICY_TOPICS
 
 
 def _render_roster() -> str:
@@ -302,13 +289,6 @@ def build_router_prompt(
         Complete prompt string
     """
     parts = [ROUTER_SYSTEM_PROMPT]
-
-    # The policy's topic vocabulary, rendered from ips.toml the way the roster
-    # is rendered from AGENTS. Appended here, not in the constant, so the IPS
-    # is loaded on the first route and not at import (the same seam the
-    # period vocabulary is meant to use; see KNOWN_GAPS).
-    parts.append("\nPOLICY TOPICS (for policy_topic; the policy has clauses on exactly these):")
-    parts.append(", ".join(_policy_topics()))
     
     # Add few-shot examples if requested
     if include_examples:
