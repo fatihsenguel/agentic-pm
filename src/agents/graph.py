@@ -16,6 +16,7 @@ from .nodes import (
     optimization_agent_node,
     rebalance_agent_node,
     portfolio_analysis_agent_node,
+    compliance_agent_node,
     backtest_agent_node,
     synthesizer_node,
 )
@@ -39,6 +40,7 @@ AGENT_NODES = {
     "RebalanceAgent": rebalance_agent_node,
     "BacktestAgent": backtest_agent_node,
     "PortfolioAnalysisAgent": portfolio_analysis_agent_node,
+    "ComplianceAgent": compliance_agent_node,
 }
 
 if set(AGENT_NODES) != set(AGENTS):

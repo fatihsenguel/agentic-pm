@@ -926,6 +926,133 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
 
 
 # =============================================================================
+# COMPLIANCE AGENT NODE
+# =============================================================================
+
+async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
+    """
+    Compliance Agent node - the IPS applied to the published allocation.
+
+    Reads only `shared_data`: the allocation block and position P&L that
+    PortfolioAnalysisAgent published, and the holdings summary for each
+    position's instrument type. No database, no provider, no recomputation
+    (tests/golden/KNOWN_GAPS.md, "wip/phase7-snapshot was read and rejected").
+    Loads the policy from ips.toml on every run, so a broken policy file
+    fails the run that needs it and not the import of everything.
+
+    Publishes `shared_data["compliance"]`: the loaded policy (id, type and
+    the clause text a citation quotes), its statements, the D2 denominator,
+    the allocation's as-of copied and not reduced again, one finding per
+    (clause, subject, bound), and the `no_clause` marker. The synthesizer
+    formats and cites; this node does not.
+
+    One mode until the compliance intent carries parameters: a check of the
+    portfolio. A hypothetical weight (benchmark 3.1) and a policy topic
+    (3.4) are not yet distinguishable from here and are checked as the
+    portfolio, which their runner checks refuse.
+
+    Reference: expected_values.md Part 7, decisions D2 and D9.
+    """
+    tracer = get_tracer()
+    agent_ctx = None
+
+    try:
+        if tracer and hasattr(tracer, "get_current_request"):
+            req = tracer.get_current_request()
+            if req:
+                agent_ctx = req.trace_agent("ComplianceAgent")
+                agent_ctx.__enter__()
+    except Exception as e:
+        logger.warning(f"Tracing failed in ComplianceAgent (ignoring): {e}")
+
+    print("\n" + "=" * 80)
+    print("COMPLIANCE AGENT - Checking the portfolio against the IPS")
+    print("=" * 80)
+
+    try:
+        shared = state.get("shared_data", {})
+
+        # STRICT: every input is PortfolioAnalysisAgent's output. No fallback;
+        # a check against figures nobody computed is a verdict nobody asked for.
+        allocation = shared.get("allocation")
+        position_pnl = shared.get("position_pnl")
+        holdings = shared.get("holdings")
+        for key, value in (("allocation", allocation), ("position_pnl", position_pnl),
+                           ("holdings", holdings)):
+            if not value:
+                raise DataCalculationError(
+                    f"No {key} in shared_data.\n"
+                    "ComplianceAgent requires DataAgent and PortfolioAnalysisAgent "
+                    "to run first. Check the plan puts both before ComplianceAgent."
+                )
+
+        from contextlib import nullcontext
+        from dataclasses import asdict
+
+        from portfolio_tool.compliance import check
+        from portfolio_tool.ips import load_ips
+
+        ips = load_ips()
+        instrument_types = {h["ticker"]: h.get("instrument_type") for h in holdings}
+
+        # The checker is this agent's one tool call, traced as one: inputs
+        # and outputs as counts, never the findings themselves (hot potato).
+        # A raise inside leaves the trace with the exception recorded.
+        with (agent_ctx.trace_tool("check_ips") if agent_ctx else nullcontext()) as tool_ctx:
+            if tool_ctx:
+                tool_ctx.set_input({
+                    "policy": ips.path,
+                    "clauses": len(ips),
+                    "checkable": len(ips.checkable),
+                    "positions": len(position_pnl),
+                })
+            findings = check(ips, allocation, position_pnl, instrument_types)
+            by_status = {}
+            for f in findings:
+                by_status[f.status] = by_status.get(f.status, 0) + 1
+            if tool_ctx:
+                tool_ctx.set_output({"findings": by_status})
+
+        compliance_summary = {
+            "policy": {c.id: {"type": c.type, "text": c.text} for c in ips},
+            "statements": [{"clause": c.id, "text": c.text} for c in ips.statements],
+            "total_value": allocation["by_asset_class"]["total_value"],
+            "as_of": allocation.get("as_of"),
+            "findings": [asdict(f) for f in findings],
+            "no_clause": False,
+        }
+
+        print(f"  {len(ips.checkable)} checkable clauses, {len(ips.statements)} statements")
+        print("  findings: " + ", ".join(f"{k} {v}" for k, v in sorted(by_status.items())))
+        for f in findings:
+            if f.status == "breach":
+                print(f"    {f.clause:<8} {f.subject:<14} {f.observed:>7.2%} vs "
+                      f"{f.limit:.0%} {f.bound}  {f.distance_pp:+.2f} pp")
+
+        result = {
+            "success": True,
+            "agent_name": "ComplianceAgent",
+            "compliance": compliance_summary,
+        }
+
+        return {
+            **mark_agent_complete(state, "ComplianceAgent", result),
+            "shared_data": {**shared, "compliance": compliance_summary},
+        }
+
+    except Exception as e:
+        return {
+            **mark_agent_complete(
+                state, "ComplianceAgent", {"success": False, "error": str(e)}
+            ),
+            **add_error(state, f"ComplianceAgent: {str(e)}"),
+        }
+    finally:
+        if agent_ctx:
+            agent_ctx.__exit__(None, None, None)
+
+
+# =============================================================================
 # FIXED: OPTIMIZATION AGENT NODE
 # =============================================================================
 

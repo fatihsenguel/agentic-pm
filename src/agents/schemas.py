@@ -41,6 +41,7 @@ AGENTS: Dict[str, str] = {
     "RebalanceAgent": "Calculates drift, generates trade lists for rebalancing",
     "BacktestAgent": "Runs historical simulations of portfolio strategies",
     "PortfolioAnalysisAgent": "Computes figures about an EXISTING portfolio's holdings: allocation by asset class and by sector, P&L per position since purchase, and the portfolio's own volatility from its weights and the covariance matrix. Needs DataAgent first (holdings, prices, cash, covariance).",
+    "ComplianceAgent": "Checks an EXISTING portfolio against the owner's Investment Policy Statement: every clause with a numeric limit, breach or headroom per clause with the distance to the limit, citing clause ids. Needs DataAgent and PortfolioAnalysisAgent first.",
 }
 
 
