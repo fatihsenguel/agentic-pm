@@ -154,10 +154,10 @@ class SmartRouter:
         read - every attempt's JSON has them replaced before validation. If
         the message asks for something the vocabularies cannot express, the
         clarification is returned here and the model is not called. The
-        model decides intent, plan, measure and group_by, and whether the
-        question asks what the policy says; for that last case the topic it
-        emits is replaced by the user's own words, which is what the policy
-        is matched against.
+        model decides intent, measure and group_by; the plan is derived
+        from those, and whether a compliance question asks what the policy
+        says is extraction's, the topic then being the user's own words,
+        which is what the policy is matched against.
         
         Args:
             user_message: The user's request
@@ -476,20 +476,20 @@ def _with_extraction(raw: Dict[str, Any], extraction: Extraction, user_message: 
     written over its own.
 
     Tickers, period, volatility cap and hypothetical weight are the message's,
-    read deterministically; whatever the model put there is not read. The
-    policy topic is the model's signal that the question asks what the
-    policy says - kept as a signal, its value replaced by the user's own
-    words, which the compliance node matches the owner's topic vocabulary
-    against. A paraphrase there would match a clause the user did not ask
-    about (KNOWN_GAPS, runner 3.4).
+    read deterministically; whatever the model put there is not read. So is
+    the policy topic: extraction decides whether the question asks what the
+    policy says, and the topic is then the user's own words, which the
+    compliance node matches the owner's topic vocabulary against. The
+    model's flag missed into a lookup for questions about a position, and a
+    paraphrased value would match a clause the user did not ask about
+    (KNOWN_GAPS, runner 3.4 and the prompt shrink, 8 September).
     """
     parameters = dict(raw.get("parameters") or {})
     parameters["tickers"] = list(extraction.tickers)
     parameters["period"] = extraction.period
     parameters["max_volatility"] = extraction.max_volatility
     parameters["hypothetical_weight"] = extraction.hypothetical_weight
-    if parameters.get("policy_topic") is not None:
-        parameters["policy_topic"] = user_message
+    parameters["policy_topic"] = user_message if extraction.policy_lookup else None
     out = {**raw, "parameters": parameters}
 
     # The plan is derived from the intent and those parameters through

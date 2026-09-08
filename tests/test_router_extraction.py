@@ -100,14 +100,28 @@ async def test_a_repair_attempt_carries_extraction_too(router):
     assert len(validation.errors) == 1 and "Attempt 1" in validation.errors[0]
 
 
-async def test_the_topic_is_the_users_words_not_the_models(router):
+async def test_the_lookup_is_extractions_and_carries_the_users_words(router):
+    """The model's topic - value and flag - is not read. A question about
+    what the policy says carries the whole message as the topic whatever
+    the model emitted; a question about the portfolio carries none even
+    when the model flagged one (the shrink's failure, 8 September)."""
     router._llm = _FakeLLM(_json("compliance", ("ComplianceAgent",), policy_topic="currency"))
     decision, _ = await router.route("What does my investment policy say about currency risk?",
                                      portfolio_id=3)
     assert decision.parameters.policy_topic == "What does my investment policy say about currency risk?"
+    assert decision.execution_order == ["ComplianceAgent"]
+
+    router._llm = _FakeLLM(_json("compliance", ("ComplianceAgent",)))
+    decision, _ = await router.route("What does my policy say about cash?", portfolio_id=3)
+    assert decision.parameters.policy_topic == "What does my policy say about cash?"
+
+    router._llm = _FakeLLM(_json("compliance", ("ComplianceAgent",), policy_topic="concentration"))
+    decision, _ = await router.route("Is AAPL too concentrated?", portfolio_id=3)
+    assert decision.parameters.policy_topic is None
+    assert decision.execution_order == list(COMPLIANCE)
 
 
-async def test_a_topic_the_model_did_not_set_stays_unset(router):
+async def test_a_portfolio_check_carries_no_mode(router):
     router._llm = _FakeLLM(_json("compliance", COMPLIANCE))
     decision, _ = await router.route("Does my allocation violate any rule of my policy?",
                                      portfolio_id=3)

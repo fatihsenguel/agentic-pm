@@ -125,3 +125,42 @@ def test_message_and_held_are_untouched():
     held = ["AAPL"]
     extract("Is my AAPL position too big?", held, PERIODS)
     assert held == ["AAPL"]
+
+
+# --- the compliance mode: does the message ask what the policy itself says? ---
+
+LOOKUP = [
+    "What does my investment policy say about currency risk?",        # benchmark 3.4
+    "What does my policy say about borrowing against the account?",   # the prompt's example
+    "Does my IPS cover margin loans?",
+    "Is there anything in my policy about cash?",
+    "What does the Investment Policy Statement require on rebalancing?",
+    "Does my policy prohibit options?",
+]
+
+CHECK = [
+    "What concentration risk do I have, and is it compatible with my investment policy?",  # 2.1
+    "Does my current allocation violate any rule of my investment policy?",                  # 2.2
+    "What would have to change for me to be within the limits again?",                       # 2.3
+    "I want to put 15% into a single position, is that allowed?",                             # 3.1
+    "Is my AAPL position too big?",
+    "Is my AAPL position within my policy's limits?",
+    "Is AAPL too concentrated?",
+    "Is my JNJ position over any limit?",
+    "What are my policy's rules on cash?",   # a lookup without a saying verb: the check, the honest miss
+]
+
+
+@pytest.mark.parametrize("message", LOOKUP, ids=[m[:40] for m in LOOKUP])
+def test_a_question_about_what_the_policy_says_is_a_lookup(message):
+    assert extract(message, P3, PERIODS).policy_lookup is True
+
+
+@pytest.mark.parametrize("message", CHECK, ids=[m[:40] for m in CHECK])
+def test_a_question_about_the_portfolio_is_not_a_lookup(message):
+    """Naming the policy is not asking what it says. The pattern's miss is
+    a lookup phrased without a saying verb, which runs the fuller check;
+    the model's flag missed the other way, into "the policy contains
+    nothing on this" (the shrink's golden diff, 8 September)."""
+    assert extract(message, P3, PERIODS).policy_lookup is False
+

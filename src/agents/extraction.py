@@ -28,8 +28,17 @@ Percentages. A figure with a percent sign next to "vol" or "volatility" is
 the volatility cap; any other single percentage is the hypothetical weight
 in one position. Two of a kind, or a figure outside (0, 100], clarify.
 
-Topics are not extracted here: the policy is matched on the user's own
-words, and the router passes the message itself.
+The compliance mode. A question about what the policy itself says - the
+word policy, IPS or investment policy statement followed by a saying verb,
+or "anything in my policy about" - is a lookup, and the router passes the
+whole message as the topic for the policy's own vocabulary to be matched
+against. Naming the policy is not asking what it says: "compatible with my
+investment policy" and "within my policy's limits" are questions about the
+portfolio. The pattern's miss is a lookup phrased without a saying verb,
+which runs the fuller portfolio check; the model's flag, which this
+replaces, missed the other way into "the policy contains nothing on this"
+for a question about a position (the prompt shrink's golden diff,
+8 September). A weight in the message is the third mode, above.
 """
 
 import re
@@ -49,6 +58,9 @@ class Extraction:
     # this is the question to ask back. The other fields carry what was
     # extracted before the question arose.
     clarification: Optional[str]
+    # The message asks what the policy itself says (intent compliance's
+    # lookup mode); the router passes the message as the topic.
+    policy_lookup: bool = False
 
 
 _KNOWN = {t for t in KNOWN_ETFS | KNOWN_STOCKS if len(t) >= 2}
@@ -81,6 +93,16 @@ _SINCE_YEAR = re.compile(r"\bsince\s+(19|20)\d{2}\b", re.IGNORECASE)
 _YTD = re.compile(r"\b(year\s+to\s+date|ytd)\b", re.IGNORECASE)
 
 _PERCENT = re.compile(r"(\d+(?:[.,]\d+)?)\s*(?:%|percent\b)", re.IGNORECASE)
+
+_POLICY = r"(?:investment\s+policy(?:\s+statement)?|policy|ips)"
+_SAYING = (r"(?:say|says|said|state|states|mention|mentions|cover|covers|require|requires|"
+           r"allow|allows|permit|permits|prohibit|prohibits|forbid|forbids|contain|contains|"
+           r"have|has|include|includes|address|addresses|tell|tells|deal|deals)")
+_POLICY_SAYS = re.compile(
+    rf"\b{_POLICY}\s+{_SAYING}\b"
+    rf"|\b(?:in|of)\s+(?:my|the|our|your)\s+{_POLICY}\s+(?:about|on|regarding|concerning)\b",
+    re.IGNORECASE,
+)
 _VOL_WINDOW = 25  # characters either side of a percentage in which "vol" makes it a cap
 
 
@@ -111,6 +133,7 @@ def extract(message: str, held_tickers: Sequence[str], periods: Iterable[str]) -
         max_volatility=max_vol,
         hypothetical_weight=weight,
         clarification=clarification,
+        policy_lookup=_POLICY_SAYS.search(message) is not None,
     )
 
 
