@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 8 September 2026, fifth sitting.
+Last updated 8 September 2026, sixth sitting.
 
 ---
 
@@ -259,7 +259,28 @@ intent dispatch chain, or any other formatter; the note in §8 of the handoff
 that pytest "collects nothing that exercises synthesizer_node" is still true
 of the node.
 
-### `trace_tool` and `log_delegation` are never called
+### `trace_tool` and `log_delegation` are never called — RESOLVED 8 September (sixth sitting)
+
+**Built, and the sentence below about the agent layer was wrong.** The
+router node opened the request span and closed it in its own `finally`
+(`RequestTraceContext.__exit__` sets `_current_trace = None`), so every
+node after the router asked `get_current_request()` and got None: no
+agent spans, no tool calls, no handovers in any live trace, `agents_used`
+== `["Router"]`. The 13 `trace_agent` call sites were reachable inside the
+router only. Fixed in 9e9b041: `run_agent_graph` owns one span under the
+state's request id, the router traces its own span like every other node.
+`ComplianceAgent` traces its checker call (`trace_tool("check_ips")`,
+f7ad273) and `mark_agent_complete` emits one DELEGATION event to the next
+agent in the plan, naming the result keys handed over (a9f6d5c). `check_2_1`
+reads the stored trace by request id and asserts spans, handovers and the
+tool call; 2.1 passes. Two commit messages (a9f6d5c, f7ad273) claimed the
+CLI would show the new events before the span was fixed; both were
+registration, not reachability, and are corrected here, not rewritten.
+
+`stream_agent_graph` (graph.py) is a second entry point; it has no caller
+and opens no span. Recorded, not wired.
+
+---
 
 `observability/tracer.py` fully implements `ToolTrace` and
 `AgentTrace.log_delegation`. Nothing invokes either. All 13 call sites across
@@ -268,8 +289,8 @@ of the node.
 benchmark.md 2.1 passes only when "trace shows contract handovers" — that is the
 `log_delegation` path. **Benchmark 2.1 cannot pass today for tracing reasons
 alone, independent of the agents.** Part 4 says tracing is largely done and only
-needs verifying; the verification result is that the agent layer is done and the
-tool and handover layers are scaffolding.
+needs verifying; the verification result was recorded as "the agent layer is
+done" — false on a live run, see above.
 
 Wire both when the base-agent deduplication happens, since that touches the same
 five agent files. Note the dedup is now scheduled with the Risk and Compliance
@@ -358,6 +379,22 @@ trace records that this happened. Repair-instead-of-raise, on the contract
 that the whole graph is planned from. The `out_of_scope` validator added the
 same day raises instead; this one should too, once the golden set has shown
 how often Haiku actually triggers it.
+
+**A second gap in the same validator, 8 September (sixth sitting).** It
+checks that the order matches the task list and nothing about whether the
+order can run. The "too big" diagnostics produced `[PortfolioAnalysisAgent]`
+alone (no DataAgent; the node raised on missing holdings) and
+`[ComplianceAgent]` alone under `risk_analysis` (an agent no formatter reads
+under that intent; the node raised on missing allocation), both accepted by
+validation and discovered by a node. Proposed shape, not built: a
+`REQUIRES` mapping beside `AGENTS` (`PortfolioAnalysisAgent` needs
+`DataAgent` before it - the one dependency verified to raise), a validator
+that raises when an agent precedes what it requires and when ComplianceAgent
+is planned under any intent but `compliance` (`validate_compliance` covers
+that intent already). A raise there is a second attempt: `SmartRouter`
+retries with `REPAIR_PROMPT` carrying the error text. Golden twice, with the
+prediction written first; it is the least certain prediction on the list
+because it changes what the router is told after a mistake.
 
 ### A router failure becomes a clarification with confidence 0.0
 
@@ -596,6 +633,15 @@ that result already carries the same allocation object, and every existing
 formatter takes `sub_results`. `shared_data` is the channel between agents; it is
 not a second input to the synthesizer.
 
+**Compliance branch, 8 September (sixth sitting).** `intent == "compliance"`
+goes to `_format_compliance_response`, which renders by what the block
+carries: a topic lookup, a hypothetical weight, or the portfolio check. It
+prints the published figures and computes none; `test_compliance_formatter.py`
+holds every percentage in its prose to a finding. One report serves 2.1, 2.2
+and 2.3 - they ask the same check from three angles and the router carries
+no sub-measure for compliance. Recorded, not hidden; a `measure`-like axis
+for compliance is a decision when a case needs one.
+
 ### `shared_data` carries 160KB of raw prices — hot potato violated
 
 `price_data_json` was 67,190 characters of daily OHLC on the 3Y queries and
@@ -626,7 +672,10 @@ strategic asset allocation works. Drift must be measured against a fixed target.
 
 Correct fix: targets belong to the IPS - a clause with target weights per
 asset class, in `ips.toml`. Not `ips_manager.py` on `wip/phase7-snapshot`,
-which was read and rejected (entry below). Resolve when the IPS is built.
+which was read and rejected (entry below). The IPS is built (8 September);
+a target-weights clause is a change to `docs/IPS.md`, which is the owner's,
+and a new clause type for the loader. Owner's decision, still open. The
+same is true of moving `OUT_OF_SCOPE_RESPONSE` into the IPS (handoff §7.7).
 
 ### `wip/phase7-snapshot` was read and rejected - DECIDED 7 September (fourth sitting)
 
@@ -700,18 +749,40 @@ is per instrument, funds included, and IPS-4.2 is per issuer over directly
 held shares only, so there is no look-through and no gap to report. Which
 holdings are shares is carried data - `Asset.instrument_type`, `share` or
 `fund`, set by the seed, checker raises when missing - accepted on the
-strength of the `Compliance` sheet's own note; not built. The third, the
-Risk agent, is recommended as PortfolioAnalysisAgent with `measure`
-`concentration` added when that figure is built (rejected: a new RiskAgent
-owning one measure; RiskManagerAgent, which is not a risk agent) and is
-**not yet accepted**. The `shared_data["compliance"]` shape - `policy`,
-`as_of`, `findings` with `clause/type/subject/observed/limit/bound/status/
-distance_pp/distance_value`, `statements`; statuses `ok | breach | exempt`,
-plus `refused` for a hypothetical and a `no_clause` marker for a topic - is
-proposed in the same message and **not yet accepted** either. Both block
-the runner checks, which are written first. expected_values.md Part 7 and
-the workbook's `Compliance` sheet agree on every figure; D9 (at the limit
-passes, strict, unrounded) came from the sheet.
+strength of the `Compliance` sheet's own note. The third, the Risk agent,
+is PortfolioAnalysisAgent - **accepted 8 September (sixth sitting)**, with
+the `concentration` measure deferred: 2.1's concentration figures are the
+IPS-4.x findings, and a second place for the same division is the
+second-arithmetic-path shape this entry rejects; the trigger to add it is
+the first concentration question with no policy attached. The
+`shared_data["compliance"]` shape was **accepted the same day with six
+changes**, all checked against the block `nodes.py` publishes: `total_value`
+added (every Part 7 distance reproduces as `observed_value - limit x
+total`), units pinned (observed and limit fractions, `distance_pp` in
+points, `distance_value` currency), `as_of` copied from the allocation and
+absent when nothing was priced, `no_clause` set by the node and never by
+the pure checker, one finding per (clause, subject, bound) so a band emits
+two, and `exempt` carrying no arithmetic; a seventh key `topic` arrived
+with the lookup mode. expected_values.md Part 7 and the workbook's
+`Compliance` sheet agree on every figure; D9 (at the limit passes, strict,
+unrounded) came from the sheet.
+
+**Built, 8 September (sixth sitting), in §7's order:** the four runner
+checks first (20206b9..795818e, each seen failing offline for its reason),
+`ips.toml` and the loader (ea3eef7), `Asset.instrument_type` (c57bd9a,
+bff17aa), the checker (19e9b51, Part 7 to the cent), the node (f7ad273),
+the compliance intent with `hypothetical_weight` and `policy_topic`
+(979562f, 13d3364), the formatter (ad8ea85). Runner: 6/12 -> 10/12. Two
+things learned on the way are their own entries: the request span (tracing
+entry above) and the topic vocabulary (below, under "Is my AAPL position
+too big?").
+
+**D9's "unrounded" means "not rounded beyond the block".** The checker
+consumes the cent-rounded market values and total the analysis node
+publishes; the only unrounded path would be a second computation. So
+18,083.175 prints as 18,083.17 where Part 7 says 18,083.18 - half a cent,
+inside the runner's tolerance, visible in prose. The wording of D9 in
+expected_values.md is the owner's to adjust; noted, not changed.
 
 The branch stays where it is. Nothing on it is scheduled.
 
@@ -749,6 +820,11 @@ not a supervisor above the roster.
 What is worth salvaging is `check_concentration_risk` from its tool list, for a
 real risk agent when 2.1 is built. The supervisor scaffolding around it is not.
 Blocking nothing; do not chase it.
+
+**The Risk role is PortfolioAnalysisAgent, decided 8 September (sixth
+sitting).** benchmark.md Part 2's roster names roles; the mapping is
+recorded there. Nothing from this file was salvaged for it: the
+concentration figures 2.1 needs are the compliance findings.
 
 ### No API path to set `asset_class` or `sector`
 
@@ -1198,6 +1274,10 @@ landed 7 September (fourth sitting) as its own commit and is the pattern:
 one mapping in `schemas.py`, the prompt rendered from it, the chain in
 `synthesizer_node` checked against it at import rather than derived.
 
+Adding `compliance` on 8 September (sixth sitting) touched all five sites in
+one commit (979562f) plus `validate_compliance`, which is per-intent logic
+rather than a restatement. Still five sites, still by hand, still pending.
+
 ### Router parameters are restated by hand in two more places
 
 `nodes.py` `_decision_to_dict` listed `parameters` key by key, and would have
@@ -1479,6 +1559,13 @@ compliance one, and "too big" and "gain today" get their next prediction
 there, not before. The false refusal stays pinned meanwhile, like the
 macro line.
 
+**8 September (sixth sitting).** The compliance intent (979562f) predicted
+"too big" moves to `compliance` and "gain today" holds at `out_of_scope`.
+"Gain today" held on every run since - still the pinned false refusal, its
+diagnostic query still the pending decision. "Too big" moved and flipped;
+its own entry follows. The three failed prompt edits (6e68c47, d8cd0d6,
+31ce272) are still in the prompt; keep or revert is still the owner's.
+
 
 Hypothesis, stated 7 September (third sitting), not believed. The PortfolioAnalysisAgent
 rule sat after EXAMPLES and before a CRITICAL RULES list numbered 1-5,
@@ -1546,6 +1633,21 @@ is recorded because none was established: the only removed text that
 named concentration was the rendered topic list, and that is an
 observation, not a model.
 
+### 2.3 does not route to ComplianceAgent, two failed predictions, stopped
+
+Recorded 8 September (sixth sitting). "What would have to change for me to
+be within the limits again?" was predicted to plan ComplianceAgent twice:
+on the roster line (f7ad273) and on the compliance intent (979562f), whose
+INTENT TYPES entry names "what would have to change to be within its
+limits" in so many words. It stayed BLOCKED both times - the router does
+not read that wording as a policy question; no word in it names the
+policy. Stopped after the second miss. The runner's blocked reason now
+prints the intent and plan the router did produce (3327f5a), so the next
+sitting starts from what it routes to, not from a guess. Its next
+prediction rides on a structural change - the dependency validator, or a
+diagnostic query naming the limits without the policy - never on a
+rewording of the intent line.
+
 ### pytest warning inventory
 
 Recorded 7 September (third sitting), from a green run of 132. Twenty
@@ -1561,7 +1663,11 @@ blocks anything; the Pydantic one has a removal date.
 A PowerShell here-string was written into it literally. Line 1 is `@"`, there is a
 `` *`$py.class `` line with a PowerShell escape, and mid-file sits
 `"@ | Out-File -FilePath .gitignore -Encoding UTF8data/portfolio.db`. The DB is
-still ignored by later standalone entries, so nothing is leaking. Rewrite it.
+still ignored by later standalone entries, so nothing is leaking.
+
+**Not actionable by the assistant, 8 September (sixth sitting):** the standing rules
+now say `.gitignore` is never edited by the assistant. "Rewrite it" stands as a
+description of what the file needs and is the owner's to do.
 
 ### `portfolio_tool/__init__.py` opens a database connection at import
 
