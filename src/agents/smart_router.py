@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from .config import get_llm, LLMConfig, OPENAI_FULL, ACTIVE_LLM_CONFIG
-from .extraction import Extraction, extract
+from .extraction import Extraction, extract, resolve
 from .router_prompts import build_router_prompt, build_repair_prompt
 from .schemas import (
     RouterDecision, 
@@ -143,10 +143,17 @@ class SmartRouter:
         user_message: str,
         conversation_history: Optional[List[dict]] = None,
         available_agents: Optional[List[str]] = None,
-        portfolio_id: Optional[int] = None  # ⭐ NEW
+        portfolio_id: Optional[int] = None,
+        pending: Optional[Dict[str, Any]] = None,
     ) -> Tuple[RouterDecision, ValidationResult]:
         """
         Route a user message to the appropriate agent(s).
+
+        `pending` is the record of what the previous turn asked back. The
+        message is first resolved against it (agents/extraction.resolve):
+        a reply that confirms or names a ticker becomes the original
+        question with that ticker, and is routed as if typed, the
+        resolution recorded on the decision; any other message is new.
 
         Extraction runs first (agents/extraction.py): tickers, period,
         volatility cap and hypothetical weight are read from the message
@@ -196,6 +203,12 @@ class SmartRouter:
                     logger.error(f"Failed to load portfolio {portfolio_id}: {e}")
                     # Continue without portfolio - LLM will extract tickers from message
             
+            resolved = None
+            resolved_message = resolve(user_message, pending, portfolio_tickers or [])
+            if resolved_message is not None:
+                resolved = {"reply": user_message, "message": resolved_message}
+                user_message = resolved_message
+
             extraction = extract(
                 user_message, portfolio_tickers or [], app_config.data.period_days.keys()
             )
@@ -230,6 +243,8 @@ class SmartRouter:
                 user_message=user_message,
                 extraction=extraction,
             )
+            if decision and resolved:
+                decision.resolved = resolved
             
             # parameters.tickers is what the user named, and nothing else. A
             # block here used to overwrite it with the portfolio's tickers (or
@@ -417,6 +432,7 @@ class SmartRouter:
             requires_confirmation=False,
             reasoning=f"Extraction could not resolve the message: {extraction.clarification}"[:1000],
             clarification_question=extraction.clarification,
+            pending=extraction.pending,
         )
 
     def _create_fallback_decision(
@@ -491,8 +507,10 @@ def _with_extraction(raw: Dict[str, Any], extraction: Extraction, user_message: 
     parameters["hypothetical_weight"] = extraction.hypothetical_weight
     parameters["policy_topic"] = user_message if extraction.policy_lookup else None
     out = {**raw, "parameters": parameters}
-    # The record of a clarification is extraction's; the model writes none.
-    out["pending"] = None
+    # The record of a clarification and the resolution are the router's own,
+    # from extraction; the model writes neither.
+    out["pending"] = extraction.pending
+    out["resolved"] = None
 
     # The plan is derived from the intent and those parameters through
     # schemas.TERMINAL and REQUIRES; the model's execution_order and

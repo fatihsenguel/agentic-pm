@@ -19,7 +19,7 @@ from observability.tracer import TraceEventType
 
 
 class _StubRouter:
-    async def route(self, user_message, portfolio_id=None):
+    async def route(self, user_message, portfolio_id=None, pending=None):
         decision = SimpleNamespace(
             intent="data_fetch",
             confidence=0.9,

@@ -40,7 +40,7 @@ class _StubRouter:
         )
         self._errors = errors
 
-    async def route(self, user_message, portfolio_id=None):
+    async def route(self, user_message, portfolio_id=None, pending=None):
         return self._decision, SimpleNamespace(errors=list(self._errors))
 
 

@@ -15,7 +15,7 @@ golden set runs them.
 
 import pytest
 
-from agents.extraction import extract
+from agents.extraction import extract, resolve
 
 
 PERIODS = ("1Y", "2Y", "3Y", "5Y", "10Y")
@@ -170,4 +170,52 @@ def test_a_question_about_the_portfolio_is_not_a_lookup(message):
     the model's flag missed the other way, into "the policy contains
     nothing on this" (the shrink's golden diff, 8 September)."""
     assert extract(message, P3, PERIODS).policy_lookup is False
+
+
+# --- the record of a clarification, and the reply resolved against it --------
+
+PENDING = {"kind": "unknown_ticker", "token": "APPL", "candidate": "AAPL",
+           "message": "Hows my APPL doing?"}
+
+
+def test_an_unknown_ticker_clarification_leaves_a_record():
+    x = extract("Hows my APPL doing?", P3, PERIODS)
+    assert x.clarification is not None
+    assert x.pending == PENDING
+
+
+def test_other_extractions_leave_no_record():
+    """Only the unknown-ticker clarification has a resolution rule so far;
+    a span or a percentage clarification carries no record and a reply to
+    it is a new message. Their rules come with a case that asks."""
+    assert extract("Is my AAPL position too big?", P3, PERIODS).pending is None
+    assert extract("How has my portfolio done over the last month?", P3, PERIODS).pending is None
+    assert extract("Put 15% into AAPL and 20% into MSFT", P3, PERIODS).pending is None
+
+
+RESOLVED = "Hows my AAPL doing?"
+
+REPLIES = [
+    ("yes", RESOLVED),
+    ("Yes.", RESOLVED),
+    ("y", RESOLVED),
+    ("yes, AAPL", RESOLVED),
+    ("AAPL", RESOLVED),
+    ("correct", RESOLVED),
+    ("no, MSFT", "Hows my MSFT doing?"),      # a different holding named
+    ("I meant JPM", "Hows my JPM doing?"),
+    ("no", None),                              # no ticker to substitute: a new message
+    ("What is my allocation?", None),          # a new question
+    ("yes please, and my allocation too", None),  # not a plain confirmation
+]
+
+
+@pytest.mark.parametrize("reply, resolved", REPLIES, ids=[r[0] for r in REPLIES])
+def test_a_reply_is_resolved_against_the_record_or_not_at_all(reply, resolved):
+    assert resolve(reply, PENDING, P3) == resolved
+
+
+def test_no_record_or_an_unknown_kind_resolves_nothing():
+    assert resolve("yes", None, P3) is None
+    assert resolve("yes", {"kind": "span", "message": "over the last month"}, P3) is None
 

@@ -41,11 +41,22 @@ which runs the fuller portfolio check; the model's flag, which this
 replaces, missed the other way into "the policy contains nothing on this"
 for a question about a position (the prompt shrink's golden diff,
 8 September). A weight in the message is the third mode, above.
+
+Conversation memory, as a rule here and not as context for a model. When
+extraction asks back it leaves a record - kind, token, candidate, the
+message - and the next turn's reply is resolved against that record before
+anything else: a confirmation or the candidate substitutes the candidate
+for the token in the original message, a different held or known ticker
+substitutes that one, and anything else is a new message. The resolved
+message then goes through extraction and the model as if typed. Only the
+unknown-ticker clarification has a record and a rule so far, the one
+benchmark 3.5 defines; the span and percentage clarifications get theirs
+when a case asks.
 """
 
 import re
 from dataclasses import dataclass
-from typing import Iterable, List, Optional, Sequence
+from typing import Dict, Iterable, List, Optional, Sequence
 
 from .validators import KNOWN_ETFS, KNOWN_STOCKS
 
@@ -63,6 +74,9 @@ class Extraction:
     # The message asks what the policy itself says (intent compliance's
     # lookup mode); the router passes the message as the topic.
     policy_lookup: bool = False
+    # The record of the clarification, when one was asked and a rule exists
+    # to resolve a reply against it: kind, token, candidate, message.
+    pending: Optional[Dict[str, str]] = None
 
 
 _KNOWN = {t for t in KNOWN_ETFS | KNOWN_STOCKS if len(t) >= 2}
@@ -134,7 +148,7 @@ def extract(message: str, held_tickers: Sequence[str], periods: Iterable[str]) -
     held = [t.upper() for t in held_tickers]
     vocabulary = list(periods)
 
-    tickers, ticker_question = _tickers(message, held)
+    tickers, ticker_question, pending = _tickers(message, held)
     period, period_question = _period(message, vocabulary)
     max_vol, weight, percent_question = _percentages(message)
 
@@ -146,7 +160,41 @@ def extract(message: str, held_tickers: Sequence[str], periods: Iterable[str]) -
         hypothetical_weight=weight,
         clarification=clarification,
         policy_lookup=_POLICY_SAYS.search(message) is not None,
+        pending=pending if ticker_question else None,
     )
+
+
+_CONFIRM = {"yes", "y", "yep", "yeah", "correct", "right", "ja", "exactly", "that's right", "thats right"}
+
+
+def resolve(reply: str, pending: Optional[Dict[str, str]], held_tickers: Sequence[str]) -> Optional[str]:
+    """The message a reply stands for, resolved against the record of what
+    was asked, or None when the reply resolves nothing and is a new message.
+
+    Unknown ticker: a plain confirmation, or the candidate named, puts the
+    candidate where the token was in the original message; a different held
+    or known ticker named in the reply puts that one there. "no" alone
+    names nothing and resolves nothing. Never a guess: a reply outside this
+    vocabulary is routed as typed.
+    """
+    if not pending or pending.get("kind") != "unknown_ticker":
+        return None
+    token, candidate, message = pending["token"], pending["candidate"], pending["message"]
+    held = {t.upper() for t in held_tickers}
+    words = re.sub(r"[^\w\s']", " ", reply).strip()
+    named = [t for t in _TOKEN.findall(reply) if t in held or t in _KNOWN]
+
+    if words.lower() in _CONFIRM:
+        chosen = candidate
+    elif named and (len(named) == 1):
+        chosen = named[0]
+        # "yes, AAPL" and "AAPL" confirm; "no, MSFT" and "I meant JPM" choose.
+        rest = re.sub(rf"\b{chosen}\b", " ", words).strip(" ,.")
+        if rest and rest.lower() not in _CONFIRM | {"no", "i meant", "no i meant", "i mean", "no i mean"}:
+            return None
+    else:
+        return None
+    return re.sub(rf"(?<![A-Za-z0-9]){re.escape(token)}(?![A-Za-z0-9])", chosen, message)
 
 
 # --- tickers -----------------------------------------------------------------
@@ -161,11 +209,14 @@ def _tickers(message: str, held: List[str]):
         if 2 <= len(token) <= 5 and token.isalpha():
             near = [h for h in held if _within_one_edit(token, h)]
             if near:
-                return found, (
+                question = (
                     f"{token} is not a ticker I know. Did you mean {near[0]}, "
                     f"which you hold? Your portfolio holds {', '.join(held)}."
                 )
-    return found, None
+                record = {"kind": "unknown_ticker", "token": token, "candidate": near[0],
+                          "message": message}
+                return found, question, record
+    return found, None, None
 
 
 def _within_one_edit(a: str, b: str) -> bool:

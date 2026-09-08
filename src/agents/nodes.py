@@ -314,7 +314,8 @@ async def router_node(state: AgentState) -> Dict[str, Any]:
         # Call Smart Router
         router = get_router()
         portfolio_id = state.get("portfolio_id")
-        decision, validation = await router.route(user_message, portfolio_id=portfolio_id)
+        decision, validation = await router.route(
+            user_message, portfolio_id=portfolio_id, pending=state.get("pending"))
 
         # Every attempt the router rejected before this decision, carried in
         # the state so a repaired route is visible to the CLI and the golden
@@ -369,6 +370,7 @@ def _decision_to_dict(decision) -> Dict[str, Any]:
         # the CLI's "asked back" line never printed (KNOWN_GAPS).
         "clarification_question": decision.clarification_question,
         "pending": getattr(decision, "pending", None),
+        "resolved": getattr(decision, "resolved", None),
     }
 
 

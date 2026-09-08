@@ -71,14 +71,25 @@ def test_the_entry_points_take_the_previous_state():
 class _StubRouter:
     def __init__(self, pending):
         self._pending = pending
+        self.received = None
 
-    async def route(self, user_message, portfolio_id=None, **kwargs):
+    async def route(self, user_message, portfolio_id=None, pending=None):
+        self.received = pending
         decision = SimpleNamespace(
             intent="clarification_needed", confidence=1.0, agents_needed=[],
             parameters=ExtractedParameters(), execution_order=[],
             clarification_question="Did you mean AAPL?", pending=self._pending,
+            resolved=None,
         )
         return decision, SimpleNamespace(errors=[])
+
+
+async def test_the_router_node_hands_the_record_to_the_router(monkeypatch):
+    stub = _StubRouter(None)
+    monkeypatch.setattr(smart_router, "get_router", lambda: stub)
+    second = create_initial_state("yes", previous=_first_turn())
+    await router_node(second)
+    assert stub.received == PENDING
 
 
 async def test_the_decision_dict_carries_the_question_and_the_record(monkeypatch):

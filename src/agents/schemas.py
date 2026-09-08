@@ -282,6 +282,10 @@ class RouterDecision(BaseModel):
     # the router from extraction, never by the model: the router drops any
     # value the model sends.
     pending: Optional[Dict[str, Any]] = Field(default=None)
+    # What this turn's reply was resolved from, when it was a reply to the
+    # previous turn's question: {"reply": ..., "message": ...}. Written by
+    # the router, never by the model.
+    resolved: Optional[Dict[str, Any]] = Field(default=None)
     
     class Config:
         use_enum_values = True

@@ -142,3 +142,39 @@ async def test_without_a_portfolio_known_tickers_and_the_period_are_extracted(ro
     decision, _ = await router.route("Get me the last 1 year of prices for SPY and TLT")
     assert decision.parameters.tickers == ["SPY", "TLT"]
     assert decision.parameters.period == "1Y"
+
+
+PENDING = {"kind": "unknown_ticker", "token": "APPL", "candidate": "AAPL",
+           "message": "Hows my APPL doing?"}
+
+
+async def test_a_clarification_about_a_typo_carries_its_record(router):
+    router._llm = _FakeLLM()
+    decision, _ = await router.route("Hows my APPL doing?", portfolio_id=3)
+    assert decision.intent == "clarification_needed"
+    assert decision.pending == PENDING
+    assert decision.resolved is None
+
+
+async def test_a_reply_is_resolved_before_extraction_and_the_model(router):
+    """"yes" against the record becomes the question with AAPL: extraction
+    reads AAPL from it, the model is shown it, and the decision records
+    what was resolved from what."""
+    llm = _FakeLLM(_json("data_fetch", ANALYSIS, measure="position_pnl"))
+    router._llm = llm
+    decision, validation = await router.route("yes", portfolio_id=3, pending=PENDING)
+    assert decision.parameters.tickers == ["AAPL"]
+    assert decision.intent == "data_fetch"
+    assert decision.resolved == {"reply": "yes", "message": "Hows my AAPL doing?"}
+    assert decision.pending is None
+    assert 'User: "Hows my AAPL doing?"' in llm.prompts[0]
+    assert validation.errors == []
+
+
+async def test_a_reply_that_resolves_nothing_is_a_new_message(router):
+    llm = _FakeLLM(_json("data_fetch", ANALYSIS, measure="allocation"))
+    router._llm = llm
+    decision, _ = await router.route("What is my allocation?", portfolio_id=3, pending=PENDING)
+    assert decision.resolved is None
+    assert 'User: "What is my allocation?"' in llm.prompts[0]
+
