@@ -105,6 +105,9 @@ TRADE_LINE = re.compile(
 CENT = 0.005
 AS_OF = re.compile(r"\d{4}-\d{2}-\d{2}")
 CLAUSE_ID = re.compile(r"IPS-\d+\.\d+")
+# A percentage or percentage-point figure in the prose, with its printed
+# precision, so a check can ask where each one came from.
+PCT_FIGURE = re.compile(r"(\d+(?:\.(\d+))?)\s*(?:%|pp\b|percentage points)")
 
 
 # ---------------------------------------------------------------------------
@@ -691,6 +694,104 @@ def check_2_2(state):
     return fails
 
 
+def _unexplained_percentages(state, findings):
+    """Every percentage or pp figure in the answer must be one the findings
+    carry: an observed weight, a limit, or a distance. A figure that is none
+    of those is a target - the midpoint of a band, a weight the policy does
+    not state - and IPS-5.2 forbids exactly that. Matched at the precision
+    the prose printed it, so 65%, 65.0% and 65.00% all explain themselves
+    and a 52.50% midpoint does not.
+    """
+    allowed = set()
+    for f in findings:
+        if f.get("status") == "exempt":
+            continue
+        for key, scale in (("observed", 100), ("limit", 100), ("distance_pp", 1)):
+            if f.get(key) is not None:
+                allowed.add(f[key] * scale)
+
+    unexplained = []
+    for match in PCT_FIGURE.finditer(_answer(state)):
+        printed, decimals = match.group(1), match.group(2)
+        tolerance = 0.5 * 10 ** -len(decimals or "") + 1e-9
+        value = float(printed)
+        if not any(abs(value - a) <= tolerance for a in allowed):
+            unexplained.append(match.group(0))
+    if unexplained:
+        return [f"answer carries figures that are no finding's observed, limit "
+                f"or distance: {unexplained}; a figure the policy does not "
+                "state is a target (IPS-5.2)"]
+    return []
+
+
+def check_2_3(state):
+    """"What would have to change for me to be within the limits again?"
+    passes when the answer describes conditions and gives no recommendation.
+
+    A condition is IPS-5.2's: the distance back to the limit, in percentage
+    points of total. So every breach's `distance_pp` reaches the answer with
+    its clause id, no percentage in the answer is anything but an observed
+    weight, a limit or a distance (no midpoint, no target), and no line
+    names a trade. "Reducing AAPL by 5.84 pp" is a condition and passes;
+    "sell AAPL" is an order and fails. Overlaps are the reader's to see
+    (Part 7), so nothing here asks that they be netted or not.
+
+    Which clauses breach is not asserted. If none does on the day, the
+    breach loop is empty and the case passes on the rest, which is the
+    right answer to a question about limits nobody is outside.
+    """
+    fails = _ran_clean(state)
+    block = _compliance(state)
+    if not block:
+        return fails + ["no compliance in shared_data"]
+
+    fails += _compliance_block_invariants(state)
+
+    if block.get("no_clause"):
+        fails.append("no_clause is set; 2.3 is a check of the portfolio, not a "
+                     "topic lookup")
+
+    findings = block.get("findings") or []
+    policy = block.get("policy") or {}
+    checkable = {c for c, e in policy.items() if e.get("type") != "statement"}
+    covered = {f.get("clause") for f in findings}
+    if checkable - covered:
+        fails.append(f"checkable clauses with no finding: {sorted(checkable - covered)}; "
+                     "the breach list is only complete over a full check")
+
+    refused = sorted(f"{f.get('clause')}/{f.get('subject')}"
+                     for f in findings if f.get("status") == "refused")
+    if refused:
+        fails.append(f"refused findings {refused} on a portfolio check; refused "
+                     "is for a hypothetical (3.1)")
+
+    answer = _answer(state)
+    for f in findings:
+        if f.get("status") != "breach" or f.get("distance_pp") is None:
+            continue
+        where = f"{f.get('clause')}/{f.get('subject')}"
+        if f["clause"] not in answer:
+            fails.append(f"breach {where}: clause id never reaches the answer")
+        if f"{f['distance_pp']:.2f}" not in answer:
+            fails.append(f"breach {where}: distance {f['distance_pp']:.2f} pp is "
+                         "in shared_data but never reaches the answer")
+
+    invented = sorted(set(CLAUSE_ID.findall(answer)) - set(policy))
+    if invented:
+        fails.append(f"answer cites clause ids not in the policy: {invented}")
+
+    fails += _unexplained_percentages(state, findings)
+    fails += _no_trade_lines(state)
+
+    as_of = (block.get("as_of") or {}).get("worst_case")
+    if not as_of:
+        fails.append("no as_of.worst_case in shared_data['compliance'] "
+                     "(benchmark.md Part 3b)")
+    else:
+        fails += _date_reaches_answer(state, as_of, "compliance.as_of.worst_case")
+    return fails
+
+
 # ---------------------------------------------------------------------------
 # Blocked probes. Each returns a reason while the capability is absent, and
 # None once it exists, so the case unblocks itself.
@@ -748,7 +849,7 @@ CASES = [
     ("2.2", "Does my current allocation violate any rule of my investment policy?",
      BENCHMARK_PORTFOLIO, blocked_on_compliance, check_2_2),
     ("2.3", "What would have to change for me to be within the limits again?",
-     BENCHMARK_PORTFOLIO, blocked_on_compliance, None),
+     BENCHMARK_PORTFOLIO, blocked_on_compliance, check_2_3),
     ("3.1", "I want to put 15% into a single position, is that allowed?",
      BENCHMARK_PORTFOLIO, blocked_on_compliance, None),
     ("3.2", "Should I buy Nvidia?", BENCHMARK_PORTFOLIO, None, check_3_2),
