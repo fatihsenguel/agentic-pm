@@ -1,13 +1,15 @@
 """
 The router prompt renders its vocabularies from their registries: the agent
-roster and its count from AGENTS, the policy topics from ips.toml. A word
-that exists in one place and not the other is the drift these tests refuse.
+roster and its count from AGENTS, the intents and their descriptions from
+INTENTS, the policy topics from ips.toml. A word that exists in one place
+and not the other is the drift these tests refuse.
 """
 
 from typing import get_args
 
 from agents.router_prompts import ROUTER_SYSTEM_PROMPT, REPAIR_PROMPT, build_router_prompt
-from agents.schemas import AGENTS, ExtractedParameters, IntentType
+from agents import nodes
+from agents.schemas import AGENTS, INTENTS, ExtractedParameters, IntentType
 from portfolio_tool.ips import load_ips
 
 
@@ -49,4 +51,36 @@ def test_group_by_line_names_every_value_the_schema_allows():
     line = [l for l in ROUTER_SYSTEM_PROMPT.splitlines() if l.startswith("- Group by:")][0]
     for value in get_args(literal):
         assert f'"{value}"' in line, value
+
+
+def test_intent_types_block_comes_from_intents():
+    for value, description in INTENTS.items():
+        assert f"- {value}: {description}" in ROUTER_SYSTEM_PROMPT, value
+
+
+def test_intent_line_in_both_prompts_is_the_registry():
+    joined = "|".join(INTENTS)
+    for prompt in (ROUTER_SYSTEM_PROMPT, REPAIR_PROMPT):
+        line = [l for l in prompt.splitlines() if l.lstrip().startswith('"intent": "')][0]
+        assert f'"intent": "{joined}"' in line
+
+
+def test_intent_type_is_built_from_intents():
+    assert [m.value for m in IntentType] == list(INTENTS)
+    assert IntentType.OUT_OF_SCOPE.value == "out_of_scope"
+    assert IntentType["CLARIFICATION_NEEDED"] is IntentType.CLARIFICATION_NEEDED
+
+
+def test_synthesizer_chain_is_held_to_the_registry():
+    """The chain in synthesizer_node is a second statement of the vocabulary,
+    checked rather than derived, as graph.AGENT_NODES is against AGENTS.
+    clarification_needed exits the graph before the synthesizer and is the
+    one value the chain does not format."""
+    assert nodes.SYNTHESIZER_INTENTS | {"clarification_needed"} == set(INTENTS)
+    nodes._check_synthesizer_intents(nodes.SYNTHESIZER_INTENTS)
+    import pytest
+    with pytest.raises(RuntimeError, match="planted"):
+        nodes._check_synthesizer_intents(nodes.SYNTHESIZER_INTENTS | {"planted"})
+    with pytest.raises(RuntimeError, match="compliance"):
+        nodes._check_synthesizer_intents(nodes.SYNTHESIZER_INTENTS - {"compliance"})
 

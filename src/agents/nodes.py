@@ -17,6 +17,7 @@ from typing import Dict, Any, Optional, Literal, List, Tuple
 from langchain_core.messages import AIMessage, HumanMessage
 
 from .protocols import PortfolioContext
+from .schemas import INTENTS
 
 from .state import (
     AgentState,
@@ -1590,6 +1591,33 @@ async def backtest_agent_node(state: AgentState) -> Dict[str, Any]:
 # =============================================================================
 # SYNTHESIZER NODE
 # =============================================================================
+
+# The intents the chain in synthesizer_node formats, stated once beside it. A
+# second statement of schemas.INTENTS, checked at import rather than derived,
+# as graph.AGENT_NODES is against AGENTS: three branches condition on what
+# ran and `combined` fans out to several formatters, so a mapping would not
+# be the chain. clarification_needed is the one registry value with no
+# branch - router_node writes its final_response and the graph exits before
+# the synthesizer (KNOWN_GAPS, "Clarification exits the graph on a proxy").
+SYNTHESIZER_INTENTS = frozenset({
+    "optimization", "macro_analysis", "rebalancing", "backtest", "data_fetch",
+    "risk_analysis", "out_of_scope", "compliance", "combined",
+})
+_UNSYNTHESIZED_INTENTS = frozenset({"clarification_needed"})
+
+
+def _check_synthesizer_intents(handled) -> None:
+    expected = set(INTENTS) - _UNSYNTHESIZED_INTENTS
+    if set(handled) != expected:
+        raise RuntimeError(
+            "intent registry and synthesizer chain disagree: schemas.INTENTS "
+            f"formats {sorted(expected)}, nodes.SYNTHESIZER_INTENTS has "
+            f"{sorted(handled)}. An intent is added to both or to neither."
+        )
+
+
+_check_synthesizer_intents(SYNTHESIZER_INTENTS)
+
 
 async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
     """

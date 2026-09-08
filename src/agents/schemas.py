@@ -13,18 +13,35 @@ import re
 # ENUMS FOR VALIDATION
 # =============================================================================
 
-class IntentType(str, Enum):
-    """Valid intent types the router can detect."""
-    OPTIMIZATION = "optimization"
-    MACRO_ANALYSIS = "macro_analysis"
-    REBALANCING = "rebalancing"
-    BACKTEST = "backtest"
-    DATA_FETCH = "data_fetch"
-    RISK_ANALYSIS = "risk_analysis"
-    COMBINED = "combined"  # Multi-step workflows
-    CLARIFICATION_NEEDED = "clarification_needed"
-    OUT_OF_SCOPE = "out_of_scope"  # Clear request for something the system does not do
-    COMPLIANCE = "compliance"  # The portfolio, a proposed weight, or the policy itself, against the IPS
+# The intent vocabulary, stated once. Value -> the one-line description the
+# router prompt renders, in the order the prompt lists them. Every other
+# statement derives from or is checked against this: IntentType below, the
+# INTENT TYPES block and the schema's "intent" line in both prompts
+# (router_prompts.py), and the synthesizer's dispatch chain, which nodes.py
+# holds to this set at import. The descriptions are the prompt's text, moved
+# and not edited; the prompt shrink is its own change with its own golden runs.
+INTENTS: Dict[str, str] = {
+    'optimization': 'User wants to create or optimize a portfolio',
+    'macro_analysis': 'User asks about market conditions, VIX, yields',
+    'rebalancing': 'User wants drift analysis or trade generation',
+    'backtest': 'User wants historical simulation',
+    'data_fetch': 'User wants raw price data or metrics',
+    'risk_analysis': 'User wants risk metrics (VaR, volatility, drawdown)',
+    'compliance': 'User asks about their Investment Policy Statement: whether the portfolio complies with it or breaks a rule, whether a position is too big, what would have to change to be within its limits, whether a proposed weight in one position is allowed, or what the policy says about a topic',
+    'combined': 'Multi-step workflow requiring multiple agents in sequence',
+    'clarification_needed': 'Request is in scope but too vague to plan, need to ask user',
+    'out_of_scope': 'Request is clear, and what it asks for is something this system does not do: a judgement about whether to own a security (should I buy/sell/hold X, is X a good investment, what should I buy, screening or finding candidates), a price or return forecast, tax assessment, or placing an order. Whether the security is held makes no difference to refusing that judgement - and no difference the other way: a question about a held position\'s own figures is in scope, below. Plan NO agents, leave clarification_question null. Questions about a portfolio the user already holds - its allocation, P&L, risk, drift, whether and how to rebalance it, whether it complies with their policy - are IN scope and keep their normal intent: "Should I rebalance my portfolio?" is rebalancing, not out_of_scope and not clarification_needed, because it asks about mechanics on holdings already chosen, not about whether to own a security. A question about how a ticker the active portfolio holds has performed, gained or lost, or how large it is, is a question about that position even without the word "my": data_fetch with PortfolioAnalysisAgent, measure "position_pnl" or "allocation", tickers [that symbol] - not out_of_scope. If a request could be either an in-scope question or an out-of-scope one (e.g. "analyze X" could mean price data), that is clarification_needed, not out_of_scope: ambiguity wins over refusal.',
+}
+
+
+# Valid intents: the registry above as a str Enum, so that RouterDecision.intent
+# rejects any value the graph cannot route. Members are not written by hand;
+# add an intent to INTENTS.
+IntentType = Enum(
+    "IntentType",
+    {value.upper(): value for value in INTENTS},
+    type=str,
+)
 
 
 # The agent roster, stated once. Name -> the one-line description the router

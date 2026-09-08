@@ -5,17 +5,19 @@
 
 from typing import List, Optional
 
-from .schemas import AGENTS
+from .schemas import AGENTS, INTENTS
 
 # =============================================================================
 # ROUTER SYSTEM PROMPT
 # =============================================================================
 
-# The system prompt is assembled at import from three literal pieces with the
-# agent roster and its count rendered from schemas.AGENTS in between. Plain
+# The system prompt is assembled at import from literal pieces with the agent
+# roster and its count rendered from schemas.AGENTS, and the intent list and
+# the schema's intent line rendered from schemas.INTENTS, in between. Plain
 # concatenation rather than .format(), because the prompt is full of JSON
 # braces. Rendering must reproduce the hand-written text byte for byte: a
-# roster line is "N. Name - description".
+# roster line is "N. Name - description", an intent line "- value:
+# description", the schema line the values joined by "|".
 
 _PROMPT_BEFORE_ROSTER = """You are the Intent Router for a Quant Portfolio Management system.
 
@@ -29,16 +31,9 @@ AVAILABLE AGENTS:
 _PROMPT_AFTER_ROSTER = """
 
 INTENT TYPES:
-- optimization: User wants to create or optimize a portfolio
-- macro_analysis: User asks about market conditions, VIX, yields
-- rebalancing: User wants drift analysis or trade generation
-- backtest: User wants historical simulation
-- data_fetch: User wants raw price data or metrics
-- risk_analysis: User wants risk metrics (VaR, volatility, drawdown)
-- compliance: User asks about their Investment Policy Statement: whether the portfolio complies with it or breaks a rule, whether a position is too big, what would have to change to be within its limits, whether a proposed weight in one position is allowed, or what the policy says about a topic
-- combined: Multi-step workflow requiring multiple agents in sequence
-- clarification_needed: Request is in scope but too vague to plan, need to ask user
-- out_of_scope: Request is clear, and what it asks for is something this system does not do: a judgement about whether to own a security (should I buy/sell/hold X, is X a good investment, what should I buy, screening or finding candidates), a price or return forecast, tax assessment, or placing an order. Whether the security is held makes no difference to refusing that judgement - and no difference the other way: a question about a held position's own figures is in scope, below. Plan NO agents, leave clarification_question null. Questions about a portfolio the user already holds - its allocation, P&L, risk, drift, whether and how to rebalance it, whether it complies with their policy - are IN scope and keep their normal intent: "Should I rebalance my portfolio?" is rebalancing, not out_of_scope and not clarification_needed, because it asks about mechanics on holdings already chosen, not about whether to own a security. A question about how a ticker the active portfolio holds has performed, gained or lost, or how large it is, is a question about that position even without the word "my": data_fetch with PortfolioAnalysisAgent, measure "position_pnl" or "allocation", tickers [that symbol] - not out_of_scope. If a request could be either an in-scope question or an out-of-scope one (e.g. "analyze X" could mean price data), that is clarification_needed, not out_of_scope: ambiguity wins over refusal.
+"""
+
+_PROMPT_AFTER_INTENTS = """
 
 MULTI-STEP WORKFLOWS (combined):
 Some requests require agents to run in sequence:
@@ -55,7 +50,9 @@ EXECUTION ORDER RULES:
 OUTPUT FORMAT:
 You MUST respond with valid JSON matching this schema:
 {
-  "intent": "optimization|macro_analysis|rebalancing|backtest|data_fetch|risk_analysis|compliance|combined|clarification_needed|out_of_scope",
+  "intent": \""""
+
+_PROMPT_AFTER_INTENT_LINE = """\",
   "confidence": 0.0-1.0,
   "agents_needed": [
     {"agent": "AgentName", "task_description": "What this agent should do", "priority": 1-10}
@@ -183,10 +180,22 @@ def _render_roster() -> str:
     )
 
 
+def _render_intents() -> str:
+    return "\n".join(f"- {value}: {description}" for value, description in INTENTS.items())
+
+
+def _render_intent_line() -> str:
+    return "|".join(INTENTS)
+
+
 ROUTER_SYSTEM_PROMPT = (
     _PROMPT_BEFORE_ROSTER
     + _render_roster()
     + _PROMPT_AFTER_ROSTER
+    + _render_intents()
+    + _PROMPT_AFTER_INTENTS
+    + _render_intent_line()
+    + _PROMPT_AFTER_INTENT_LINE
     + str(len(AGENTS))
     + _PROMPT_AFTER_COUNT
 )
@@ -325,13 +334,15 @@ def build_router_prompt(
 # RESPONSE REPAIR PROMPT
 # =============================================================================
 
-REPAIR_PROMPT = """The previous response was invalid JSON or didn't match the required schema.
+_REPAIR_BEFORE_INTENT_LINE = """The previous response was invalid JSON or didn't match the required schema.
 
 ERROR: {error}
 
 Please fix and return ONLY valid JSON matching this schema:
 {{
-  "intent": "optimization|macro_analysis|rebalancing|backtest|data_fetch|risk_analysis|compliance|combined|clarification_needed|out_of_scope",
+  "intent": \""""
+
+_REPAIR_AFTER_INTENT_LINE = """\",
   "confidence": 0.0-1.0,
   "agents_needed": [{{"agent": "AgentName", "task_description": "...", "priority": 1}}],
   "execution_order": ["AgentName"],
@@ -344,6 +355,8 @@ Please fix and return ONLY valid JSON matching this schema:
 
 Original request was: "{user_message}"
 """
+
+REPAIR_PROMPT = _REPAIR_BEFORE_INTENT_LINE + _render_intent_line() + _REPAIR_AFTER_INTENT_LINE
 
 
 def build_repair_prompt(user_message: str, error: str) -> str:
