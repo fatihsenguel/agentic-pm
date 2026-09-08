@@ -61,15 +61,18 @@ class TestRouterDecision:
         assert len(decision.agents_needed) == 1
     
     def test_valid_multi_step_decision(self):
-        """Test a multi-step workflow decision."""
+        """Test a multi-step workflow decision. The plan carried DataAgent
+        from the day REQUIRES named it for RebalanceAgent: the January shape,
+        macro then rebalance with no prices, validated and could not run."""
         data = {
             "intent": "combined",
             "confidence": 0.85,
             "agents_needed": [
                 {"agent": "MacroAgent", "task_description": "Check regime", "priority": 1},
-                {"agent": "RebalanceAgent", "task_description": "Generate TAA signal", "priority": 2}
+                {"agent": "DataAgent", "task_description": "Fetch prices", "priority": 2},
+                {"agent": "RebalanceAgent", "task_description": "Generate TAA signal", "priority": 3}
             ],
-            "execution_order": ["MacroAgent", "RebalanceAgent"],
+            "execution_order": ["MacroAgent", "DataAgent", "RebalanceAgent"],
             "parameters": {"tickers": ["SPY", "TLT"]},
             "is_multi_step": True,
             "requires_confirmation": False,
@@ -78,7 +81,7 @@ class TestRouterDecision:
         
         decision = RouterDecision.model_validate(data)
         assert decision.is_multi_step is True
-        assert len(decision.execution_order) == 2
+        assert len(decision.execution_order) == 3
     
     def test_invalid_agent_name(self):
         """Test that invalid agent names are rejected."""
@@ -250,7 +253,32 @@ class TestDependencies:
         for agent, needs in REQUIRES.items():
             assert agent in AGENTS
             assert set(needs) <= set(AGENTS)
-        assert REQUIRES["PortfolioAnalysisAgent"] == ("DataAgent",)
+
+    def test_requires_is_what_the_nodes_raise_on(self):
+        """Each entry is a raise verified at the node: PortfolioAnalysisAgent
+        on missing holdings, OptimizationAgent on missing returns and
+        covariance, BacktestAgent on missing optimal_weights, RebalanceAgent
+        on missing prices. The rebalance target is not an entry (KNOWN_GAPS:
+        the target is the IPS's, never the optimiser's)."""
+        assert REQUIRES == {
+            "PortfolioAnalysisAgent": ("DataAgent",),
+            "OptimizationAgent": ("DataAgent",),
+            "BacktestAgent": ("DataAgent", "OptimizationAgent"),
+            "RebalanceAgent": ("DataAgent",),
+        }
+
+    def test_plans_the_nodes_would_raise_on_are_rejected(self):
+        """The prompt's own examples plan [OptimizationAgent] alone and a
+        backtest with no optimiser; both raise at the node today."""
+        shapes = (
+            ("optimization", ["OptimizationAgent"], "OptimizationAgent requires DataAgent"),
+            ("backtest", ["DataAgent", "BacktestAgent"], "BacktestAgent requires OptimizationAgent"),
+            ("backtest", ["OptimizationAgent", "BacktestAgent"], "OptimizationAgent requires DataAgent"),
+            ("rebalancing", ["RebalanceAgent"], "RebalanceAgent requires DataAgent"),
+        )
+        for intent, order, message in shapes:
+            with pytest.raises(ValueError, match=message):
+                RouterDecision.model_validate(self._plan(intent, order))
 
     def test_analysis_agent_alone_is_rejected(self):
         with pytest.raises(ValueError, match="PortfolioAnalysisAgent requires DataAgent before it"):
@@ -287,15 +315,13 @@ class TestDependencies:
             RouterDecision.model_validate(self._plan("risk_analysis", ["PortfolioAnalysisAgent"]))
 
     def test_plans_still_accepted(self):
-        """Shapes the router is shown or produces today and REQUIRES does not
-        touch: rule 6's DataAgent alone, the prompt's own [OptimizationAgent]
-        alone and backtest with no optimiser, the rebalance with no target.
-        Whether they can run is the node's business until an entry is added."""
+        """Shapes every node in them can run: rule 6's DataAgent alone, the
+        optimiser after data, the backtest after both, the rebalance after
+        data (its missing target is the node's business, not a dependency)."""
         shapes = (
             ("risk_analysis", ["DataAgent"]),
-            ("optimization", ["OptimizationAgent"]),
             ("optimization", ["DataAgent", "OptimizationAgent"]),
-            ("backtest", ["DataAgent", "BacktestAgent"]),
+            ("backtest", ["DataAgent", "OptimizationAgent", "BacktestAgent"]),
             ("rebalancing", ["DataAgent", "RebalanceAgent"]),
             ("macro_analysis", ["MacroAgent"]),
         )

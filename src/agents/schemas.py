@@ -80,17 +80,19 @@ AgentName = Enum(
 # What an agent needs to have run before it, stated once beside the roster.
 # Every node raises on input an earlier agent did not publish, but only the
 # validator sees the plan before anything runs: an entry here turns a raise
-# discovered mid-run into a rejection the router is asked to repair. One
-# entry, the dependency verified to raise at the node (missing holdings,
-# prices, as-of dates, cash). OptimizationAgent, RebalanceAgent and
-# BacktestAgent raise the same way and are absent on purpose: the router
-# prompt's own examples plan [OptimizationAgent] alone and a backtest with no
-# optimiser, so each of those entries contradicts a shown example and is a
-# prompt change with its own golden prediction, one per commit.
-# ComplianceAgent's needs depend on its mode and live in
-# RouterDecision.validate_compliance.
+# discovered mid-run into a rejection the router is asked to repair. Each
+# entry is a raise verified at the node: PortfolioAnalysisAgent on missing
+# holdings, prices, as-of dates and cash; OptimizationAgent on missing
+# tickers, expected returns and covariance; BacktestAgent on missing
+# optimal_weights; RebalanceAgent on missing prices. RebalanceAgent's missing
+# target is not an entry on the optimiser: the target is the IPS's to state
+# (KNOWN_GAPS, "Rebalance has no target allocation source"). ComplianceAgent's
+# needs depend on its mode and live in RouterDecision.validate_compliance.
 REQUIRES: Dict[str, Tuple[str, ...]] = {
     "PortfolioAnalysisAgent": ("DataAgent",),
+    "OptimizationAgent": ("DataAgent",),
+    "BacktestAgent": ("DataAgent", "OptimizationAgent"),
+    "RebalanceAgent": ("DataAgent",),
 }
 
 _named_in_requires = set(REQUIRES) | {n for needs in REQUIRES.values() for n in needs}
