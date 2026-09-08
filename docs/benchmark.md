@@ -109,7 +109,7 @@ Must run without errors. Proves little, but a failure here damages everything th
 
 Questions requiring several agents in one run.
 
-**Status note, revised 8 September 2026:** the IPS (`docs/IPS.md`, `ips.toml`) and ComplianceAgent exist, built from the owner's document. The "Risk" agent 2.1 names is PortfolioAnalysisAgent (decided 8 September; RiskManagerAgent is an unused supervisor, `KNOWN_GAPS.md`). 2.1 and 2.2 pass on the runner; 2.3 is blocked on routing — the router does not plan ComplianceAgent for its wording, two failed predictions, stopped (`KNOWN_GAPS.md`).
+**Status note, revised 8 September 2026:** the IPS (`docs/IPS.md`, `ips.toml`) and ComplianceAgent exist, built from the owner's document. The "Risk" agent 2.1 names is PortfolioAnalysisAgent (decided 8 September; RiskManagerAgent is an unused supervisor, `KNOWN_GAPS.md`). 2.1 and 2.2 pass on the runner; 2.3 is blocked on routing — the router does not plan ComplianceAgent for its wording, two failed predictions, stopped (`KNOWN_GAPS.md`). **Revised 8 September, eighth sitting: all three pass; the runner is the status.** Since the router restructure the plan is derived from the intent and the extracted parameters through a terminal-agent table, and the three compliance readings are read from the message, not decided by the model.
 
 | # | Prompt | Passes when | Status |
 | --- | --- | --- | --- |
@@ -134,6 +134,8 @@ Cases where the system correctly does **not** deliver. More telling than any suc
 **3.3 is a feature to build, not a behaviour to verify.** Nothing in the system currently tracks or surfaces data age. `DailyPrice` rows carry dates, so the information exists in the database, but no agent reports it and no response format has a place for it. Budget build time, not test time.
 
 **3.5 requires conversation memory, which does not exist.** Each request builds fresh state; `run_agent_graph_sync` never passes prior turns. The router already produces good clarification questions — the follow-up answer arrives with no context, so the loop never closes. `AgentState.messages` and the `conversation_history` parameter on `build_router_prompt` already exist and are simply never populated; wiring them is small. This is a prerequisite for 3.5, not a later enhancement.
+
+**Built 8 September (eighth sitting), and not the way the paragraph above expected.** Memory is an extraction rule, not context for the model (`docs/DIRECTION.md`): the first turn's clarification leaves a structured record of what was asked, `run_agent_graph_sync` takes the previous turn's final state, and the reply is resolved against the record before anything else, with the model never shown the history. `conversation_history` on the prompt builder stayed unpopulated and is dead. The runner's 3.5 is a two-turn case, "Hows my APPL doing?" then "yes", and passes: 12/12.
 
 ---
 
@@ -162,7 +164,7 @@ Work through it and stop when time runs out. Sorted by effect, not by effort.
 2. **Data-age reporting (test case 3.3).** Promoted from fourth. It is a cross-cutting output-contract change, cheaper to build into Level 1 than to retrofit afterwards, and it is the single most transferable point in the interview.
 3. **The IPS, from the owner's document.** A prose IPS with numbered clauses, `ips.toml` derived from it, a pure checker, then the agent (`docs/HANDOFF.md` §7.2). Not from `wip/phase7-snapshot`, read and rejected 7 September 2026. This unlocks Level 2 and test cases 3.1 and 3.4 simultaneously. It also resolves the open question of where rebalancing targets come from (see `tests/golden/KNOWN_GAPS.md`).
 4. **One guardrail path that genuinely blocks** (test case 3.1), with clause citation.
-5. **Minimal conversation history** — enough to close the clarification loop for test case 3.5.
+5. **Minimal conversation history** — enough to close the clarification loop for test case 3.5. *Done 8 September, as an extraction rule over a record of what was asked; see the note under 3.5.*
 6. **Eval set, 20–30 questions** with expected answer and expected source per question. Produces the figure quoted in the CV. Moved last not because it matters least, but because it is the only item that cannot be built before the things it measures.
 
 **Tracing (previously point 3) is done, and the sentence that stood here was wrong.** Until 8 September 2026 the router node opened the request span and closed it in its own `finally`, so a live trace showed the routing decision and nothing after it — no agent spans, no tool calls, no handovers (`KNOWN_GAPS.md`). `run_agent_graph` now owns the span; agents trace their spans, ComplianceAgent traces its checker call, and `mark_agent_complete` records a handover to the next agent in the plan. Case 2.1 asserts all three on the stored trace.
