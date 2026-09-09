@@ -190,6 +190,17 @@ def test_named_ticker_with_no_finding_says_so():
 # "Which of my positions are over the limit?" is the breach list, which the
 # full report carries inside 63 lines (KNOWN_GAPS, the same entry). `status`
 # is the finding's own field and its one allowed value; the model sets it.
+#
+# The model sets it on 2.2 and 2.3 as well (read from its own output,
+# 9 September), so the rendering's failure direction is part of its design:
+# the body is the breach rows and their conditions, and the check's coverage
+# stays visible in one line each - the clauses within their limits by id
+# with their subjects, the exempt funds by name, the statements by id - so
+# "all rules" is visibly all of them whatever the model set, and 2.2 cannot
+# be hidden by a field.
+
+WITHIN_ROW = "→ within."
+EXEMPT_ROW = "exempt — a fund"
 
 
 def test_breaches_only_renders_the_breach_findings():
@@ -201,16 +212,21 @@ def test_breaches_only_renders_the_breach_findings():
     breaches = [f for f in findings if f.status == "breach"]
     assert breaches, "Part 7 has eight breaches at the 09-02 closes"
     assert "breach" in answer.splitlines()[0].lower()          # the header says so
-    assert set(CLAUSE.findall(answer)) == {f.clause for f in breaches} | {"IPS-5.2"}
     for f in breaches:
         assert f"{f.distance_pp:.2f}" in answer, f
-    assert "within" not in answer and "exempt" not in answer
+    assert WITHIN_ROW not in answer and EXEMPT_ROW not in answer   # body: breaches only
+    for c in ips:
+        assert c.id in answer, c.id                            # coverage: all rules, visibly
+    for f in findings:
+        if f.status == "exempt":
+            assert re.search(rf"\b{f.subject}\b", answer), f  # funds named (2.1)
+    for st in ips.statements:
+        assert st.text not in answer                           # by id, not quoted
     # Explained against the block's findings, as the runner does: IPS-3.1's
-    # clause text quotes its 40% minimum, whose finding is ok and not shown.
+    # clause text quotes its 40% minimum, whose finding is within and not a row.
     assert _unexplained(answer, findings) == []
     assert "2026-09-02" in answer
     assert "What would have to change" in answer
-    assert "Policy statements" not in answer
     assert "Not shown" in answer
     assert not TRADE.search(answer)
     assert not HEDGE.search(answer)
@@ -228,19 +244,24 @@ def test_breaches_on_a_named_position():
                      tickers=["JNJ"], status="breach")
     on_jnj = [f for f in findings if f.subject == "JNJ" and f.status == "breach"]
     assert {f.clause for f in on_jnj} == {"IPS-4.2"}
-    assert set(CLAUSE.findall(answer)) == {"IPS-4.2", "IPS-5.2"}
-    assert "within" not in answer
+    # IPS-4.1 is named in the coverage line as within, not as a row.
+    assert set(CLAUSE.findall(answer)) == {"IPS-4.1", "IPS-4.2", "IPS-5.2"}
+    assert WITHIN_ROW not in answer
     for t in TICKERS - {"JNJ"}:
         assert not re.search(rf"\b{t}\b", answer), t
     assert _unexplained(answer, on_jnj) == []
 
 
-def test_no_breach_says_so():
+def test_no_breach_says_so_and_still_names_every_rule():
+    """The day nothing breaches, 2.2's wording still gets the list: one line
+    saying so, then the coverage, no figure."""
     ips = load_ips()
     alloc = allocation()
     findings = [f for f in check(ips, alloc, INSTRUMENT_TYPES) if f.status != "breach"]
     answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"]), status="breach")
     assert "no finding is in breach" in answer.lower()
-    assert CLAUSE.findall(answer) == []
+    for c in ips:
+        assert c.id in answer, c.id
+    assert WITHIN_ROW not in answer and EXEMPT_ROW not in answer
     assert PCT.findall(answer) == []
     assert "2026-09-02" in answer                                # still priced, so dated
