@@ -222,6 +222,19 @@ def test_breaches_only_renders_the_breach_findings():
             assert re.search(rf"\b{f.subject}\b", answer), f  # funds named (2.1)
     for st in ips.statements:
         assert st.text not in answer                           # by id, not quoted
+    # A band clause emits one finding per bound. "Within" means every bound
+    # within: Equity is under IPS-3.1's minimum and over its maximum, and is
+    # not within; Fixed Income is within both bounds and is named once.
+    within_line = [l for l in answer.splitlines() if l.startswith("**Within their limits:**")][0]
+    within = {}
+    for part in within_line.split(":**", 1)[1].split(";"):
+        cid, _, subs = part.strip().partition(" ")
+        within[cid] = [x.strip() for x in subs.split(",")]
+    for cid, subs in within.items():
+        assert len(subs) == len(set(subs)), (cid, subs)
+    for f in breaches:
+        assert f.subject not in within.get(f.clause, []), (f.clause, f.subject)
+    assert "Fixed Income" in within["IPS-3.2"]
     # Explained against the block's findings, as the runner does: IPS-3.1's
     # clause text quotes its 40% minimum, whose finding is within and not a row.
     assert _unexplained(answer, findings) == []
