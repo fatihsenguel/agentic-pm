@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 8 September 2026, eighth sitting, on branch `vocabulary`, after DIRECTION.md's Order 1 was built.
+Last updated 9 September 2026, ninth sitting, on branch `selection`, after the compliance selection axis, the rename to named denominators, the deletions and Part 8.
 
 ---
 
@@ -65,6 +65,15 @@ So the "91 tests pass" figure in HANDOFF.md was not reproducible with a bare
 `pytest` invocation, and the verify-against-pytest half of the workflow had not
 been functioning. Fixed in 30819f6 by renaming to `check_imports.py`, since the
 file defines no test functions and is a diagnostic script.
+
+**9 September (ninth sitting).** Five of the six unguarded files still
+existed (`test_portfolio_manager_simple.py` did not), and two of them
+routed a live question through the model on the Demo Portfolio at every
+collection; pytest also collected their bare `test()` coroutine, so each
+ran its call twice per run. All five deleted (33f09b5): the suite went
+from 408 in 24 seconds to 405 in 14, and no longer spends on Haiku or
+touches portfolio 2. What `test_nodes_simple.py` alone exercised,
+`load_portfolio_context`, has its own entry under Hygiene.
 
 ## The golden set was silently nondeterministic
 
@@ -278,6 +287,11 @@ still cannot see `measure`, `group_by` or `tickers`, and the prompt shrink
 showed why that matters: the model's `policy_topic` flag moved two plan lines
 and only the plan told. The runner is the loop that saw the mode.
 
+**9 September (ninth sitting).** A seventh model-owned field, `status`, is
+as invisible to the runner as `measure`; the benchmark runner saw its one
+failed prediction (2.2 failing on clauses uncited) and the golden set,
+run twice, saw nothing. Sixteen lines held both times.
+
 
 ### `trace_tool` and `log_delegation` are never called — RESOLVED 8 September (sixth sitting)
 
@@ -379,6 +393,13 @@ So "91 passed" means 91 collected and none errored, not 91 things verified.
 
 Fixing means rewriting with real assertions, not a mechanical return -> assert
 swap. Expect genuine failures once it does.
+
+**9 September (ninth sitting).** Its `test_2` routes live twice per pytest
+run, and asserts the router filled `tickers` on "Analyze my portfolio",
+false since the padding block went; the `except Exception` swallows the
+error and the function returns False, which pytest ignores. Two asserts
+on the deleted `parameters.portfolio_id` were removed from it (1238792);
+the rest is untouched and still passes unconditionally.
 
 ---
 
@@ -500,6 +521,10 @@ role names LLM monitoring and evaluation, and this is the monitoring layer.
 with no error. `smart_router.py:104` imports it behind
 `self.config.use_stronger_model`, so the path is reachable. Verify the current
 Sonnet string against `GET /v1/models` rather than typing one in.
+
+**9 September (ninth sitting).** `claude-sonnet-5` is accepted by the
+token counter, so the id is known; the config line is unchanged, since
+decision 16 was logged rather than taken (its entry under Directions).
 
 ### `cash_balance` cannot be absent, so D2 is unenforceable
 
@@ -1112,6 +1137,29 @@ compliance formatter lacks has at least two values: a named position
 and breaches only. The handoff names this the first code change of the
 next sitting.
 
+**9 September (ninth sitting), built.** Two values, two readers. A named
+position is `tickers`, extraction's, read by the compliance formatter the
+way the P&L formatter reads it (c0886c2): "Is my JNJ position over any
+limit?" answers with JNJ's IPS-4.1 and 4.2 rows, its condition, the as-of
+and the total, and a "Not shown" line. Breaches only is `status`, a
+Literal with the one value `breach`, the model's like `measure` and
+`group_by`, held to intent compliance and rejected beside a mode
+(7232ecb, cb3e1c1, b4aada5). The prompt commit's prediction failed on
+2.2 and 2.3 on the first run: read from the model's own output, it sets
+`breach` on "does my allocation violate any rule" and "what would have to
+change" as readily as on "which are over". Not reworded. The failure
+direction moved instead (27a2ec0): the breach rendering keeps the
+check's coverage in one line each - clauses within their limits by id
+with their subjects, exempt funds by name, statements by id - so a
+status the model over-sets shortens the answer and hides nothing, and
+2.2 passes whatever it sets. Runner 12/12 after. `filter` is still not
+built. Noted for a case that asks: `group_by`'s three values are exactly
+the subject kinds of the findings, so "which of my *positions*" would
+narrow the breach list by it; the model once set `group_by: position`
+under compliance unasked. The one-figure entry's principle was decided
+with this: selection is a parameter the formatter reads, its values the
+block's own words, never a new measure.
+
 
 ## Where non-determinism is allowed to live
 
@@ -1290,6 +1338,10 @@ lacks, months, weeks, days, an absolute year, "today" next to a change verb
 sites remain: `nodes.py`'s dead `"3Y"` default on the period read, and the
 schema's `^\d+[YMD]$` pattern, wider than the config, now unreachable
 because extraction only ever writes a vocabulary key or None.
+
+**9 September (ninth sitting).** The dead `"3Y"` default in `nodes.py`
+deleted (043ed55). The schema's `^\d+[YMD]$` pattern remains, wider than
+the config and unreachable.
 
 
 ### The agent roster is restated in eight places — RESOLVED 7 September (fourth sitting)
@@ -1559,6 +1611,10 @@ own commit, and would make the CLI's lines reachable.
 `pending` record, and `resolved` since 5fca3bd; the CLI's "asked back" line
 printed for the first time. `reasoning` is still dropped.
 
+**9 September (ninth sitting).** Still dropped: the diagnostic that read
+the model's `status` printed `reasoning: None` from the decision dict.
+Pending decision 6, unchanged.
+
 
 ### `AgentTask.depends_on` has no reader
 
@@ -1573,6 +1629,12 @@ from the derived plan (`task_description` "derived for intent X", `priority`
 by position) and the model is not asked for it; `AgentTask` exists to carry
 three fields nothing reads. Deletion of the task list is a state-shape
 change, own decision.
+
+**Resolved 9 September (ninth sitting), a7a24bc.** `AgentTask` and the
+task list deleted: the graph's fallback to it was dead by derivation, the
+tracer line and the out-of-scope validator read the plan, the decision
+dict drops a key nothing read. A task list the model still sends is an
+extra field, ignored; two tests send one to prove it.
 
 
 ### `SmartRouter.route` opens its own request span behind the observability flag
@@ -1669,6 +1731,9 @@ refused under IPS-4.2 as before (pending decision 7). The JNJ question
 carries `tickers: ["JNJ"]` and still gets the full report (the selection
 axis, above).
 
+**9 September (ninth sitting).** The JNJ half is closed by c0886c2: its two
+rows and one condition, no other holding named.
+
 
 ### `ExtractedParameters` fields with no reader - grep, 8 September
 
@@ -1700,6 +1765,11 @@ the rest are dead on both ends. `portfolio_value` keeps its reader in the
 backtest node and no writer. `portfolio_id` on `parameters` is still written
 by the router and read by nothing. Deletion candidates, each its own commit
 after the grep.
+
+**9 September (ninth sitting).** `target_return` (dccb201),
+`rebalance_threshold` (7b9db26) and `portfolio_id` (1238792) deleted, each
+after the grep. `portfolio_value` keeps its reader in the backtest node
+and no writer, and stays.
 
 
 ### BaseAgent's tool-calling loop has no live caller - confirmed, 8 September
@@ -1752,6 +1822,11 @@ over, and `conversation_history=` joined it when memory became an extraction
 rule. The out-of-scope description in `INTENTS` still names DataAgent and
 PortfolioAnalysisAgent in one sentence (d8cd0d6's), left verbatim on purpose.
 
+**9 September (ninth sitting).** `get_graph_mermaid` and `print_graph`
+deleted (61158e1); `available_agents` and `conversation_history` deleted
+from the builder and from `route()` (1320913); `prompts.py` deleted
+(536a357). The tracer's `COLORS` map is the one site left.
+
 
 ### `get_agent_prompt`, `build_agent_prompt` and `build_system_prompt` have no caller
 
@@ -1765,6 +1840,10 @@ otherwise unread. Three dead functions, a stale map and a dead module;
 deletion is safe and is its own commit, after a grep for every name the
 `__init__` re-exports.
 
+**Resolved 9 September (ninth sitting), 536a357.** The module, the import
+and the export deleted; nothing outside the package `__init__` named any
+of it.
+
 ### `_validate_decision`'s agent check is unreachable
 
 Recorded 7 September (fourth sitting). `smart_router.py` `_validate_decision`
@@ -1773,6 +1852,10 @@ else. It cannot fire: `AgentTask.agent` and `RouterDecision.execution_order`
 are typed against `AgentName`, so Pydantic has already rejected the whole
 response before this runs. Harmless, but a check that cannot fail is a check
 nobody will notice going wrong. Delete with the next `smart_router.py` change.
+
+**Resolved 9 September (ninth sitting), 300af9e.** Both the agent loop and
+the length warning deleted, with the `AgentName` import that served only
+the first.
 
 ### A workbook edit rode into a KNOWN_GAPS commit
 
@@ -1794,6 +1877,10 @@ own commit with its own message. Confirm with `git show --stat 22508c9`.
 `_get_next_agent_internal` and `_is_execution_complete_internal` duplicate
 `state.get_next_agent` / `state.is_execution_complete` and have no caller;
 `route_next_step` imports the `state.py` versions.
+
+**9 September (ninth sitting).** The task-list fallback inside
+`_get_next_agent_internal` went with the task list (a7a24bc); the two
+dead duplicates themselves remain, still with no caller.
 
 ### Clarification exits the graph on a proxy, not on the intent
 
@@ -2134,6 +2221,10 @@ formatter reads neither field. Harmless, and a sign the measure rule's
 compliance question as one. Logged for the `filter` decision, where a
 selection axis for the compliance report would give the field a reader.
 
+**9 September (ninth sitting).** Still unread. The reader the compliance
+report gained is `status`, not `measure`; a `measure` set under
+compliance stays a sign of the rule's wording and nothing else.
+
 ### No pytest reached the analysis node's allocation call - RESOLVED 8 September (eighth sitting)
 
 Found when `allocation_by_sector` gained a parameter (4b003be): the suite
@@ -2173,6 +2264,9 @@ all nine positions, AAPL first only because the block is in the model's
 order. Owner's decision the same day (handoff §5 item 13): not resolved by
 extraction; item 16 is the path that would resolve it.
 
+**9 September (ninth sitting).** Decision 16 logged with its trigger, not
+taken; entry under Directions.
+
 
 ### The four phrase rules in extraction read English
 
@@ -2196,6 +2290,9 @@ Anlageklasse?" answered correctly (intent and measure are the model's, in
 German). "Wie lief mein Portfolio im letzten Monat?" -> `position_pnl`,
 no period, the since-purchase block for all nine positions: the wrong face
 the English span rule prevents, in German.
+
+**9 September (ninth sitting).** Same: decision 16 logged, entry under
+Directions.
 
 
 ### The lookup sentence quotes the whole question
@@ -2224,6 +2321,11 @@ allocation block and a cost inside each position, so either would be a
 rendering of an existing figure, not a computation, and belongs with the
 selection-axis decision rather than as new measures. Logged.
 
+**9 September (ninth sitting).** The principle is decided with the
+selection axis: a total and a cost are selections on the allocation and
+P&L renderings, read from a parameter, never new measures. Not built
+until a case asks.
+
 ### CLI session, 9 September: twenty-seven prompts
 
 Run after the eighth sitting's sweep, against portfolio 3, with the nine
@@ -2244,6 +2346,37 @@ questions. Every answer carried its as-of date. No golden or runner run was
 needed: nothing under `src/` changed.
 
 
+### `load_portfolio_context` has no asserting test
+
+Recorded 9 September (ninth sitting), when the five unguarded files were
+deleted. The only exercise of `load_portfolio_context` outside
+`test_portfolio_integration.py`, whose functions return booleans, was
+`test_nodes_simple.py`, a module body that hit the database at
+collection. The right instrument is a pytest with a stubbed portfolio
+manager, the way `test_router_plans.py` stubs it. Not built.
+
+### `max_conversation_history` is read by nothing
+
+Recorded 9 September (ninth sitting), seen while deleting
+`conversation_history` from the router path (1320913). `AgentConfig`
+(`agents/config.py`) carries it with a default of 10; no reader. Same
+family as `log_tool_calls`. Logged, not chased.
+
+### The `transactions` table has no portfolio
+
+Recorded 9 September (ninth sitting), for Order 2's first item. The
+models carry a `Transaction` with asset, date, type, quantity, price and
+fees, no portfolio and no currency, and no caller anywhere - the shape
+that makes `Dividend` unattributable (expected_values.md Part 6).
+expected_values.md Part 8 pins the ledger before it is built: decisions
+D10 to D14 (average cost, fees in basis, what a sale does, holdings
+derived from rows, a row belongs to a portfolio and its amount is data),
+portfolio 3 as nine buys that must reproduce Part 1 to the cent, and one
+synthetic position built in two tranches and partly sold, exact to the
+cent. The workbook's `Ledger` sheet carries the same as formulas (64a9bec),
+not recalculated here. The code is next: a test over Part 8 that fails
+before the ledger exists, then the migration, then the derivation.
+
 ### pytest warning inventory
 
 Recorded 7 September (third sitting), from a green run of 132. Twenty
@@ -2253,6 +2386,11 @@ SQLAlchemy `Query.get()` legacy calls from `data_manager.py:57`; and two
 `PytestReturnNotNoneWarning` from `test_portfolio_integration.py`, which is
 the "does not assert" entry above showing up in pytest's own output. None
 blocks anything; the Pydantic one has a removal date.
+
+**9 September (ninth sitting).** Twenty-three: `AgentTask`'s Pydantic
+warning went with the class; the SQLAlchemy `.get()` count was twenty on
+this day's runs, not sixteen - it moves with what the price cache does
+during the run, so the inventory's number is a floor.
 
 ### `.gitignore` is corrupted
 
@@ -2297,6 +2435,13 @@ on each asset-class and position line. The checker reads `pct_of_total`
 only. The rename to named denominators (`pct_of_sectored`, no
 `pct_of_denominator`) is its own later decision; it touches the runner, two
 fixtures and the formatter.
+
+**Renamed 9 September (ninth sitting), 0c9f833.** `pct_of_denominator` is
+gone; `pct_of_sectored` is the sector view's, None on the unsectored line
+and in the other views; `pct_of_total` is the checker's field on every
+line. The block's `denominator` label stays as the formatter's header;
+dropping it is its own decision. Runner 12/12 after, 1.1's own check
+having moved to the new name.
 
 
 ### Router parameter ordering is nondeterministic — RESOLVED 7 September
@@ -2440,6 +2585,35 @@ vocabularies are registries (8c35dee, `TERMINAL`), and the prompt shrank
 from 1574 to 1063 words (9364d24, 4d69e47). Memory is an extraction rule
 (5fca3bd). What the tool boundary still lacks: `measure` and `group_by` are
 the model's, and a defined window is not an input.
+
+**9 September (ninth sitting).** The prompt is 1120 words with the
+`status` rule line (b4aada5); `status` joins `measure` and `group_by` as
+the model's.
+
+### Decision 16: a stronger reader producing a typed request - LOGGED 9 September
+
+Brought as a decision (handoff §5 item 16) and logged, not taken. The
+shape: the model reads the sentence and emits every typed field -
+tickers, period, the percentages, the compliance mode - and
+`extraction.py` only validates them against the vocabularies, asking on
+what fails; names, German and typos become the model's reading. What it
+does to the golden set: seven of sixteen lines go from deterministic to
+model-dependent - the two `1Y` lines, the "gain today" clarification, the
+three compliance plans, the two clarifications - and validation catches
+a wrong ticker but not a missed one, which is the bad-direction miss the
+bridge entry above records, made nondeterministic. Cost per call,
+measured with the token counter on the full prompt: Haiku 4.5 about
+2,280 input tokens and $0.003; Sonnet 5 about 3,150 and $0.008; Opus 5
+about 3,150 and $0.021; a golden run is 5, 13 or 34 cents. The prompt
+would grow back, since the ticker, period and mode rules the shrink
+removed would return. If taken it is Order 5's shape built early on the
+router's schema, a dated change to DIRECTION.md's Order and its "a bigger
+model is debt" sentence, and the reader built twice. Trigger: Order 5, or
+earlier if a benchmark case needs a name, German or a typo read rather
+than asked about. Rejected alongside: flipping `use_stronger_model` on
+the current prompt (a no-op today, the Sonnet config carrying the Haiku
+id); a hybrid with extraction first and the model on a miss (two readers,
+two failure directions, the answer depending on phrasing).
 
 
 ### Direction for `quant/`: one implementation per formula
