@@ -99,15 +99,24 @@ class DailyPrice(Base):
         return f"<DailyPrice(asset_ticker='{self.asset.ticker}', date={self.date}, close={self.close})>"
 
 class Transaction(Base):
-    # ... (Ihr Code) ...
+    """
+    One ledger row: a buy or a sale of an asset in a portfolio.
+
+    A row belongs to a portfolio (expected_values.md D14); holdings derive
+    from rows (D13). `amount` is the settled figure in the portfolio's
+    currency - what was paid on a buy, what was received on a sale, fees
+    included (D11) - and is data, never computed from the other columns.
+    """
     __tablename__ = 'transactions'
     id = Column(Integer, primary_key=True)
+    portfolio_id = Column(Integer, ForeignKey('portfolios.id', ondelete='CASCADE'), nullable=False, index=True)
     asset_id = Column(Integer, ForeignKey('assets.id'), nullable=False)
     date = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     type = Column(String(10), nullable=False)
     quantity = Column(Float, nullable=False)
     price_per_unit = Column(Float, nullable=False)
     fees = Column(Float, default=0.0)
+    amount = Column(Float, nullable=False)
     asset = relationship('Asset', back_populates='transactions')
 
 class Dividend(Base):
