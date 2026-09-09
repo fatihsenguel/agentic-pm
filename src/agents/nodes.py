@@ -1792,12 +1792,18 @@ def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict],
     has no finding on is said so, and nothing else is printed for it: it is
     not among the holdings the check covered.
 
-    With `status` set, only the findings of that status - the breach list,
-    every clause included, since the class and sector limits are limits too.
-    No finding of that status is said so, under the as-of date.
+    With `status` set, the body is the findings of that status - the breach
+    list, every clause included, since the class and sector limits are
+    limits too - and the check's coverage stays visible in one line each:
+    the clauses within their limits by id with their subjects, the exempt
+    funds by name, the statements by id. The model sets status on "does my
+    allocation violate any rule" as readily as on "which are over" (read
+    from its output, 9 September), so the failure direction is designed in:
+    a status the model over-sets shortens the answer and hides nothing.
+    No finding of that status is said so, and the coverage still follows.
 
-    Under either selection the statements are left out - nothing about one
-    position or one breach is in them - and a "Not shown" line names what
+    Under either selection the statements' text is left out - nothing about
+    one position or one breach is in it - and a "Not shown" line names what
     was left out, so the answer says what it did not do (Part 3b)."""
     heading = []
     lines = []
@@ -1817,6 +1823,7 @@ def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict],
             lines.append(f"No finding on {', '.join(missing)}: not among the holdings "
                          "the check covered.")
             lines.append("")
+    pool = findings
     if status is not None:
         findings = [f for f in findings if f.get("status") == status]
         heading.append("breaches" if status == "breach" else status)
@@ -1834,48 +1841,76 @@ def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict],
                          f"close among the holdings ({as_of.get('stalest')}). "
                          f"No figure below is fresher than that.")
         lines.append("")
-    if status is not None and not findings:
-        lines.append(f"No finding is in {status}"
-                     + (f" on {', '.join(subjects)}" if subjects else "") + ".")
-        return lines
     if block.get("total_value") is not None:
         lines.append(f"**Total portfolio value:** {block['total_value']:,.2f} "
                      "(including cash; every limit is a share of it)")
         lines.append("")
 
-    by_clause: Dict[str, List[Dict]] = {}
-    for f in findings:
-        by_clause.setdefault(f["clause"], []).append(f)
+    if status is not None and not findings:
+        lines.append(f"No finding is in {status}"
+                     + (f" on {', '.join(subjects)}" if subjects else "") + ".")
+    else:
+        by_clause: Dict[str, List[Dict]] = {}
+        for f in findings:
+            by_clause.setdefault(f["clause"], []).append(f)
 
-    lines.append("**Findings by clause**")
-    for cid, rows in by_clause.items():
+        lines.append("**Findings by clause**")
+        for cid, rows in by_clause.items():
+            lines.append("")
+            lines.append(f"**{cid}** — {policy.get(cid, {}).get('text', '')}")
+            for f in rows:
+                if f.get("status") == "exempt":
+                    lines.append(f"  {f['subject']}: exempt — a fund, not attributed to an issuer.")
+                elif f.get("status") == "breach":
+                    lines.append(f"  {f['subject']}: {f['observed']:.2%} of total against "
+                                 f"{f['bound']} {f['limit']:.0%} → BREACH, "
+                                 f"{f['distance_pp']:+.2f} pp ({f['distance_value']:,.2f}).")
+                else:
+                    lines.append(f"  {f['subject']}: {f['observed']:.2%} of total against "
+                                 f"{f['bound']} {f['limit']:.0%} → within.")
+
         lines.append("")
-        lines.append(f"**{cid}** — {policy.get(cid, {}).get('text', '')}")
-        for f in rows:
-            if f.get("status") == "exempt":
-                lines.append(f"  {f['subject']}: exempt — a fund, not attributed to an issuer.")
-            elif f.get("status") == "breach":
-                lines.append(f"  {f['subject']}: {f['observed']:.2%} of total against "
-                             f"{f['bound']} {f['limit']:.0%} → BREACH, "
-                             f"{f['distance_pp']:+.2f} pp ({f['distance_value']:,.2f}).")
-            else:
-                lines.append(f"  {f['subject']}: {f['observed']:.2%} of total against "
-                             f"{f['bound']} {f['limit']:.0%} → within.")
-
-    lines.append("")
-    breaches = [f for f in findings if f.get("status") == "breach"]
-    lines.append("**What would have to change** (IPS-5.2: the amount that returns each "
-                 "figure to its limit, stated as a condition, not a trade)")
-    if not breaches:
-        lines.append("  No limit is breached.")
-    for f in breaches:
-        direction = "down" if f["bound"] == "max" else "up"
-        lines.append(f"  {f['clause']} {f['subject']}: {direction} {f['distance_pp']:.2f} pp "
-                     f"of total ({f['distance_value']:,.2f} at unchanged total).")
+        breaches = [f for f in findings if f.get("status") == "breach"]
+        lines.append("**What would have to change** (IPS-5.2: the amount that returns each "
+                     "figure to its limit, stated as a condition, not a trade)")
+        if not breaches:
+            lines.append("  No limit is breached.")
+        for f in breaches:
+            direction = "down" if f["bound"] == "max" else "up"
+            lines.append(f"  {f['clause']} {f['subject']}: {direction} {f['distance_pp']:.2f} pp "
+                         f"of total ({f['distance_value']:,.2f} at unchanged total).")
 
     statements = block.get("statements") or []
     selected = bool(subjects) or status is not None
-    if statements and not selected:
+    if status is not None:
+        # The coverage, one line each, no figures: what the check found within
+        # its limits, what it exempted, what it cited without computing. A
+        # band clause emits one finding per bound, so "within" is per
+        # (clause, subject) with no bound in breach, the subject named once.
+        breached = {(f["clause"], f["subject"]) for f in pool if f.get("status") == "breach"}
+        within: Dict[str, List[str]] = {}
+        exempt: Dict[str, List[str]] = {}
+        for f in pool:
+            key = (f["clause"], f["subject"])
+            if f.get("status") == "ok" and key not in breached:
+                subs = within.setdefault(f["clause"], [])
+                if f["subject"] not in subs:
+                    subs.append(f["subject"])
+            elif f.get("status") == "exempt":
+                exempt.setdefault(f["clause"], []).append(f["subject"])
+        if within:
+            lines.append("")
+            lines.append("**Within their limits:** "
+                         + "; ".join(f"{cid} {', '.join(subs)}" for cid, subs in within.items()))
+        for cid, subs in exempt.items():
+            lines.append("")
+            lines.append(f"**Exempt under {cid}**, funds not attributed to an issuer: "
+                         + ", ".join(subs))
+        if statements and not subjects:
+            lines.append("")
+            lines.append("**Statements**, cited and not computed: "
+                         + ", ".join(st["clause"] for st in statements))
+    elif statements and not selected:
         lines.append("")
         lines.append("**Policy statements** — cited, not computed")
         for st in statements:
@@ -1890,8 +1925,8 @@ def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict],
         if subjects:
             left_out.append("the other holdings, the asset-class and sector clauses")
         if status is not None:
-            left_out.append("the findings inside their limits and the funds not counted")
-        left_out.append("the policy statements")
+            left_out.append("the figures of the findings within their limits")
+        left_out.append("the policy statements' text")
         lines.append(f"**Not shown:** {', '.join(left_out)}. Ask about the portfolio "
                      "for the full check.")
     return lines
