@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 import asyncio
 import pytest
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 # Test imports
 from agents.state import create_initial_state, AgentState
@@ -26,7 +26,7 @@ from agents.nodes import (
     rebalance_agent_node,
     backtest_agent_node,
 )
-from portfolio_tool.portfolio_manager import PortfolioManager, add_holding_with_auto_fetch
+from portfolio_tool.portfolio_manager import PortfolioManager
 from portfolio_tool.data_manager import DataManager, get_data_manager
 
 
@@ -81,8 +81,8 @@ def test_load_portfolio_context_with_valid_portfolio():
     dm.fetch_price_data("TLT", start, end)
     
     portfolio_id = pm.create_portfolio("Test Portfolio")
-    pm.add_holding(portfolio_id, "SPY", 100, 450.0)
-    pm.add_holding(portfolio_id, "TLT", 50, 88.0)
+    pm.record_transaction(portfolio_id, "SPY", date(2024, 1, 15), "buy", 100, 450.0, 0.0, 45_000.0)
+    pm.record_transaction(portfolio_id, "TLT", date(2024, 1, 15), "buy", 50, 88.0, 0.0, 4_400.0)
     
     state = create_initial_state("Test", portfolio_id=portfolio_id)
     
@@ -159,7 +159,7 @@ async def test_data_agent_with_valid_data():
     dm.fetch_price_data("SPY", start, end)
     
     portfolio_id = pm.create_portfolio("Test Portfolio")
-    pm.add_holding(portfolio_id, "SPY", 100, 450.0)
+    pm.record_transaction(portfolio_id, "SPY", date(2024, 1, 15), "buy", 100, 450.0, 0.0, 45_000.0)
     
     state = create_initial_state("Test", portfolio_id=portfolio_id)
     
@@ -285,9 +285,9 @@ async def test_end_to_end_valid_workflow():
         dm.fetch_price_data(ticker, start, end)
     
     portfolio_id = pm.create_portfolio("End-to-End Test")
-    pm.add_holding(portfolio_id, "SPY", 100, 450.0)
-    pm.add_holding(portfolio_id, "TLT", 50, 88.0)
-    pm.add_holding(portfolio_id, "GLD", 20, 185.0)
+    pm.record_transaction(portfolio_id, "SPY", date(2024, 1, 15), "buy", 100, 450.0, 0.0, 45_000.0)
+    pm.record_transaction(portfolio_id, "TLT", date(2024, 1, 15), "buy", 50, 88.0, 0.0, 4_400.0)
+    pm.record_transaction(portfolio_id, "GLD", date(2024, 1, 15), "buy", 20, 185.0, 0.0, 3_700.0)
     
     state = create_initial_state("Optimize my portfolio", portfolio_id=portfolio_id)
     

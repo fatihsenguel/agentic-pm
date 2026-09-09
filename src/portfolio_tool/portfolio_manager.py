@@ -13,7 +13,8 @@ DESIGN PRINCIPLES (PRODUCTION-GRADE):
 
 WHAT THIS MODULE DOES:
 ✅ Create/Read/Update/Delete portfolios
-✅ Create/Read/Update/Delete holdings (links to EXISTING assets)
+✅ Record ledger rows (buys and sales) against EXISTING assets
+✅ Read holdings, derived from the ledger (expected_values.md D13)
 ✅ Query portfolio structure
 
 WHAT THIS MODULE DOES NOT DO:
@@ -34,10 +35,11 @@ Usage:
     start_date = end_date - timedelta(days=365)
     dm.fetch_price_data("SPY", start_date, end_date)  # Creates Asset with REAL data
     
-    # STEP 2: Create portfolio and add holdings (PortfolioManager's job)
+    # STEP 2: Create portfolio and record what was bought (PortfolioManager's job)
     pm = PortfolioManager()
     portfolio_id = pm.create_portfolio("My 401k", currency="USD")
-    pm.add_holding(portfolio_id, "SPY", quantity=100, average_price=450.0)
+    pm.record_transaction(portfolio_id, "SPY", date(2024, 1, 15), "buy",
+                          quantity=100, price=450.0, fees=0.0, amount=45_000.0)
     
     # Get tickers for agents
     tickers = pm.get_portfolio_tickers(portfolio_id)  # ["SPY"]
@@ -45,15 +47,17 @@ Usage:
 
 import logging
 from typing import List, Dict, Optional
-from datetime import datetime
+from datetime import date as date_type, datetime, time
 from sqlalchemy.orm import Session
 
 from portfolio_tool.database_setup import (
     SessionLocal, 
     Portfolio, 
     PortfolioHolding,
-    Asset
+    Asset,
+    Transaction,
 )
+from portfolio_tool.quant.ledger import ROW_TYPES, derive_holdings
 
 logger = logging.getLogger(__name__)
 
@@ -248,9 +252,15 @@ class PortfolioManager:
             if not portfolio:
                 return False
             
-            # Delete all holdings (cascade handles this, but explicit is clear)
+            # Delete the holdings and the ledger explicitly. SQLite does not
+            # enforce ON DELETE CASCADE unless foreign keys are switched on,
+            # and it reuses a deleted portfolio's id, so an orphaned ledger
+            # row would become the next portfolio's holding.
             session.query(PortfolioHolding).filter(
                 PortfolioHolding.portfolio_id == portfolio_id
+            ).delete()
+            session.query(Transaction).filter(
+                Transaction.portfolio_id == portfolio_id
             ).delete()
             
             # Delete portfolio
@@ -271,190 +281,176 @@ class PortfolioManager:
     # HOLDING OPERATIONS (STRICT - NO ASSET CREATION)
     # ========================================================================
     
-    def add_holding(
+    def record_transaction(
         self,
         portfolio_id: int,
         ticker: str,
+        date: date_type,
+        kind: str,
         quantity: float,
-        average_price: float
+        price: float,
+        fees: float,
+        amount: float,
     ) -> int:
         """
-        Add a holding to a portfolio
-        
-        STRICT POLICY: Asset MUST exist in database before adding holding.
-        Use DataManager.fetch_price_data() to create assets with real data.
-        
+        Record one ledger row: a buy or a sale (expected_values.md Part 8).
+
+        Every field is required. `amount` is the settled figure in the
+        portfolio's currency - what was paid on a buy, what was received on
+        a sale, fees inside (D11) - and is data (D14): it is not computed
+        from price and fees here, because for a foreign-currency row the two
+        differ by the day's rate. `fees` is required for the same reason a
+        defaulted fee would be a fee of zero with a plausible face. No
+        average is computed anywhere in this module: holdings derive from
+        the rows (quant/ledger.py, D13).
+
+        STRICT: the portfolio and the asset must already exist. Nothing is
+        created here; DataManager.fetch_price_data creates assets.
+
         Args:
-            portfolio_id: Portfolio ID
-            ticker: Asset ticker (e.g., "SPY")
-            quantity: Number of shares
-            average_price: Average purchase price per share
-            
+            portfolio_id: the portfolio the row belongs to
+            ticker: an existing asset's ticker
+            date: the trade date
+            kind: 'buy' or 'sell'
+            quantity: units traded
+            price: price per unit in the instrument's currency
+            fees: fees on the trade, in the portfolio's currency
+            amount: the settled figure in the portfolio's currency
+
         Returns:
-            holding_id: ID of created/updated holding
-            
+            the row's id
+
         Raises:
-            ValueError: If portfolio doesn't exist
-            AssetNotFoundError: If asset doesn't exist in database
-            
-        Example:
-            # WRONG - will fail:
-            pm.add_holding(1, "AAPL", 10, 150.0)  # ❌ AAPL not in database
-            
-            # CORRECT - fetch data first:
-            dm = DataManager()
-            dm.fetch_price_data("AAPL", start_date, end_date)  # Creates Asset
-            pm.add_holding(1, "AAPL", 10, 150.0)  # ✅ Now it works
+            ValueError: unknown kind, or portfolio not found
+            AssetNotFoundError: the asset is not in the database
         """
+        if kind not in ROW_TYPES:
+            raise ValueError(
+                f"Unknown transaction type {kind!r}; a ledger row is one of "
+                f"{', '.join(ROW_TYPES)}."
+            )
+
         session = self._get_session()
         try:
-            # Verify portfolio exists
             portfolio = session.get(Portfolio, portfolio_id)
             if not portfolio:
                 raise ValueError(f"Portfolio {portfolio_id} not found")
-            
-            # ✅ STRICT: Asset MUST exist (no auto-creation)
+
             asset = session.query(Asset).filter(Asset.ticker == ticker).first()
             if not asset:
                 raise AssetNotFoundError(
                     f"Asset '{ticker}' not found in database.\n"
-                    f"\n"
-                    f"Please fetch market data for this ticker first:\n"
-                    f"\n"
-                    f"  from portfolio_tool.data_manager import DataManager\n"
-                    f"  from datetime import datetime, timedelta\n"
-                    f"\n"
-                    f"  dm = DataManager()\n"
-                    f"  end_date = datetime.now()\n"
-                    f"  start_date = end_date - timedelta(days=365)\n"
-                    f"  dm.fetch_price_data('{ticker}', start_date, end_date)\n"
-                    f"\n"
-                    f"This will create the Asset with proper:\n"
-                    f"  - asset_class (EQUITY, BOND, ETF, etc.) from yfinance\n"
-                    f"  - currency (USD, EUR, etc.) from yfinance\n"
-                    f"  - sector, industry, and other metadata\n"
-                    f"\n"
-                    f"Then you can add it to your portfolio."
+                    f"Fetch market data for it first "
+                    f"(DataManager.fetch_price_data('{ticker}', start, end)), "
+                    f"which creates the Asset with its metadata."
                 )
-            
-            # Check if holding already exists
-            existing = session.query(PortfolioHolding).filter(
-                PortfolioHolding.portfolio_id == portfolio_id,
-                PortfolioHolding.asset_id == asset.id
-            ).first()
-            
-            if existing:
-                # Update existing holding
-                old_quantity = existing.quantity
-                new_quantity = old_quantity + quantity
-                
-                # Weighted average price
-                total_cost = (existing.average_price * old_quantity + average_price * quantity)
-                existing.average_price = total_cost / new_quantity
-                existing.quantity = new_quantity
-                existing.updated_at = datetime.utcnow()
-                
-                session.commit()
-                logger.info(
-                    f"Updated holding {ticker} in portfolio {portfolio_id}: "
-                    f"{old_quantity} → {new_quantity} shares, "
-                    f"avg price ${existing.average_price:.2f}"
-                )
-                return existing.id
-            else:
-                # Create new holding
-                holding = PortfolioHolding(
-                    portfolio_id=portfolio_id,
-                    asset_id=asset.id,
-                    quantity=quantity,
-                    average_price=average_price,
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow()
-                )
-                session.add(holding)
-                session.commit()
-                session.refresh(holding)
-                
-                logger.info(f"Added holding {ticker} to portfolio {portfolio_id}: {quantity} shares @ ${average_price:.2f}")
-                return holding.id
-            
-        except Exception as e:
+
+            row = Transaction(
+                portfolio_id=portfolio_id,
+                asset_id=asset.id,
+                date=datetime.combine(date, time()) if not isinstance(date, datetime) else date,
+                type=kind,
+                quantity=quantity,
+                price_per_unit=price,
+                fees=fees,
+                amount=amount,
+            )
+            session.add(row)
+            session.commit()
+            session.refresh(row)
+            logger.info(
+                f"Recorded {kind} of {quantity} {ticker} @ {price} on {date} "
+                f"in portfolio {portfolio_id} (amount {amount})"
+            )
+            return row.id
+
+        except Exception:
             session.rollback()
             raise
         finally:
             session.close()
-    
+
     def get_holdings(self, portfolio_id: int) -> List[Dict]:
         """
-        Get all holdings for a portfolio
-        
-        Args:
-            portfolio_id: Portfolio ID
-            
+        Holdings of a portfolio, derived from its ledger rows (D13).
+
+        The `transactions` table is the record of what was bought and sold;
+        a holding is a view of it, computed by quant/ledger.py and never read
+        from the holdings table. Unpriced: one dict per position still held,
+        with the asset's metadata joined, plus the cost basis and realized
+        gain the derivation carries. A portfolio with no rows has no
+        holdings; the caller decides what an empty portfolio means.
+
+        Raises LedgerError, from the derivation, on rows that cannot be
+        turned into holdings - a sale over the position, an unknown type.
+        That is a data error and is not repaired here.
+
         Returns:
-            List of holding dicts with FULL asset information
+            List of holding dicts: ticker, name, quantity, average_price,
+            cost_basis, realized, asset_class, sector, instrument_type,
+            industry, country, currency, purchase_date (a date).
         """
         session = self._get_session()
         try:
-            holdings = (
-                session.query(PortfolioHolding, Asset)
-                .join(Asset, PortfolioHolding.asset_id == Asset.id)
-                .filter(PortfolioHolding.portfolio_id == portfolio_id)
+            found = (
+                session.query(Transaction, Asset)
+                .join(Asset, Transaction.asset_id == Asset.id)
+                .filter(Transaction.portfolio_id == portfolio_id)
+                .order_by(Transaction.date, Transaction.id)
                 .all()
             )
-            
-            return [
+            if not found:
+                return []
+
+            assets = {asset.ticker: asset for _, asset in found}
+            rows = [
                 {
-                    "id": holding.id,
+                    "portfolio_id": t.portfolio_id,
+                    "date": t.date.date() if isinstance(t.date, datetime) else t.date,
+                    "type": t.type,
                     "ticker": asset.ticker,
-                    "name": asset.name,
-                    "quantity": float(holding.quantity),
-                    "average_price": float(holding.average_price),
-                    "asset_class": asset.asset_class,
-                    "sector": asset.sector,
-                    "instrument_type": asset.instrument_type,
-                    "industry": asset.industry,
-                    "country": asset.country,
-                    "currency": asset.currency,
-                    "created_at": holding.created_at,
-                    "updated_at": holding.updated_at,
-                    "purchase_date": holding.purchase_date
+                    "quantity": t.quantity,
+                    "price": t.price_per_unit,
+                    "fees": t.fees,
+                    "amount": t.amount,
                 }
-                for holding, asset in holdings
+                for t, asset in found
             ]
-            
         finally:
             session.close()
-    
+
+        holdings = derive_holdings(rows)
+        return [
+            {
+                "ticker": h.ticker,
+                "name": assets[h.ticker].name,
+                "quantity": float(h.quantity),
+                "average_price": float(h.average_price),
+                "cost_basis": float(h.cost_basis),
+                "realized": float(h.realized),
+                "asset_class": assets[h.ticker].asset_class,
+                "sector": assets[h.ticker].sector,
+                "instrument_type": assets[h.ticker].instrument_type,
+                "industry": assets[h.ticker].industry,
+                "country": assets[h.ticker].country,
+                "currency": assets[h.ticker].currency,
+                "purchase_date": date_type.fromisoformat(h.purchase_date),
+            }
+            for h in holdings.values()
+        ]
+
     def get_portfolio_tickers(self, portfolio_id: int) -> List[str]:
         """
-        Get list of tickers in a portfolio
-        
-        This is the KEY METHOD used by agents to get the list of assets
-        to analyze, optimize, or rebalance.
-        
-        Args:
-            portfolio_id: Portfolio ID
-            
-        Returns:
-            List of tickers (e.g., ["SPY", "TLT", "GLD"])
+        Tickers of a portfolio's holdings, in get_holdings' order.
+
+        The router builds its portfolio context from this list. It is a view
+        of get_holdings so that the ledger has one reader, not two.
         """
-        session = self._get_session()
-        try:
-            holdings = (
-                session.query(Asset.ticker)
-                .join(PortfolioHolding, Asset.id == PortfolioHolding.asset_id)
-                .filter(PortfolioHolding.portfolio_id == portfolio_id)
-                .all()
-            )
-            
-            tickers = [ticker for (ticker,) in holdings]
-            logger.debug(f"Portfolio {portfolio_id} tickers: {tickers}")
-            return tickers
-            
-        finally:
-            session.close()
-    
+        tickers = [h["ticker"] for h in self.get_holdings(portfolio_id)]
+        logger.debug(f"Portfolio {portfolio_id} tickers: {tickers}")
+        return tickers
+
+
     def update_holding(
         self,
         holding_id: int,
@@ -687,102 +683,3 @@ def ensure_asset_exists_helper(ticker: str) -> bool:
     except Exception as e:
         logger.error(f"Failed to fetch data for {ticker}: {e}")
         raise
-
-
-def add_holding_with_auto_fetch(
-    portfolio_id: int,
-    ticker: str,
-    quantity: float,
-    average_price: float
-) -> int:
-    """
-    Convenience function: Add holding with automatic data fetching if needed.
-    
-    This is a WRAPPER - NOT part of core PortfolioManager.
-    Use this in demos or user-facing code for better UX.
-    
-    Args:
-        portfolio_id: Portfolio ID
-        ticker: Asset ticker
-        quantity: Number of shares
-        average_price: Average purchase price
-        
-    Returns:
-        holding_id
-    """
-    # Ensure asset exists
-    ensure_asset_exists_helper(ticker)
-    
-    # Add holding
-    pm = PortfolioManager()
-    return pm.add_holding(portfolio_id, ticker, quantity, average_price)
-
-
-if __name__ == "__main__":
-    # This demonstrates the CORRECT usage pattern
-    logging.basicConfig(level=logging.INFO)
-    
-    print("=" * 80)
-    print("PORTFOLIO MANAGER - PRODUCTION USAGE PATTERN")
-    print("=" * 80)
-    
-    print("\n⚠️  This will FAIL if assets don't exist - that's intentional!")
-    print("Use ensure_asset_exists_helper() or fetch data first.\n")
-    
-    pm = PortfolioManager()
-    
-    # Create portfolio
-    pid = pm.create_portfolio("Test Portfolio")
-    print(f"✓ Created portfolio {pid}")
-    
-    # Try to add holdings - will fail if assets don't exist
-    try:
-        print("\nAttempting to add SPY (may fail if not in database)...")
-        pm.add_holding(pid, "SPY", quantity=100, average_price=450.0)
-        print("✓ Added SPY (asset existed in database)")
-    except AssetNotFoundError as e:
-        print(f"❌ Failed as expected: {e}")
-        print("\n✅ This is CORRECT behavior - no guessing allowed!")
-    
-    # Cleanup
-    pm.delete_portfolio(pid)
-    print("\n✓ Cleaned up test portfolio")
-
-
-
-
-# JUST FOR TESTSS
-def get_or_create_demo_portfolio() -> int:
-    """
-    Helper to get or create a demo portfolio for testing.
-    
-    Returns:
-        Portfolio ID
-    """
-    pm = PortfolioManager()
-    
-    # Check for existing
-    portfolios = pm.list_portfolios()
-    for p in portfolios:
-        if p["name"] == "Demo Portfolio":
-            return p["id"]
-            
-    # Create new
-    pid = pm.create_portfolio("Demo Portfolio", currency="USD")
-    
-    # Add assets (safely)
-    try:
-        # We use the helper to ensure assets exist first
-        # This is for DEMO purposes - in prod, use DataManager
-        ensure_asset_exists_helper("SPY")
-        ensure_asset_exists_helper("TLT")
-        ensure_asset_exists_helper("GLD")
-        
-        pm.add_holding(pid, "SPY", 100, 400.0)  # $40k
-        pm.add_holding(pid, "TLT", 200, 100.0)  # $20k
-        pm.add_holding(pid, "GLD", 50, 180.0)   # $9k
-        
-    except Exception as e:
-        logger.warning(f"Could not fully seed demo portfolio: {e}")
-        
-    return pid

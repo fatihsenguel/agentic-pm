@@ -152,6 +152,24 @@ def test_a_disagreeing_holdings_row_is_ignored(ko_portfolio):
             session.close()
 
 
+def test_delete_portfolio_removes_its_ledger():
+    """A portfolio's rows go with it. SQLite does not enforce the cascade,
+    and a reused portfolio id would inherit orphaned rows as holdings -
+    seen in test_strict_nodes.py the day the reader changed."""
+    pm = PortfolioManager()
+    portfolio_id = pm.create_portfolio("Ledger Delete Test")
+    pm.record_transaction(portfolio_id, "SPY", datetime.date(2024, 1, 15), "buy",
+                          100, 450.0, 0.0, 45_000.0)
+    assert pm.get_portfolio_tickers(portfolio_id) == ["SPY"]
+    pm.delete_portfolio(portfolio_id)
+    session = get_session()
+    try:
+        left = session.query(Transaction).filter(Transaction.portfolio_id == portfolio_id).count()
+    finally:
+        session.close()
+    assert left == 0
+
+
 def test_empty_ledger_is_no_holdings():
     """A portfolio with no rows has no holdings; the node is what refuses it."""
     pm = PortfolioManager()
