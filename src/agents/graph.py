@@ -4,7 +4,7 @@
 # Phase: 6.2 - LangGraph State Machine
 # Status: BANK-READY & FLEXIBLE
 
-from typing import Dict, Any, Tuple, AsyncGenerator
+from typing import Dict, Any
 from langgraph.graph import StateGraph, END
 
 from .schemas import AGENTS
@@ -192,26 +192,6 @@ def get_graph():
     return _compiled_graph
 
 # =============================================================================
-# STREAMING SUPPORT
-# =============================================================================
-
-async def stream_agent_graph(user_input: str, portfolio_id: int = None) -> AsyncGenerator[Tuple[str, Dict[str, Any]], None]:
-    """
-    Runs the graph and yields events step-by-step.
-    This enables the real-time "Thinking..." UI in the demo.
-    """
-    graph = get_graph()
-    
-    # Create valid initial state
-    initial_state = create_initial_state(user_input, portfolio_id=portfolio_id)
-    
-    # Run graph with streaming
-    async for event in graph.astream(initial_state):
-        # event is a dict like {'Router': state_dict} or {'DataAgent': state_dict}
-        for node_name, state in event.items():
-            yield node_name, state
-
-# =============================================================================
 # CONVENIENCE FUNCTIONS (REQUIRED FOR TESTS)
 # =============================================================================
 
@@ -232,7 +212,6 @@ async def run_agent_graph(user_message: str, request_id: str = None, portfolio_i
     # One request span around the whole run, under the state's request id,
     # so every node - Router included - traces into the same request and the
     # stored trace shows the plan being executed, not only planned.
-    # stream_agent_graph has no caller and does not open one.
     from observability import get_tracer
 
     with get_tracer().trace_request(request_id=state["request_id"], user_input=user_message[:100]):
@@ -257,51 +236,8 @@ def run_agent_graph_sync(user_message: str, request_id: str = None, portfolio_id
     return loop.run_until_complete(run_agent_graph(user_message, request_id, portfolio_id, previous))
 
 
-# =============================================================================
-# GRAPH VISUALIZATION
-# =============================================================================
-
-def get_graph_mermaid() -> str:
-    """Get Mermaid diagram 
-
-[Image of State Machine Diagram]
-"""
-    return """
-graph TD
-    START((Start)) --> Router
-    Router -->|clarification| END((End))
-    
-    Router -->|dynamic route| DataAgent
-    Router -->|dynamic route| MacroAgent
-    Router -->|dynamic route| OptimizationAgent
-    Router -->|dynamic route| RebalanceAgent
-    Router -->|dynamic route| BacktestAgent
-    
-    DataAgent -->|next step| RouterLogic
-    MacroAgent -->|next step| RouterLogic
-    OptimizationAgent -->|next step| RouterLogic
-    RebalanceAgent -->|next step| RouterLogic
-    BacktestAgent -->|next step| RouterLogic
-    
-    RouterLogic{Check Plan} -->|Next Agent| DataAgent
-    RouterLogic -->|Next Agent| MacroAgent
-    RouterLogic -->|...| OptimizationAgent
-    RouterLogic -->|Done| Synthesizer
-    
-    Synthesizer --> END
-"""
-
-def print_graph():
-    """Print the graph structure."""
-    print("=" * 60)
-    print("AGENT GRAPH STRUCTURE (Dynamic)")
-    print("=" * 60)
-    print(get_graph_mermaid())
-    print("=" * 60)
-
 if __name__ == "__main__":
     # Test graph compilation
     print("Testing graph compilation...")
     graph = create_agent_graph()
     print("✓ Graph compiled successfully!")
-    print_graph()
