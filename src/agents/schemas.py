@@ -131,7 +131,6 @@ class ExtractedParameters(BaseModel):
     tickers: List[str] = Field(default_factory=list)
     period: Optional[str] = Field(default=None, pattern=r"^\d+[YMD]$")  # e.g., "5Y", "3M", "30D"
     max_volatility: Optional[float] = Field(default=None, ge=0.01, le=1.0)
-    target_return: Optional[float] = Field(default=None, ge=-1.0, le=5.0)
     portfolio_value: Optional[float] = Field(default=None, gt=0)
     rebalance_threshold: Optional[float] = Field(default=None, ge=0.01, le=0.5)
     portfolio_id: Optional[int] = Field(default=None, description="Portfolio ID if analyzing a saved portfolio")
