@@ -1665,7 +1665,7 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
         elif intent == "out_of_scope":
             lines.extend(_format_out_of_scope_response())
         elif intent == "compliance":
-            lines.extend(_format_compliance_response(sub_results))
+            lines.extend(_format_compliance_response(decision, sub_results))
         else:
             lines.append("Analysis complete. See details below:")
             for agent, result in sub_results.items():
@@ -1696,7 +1696,7 @@ OUT_OF_SCOPE_RESPONSE = [
 ]
 
 
-def _format_compliance_response(sub_results: Dict) -> List[str]:
+def _format_compliance_response(decision: Dict, sub_results: Dict) -> List[str]:
     """Format the compliance block. Cites clause ids and the owner's clause
     text; prints the figures the checker published and computes none - the
     benchmark runner holds every percentage in this prose to a finding.
@@ -1704,6 +1704,13 @@ def _format_compliance_response(sub_results: Dict) -> List[str]:
     Three renderings, chosen by what the block carries: a topic lookup, a
     hypothetical weight (no total was measured), or the portfolio check.
     Every reading gives a condition or a citation and no recommendation.
+
+    The portfolio check has a selection axis, read from the router's
+    `tickers` the way the P&L formatter reads it: filled means the findings
+    on those subjects, empty means every finding. Selection is rendering
+    only - the node checks every clause on every run and the block is the
+    full check whatever is shown. "Is my JNJ position over any limit?"
+    answers with JNJ's two concentration findings, not the 63-line report.
     """
     result = sub_results.get("ComplianceAgent", {})
     if not result.get("success"):
@@ -1711,12 +1718,13 @@ def _format_compliance_response(sub_results: Dict) -> List[str]:
     block = result.get("compliance") or {}
     policy = block.get("policy") or {}
     findings = block.get("findings") or []
+    subjects = (decision.get("parameters") or {}).get("tickers") or []
 
     if block.get("topic") is not None:
         return _format_policy_lookup(block, policy)
     if block.get("total_value") is None and findings:
         return _format_hypothetical(findings, policy)
-    return _format_policy_check(block, policy, findings)
+    return _format_policy_check(block, policy, findings, subjects)
 
 
 def _format_policy_lookup(block: Dict, policy: Dict) -> List[str]:
@@ -1766,11 +1774,38 @@ def _format_hypothetical(findings: List[Dict], policy: Dict) -> List[str]:
     return lines
 
 
-def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict]) -> List[str]:
+def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict],
+                         subjects: List[str] = ()) -> List[str]:
     """The portfolio against every checkable clause, then the conditions
     IPS-5.2 asks for, then the statements the check did not compute, so
-    "all rules" is visibly all of them."""
-    lines = ["📋 **INVESTMENT POLICY CHECK**", ""]
+    "all rules" is visibly all of them.
+
+    With `subjects` named, only the findings on them: for a position that
+    is its instrument and issuer clauses (IPS-4.1, IPS-4.2). IPS-4.3 limits
+    the sector, not the position, and the asset-class clauses limit the
+    class, so neither is a finding on a ticker. The statements are left out
+    - nothing about one position is in them. A named subject the check has
+    no finding on is said so, and nothing else is printed for it: it is
+    not among the holdings the check covered."""
+    if subjects:
+        selected = [f for f in findings if f.get("subject") in subjects]
+        missing = [s for s in subjects if not any(f.get("subject") == s for f in findings)]
+        if not selected:
+            return [
+                "📋 **INVESTMENT POLICY CHECK**",
+                "",
+                f"The check has no finding on {', '.join(missing)}: not among the "
+                "holdings it covered. Nothing else was asked about.",
+            ]
+        findings = selected
+        named = ", ".join(s for s in subjects if s not in missing)
+        lines = [f"📋 **INVESTMENT POLICY CHECK — {named}**", ""]
+        if missing:
+            lines.append(f"No finding on {', '.join(missing)}: not among the holdings "
+                         "the check covered.")
+            lines.append("")
+    else:
+        lines = ["📋 **INVESTMENT POLICY CHECK**", ""]
 
     as_of = block.get("as_of") or {}
     if as_of.get("worst_case"):
@@ -1818,7 +1853,7 @@ def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict]) -> Lis
                      f"of total ({f['distance_value']:,.2f} at unchanged total).")
 
     statements = block.get("statements") or []
-    if statements:
+    if statements and not subjects:
         lines.append("")
         lines.append("**Policy statements** — cited, not computed")
         for st in statements:
@@ -1828,6 +1863,10 @@ def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict]) -> Lis
     lines.append("**Not done:** no recommendation, no target weight, no instrument to "
                  "trade. Which instruments meet a condition is outside this document "
                  "(IPS-5.2).")
+    if subjects:
+        lines.append("**Not shown:** the other holdings, the asset-class and sector "
+                     "clauses, and the policy statements. Ask about the portfolio for "
+                     "the full check.")
     return lines
 
 
