@@ -417,10 +417,12 @@ async def data_agent_node(state: AgentState) -> Dict[str, Any]:
         # Cache holdings if loaded (spread into the return below)
         holdings_update = cache_portfolio_holdings(state, holdings)
         
-        # Get period from router decision
+        # The period is extraction's: a vocabulary key or None, always
+        # present on the decision. None falls through to config's default in
+        # the data agent; no second default lives here.
         router_decision = state.get("router_decision") or {}
         parameters = router_decision.get("parameters", {})
-        period = parameters.get("period", "3Y")
+        period = parameters.get("period")
         
         print(f"  Tickers: {tickers}")
         print(f"  Period: {period}")
