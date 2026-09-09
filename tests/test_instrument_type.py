@@ -14,7 +14,8 @@ the seed, so the seed cannot drift from the reference without this noticing.
 
 import pytest
 
-from portfolio_tool.database_setup import Asset, Portfolio, PortfolioHolding, get_session
+from portfolio_tool.database_setup import Asset, Portfolio, Transaction, get_session
+from portfolio_tool.portfolio_manager import PortfolioManager
 
 
 BENCHMARK_PORTFOLIO = "Benchmark Portfolio"
@@ -24,22 +25,18 @@ SHARES = {"AAPL", "MSFT", "JNJ", "JPM", "NEE"}
 
 @pytest.fixture(scope="module")
 def types_by_ticker():
+    """Through get_holdings, the one reader of what a portfolio holds (D13)."""
     session = get_session()
     try:
-        portfolio = (
-            session.query(Portfolio)
+        portfolio_id = (
+            session.query(Portfolio.id)
             .filter(Portfolio.name == BENCHMARK_PORTFOLIO)
-            .one()
+            .scalar()
         )
-        rows = (
-            session.query(Asset.ticker, Asset.instrument_type)
-            .join(PortfolioHolding, PortfolioHolding.asset_id == Asset.id)
-            .filter(PortfolioHolding.portfolio_id == portfolio.id)
-            .all()
-        )
-        return dict(rows)
     finally:
         session.close()
+    return {h["ticker"]: h["instrument_type"]
+            for h in PortfolioManager().get_holdings(portfolio_id)}
 
 
 def test_every_benchmark_holding_has_an_instrument_type(types_by_ticker):
@@ -54,14 +51,14 @@ def test_funds_and_shares_are_part_7s_split(types_by_ticker):
 
 
 def test_no_holding_anywhere_has_a_type_outside_the_vocabulary():
-    """Shared Asset rows: seeding portfolio 3 wrote types for the nine tickers,
-    which cover every holding of portfolios 1 and 2 as well. Anything else on a
-    held asset is a value the checker would raise on."""
+    """Shared Asset rows: an asset held by any portfolio - any asset with a
+    ledger row - carries a type the checker accepts. Anything else on a held
+    asset is a value the checker would raise on."""
     session = get_session()
     try:
         rows = (
             session.query(Asset.ticker, Asset.instrument_type)
-            .join(PortfolioHolding, PortfolioHolding.asset_id == Asset.id)
+            .join(Transaction, Transaction.asset_id == Asset.id)
             .distinct()
             .all()
         )
