@@ -197,9 +197,19 @@ def test_part_8_b_pnl_at_88(ledger):
 # ---------------------------------------------------------------------------
 
 def test_sale_larger_than_position_raises(ledger):
-    rows = PART_8_B[:2] + [_row("2025-11-17", "sell", "KO", 300, 85.00, 2.00, 25_498.00)]
+    """300 are held after the two buys; 350 is more than the position. The
+    first version of this test sold exactly 300, which closes the position
+    and is not an error - see the next test."""
+    rows = PART_8_B[:2] + [_row("2025-11-17", "sell", "KO", 350, 85.00, 2.00, 29_748.00)]
     with pytest.raises(ledger.LedgerError, match="KO"):
         ledger.derive_holdings(rows)
+
+
+def test_sale_of_whole_position_closes_it(ledger):
+    """A position sold down to nothing is not a holding: KO is absent, not
+    present with quantity zero, which position_pnl would raise on."""
+    rows = PART_8_B[:2] + [_row("2025-11-17", "sell", "KO", 300, 85.00, 2.00, 25_498.00)]
+    assert "KO" not in ledger.derive_holdings(rows)
 
 
 def test_sale_before_any_buy_raises(ledger):
