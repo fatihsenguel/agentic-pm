@@ -7,12 +7,11 @@ unanswerable against it; portfolio 2 has only two positions, both Technology.
 
 Usage:
     python src/portfolio_tool/scripts/seed_portfolio.py            # create
-    python src/portfolio_tool/scripts/seed_portfolio.py --reset    # wipe holdings first
+    python src/portfolio_tool/scripts/seed_portfolio.py --reset    # wipe the ledger first
     python src/portfolio_tool/scripts/seed_portfolio.py --show     # print, write nothing
 
-Writes Asset rows via SQLAlchemy directly. PortfolioManager.update_holding
-accepts only quantity and average_price, and asset_class / sector / industry /
-country live on Asset with no API path at all.
+Writes Asset rows via SQLAlchemy directly: asset_class / sector / industry /
+country / instrument_type live on Asset with no API path at all.
 
 DESIGN NOTES — read before changing the numbers.
 
@@ -40,16 +39,15 @@ Cost basis totals 284,500 and cash is 15,500, so the portfolio is 300,000 flat.
 Equity is 187,500 of cost basis — 65.9% excluding cash, 62.5% including it.
 Those two numbers differing is the point: 0.2 has to decide which one 1.1 means.
 
-THE LEDGER (expected_values.md Part 8 A, 9 September). Each position is also
+THE LEDGER (expected_values.md Part 8 A, 9 September). Each position is
 written as one buy row in `transactions`: the purchase date, the quantity,
-the average price, no fees, amount = quantity x price (D11, D14). Holdings
-derive from those rows (D13), so the ledger and the holdings rows written
-here must agree to the cent - tests/test_ledger_seed.py holds the ledger to
-Part 8 A, and Part 8 A reproduces Part 1.
+the price, no fees, amount = quantity x price (D11, D14). Holdings derive
+from those rows (D13); there is no holdings table. tests/test_ledger_seed.py
+holds the ledger to Part 8 A, and Part 8 A reproduces Part 1.
 
 A rerun without --reset would append nine more buys and double every
 position silently, so the seed refuses when the portfolio already has
-ledger rows. --reset clears the ledger with the holdings.
+ledger rows. --reset clears the ledger first.
 """
 
 import argparse
@@ -62,7 +60,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from portfolio_tool.database_setup import (  # noqa: E402
     Asset,
     Portfolio,
-    PortfolioHolding,
     Transaction,
     get_session,
 )
@@ -148,12 +145,6 @@ def seed(reset: bool) -> int:
 
         if reset:
             deleted = (
-                session.query(PortfolioHolding)
-                .filter(PortfolioHolding.portfolio_id == portfolio.id)
-                .delete()
-            )
-            print(f"  deleted {deleted} existing holdings")
-            deleted = (
                 session.query(Transaction)
                 .filter(Transaction.portfolio_id == portfolio.id)
                 .delete()
@@ -192,32 +183,10 @@ def seed(reset: bool) -> int:
             asset.instrument_type = kind
             session.flush()
 
-            purchase_date = datetime.date.fromisoformat(bought)
-            holding = (
-                session.query(PortfolioHolding)
-                .filter(
-                    PortfolioHolding.portfolio_id == portfolio.id,
-                    PortfolioHolding.asset_id == asset.id,
-                )
-                .one_or_none()
-            )
-            if holding is None:
-                holding = PortfolioHolding(
-                    portfolio_id=portfolio.id,
-                    asset_id=asset.id,
-                    quantity=qty,
-                    average_price=price,
-                    purchase_date=purchase_date,
-                )
-                session.add(holding)
-            else:
-                holding.quantity = qty
-                holding.average_price = price
-                holding.purchase_date = purchase_date
-
-            # The same position as its one ledger row (Part 8 A). `amount` is
-            # data (D14); here, with one currency and no fees, it is the D11
+            # The position as its one ledger row (Part 8 A). `amount` is data
+            # (D14); here, with one currency and no fees, it is the D11
             # arithmetic.
+            purchase_date = datetime.date.fromisoformat(bought)
             session.add(Transaction(
                 portfolio_id=portfolio.id,
                 asset_id=asset.id,
@@ -245,7 +214,7 @@ def seed(reset: bool) -> int:
 def main():
     parser = argparse.ArgumentParser(description="Seed the benchmark portfolio")
     parser.add_argument("--reset", action="store_true",
-                        help="delete this portfolio's existing holdings first")
+                        help="delete this portfolio's existing ledger rows first")
     parser.add_argument("--show", action="store_true",
                         help="print the composition and exit without writing")
     args = parser.parse_args()

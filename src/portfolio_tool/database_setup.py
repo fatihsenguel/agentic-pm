@@ -417,8 +417,9 @@ class MacroData(Base):
 
 class Portfolio(Base):
     """
-    User portfolio - contains multiple asset holdings.
-    
+    User portfolio: a name, a currency, a cash balance. Its holdings are a
+    view of its ledger rows.
+
     Example:
         Portfolio(name="Retirement 401k", currency="USD")
     """
@@ -432,43 +433,13 @@ class Portfolio(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     
-    # Relationship to holdings
-    holdings = relationship('PortfolioHolding', back_populates='portfolio', cascade='all, delete-orphan')
-    
+    # What a portfolio holds is derived from its `transactions` rows
+    # (expected_values.md D13); there is no holdings table.
+
     def __repr__(self):
-        return f"<Portfolio(id={self.id}, name='{self.name}', holdings={len(self.holdings)})>"
+        return f"<Portfolio(id={self.id}, name='{self.name}')>"
 
 
-class PortfolioHolding(Base):
-    """
-    Individual holding within a portfolio.
-    
-    Example:
-        PortfolioHolding(portfolio_id=1, asset_id=5, quantity=100, average_price=450.0)
-        # Means: 100 shares of asset #5, bought at avg price $450
-    """
-    __tablename__ = 'portfolio_holdings'
-    
-    id = Column(Integer, primary_key=True)
-    portfolio_id = Column(Integer, ForeignKey('portfolios.id', ondelete='CASCADE'), nullable=False, index=True)
-    asset_id = Column(Integer, ForeignKey('assets.id', ondelete='CASCADE'), nullable=False, index=True)
-    quantity = Column(Float, nullable=False)
-    average_price = Column(Float, nullable=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
-    purchase_date = Column(Date, nullable=True)
-
-    # Relationships
-    portfolio = relationship('Portfolio', back_populates='holdings')
-    asset = relationship('Asset')
-    
-    # Unique constraint: one holding per asset per portfolio
-    __table_args__ = (
-        UniqueConstraint('portfolio_id', 'asset_id', name='_portfolio_asset_uc'),
-    )
-    
-    def __repr__(self):
-        return f"<PortfolioHolding(portfolio_id={self.portfolio_id}, asset_id={self.asset_id}, qty={self.quantity})>"
 
 
 

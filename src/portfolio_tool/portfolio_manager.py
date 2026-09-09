@@ -53,7 +53,6 @@ from sqlalchemy.orm import Session
 from portfolio_tool.database_setup import (
     SessionLocal, 
     Portfolio, 
-    PortfolioHolding,
     Asset,
     Transaction,
 )
@@ -237,7 +236,7 @@ class PortfolioManager:
     
     def delete_portfolio(self, portfolio_id: int) -> bool:
         """
-        Delete a portfolio and all its holdings
+        Delete a portfolio and its ledger
         
         Args:
             portfolio_id: Portfolio ID
@@ -252,13 +251,10 @@ class PortfolioManager:
             if not portfolio:
                 return False
             
-            # Delete the holdings and the ledger explicitly. SQLite does not
-            # enforce ON DELETE CASCADE unless foreign keys are switched on,
-            # and it reuses a deleted portfolio's id, so an orphaned ledger
-            # row would become the next portfolio's holding.
-            session.query(PortfolioHolding).filter(
-                PortfolioHolding.portfolio_id == portfolio_id
-            ).delete()
+            # Delete the ledger explicitly. SQLite does not enforce ON DELETE
+            # CASCADE unless foreign keys are switched on, and it reuses a
+            # deleted portfolio's id, so an orphaned ledger row would become
+            # the next portfolio's holding.
             session.query(Transaction).filter(
                 Transaction.portfolio_id == portfolio_id
             ).delete()
@@ -451,78 +447,6 @@ class PortfolioManager:
         return tickers
 
 
-    def update_holding(
-        self,
-        holding_id: int,
-        quantity: Optional[float] = None,
-        average_price: Optional[float] = None
-    ) -> bool:
-        """
-        Update a holding's quantity or average price
-        
-        Args:
-            holding_id: Holding ID
-            quantity: New quantity (optional)
-            average_price: New average price (optional)
-            
-        Returns:
-            True if updated, False if not found
-        """
-        session = self._get_session()
-        try:
-            holding = session.get(PortfolioHolding, holding_id)
-            
-            if not holding:
-                return False
-            
-            if quantity is not None:
-                holding.quantity = quantity
-            if average_price is not None:
-                holding.average_price = average_price
-            
-            holding.updated_at = datetime.utcnow()
-            
-            session.commit()
-            logger.info(f"Updated holding {holding_id}")
-            return True
-            
-        except Exception as e:
-            session.rollback()
-            logger.error(f"Failed to update holding {holding_id}: {e}")
-            raise
-        finally:
-            session.close()
-    
-    def delete_holding(self, holding_id: int) -> bool:
-        """
-        Delete a holding from a portfolio
-        
-        Args:
-            holding_id: Holding ID
-            
-        Returns:
-            True if deleted, False if not found
-        """
-        session = self._get_session()
-        try:
-            holding = session.get(PortfolioHolding, holding_id)
-            
-            if not holding:
-                return False
-            
-            session.delete(holding)
-            session.commit()
-            
-            logger.info(f"Deleted holding {holding_id}")
-            return True
-            
-        except Exception as e:
-            session.rollback()
-            logger.error(f"Failed to delete holding {holding_id}: {e}")
-            raise
-        finally:
-            session.close()
-    
     # ========================================================================
     # UTILITY METHODS (PURE CALCULATIONS - NO DATA FETCHING)
     # ========================================================================
