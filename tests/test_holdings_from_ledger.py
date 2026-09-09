@@ -122,6 +122,12 @@ def test_row_carries_what_the_summary_reads(ko_holding):
     assert isinstance(ko_holding["purchase_date"], datetime.date)
 
 
+def test_portfolio_tickers_come_from_the_ledger(ko_portfolio, ko_holding):
+    """The router's portfolio context reads get_portfolio_tickers; it must be
+    the tickers of get_holdings and nothing else, so one reader, not two."""
+    assert PortfolioManager().get_portfolio_tickers(ko_portfolio) == ["KO"]
+
+
 def test_a_disagreeing_holdings_row_is_ignored(ko_portfolio):
     """The holdings table is not a second source: a row saying 999 KO does
     not change what the ledger says."""
