@@ -51,14 +51,6 @@ from .config import (
 from .state import AgentState, trim_messages
 
 # =============================================================================
-# PROMPTS
-# =============================================================================
-
-from .prompts import (
-    build_system_prompt,
-)
-
-# =============================================================================
 # PROTOCOLS - DTOs for Agent Communication
 # =============================================================================
 
@@ -152,9 +144,6 @@ __all__ = [
     # === State Management ===
     "AgentState",
     "trim_messages",
-    
-    # === Prompts ===
-    "build_system_prompt",
     
     # === Protocols (Enums) ===
     "TaskType",
