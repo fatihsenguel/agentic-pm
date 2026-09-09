@@ -52,6 +52,10 @@ are the ones a run must still reproduce exactly, and they are what
 | D12 | What does a sale do under average cost? | Quantity falls by the quantity sold; the average price is unchanged; cost basis falls by quantity sold x average. The realized gain is proceeds minus the basis released. It is stated in Part 8 because D10 to D12 define it, and consumed by nothing: no case asks for realized gains. |
 | D13 | Holdings derive from the ledger, not the other way round. | quantity = buys minus sells; cost basis per D11 and D12; average price = cost basis / quantity; `purchase_date` = the first buy, reported, never used in arithmetic. A holding row is a view of its ledger rows. Portfolio 3's nine rows are its ledger with one buy each, so Part 1 must reproduce from them to the cent - the invariant Part 8 pins. |
 | D14 | A ledger row belongs to a portfolio. | The `transactions` table in the models has an asset and no portfolio, the shape that makes `Dividend` unattributable (Part 6). A row without a portfolio cannot be summed into one; the ledger carries `portfolio_id`, and the dividend fix follows the same rule when total return is built. The row's `amount` is the settled figure in the portfolio's currency, taken from the statement for a real portfolio and equal to the D11 arithmetic for a synthetic one; historical FX is data, never computed. |
+| D15 | Base currency? | **The portfolio's own currency** (`Portfolio.currency`, which exists). Every figure the system reports for a portfolio is in it: total, allocation, P&L, compliance distances. One portfolio, one currency. Decided 10 September for Part 8 C, before any FX code exists. |
+| D16 | Instrument currency, and a foreign holding's value? | **`Asset.currency`**, filled by the price source; a price is in it. A holding's value in the base currency is quantity x price x the spot rate on the price's as-of date, and the answer states both dates. |
+| D17 | Where does a spot rate come from? | **A price source, like closes.** Stored per day with an as-of date, fetched from the same provider. A missing rate raises; nothing falls back to yesterday's rate or to 1. When the two currencies are the same there is no lookup. |
+| D18 | Which currency are cost basis, average price and realized gain in? | **The base currency**, since they come from `amount` (D14). The average price of a foreign holding is therefore not comparable to its quoted price, and a formatter names the currency of every figure it prints. |
 
 Note the tension between D2 and Part 4: the volatility weights exclude cash
 while D2 includes it. Resolved by disclosure — see Part 4.
@@ -351,13 +355,57 @@ The position after: **250 @ 80.01, cost basis 20,002.50, purchase date
 At a price of 88.00: market value 22,000.00, P&L **+1,997.50, +9.99%**
 (1,997.50 / 20,002.50 = 0.099863), price return per D4.
 
+### C. One foreign-currency position in a euro portfolio
+
+Computed 2026-09-10 by hand, before any FX code exists (DIRECTION.md Order 2,
+item 2). Decisions D15 to D18. A synthetic position, not part of portfolio 3:
+a fixture for the currency arithmetic alone. Every rate is stated and
+synthetic; nothing here is a market rate. Figures chosen so that every step
+is exact to the cent.
+
+**The portfolio's base currency is EUR (D15). The instrument is AAPL, quoted
+in USD (D16).** Rates are euros per dollar.
+
+| Date | Type | Qty | Price (USD) | Rate EUR/USD | Fees (EUR) | Amount (EUR) |
+|---|---|---|---|---|---|---|
+| 2024-02-20 | buy | 100 | 200.00 | 0.9200 | 5.00 | 18,405.00 |
+
+Amount = 100 x 200.00 x 0.9200 + 5.00 = 18,400.00 + 5.00 = **18,405.00 EUR**,
+the settled figure in the portfolio's currency (D14). The rate on the row is
+data from the statement, shown here so the arithmetic can be checked; the
+ledger stores the amount, not the rate.
+
+The position after: **100 @ 184.05 EUR, cost basis 18,405.00 EUR, purchase
+date 2024-02-20** (D13, D18). The average price is in euros and is not the
+200.00 dollars paid per share.
+
+**Valuation** at the 2026-09-02 close of 324.96 USD (Part 1) and a stated spot
+rate of **0.8500 EUR/USD** on the same date (D17):
+
+| | |
+|---|---|
+| Market value | 100 x 324.96 x 0.8500 = **27,621.60 EUR** |
+| P&L abs | 27,621.60 - 18,405.00 = **+9,216.60 EUR** |
+| P&L % | 9,216.60 / 18,405.00 = 0.500766 = **+50.08%** |
+| Price as-of | 2026-09-02 |
+| Rate as-of | 2026-09-02 |
+
+For contrast, the same shares in dollars went from 20,000.00 to 32,496.00,
++62.48% (Part 1's AAPL row). The euro gain is smaller because the dollar fell
+from 0.9200 to 0.8500 euros over the holding period. That split, into a price
+part and a currency part, is **not** computed here: it is a measure with its
+own reference, when a case asks.
+
+**Under D17, the same position with no rate for 2026-09-02 has no market
+value.** The answer is a refusal naming the missing rate and date, not a value
+at yesterday's rate and not a value at 1.0000.
+
 ### What Part 8 does not cover
 
-- **Currency.** Every row is in the portfolio's currency; the `amount` column
-  is where a second currency enters, as data (D14). Order 2 item 2 adds the
-  column's reference at a stated rate on a stated date, here.
+- **The currency split of a gain.** Stated once under C; not a measure.
 - **Dividends and corporate actions.** Not ledger rows here; a split or a
-  dividend reinvested is a buy-shaped row when total return is built.
-- **Realized gains as a figure the system reports.** Stated once above;
+  dividend reinvested is a buy-shaped row when total return is built. A
+  dividend in a foreign currency follows D14: the settled amount is data.
+- **Realized gains as a figure the system reports.** Stated once under B;
   no case asks.
 
