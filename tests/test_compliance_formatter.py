@@ -38,9 +38,12 @@ def _block(ips, findings, total, as_of, topic=None, no_clause=False):
             "findings": [asdict(f) for f in findings], "no_clause": no_clause, "topic": topic}
 
 
-def _answer(block):
+def _answer(block, tickers=None):
+    """The formatter reads the decision for the selection: `tickers` filled
+    means the findings on those subjects, empty means every finding."""
+    decision = {"parameters": {"tickers": list(tickers or [])}}
     return "\n".join(_format_compliance_response(
-        {"ComplianceAgent": {"success": True, "compliance": block}}))
+        decision, {"ComplianceAgent": {"success": True, "compliance": block}}))
 
 
 def _unexplained(answer, findings):
@@ -117,5 +120,64 @@ def test_lookup_with_clauses_on_the_topic():
 
 
 def test_failed_agent_is_reported_not_formatted():
-    lines = _format_compliance_response({"ComplianceAgent": {"success": False, "error": "boom"}})
+    lines = _format_compliance_response(
+        {"parameters": {}}, {"ComplianceAgent": {"success": False, "error": "boom"}})
     assert "failed" in lines[0].lower() and "boom" in "\n".join(lines)
+
+
+# --- the selection axis: a named position renders its own findings only ---
+#
+# "Is my JNJ position over any limit?" carries JNJ in `tickers` from
+# extraction and got the full report (KNOWN_GAPS, "Four wrong-faced
+# answers"). Selection is rendering: the block is the full check, the
+# formatter shows the findings whose subject is named. IPS-4.3 limits the
+# sector, not the position, so it is not a finding on JNJ.
+
+
+def test_named_position_renders_its_findings_only():
+    ips = load_ips()
+    alloc = allocation()
+    findings = check(ips, alloc, INSTRUMENT_TYPES)
+    answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"]), tickers=["JNJ"])
+
+    on_jnj = [f for f in findings if f.subject == "JNJ"]
+    assert {f.clause for f in on_jnj} == {"IPS-4.1", "IPS-4.2"}
+    assert set(CLAUSE.findall(answer)) == {"IPS-4.1", "IPS-4.2"}
+    assert re.search(r"\bJNJ\b", answer)
+    for t in TICKERS - {"JNJ"}:
+        assert not re.search(rf"\b{t}\b", answer), t
+    for f in on_jnj:
+        if f.status == "breach":
+            assert f"{f.distance_pp:.2f}" in answer, f
+    assert _unexplained(answer, on_jnj) == []          # figures from JNJ's findings only
+    assert "2026-09-02" in answer                       # priced, so dated (Part 3b)
+    assert "What would have to change" in answer
+    assert "Policy statements" not in answer            # not asked about
+    assert not TRADE.search(answer)
+    assert not HEDGE.search(answer)
+
+
+def test_empty_tickers_renders_every_finding():
+    ips = load_ips()
+    alloc = allocation()
+    findings = check(ips, alloc, INSTRUMENT_TYPES)
+    block = _block(ips, findings, TOTAL, alloc["as_of"])
+    answer = _answer(block, tickers=[])
+    assert answer == _answer(block)                     # absent and empty are the same
+    for c in ips:
+        assert c.id in answer, c.id
+    assert "Policy statements" in answer
+
+
+def test_named_ticker_with_no_finding_says_so():
+    """A known symbol that is not held: the check has no finding on it and
+    the answer says exactly that - no clause, no figure, no other holding."""
+    ips = load_ips()
+    alloc = allocation()
+    findings = check(ips, alloc, INSTRUMENT_TYPES)
+    answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"]), tickers=["NVDA"])
+    assert re.search(r"\bNVDA\b", answer)
+    assert "no finding" in answer.lower()
+    assert CLAUSE.findall(answer) == []
+    assert PCT.findall(answer) == []
+    assert not any(re.search(rf"\b{t}\b", answer) for t in TICKERS)
