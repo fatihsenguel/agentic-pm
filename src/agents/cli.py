@@ -63,7 +63,6 @@ def show(state, elapsed, verbose, question, seen):
     print(f"  intent      : {decision.get('intent')}")
     print(f"  confidence  : {decision.get('confidence')}")
     print(f"  plan        : {decision.get('execution_order')}")
-    print(f"  multi_step  : {decision.get('is_multi_step')}")
     print(f"  parameters  : {_fmt(decision.get('parameters') or {}, limit)}")
     if decision.get("reasoning"):
         print(f"  reasoning   : {_fmt(decision['reasoning'], limit)}")

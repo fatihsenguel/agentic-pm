@@ -50,7 +50,6 @@ class TestRouterDecision:
             ],
             "execution_order": ["MacroAgent"],
             "parameters": {"tickers": [], "period": None},
-            "is_multi_step": False,
             "requires_confirmation": False,
             "reasoning": "User asked about market conditions",
         }
@@ -575,7 +574,6 @@ class TestSafeParse:
             ],
             "execution_order": ["MacroAgent"],
             "parameters": {"tickers": []},
-            "is_multi_step": False,
             "requires_confirmation": False,
             "reasoning": "Test reasoning",
         }

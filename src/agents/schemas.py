@@ -276,7 +276,6 @@ class RouterDecision(BaseModel):
     parameters: ExtractedParameters
     
     # For multi-step workflows
-    is_multi_step: bool = Field(default=False)
     requires_confirmation: bool = Field(default=False)
     
     # Router's reasoning

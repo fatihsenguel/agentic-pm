@@ -46,7 +46,6 @@ def _json(intent, plan, **parameters):
                           for i, a in enumerate(plan)],
         "execution_order": list(plan),
         "parameters": parameters,
-        "is_multi_step": False,
         "requires_confirmation": False,
         "reasoning": "a stubbed decision for the test",
         "clarification_question": None,
