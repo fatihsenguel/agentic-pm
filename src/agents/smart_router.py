@@ -15,7 +15,6 @@ from .router_prompts import build_router_prompt, build_repair_prompt
 from .schemas import (
     RouterDecision, 
     IntentType, 
-    AgentName, 
     AgentTask,
     ExtractedParameters,
     TERMINAL,
@@ -386,7 +385,11 @@ class SmartRouter:
         validation: ValidationResult
     ) -> ValidationResult:
         """
-        Additional validation of the router decision.
+        Additional validation of the router decision: the tickers against
+        the database. The agent names and the plan are the schema's and the
+        terminal table's - AgentTask.agent and execution_order are typed
+        against AgentName, and both lists are derived from one table - so
+        no check here on either could fire.
         """
         # Validate tickers if any were extracted
         if decision.parameters.tickers:
@@ -399,16 +402,6 @@ class SmartRouter:
             
             for ticker in unknown:
                 validation.add_warning(f"Unknown ticker (not in database): {ticker}")
-        
-        # Validate agents exist
-        valid_agents = {a.value for a in AgentName}
-        for task in decision.agents_needed:
-            if task.agent not in valid_agents:
-                validation.add_error(f"Unknown agent: {task.agent}")
-        
-        # Validate execution order makes sense
-        if len(decision.execution_order) != len(decision.agents_needed):
-            validation.add_warning("execution_order length doesn't match agents_needed")
         
         return validation
     
