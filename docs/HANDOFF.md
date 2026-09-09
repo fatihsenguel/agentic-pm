@@ -1,18 +1,17 @@
 # AGENTIC_FINANCE — Session Handoff
 
-**Session date:** 8 September 2026 (eighth sitting; regenerated at its end)
-**Branch:** `vocabulary`, cut from `baseline-v1` at 3bebeb3. Twenty-five commits on top, plus the three sweep commits (KNOWN_GAPS, the benchmark notes, this file). Not merged, not pushed; the owner merges and pushes.
-**State:** Green on every loop. pytest 397. Golden set sixteen queries, clean on the last three runs against `expected.txt`, no `retries` line ever printed; two lines pin failures (below). Runner **12/12** for the first time; 3.5 passes as a two-turn case. Commit count: `git rev-list --count baseline-v1..HEAD`.
+**Session date:** 9 September 2026 (ninth sitting; regenerated at its end)
+**Branch:** `selection`, cut from `baseline-v1` at 7fc6474 (where `vocabulary` had already been merged and pushed). Thirty-one commits on top, the sweep included. Not merged, not pushed; the owner merges and pushes.
+**State:** Green on every loop. pytest 405 in 14 seconds. Golden set sixteen queries, clean twice after the one prompt change, no `retries` line. Runner **12/12** on the last run, after one failed prediction fixed in the formatter. Commit count: `git rev-list --count baseline-v1..HEAD`.
 
 Written for whoever picks this up cold.
 
 **Regenerate this document at the end of each session rather than patching it.**
-Generated context files rot faster than the code they describe. The version
-this replaces described a router that planned, extracted and classified in
-one model call; that router no longer exists. **Check every claim here
-against the code before acting on it, including the owner's, including this
-file.** Grep for the caller, not the registration, and for the reader of a
-return value.
+The previous version was patched between sittings and said so nowhere;
+its branch claims were a day stale when this sitting opened. **Check every
+claim here against the code before acting on it, including the owner's,
+including this file.** Grep for the caller, not the registration, and for
+the reader of a return value.
 
 ---
 
@@ -20,15 +19,15 @@ return value.
 
 | File | What it is |
 |---|---|
-| `docs/DIRECTION.md` | **The end state and the invariants.** Owner's, dated, not regenerated. Wins over this file on direction; this file wins on state. Its Order 1 was built this sitting; Order 2 is next. Its last section says when to stop and ask. |
-| `docs/benchmark.md` | **The definition of done.** 12 cases, 12 pass. Two status notes carry dated corrections rather than rewrites; the runner is the status. |
-| `tests/benchmark/run_cases.py` | **The scoreboard.** Every case has a check. 3.5 is a tuple of two turns, each run after the previous final state; its check demands a resolution recorded on the decision, so the pass is memory's and not the model's reading of a typo. |
-| `tests/golden/KNOWN_GAPS.md` | Open decisions, resolved decisions, and why obvious fixes are wrong. Swept at the end of this sitting: every entry the sitting touched carries an "8 September (eighth sitting)" paragraph. Read at minimum: "The prompt shrink moved two lines" (the sitting's one failed prediction and what it taught), "Four wrong-faced answers" (three resolved, one half open), "`Allocation.total_value`" (the duplicate the fix left, and the rename decision), "Does the router stay a classifier" (what the model still decides). |
-| `tests/golden/expected_values.md` | Hand-computed reference for portfolio 3, Parts 1–7. Part 7's IPS-4.1 and IPS-4.3 columns are now published figures the checker reads, not divisions it makes. **Never update it to match code output.** |
+| `docs/DIRECTION.md` | **The end state and the invariants.** Owner's, dated, not regenerated. Wins over this file on direction; this file wins on state. Order 1 is built; Order 2 has begun with a reference, not code. Its last section says when to stop and ask. |
+| `docs/benchmark.md` | **The definition of done.** 12 cases, 12 pass; the runner is the status. |
+| `tests/benchmark/run_cases.py` | **The scoreboard.** Every case has a check. 2.2's every-clause-cited check is the falsifier that caught this sitting's one failed prediction. |
+| `tests/golden/KNOWN_GAPS.md` | Open decisions, resolved decisions, and why obvious fixes are wrong. Swept at the end of this sitting: every entry the sitting touched carries a "9 September (ninth sitting)" paragraph. Read at minimum: the `group_by`/`filter` entry (the selection axis, its failed prediction, and the fix in the formatter), "Decision 16" under Directions (logged, with its trigger and cost), "The `transactions` table has no portfolio" (what Order 2 starts from), "pytest had not run since January" (the five files that ran live at collection). |
+| `tests/golden/expected_values.md` | Hand-computed reference for portfolio 3, Parts 1–8. **Part 8 is new: the transaction ledger, decisions D10–D14, before the ledger exists.** Never update it to match code output. The workbook's `Ledger` sheet carries the same as formulas, not recalculated by this sitting. |
 | `docs/IPS.md` | The owner's policy, synthetic. `ips.toml` is derived from it. Do not edit `docs/IPS.md`. |
 | `docs/PM-Assistant — Roadmap.md` | Stale, header lists what is superseded. DIRECTION.md's Order supersedes its ordering. |
 
-Two Part 7 figures are decided by cents (MSFT 12.11% v 12%, JNJ 10.06% v 10%) and sit wherever the day's closes put them; the runner asserts structure. The live `as_of` was 2026-09-04 on every run this sitting (Labor Day on the 7th).
+Two Part 7 figures are decided by cents (MSFT 12.16% v 12%, JNJ 10.05% v 10% at the 09-04 closes); the runner asserts structure. The live `as_of` was 2026-09-04 on every run this sitting.
 
 ---
 
@@ -64,8 +63,14 @@ speed. Scope creep is the risk.**
 - **Extraction and derivation before the model.** Tickers, periods,
   percentages and the compliance mode are read from the message; the plan
   is derived from the intent and those parameters. The model decides
-  intent, `measure`, `group_by`, confidence and a clarification question,
-  and nothing else it emits is read.
+  intent, `measure`, `group_by`, `status`, confidence and a clarification
+  question, and nothing else it emits is read.
+- **Selection is rendering.** A formatter selects from a block the node
+  computed in full; the selection's values are the block's own words
+  (`tickers` for subjects, a finding's `status`), never a new measure.
+- **The failure direction of a model-owned field is designed in the
+  formatter.** A field the model over-sets must shorten the answer and hide
+  nothing (this sitting's lesson, §8).
 
 ### How the owner works
 
@@ -74,23 +79,27 @@ speed. Scope creep is the risk.**
   yes. Then one commit per layer, tests written first and seen failing,
   `git status --short` and the diff before each commit, and a yes on each.
 - `grep -rn "Name" src/ tests/ --include='*.py'` before deleting any symbol;
-  grep for the caller and for the reader of a return value.
+  grep for the caller and for the reader of a return value. Eleven
+  deletions this sitting went that way, one commit each.
 - **A prompt change is a hypothesis.** Line-by-line prediction in the commit
   message before the run; golden twice. **After the second failed
   prediction on a line, stop:** no rewording, bring a diagnostic that reads
-  the model's own output. This sitting the shrink's prediction failed on a
-  line that already carried two; the fix was structural (the mode moved
-  into extraction), not a wording, and the owner chose fix-forward over a
-  revert with the tree red on two loops in between.
+  the model's own output. This sitting the `status` prompt's prediction
+  failed on 2.2 and 2.3 at the first run; the fix was the formatter's
+  failure direction, not a wording.
 - Never `commit -a`/`-am`, never `add -A`/`.`; name the files. Never push,
   rebase, amend, reset, stash. Never edit `.gitignore`; never reseed or run
   Alembic unasked. No attribution trailers.
-- When a step needs the owner's result, ask for it and stop.
+- When a step needs the owner's result, ask for it and stop. The owner
+  asked "what is Part 8, what are the decisions, what changes if I say
+  yes" before the reference landed; explain in plain words before asking
+  for a yes on a document.
 
 ### What the owner does NOT want
 
 A pure asyncio/regex deterministic version without LangGraph. Prompt rules
-added to fix a routing defect (DIRECTION.md).
+added to fix a routing defect (DIRECTION.md). The real portfolio's data in
+the repo or in this sitting: it enters last, when everything works.
 
 ---
 
@@ -106,51 +115,52 @@ python tests/golden/run_golden.py > /tmp/golden_now.txt 2>/dev/null
 diff tests/golden/expected.txt /tmp/golden_now.txt
 
 python tests/benchmark/run_cases.py
-python tests/benchmark/run_cases.py --case 3.5
+python tests/benchmark/run_cases.py --case 2.2
 
 python src/agents/cli.py --portfolio 3
 ```
 
-**397 passed.** New this sitting, all asserting: `test_analysis_node.py`
-(the first pytest that runs the analysis node; it caught a broken call site
-the suite had passed), `test_allocation_formatter.py`, `test_extraction.py`
-(every golden query, benchmark prompt and recorded CLI prompt pinned to its
-extraction, plus the clarifying cases and the reply vocabulary),
-`test_router_extraction.py` and `test_router_plans.py` (the router with a
-stubbed model: extracted fields and derived plans written over the model's),
-`test_derived_plans.py` (every table row), `test_conversation_state.py`
-(the previous turn carried, the record handed on). The caveat stands:
-`test_portfolio_integration.py` returns booleans and passes unconditionally.
+**405 passed, 23 warnings, 14 seconds.** Down from 408 in 24 seconds: five
+unguarded files that ran at import were deleted (33f09b5), two of which
+made live model calls twice per run. New this sitting: the selection tests
+in `test_compliance_formatter.py` (a named position, breaches only, both,
+no breach, the coverage line), the `status` schema and plan tests, the
+prompt tests for the `status` line. The caveat stands and is sharper:
+`test_portfolio_integration.py` returns booleans, passes unconditionally,
+and still routes live through the model on every run (KNOWN_GAPS).
 
 **The golden set has sixteen queries.** Two lines pin failures: the macro
-query (`errors: 1`, since the first baseline) and "Should I rebalance my
-portfolio?" (`errors: 1`, no target source). "How much did AAPL gain today?"
-is pinned as the deterministic clarification extraction asks (a one-day
-span), no longer the false refusal; "How much has AAPL gained?" beside it
-pins the in-scope bare-ticker question as `data_fetch` with the analysis
-plan. The three compliance lines pin the three-agent plan and have held on
-every run since the derivation landed. `retries` has never printed.
+query (`errors: 1`) and "Should I rebalance my portfolio?" (`errors: 1`,
+no target source). Clean twice after the only prompt change this sitting
+(b4aada5). The set is blind to `tickers`, `measure`, `group_by`, `status`
+and the compliance mode; the runner is the loop that sees those.
 
-**Runner 12/12.** 3.5: "Hows my APPL doing?" then "yes". It asks, by
-decision (9 September, §5 item 15).
+**Runner 12/12.** It fell to 11/12 once this sitting, on 2.2, when the
+model set `status: breach` on "does my allocation violate any rule"; the
+formatter's coverage line (27a2ec0) put it back and it holds whatever the
+model sets there.
 
 ### Branches and tags
 
-`vocabulary` is the working branch, cut from `baseline-v1` at 3bebeb3.
-`baseline-v1` matches `origin/baseline-v1` at the last fetch. `compliance`
-is merged into it. `wip/phase7-snapshot` holds rejected Compliance/IPS code;
-nothing on it is scheduled. `wip/rag-early` and tag `rag-early-parked` hold
-the deleted RAG code.
+`selection` is the working branch, cut from `baseline-v1` at 7fc6474.
+`baseline-v1` matched `origin/baseline-v1` at 7fc6474 when the sitting
+opened; `vocabulary` is merged into it. `compliance` is merged.
+`wip/phase7-snapshot` holds rejected Compliance/IPS code; nothing on it is
+scheduled. `wip/rag-early` and tag `rag-early-parked` hold the deleted RAG
+code.
 
 ### Database
 
 `data/portfolio.db` is untracked runtime state. Alembic head is
-**`05034c6316c8`**, 12 migrations, linear. Not touched this sitting.
+**`05034c6316c8`**, 12 migrations, linear. Not touched this sitting. The
+`transactions` table exists in the models with no portfolio column and no
+caller; Part 8 is written against the shape it will need.
 
 - **Portfolio 3, "Benchmark Portfolio" — use this one.** 9 positions, cost
   basis 284,500 plus 15,500 cash. Five golden queries run against it.
 - **Portfolio 1** — January data; five golden queries. Do not modify.
-- **Portfolio 2** — a leaked test artifact; one golden query. Load-bearing.
+- **Portfolio 2** — "Demo Portfolio", a leaked test artifact; one golden
+  query. Load-bearing. No longer touched by pytest collection.
 - **Reseeding portfolio 3 rewrites `Asset` metadata shared with 1 and 2.**
 
 ---
@@ -162,7 +172,11 @@ the deleted RAG code.
   `src/observability` → `observability`, `src/config.py` → `config`. Never `from src.…`.
 - `.env` holds keys. Never read or print it.
 - **OpenAI: no credits.** **Anthropic: working.** `ACTIVE_LLM_CONFIG = ANTHROPIC_HAIKU`
-  (`claude-haiku-4-5-20251001`). `ANTHROPIC_SONNET` still points at the Haiku id.
+  (`claude-haiku-4-5-20251001`). `ANTHROPIC_SONNET` still points at the Haiku id;
+  `claude-sonnet-5` is a live id (the token counter accepted it).
+- `openpyxl` is in the venv and in the `dev` extras (f6fe39a), for the
+  workbook's `Ledger` sheet. No LibreOffice on the machine: a sheet written
+  here is not recalculated here.
 - `config.features.observability_enabled` is **false** here. Do not turn it
   on without reading the KNOWN_GAPS entry on the router's own span.
 - `portfolio_tool/__init__.py` opens a DB connection at import; the router
@@ -170,187 +184,148 @@ the deleted RAG code.
 
 ---
 
-## 4. What the eighth sitting did
+## 4. What the ninth sitting did
 
-`git log --oneline baseline-v1..HEAD` for the list, in DIRECTION.md's Order 1.
+`git log --oneline baseline-v1..HEAD` for the list, in the owner's order.
 
-**The block shapes the CLI questions exposed (decisions 1 and 2, nine commits).**
-Every allocation line carries `pct_of_total`, the D2 share; the sector view
-takes cash, its `total_value` is the D2 total and `sectored_value` is its own
-denominator (4b003be); the node publishes the field and the sector block's
-total (60c0df0); the checker's sector arm reads it instead of dividing
-(62ddbcd); the formatter prints it (dbb8bc2) — "What share of my portfolio
-is technology?" answers 27.73% of total at the 09-04 closes. Then
-concentration as a view: `allocation_by_position`, Part 7's IPS-4.1 table
-largest first (d361520), published (7958af5), read by the IPS-4.1 and 4.2
-arms with the last division and `position_pnl` leaving the checker
-(9c11bd1), rendered (317f4eb), named by `group_by: position` (f465e13) —
-"What's my biggest position?" answers the table, SPY first. The checker's
-only arithmetic is a subtraction per finding.
+**Decision 16, brought and logged.** A stronger reader producing a typed
+request, extraction reduced to validation. Brought with what it does to
+the golden set (seven of sixteen lines become model-dependent), the cost
+per call measured with the token counter (Haiku $0.003, Sonnet 5 $0.008,
+Opus 5 $0.021), and what it changes in DIRECTION.md's Order (Order 5's
+shape built early, the "bigger model is debt" sentence). Logged with the
+trigger: Order 5, or a benchmark case that needs a name, German or a typo
+read. KNOWN_GAPS, "Decision 16".
 
-**The router restructure (decision 3, four steps, eleven commits).**
-Registry: `IntentType.UNKNOWN` deleted (795f5e8), then `INTENTS` with both
-prompts rendered from it and the synthesizer chain held to it at import,
-byte-identical prompt, zero golden diff (8c35dee). Extraction:
-`agents/extraction.py`, pure, tickers from the held and known symbols with a
-typo of a holding asked about by name, periods from config's keys with any
-other span asked about, a percentage near "vol" the cap and any other the
-weight (56caa2c); wired before the model with every attempt's JSON
-overwritten (f099101) — "Is my JNJ position over any limit?" carries JNJ,
-"last month" asks which of five spans with no model call. Derived plans:
-`REQUIRES` closed to the four dependencies the nodes raise on (0d60f18);
-`TERMINAL`, intent and discriminator to terminal agent closed upward, the
-plan written over the model's on every attempt, `validate_plan` replacing
-two validators (bc2b555). Shrink: `combined` retired as the last intent
-whose plan was the model's (ce7032f); the reorder-repair and the plan
-alias deleted (e86841c); the prompt cut from 1574 to 1107 words (9364d24).
+**The compliance selection axis, two values (item 2).** A named position:
+the formatter takes the decision and reads `tickers` as the P&L formatter
+does; "Is my JNJ position over any limit?" answers with JNJ's two rows
+and one condition (2e7fd63, c620275, c0886c2). Breaches only: `status`,
+Literal `"breach"`, the model's field beside `measure` and `group_by`,
+held to intent compliance and rejected beside a mode, not a plan
+discriminator (a40b277, 7232ecb, c637152, cb3e1c1, b4aada5). The prompt
+commit's prediction, "status null on 2.2 and 2.3", failed on both at the
+first runner run, read from the model's own output; the fix was the
+rendering's failure direction: the breach body keeps the check's coverage
+in one line each, so 2.2 passes whatever the model sets (fdcd9a2,
+3c67ced, 27a2ec0). Golden clean twice; runner 12/12 after.
 
-**The one failed prediction, and the fix.** The shrink moved "Is AAPL too
-concentrated?" and runner 2.1 to `[ComplianceAgent]` alone: the model set
-`policy_topic` on both once rule 7's plan brackets were gone, and the
-lookup answered "the policy contains nothing on is aapl too concentrated?".
-Read from the model's own output in one CLI session; the line was on its
-third failed prediction; stopped. Fixed forward on the owner's call: the
-lookup became extraction's — a saying verb after policy/IPS/investment
-policy statement, or "anything in my policy about" (55dd80c), two golden
-runs returning the line to its pin and 2.1 to PASS; then the topic left the
-prompt as dead text, 1063 words (4d69e47).
+**The rename to named denominators (item 3), one commit (0c9f833).**
+`pct_of_denominator` gone; `pct_of_sectored` on sector lines only;
+`pct_of_total` everywhere. Runner 12/12, 1.1's own check moved.
 
-**"today", and the pins that moved.** "today" next to a change verb is a
-one-day span the vocabulary lacks; "today" alone is "as of now", so 3.3
-holds (9c9be90). `expected.txt` moved by two lines on a yes: the false
-refusal became the clarification, and the diagnostic "How much has AAPL
-gained?" entered, pinned as designed (c086cd7).
+**The deletions (item 4), each after a grep, one commit each.** The `"3Y"`
+default (043ed55); `state.add_warning` (6d82220); the two unreachable
+checks in `_validate_decision` (300af9e); the stream entry point and the
+mermaid diagram (61158e1); `prompts.py` (536a357); `route_sync`,
+`detect_intent_simple`, `route_message` (a60d0ad); `conversation_history`
+and `available_agents` (1320913); `is_multi_step` (2a7dd47);
+`requires_confirmation` (696ef6a); `target_return` (dccb201);
+`rebalance_threshold` (7b9db26); the five test files that ran at import
+(33f09b5, a finding, not on the list); `parameters.portfolio_id`
+(1238792); `AgentTask` and the task list (a7a24bc).
 
-**Conversation memory (decision 4, three commits).** The runner's two-turn
-case first, its check demanding a recorded resolution (7c7fb16). Then the
-state carries the previous turn's messages and the record of what it asked,
-`run_agent_graph(previous=)`, `get_user_message` returning the last human
-message (it returned the first), the decision dict carrying
-`clarification_question` and `pending`, the CLI passing its last state
-(1e00bc2). Then `resolve()`: a confirmation or a named ticker substitutes
-into the original question, routed as if typed, the resolution recorded;
-anything else is a new message (5fca3bd). Runner 12/12. Only the
-unknown-ticker clarification has a record and a rule.
+**Order 2 begun with a reference (item 5).** The ledger is first, with
+its reasons; Part 8 in expected_values.md, decisions D10–D14, portfolio 3
+as nine buys reproducing Part 1 and one synthetic tranche-and-sale
+position exact to the cent (c4c4920); the workbook's `Ledger` sheet
+(64a9bec); openpyxl declared (f6fe39a).
 
-**Findings logged, not chased** (all in KNOWN_GAPS): "Optimization failed:
-None" on a two-asset five-year backtest, the node formatting an absent
-error key; the rebalancing few-shot names four percentages extraction would
-ask about; `measure` set by the model under compliance is unread; the
-duplicate `pct_of_denominator`/`pct_of_total` on total-denominated lines;
-the BaseAgent grep was one file short (`risk_manager_agent.py`, itself
-uninstantiated).
+**Findings logged, not chased** (all in KNOWN_GAPS): the unguarded files
+and the double-collected coroutine; the integration file's swallowed
+assert and live calls; `load_portfolio_context` without an asserting
+test; `max_conversation_history` unread; the SQLAlchemy warning count as
+a floor; the `transactions` table's shape.
 
 ---
 
 ## 5. Decisions taken, and decisions pending
 
 **Taken this sitting, each on a yes.**
-- Share of total on every allocation line as `pct_of_total`; the checker
-  reads it for every clause and divides nowhere.
-- Concentration is allocation by position: a third view, the same line
-  shape, named by `group_by: position`; no cash line, no new `measure`.
-- Extraction owns tickers, periods, the two percentages and the compliance
-  mode; the model's values for them are never read. A typo within one edit
-  of a holding asks by name, no stoplist. "today" with a change verb is a
-  span; alone it is not.
-- Plans are derived: `TERMINAL` and `REQUIRES`; `combined` retired; the
-  reorder-repair and the `execution_plan` alias deleted.
-- The prompt shrunk to what the model decides. Pending decision 6 decided
-  keep: the three failed edits stay as registry text and an intent example.
-- The two `expected.txt` moves.
-- Memory as an extraction rule over a record of what was asked; the model
-  never sees the history.
-- Three departures from one commit per step, each stated: the node's call
-  site inside the quant commit (4b003be); two commits for extraction and
-  for derivation; the alias deleted with the repair.
+- Decision 16 logged, not taken; its trigger is Order 5 or a case.
+- The selection axis has two values, `tickers` (extraction's) and `status`
+  (the model's); selection is rendering; the block is always the full
+  check; a model-owned field's over-setting hides nothing.
+- The one-figure principle: a total and a cost are selections, never
+  measures; built when a case asks.
+- The rename to named denominators; the `denominator` label stays.
+- The deletions, all of §5 item 5 of the previous handoff, plus the five
+  unguarded files and `route_message`.
+- Order 2's first item is the ledger; D10 average cost, D11 fees in basis,
+  D12 what a sale does, D13 holdings derive from rows, D14 a row belongs
+  to a portfolio and its amount is data. The real portfolio's own Part 8
+  comes last, when the system works, and is the owner's.
+- One departure from tests-first, stated: the rename's fixtures moved in
+  the same commit as the code, since a rename has no failing test but the
+  missing attribute.
 
 **Pending, owner's call — bring them up before writing code.**
-1. **A selection axis for the compliance report** (`filter`, or reading
-   `tickers` in the compliance formatter): "Is my JNJ position over any
-   limit?" carries JNJ and still gets the full report. The `group_by`/
-   `filter` entry in KNOWN_GAPS has the shape.
-2. **The rename to named denominators**: `pct_of_denominator` equals
-   `pct_of_total` on asset-class and position lines. Touches the runner,
-   two fixtures and the formatter.
-3. **Records and rules for the span and two-weights clarifications**, when a
-   case asks; today a reply to either is a new message.
-4. **A window return** as a measure with a reference, the capability behind
-   "last month" and "today"; not an extraction rule.
-5. **Deletions**, each its own commit after a grep: `AgentTask` and the
-   task list (router-written, unread), `target_return`,
-   `rebalance_threshold`, `parameters.portfolio_id`, `is_multi_step`,
-   `requires_confirmation`, `conversation_history` and `available_agents`
-   on the prompt builder, `route_sync`, `detect_intent_simple`,
-   `stream_agent_graph`, `get_graph_mermaid`, `prompts.py`, the unreachable
-   check in `_validate_decision`, `state.add_warning`, the dead `"3Y"`
-   period default in `nodes.py`.
-6. `reasoning` carried into the decision dict, so the CLI's line prints.
-7. Replace the two verbatim benchmark few-shots (1.1, 1.3); the
+1. **The ledger's code**, in this order: a pytest over Part 8 A and B that
+   fails before the ledger exists; the migration adding `portfolio_id`
+   and `amount` to `transactions`; the derivation of holdings from rows
+   (D13); then what reads it. Each a decision first.
+2. **Order 2 items 2 to 4** after it: base currency and spot FX (its
+   reference is a Part 8 column at a stated rate on a stated date); the
+   price source; the personal IPS as a local file.
+3. **Records and rules for the span and two-weights clarifications**, when
+   a case asks.
+4. **A window return** as a measure with a reference; not an extraction rule.
+5. `reasoning` carried into the decision dict, so the CLI's line prints.
+6. Replace the two verbatim benchmark few-shots (1.1, 1.3); the
    rebalancing few-shot with four percentages.
-8. The hypothetical mode's instrument type ("11% into a new ETF").
-9. A target-weights clause and `OUT_OF_SCOPE_RESPONSE` moving into the
+7. The hypothetical mode's instrument type ("11% into a new ETF").
+8. A target-weights clause and `OUT_OF_SCOPE_RESPONSE` moving into the
    IPS — both edit `docs/IPS.md`.
-10. D9's wording; the workbook's `Decisions` sheet (D8, D9, `C91`), own
-    commit via `git add`.
-11. "Optimization failed: None": the message, and the two-asset failure.
-12. A golden line for 2.3.
-13. **Company names in questions** ("How is my Apple Inc. position doing?"
-    answers for all nine positions). Not resolved by extraction, by the
-    owner's decision on 9 September: a name list is a bridge that grows;
-    the reader model resolves the name and the tool validates the ticker.
-    KNOWN_GAPS, "The extraction bridge reads symbols, not company names".
-14. **German phrasings.** The four phrase rules in `extraction.py` read
-    English; a German span question is a known wrong face until the reader
-    changes. Owner: occasional German use. KNOWN_GAPS, "The four phrase
-    rules in extraction read English".
-15. **The softer 3.5 - decided 9 September: no.** 3.5 stays as the
-    benchmark defines it; a typo of a holding is asked about. A stated
-    reading ("APPL read as AAPL") is the reader model's behaviour in the
-    end state, not the tool's, and the tool asks.
-16. **A stronger reader model producing a typed request, with extraction
-    reduced to validation.** The middle path between today's bridge and
-    DIRECTION.md's Order 5: the model reads the sentence (names, German,
-    typos) and emits the typed fields; extraction only validates them
-    against the vocabularies and asks on what fails. To be brought as a
-    decision next session with what it does to the golden set (a
-    nondeterministic reader behind pinned lines) and the cost per call
-    (`RouterConfig.use_stronger_model` exists; `ANTHROPIC_SONNET` still
-    points at the Haiku id). If taken, it is a dated change to
-    DIRECTION.md's Order.
+9. D9's wording; the workbook's `Decisions` sheet (D8, D9, D10–D14, `C91`).
+10. "Optimization failed: None": the message, and the two-asset failure.
+11. A golden line for 2.3.
+12. **Company names, German phrasings, the softer 3.5**: logged, not
+    built; decision 16 is their path (§5 items 13–15 of the previous
+    handoff, unchanged).
+13. **`group_by` as the subject kind of a compliance finding**, narrowing
+    "which of my *positions* are over" to ticker subjects; the values
+    already match. When a case asks.
+14. **Dropping the block's `denominator` label** now that every share
+    names its own.
+15. **The two dead duplicates in `graph.py`** (`_get_next_agent_internal`,
+    `_is_execution_complete_internal`), still uncalled.
+16. **`test_portfolio_integration.py`**: rewrite with assertions or delete;
+    it routes live on every pytest run.
+17. **`ANTHROPIC_SONNET`'s id**: a one-line config fix, independent of
+    decision 16.
 
 ---
 
 ## 6. Where we stand against the benchmark
 
-12/12. Level 1, Level 2 and Level 3 in full. benchmark.md's Level 2 note and
-the 3.5 note carry dated corrections; Part 4's item 5 is marked done.
+12/12. Level 1, Level 2 and Level 3 in full. benchmark.md's notes are
+current; nothing in it changed this sitting.
 
 ---
 
 ## 7. Next steps, in order
 
-**DIRECTION.md's Order 1 is built.** Order 2 is next: make it the owner's —
-a transaction ledger and cost-basis method; a base currency and FX source;
-a price source that can be defended with real money; the personal IPS, the
-type vocabulary grown one clause at a time; a Part 8 reference for the real
-portfolio before any figure about it is trusted. Each is a decision first,
-a hand-computed reference before code, and the loops named.
+**The ledger's code, against Part 8.** First the test: `tests/test_ledger.py`
+over Part 8 A (portfolio 3 as nine buys reproduces Part 1 to the cent)
+and B (250 @ 80.01, cost basis 20,002.50, realized 247.50), written to
+fail before any ledger function exists. Then the migration: `transactions`
+gains `portfolio_id` and `amount`; a Dividend follows the same rule later.
+Then the derivation, pure like `quant/allocation.py`: rows in, holdings
+out, per D10–D13, raising on a sale that exceeds the quantity held. Then
+the question of what reads it — whether `PortfolioHolding` becomes a
+view of the ledger or the seed writes both — is its own decision. Each
+comes as a decision first, with the loops named; the runner is not
+expected to move until something reads the ledger.
 
-**The first code change of the next sitting is the compliance selection
-axis (§5 item 1)**, ahead of the rename (2) and the deletions (5): the
-9 September CLI session put the full 63-line report in front of three
-different questions ("Is my JNJ position over any limit?", "Which of my
-positions are over the limit?", and the pinned lookup miss "What are my
-policy's rules on cash?"), and it is the one wrong face left that the
-sitting's own work made deterministic. Decision 16 is brought as a decision
-in the same sitting, before any code that widens the bridge.
+**Before any of it**, if the owner opens the workbook: the `Ledger` sheet's
+difference column must show zeros and its P&L % must read 9.99%. If not,
+the sheet is wrong and Part 8 in the markdown stands.
 
 ### Later, with reasons
 
 - The judgement half stays unstarted until benchmark.md has a Level 4 and
   the prediction ledger exists (DIRECTION.md).
-- `measure` and `group_by` are the model's last classification beyond
+- `measure`, `group_by` and `status` are the model's classification beyond
   intent; whether they become extraction is a question for the tool
   boundary, not for a prompt.
 - README rewrite; `test_portfolio_integration.py`; the inline `sqrt(w'Σw)`
@@ -360,32 +335,35 @@ in the same sitting, before any code that widens the bridge.
 
 ## 8. Rules learned the hard way
 
-**Prose that names a plan classifies by proxy.** Rule 7's brackets held the
-model's topic flag in place; removing them as dead text moved two lines
-the text never mentioned. A shrink is a hypothesis about every line the
-removed text touched, not only the lines that quote it.
+**Design the failure direction of a model-owned field.** The `status`
+rule's "which are over" against "whether it complies" is not a line the
+model draws; it set `breach` on 2.2, 2.3 and the list question alike. The
+fix that held was not a wording but a rendering in which an over-set
+field shortens the answer and hides nothing. Two readings, same hit rate,
+different failure direction: choose the one whose miss is honest.
 
-**A green suite can hide a broken call site.** `allocation_by_sector` gained
-a parameter and pytest stayed green because nothing ran the node. Write the
-test that runs the node before changing what it calls.
+**A fixture that passes in both states is no check.** The first combined
+test named AAPL, which breaches both of its clauses, so its rendering was
+the same whether `status` was read or ignored. JNJ, within one clause and
+over the other, was the fixture that could fail.
 
-**The failure direction of a rule is part of its design.** The lookup
-pattern misses into the fuller portfolio check; the model's flag missed into
-"the policy contains nothing on this". Two rules with the same hit rate are
-not the same rule.
+**Explain figures against the block, not the selection.** The clause text
+a breach row cites quotes the band's other bound; the runner explains
+every figure against `shared_data`'s findings, which are always the full
+check. A test stricter than its instrument fails on a design that is
+right.
 
-**Read the model's own output before choosing between readings.** One CLI
-session showed `policy_topic` set on both moved lines; no golden field could
-have. The runner and the CLI see fields the golden set does not print.
+**A "free" loop can be spending.** Five files with no test function and no
+guard ran at collection; two routed live through the model, and pytest
+collected their bare `test()` coroutine as a test as well, so each call
+ran twice per run. The suite was ten seconds and two Haiku calls heavier
+than anyone believed. Look for module-level calls in every `test_*.py`.
 
-**A record beats a re-read.** The clarification's text was not the memory;
-a structured record of what was asked was, and the resolution rule needed
-only that.
-
-**Registration is not reachability; shown a list, a model picks from it;
-predict from the whole prompt; structure, not verdicts; a refusal is an
-honest failure; write the falsifier — still true.** Earlier handoffs' §8
-have the examples.
+**Read the model's own output before choosing between readings; a record
+beats a re-read; prose that names a plan classifies by proxy; a green
+suite can hide a broken call site; registration is not reachability;
+predict from the whole prompt; a refusal is an honest failure; write the
+falsifier — still true.** Earlier handoffs' §8 have the examples.
 
 ---
 
@@ -399,7 +377,7 @@ pytest -q
 python tests/golden/run_golden.py > /tmp/golden_now.txt 2>/dev/null
 diff tests/golden/expected.txt /tmp/golden_now.txt
 python tests/benchmark/run_cases.py
-python tests/benchmark/run_cases.py --case 3.5
+python tests/benchmark/run_cases.py --case 2.2
 
 python src/agents/cli.py --portfolio 3
 
@@ -412,10 +390,10 @@ git log --oneline baseline-v1..HEAD
 
 | Loop | Cost | Answers |
 |---|---|---|
-| `pytest` | ~25s | Do the components still work; does every table row derive its plan; does extraction read every recorded prompt the same way; does the node publish the block the checker reads |
-| CLI | ~3s | What is it actually doing — the plan, the parameters, what was asked back, what a reply resolved to |
-| Golden set | ~70s, cents | Did routing change anywhere (sixteen lines, two pinned failures, `retries` when a plan was rejected). Blind to `measure`, `group_by`, `tickers` and the compliance mode |
-| Benchmark runner | ~1.5min, cents | How many cases pass; the only loop that sees the compliance mode and the second turn |
+| `pytest` | ~14s, still a few live calls from `test_portfolio_integration.py` | Do the components still work; does every table row derive its plan; does extraction read every recorded prompt the same way; does the node publish the block the checker reads; does each formatter select what its parameters say |
+| CLI | ~3s, one call | What is it actually doing — the plan, the parameters (truncated before `measure`, `group_by`, `status`), what was asked back, the answer's header |
+| Golden set | ~70s, cents | Did routing change anywhere (sixteen lines, two pinned failures, `retries` when a plan was rejected). Blind to `measure`, `group_by`, `status`, `tickers` and the compliance mode |
+| Benchmark runner | ~1.5min, cents | How many cases pass; the only loop that sees the compliance mode, the second turn, and a model-owned field set where it should not be (2.1, 2.2) |
 
 `golden set → change → golden set → decide → then update expected.txt, its own
 commit, with a yes`. Prediction first, twice for a prompt change, stop at
