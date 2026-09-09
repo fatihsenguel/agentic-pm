@@ -140,8 +140,6 @@ class SmartRouter:
     async def route(
         self,
         user_message: str,
-        conversation_history: Optional[List[dict]] = None,
-        available_agents: Optional[List[str]] = None,
         portfolio_id: Optional[int] = None,
         pending: Optional[Dict[str, Any]] = None,
     ) -> Tuple[RouterDecision, ValidationResult]:
@@ -167,9 +165,8 @@ class SmartRouter:
         
         Args:
             user_message: The user's request
-            conversation_history: Previous conversation messages
-            available_agents: List of currently available agents
             portfolio_id: Optional portfolio ID to analyze
+            pending: The previous turn's clarification record, if any
         
         Returns:
             Tuple of (RouterDecision, ValidationResult)
@@ -218,9 +215,7 @@ class SmartRouter:
             # Build prompt
             prompt = build_router_prompt(
                 user_message=user_message,
-                conversation_history=conversation_history,
                 include_examples=self.config.include_examples,
-                available_agents=available_agents,
                 # Tells the router the portfolio exists, not to copy it: nothing
                 # downstream reads parameters.tickers when a portfolio is set
                 # except the position P&L formatter, where a filled list means

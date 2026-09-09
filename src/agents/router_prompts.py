@@ -3,7 +3,7 @@
 # Principle: Minimal tokens, maximum clarity. The router must be fast and accurate.
 # Phase: 6.1 - Smart Router (LLM-Based Intent Detection)
 
-from typing import List, Optional
+from typing import Optional
 
 from .schemas import INTENTS
 
@@ -192,19 +192,20 @@ ROUTER_FEW_SHOT_EXAMPLES = [
 
 def build_router_prompt(
     user_message: str,
-    conversation_history: Optional[List[dict]] = None,
     include_examples: bool = True,
-    available_agents: Optional[List[str]] = None,
     portfolio_context: Optional[str] = None
 ) -> str:
     """
     Build the complete router prompt.
+
+    The model is shown no history and no roster: memory is an extraction
+    rule over the record of what was asked (agents/extraction.resolve),
+    and the plan is derived, so the model names no agent.
     
     Args:
         user_message: The current user request
-        conversation_history: Optional previous messages for context
         include_examples: Whether to include few-shot examples
-        available_agents: List of currently available agents (for dynamic routing)
+        portfolio_context: One paragraph saying the portfolio exists, or None
     
     Returns:
         Complete prompt string
@@ -218,14 +219,6 @@ def build_router_prompt(
             parts.append(f"\nExample {i}:")
             parts.append(f"User: \"{example['user']}\"")
             parts.append(f"Response: {example['response']}")
-    
-    # Add conversation context if provided
-    if conversation_history:
-        parts.append("\nCONVERSATION CONTEXT (last 3 messages):")
-        for msg in conversation_history[-3:]:
-            role = msg.get("role", "unknown")
-            content = msg.get("content", "")[:200]  # Truncate long messages
-            parts.append(f"- {role}: {content}")
     
     # Add portfolio context if provided
     if portfolio_context:
