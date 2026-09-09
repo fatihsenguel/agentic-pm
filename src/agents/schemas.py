@@ -147,6 +147,13 @@ class ExtractedParameters(BaseModel):
     # table, largest first. Only dimensions that are computed: industry and
     # country exist on Asset but nothing groups by them yet.
     group_by: Optional[Literal["asset_class", "sector", "position"]] = Field(default=None)
+    # The compliance report's selection by finding status, the model's like
+    # measure and group_by: "breach" when the user asks which positions,
+    # clauses or limits are over - the breach list - and null for the full
+    # check. The value is the finding's own `status` word. The other
+    # selection value, a named position, is `tickers`. Rendering only: the
+    # node checks every clause on every run and the plan does not change.
+    status: Optional[Literal["breach"]] = Field(default=None)
 
     # The compliance modes (intent "compliance"), decided by which of these is
     # set. Neither: check the existing portfolio against the policy.
@@ -321,6 +328,7 @@ class RouterDecision(BaseModel):
         validate_plan's, from the table."""
         modes = [k for k in ("hypothetical_weight", "policy_topic")
                  if getattr(self.parameters, k) is not None]
+        status = self.parameters.status
         order = [a if isinstance(a, str) else a.value for a in self.execution_order]
         if self.intent == IntentType.COMPLIANCE:
             if len(modes) == 2:
@@ -328,9 +336,16 @@ class RouterDecision(BaseModel):
                     "hypothetical_weight and policy_topic are two different questions; "
                     "a compliance request sets at most one"
                 )
-        elif modes:
+            if modes and status is not None:
+                raise ValueError(
+                    f"status {status!r} with {modes[0]} set: a proposed weight or a "
+                    "policy lookup has no breach list; status selects from the "
+                    "portfolio check only"
+                )
+        elif modes or status is not None:
+            fields = modes + (["status"] if status is not None else [])
             raise ValueError(
-                f"{modes} set under intent {self.intent!r}; they belong to intent compliance"
+                f"{fields} set under intent {self.intent!r}; they belong to intent compliance"
             )
         elif "ComplianceAgent" in order:
             raise ValueError(
