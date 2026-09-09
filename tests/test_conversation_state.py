@@ -76,7 +76,7 @@ class _StubRouter:
     async def route(self, user_message, portfolio_id=None, pending=None):
         self.received = pending
         decision = SimpleNamespace(
-            intent="clarification_needed", confidence=1.0, agents_needed=[],
+            intent="clarification_needed", confidence=1.0,
             parameters=ExtractedParameters(), execution_order=[],
             clarification_question="Did you mean AAPL?", pending=self._pending,
             resolved=None,

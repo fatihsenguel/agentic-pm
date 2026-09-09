@@ -60,7 +60,6 @@ async def test_the_flip_plan_is_derived_away_without_a_repair(router):
                                  measure="portfolio_volatility"))
     decision, validation = await router.route("Is my AAPL position too big?", portfolio_id=3)
     assert decision.execution_order == ANALYSIS
-    assert [t.agent for t in decision.agents_needed] == ANALYSIS
     assert validation.errors == []
     assert len(router._llm.prompts) == 1
 
@@ -91,12 +90,13 @@ async def test_a_hypothetical_weight_derives_the_agent_alone(router):
     assert decision.parameters.hypothetical_weight == 0.15
 
 
-async def test_the_models_task_descriptions_are_not_read(router):
+async def test_the_models_task_list_is_not_read(router):
+    """The stub still sends agents_needed, as an older model output would;
+    the decision carries no such field and the plan is the table's."""
     router._llm = _FakeLLM(_json("data_fetch", ["DataAgent"], measure="allocation", group_by="sector"))
     decision, _ = await router.route("What share of my portfolio is technology?", portfolio_id=3)
     assert decision.execution_order == ANALYSIS
-    assert all(t.task_description != "the model's idea" for t in decision.agents_needed)
-    assert [t.priority for t in decision.agents_needed] == [1, 2]
+    assert not hasattr(decision, "agents_needed")
 
 
 async def test_a_weight_under_the_wrong_intent_is_repaired_by_changing_the_intent(router):

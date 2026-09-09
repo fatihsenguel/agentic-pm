@@ -351,14 +351,6 @@ def _decision_to_dict(decision) -> Dict[str, Any]:
     return {
         "intent": decision.intent if isinstance(decision.intent, str) else decision.intent.value,
         "confidence": decision.confidence,
-        "agents_needed": [
-            {
-                "agent": t.agent if isinstance(t.agent, str) else t.agent.value,
-                "task_description": t.task_description,
-                "priority": t.priority,
-            }
-            for t in decision.agents_needed
-        ],
         # Every extracted field, from the schema. A hand-picked key list here
         # was a second statement of ExtractedParameters and dropped any field
         # it did not name - a router output that validated and then vanished

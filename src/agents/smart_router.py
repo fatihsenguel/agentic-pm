@@ -15,7 +15,6 @@ from .router_prompts import build_router_prompt, build_repair_prompt
 from .schemas import (
     RouterDecision, 
     IntentType, 
-    AgentTask,
     ExtractedParameters,
     TERMINAL,
     derive_plan,
@@ -262,7 +261,7 @@ class SmartRouter:
             # Log to tracer
             if agent_ctx and decision:
                 agent_ctx.log_thinking(
-                    f"Routed to: {[a.agent for a in decision.agents_needed]} "
+                    f"Routed to: {list(decision.execution_order)} "
                     f"(confidence: {decision.confidence:.2f})"
                 )
             
@@ -381,9 +380,8 @@ class SmartRouter:
         """
         Additional validation of the router decision: the tickers against
         the database. The agent names and the plan are the schema's and the
-        terminal table's - AgentTask.agent and execution_order are typed
-        against AgentName, and both lists are derived from one table - so
-        no check here on either could fire.
+        terminal table's - execution_order is typed against AgentName and
+        derived from one table - so no check here on it could fire.
         """
         # Validate tickers if any were extracted
         if decision.parameters.tickers:
@@ -407,7 +405,6 @@ class SmartRouter:
         return RouterDecision(
             intent=IntentType.CLARIFICATION_NEEDED,
             confidence=1.0,
-            agents_needed=[],
             execution_order=[],
             parameters=ExtractedParameters(
                 tickers=extraction.tickers,
@@ -431,7 +428,6 @@ class SmartRouter:
         return RouterDecision(
             intent=IntentType.CLARIFICATION_NEEDED,
             confidence=0.0,
-            agents_needed=[],
             execution_order=[],
             parameters=ExtractedParameters(),
             reasoning=f"Router failed: {error}",
@@ -474,17 +470,13 @@ def _with_extraction(raw: Dict[str, Any], extraction: Extraction, user_message: 
     out["resolved"] = None
 
     # The plan is derived from the intent and those parameters through
-    # schemas.TERMINAL and REQUIRES; the model's execution_order and
-    # agents_needed are not read. An intent the registry lacks is left for
-    # the schema to reject.
+    # schemas.TERMINAL and REQUIRES; the model's execution_order is not
+    # read, and a task list it sends is ignored with every other extra
+    # field. An intent the registry lacks is left for the schema to reject.
     intent = raw.get("intent")
     if intent in TERMINAL:
         plan = derive_plan(intent, parameters)
         out["execution_order"] = plan
-        out["agents_needed"] = [
-            {"agent": agent, "task_description": f"derived for intent {intent}", "priority": i + 1}
-            for i, agent in enumerate(plan)
-        ]
     return out
 
 

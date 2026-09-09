@@ -23,7 +23,6 @@ class _StubRouter:
         decision = SimpleNamespace(
             intent="data_fetch",
             confidence=0.9,
-            agents_needed=[SimpleNamespace(agent="DataAgent", task_description="fetch", priority=1)],
             parameters=ExtractedParameters(),
             execution_order=["DataAgent"],
             clarification_question=None,

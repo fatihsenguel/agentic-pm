@@ -65,14 +65,6 @@ def _get_next_agent_internal(state: AgentState) -> str | None:
     # 1. Get the plan (List of agent names)
     plan = decision.get("execution_order", [])
     
-    # Fallback: if execution_order is missing, try extracting from agents_needed
-    if not plan:
-        agents_needed = decision.get("agents_needed", [])
-        plan = [
-            a.get("agent") if isinstance(a, dict) else a 
-            for a in agents_needed
-        ]
-    
     # 2. Check who has finished
     completed_agents = state.get("sub_results", {}).keys()
     

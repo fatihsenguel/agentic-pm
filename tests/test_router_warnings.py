@@ -30,10 +30,6 @@ class _StubRouter:
         self._decision = SimpleNamespace(
             intent=intent,
             confidence=0.9,
-            agents_needed=[
-                SimpleNamespace(agent=a, task_description="fetch", priority=i + 1)
-                for i, a in enumerate(plan)
-            ],
             parameters=ExtractedParameters(),
             execution_order=list(plan),
             clarification_question=question,

@@ -15,7 +15,6 @@ from agents.schemas import (
     RouterDecision,
     IntentType,
     AgentName,
-    AgentTask,
     ExtractedParameters,
     PortfolioWeights,
     TradeProposal,
@@ -45,9 +44,6 @@ class TestRouterDecision:
         data = {
             "intent": "macro_analysis",
             "confidence": 0.9,
-            "agents_needed": [
-                {"agent": "MacroAgent", "task_description": "Analyze VIX and regime", "priority": 1}
-            ],
             "execution_order": ["MacroAgent"],
             "parameters": {"tickers": [], "period": None},
             "reasoning": "User asked about market conditions",
@@ -56,16 +52,13 @@ class TestRouterDecision:
         decision = RouterDecision.model_validate(data)
         assert decision.intent == IntentType.MACRO_ANALYSIS
         assert decision.confidence == 0.9
-        assert len(decision.agents_needed) == 1
+        assert decision.execution_order == ["MacroAgent"]
     
     def test_invalid_agent_name(self):
         """Test that invalid agent names are rejected."""
         data = {
             "intent": "optimization",
             "confidence": 0.9,
-            "agents_needed": [
-                {"agent": "FakeAgent", "task_description": "Do nothing", "priority": 1}
-            ],
             "execution_order": ["FakeAgent"],
             "parameters": {},
             "reasoning": "An agent the roster does not have",
@@ -83,7 +76,6 @@ class TestRouterDecision:
         on (its deletion is the next commit)."""
         data = {
             "intent": "combined", "confidence": 0.9,
-            "agents_needed": [{"agent": "MacroAgent", "task_description": "regime", "priority": 1}],
             "execution_order": ["MacroAgent"], "parameters": {},
             "reasoning": "a multi-step plan the model wrote",
         }
@@ -95,7 +87,6 @@ class TestRouterDecision:
         data = {
             "intent": "clarification_needed",
             "confidence": 0.3,
-            "agents_needed": [],
             "execution_order": [],
             "parameters": {},
             "reasoning": "Unclear request",
@@ -110,9 +101,6 @@ class TestRouterDecision:
         data = {
             "intent": "out_of_scope",
             "confidence": 0.9,
-            "agents_needed": [
-                {"agent": "DataAgent", "task_description": "Fetch NVDA", "priority": 1}
-            ],
             "execution_order": ["DataAgent"],
             "parameters": {},
             "reasoning": "Asks whether to buy a security",
@@ -125,7 +113,6 @@ class TestRouterDecision:
         data = {
             "intent": "out_of_scope",
             "confidence": 0.9,
-            "agents_needed": [],
             "execution_order": [],
             "parameters": {},
             "reasoning": "Asks whether to buy a security",
@@ -142,10 +129,6 @@ class TestRouterDecision:
         return {
             "intent": "compliance",
             "confidence": 0.9,
-            "agents_needed": [
-                {"agent": a, "task_description": "check the policy", "priority": i + 1}
-                for i, a in enumerate(plan)
-            ],
             "execution_order": plan,
             "parameters": params,
             "reasoning": "policy question",
@@ -232,10 +215,6 @@ class TestDependencies:
         return {
             "intent": intent,
             "confidence": 0.9,
-            "agents_needed": [
-                {"agent": a, "task_description": "do the planned thing", "priority": i + 1}
-                for i, a in enumerate(order)
-            ],
             "execution_order": list(order),
             "parameters": parameters,
             "reasoning": "a plan shape from the diagnostics",
@@ -357,18 +336,21 @@ class TestDependencies:
 
 
 def test_a_decision_needs_no_task_list():
-    """The model is not asked for agents_needed; the router derives it.
-    A decision without it validates, with the derived plan empty here."""
+    """The model is not asked for a plan; the router derives it. A decision
+    without one validates, with the derived plan empty here, and a task
+    list the model sends anyway is an extra field, ignored."""
     decision = RouterDecision.model_validate({
         "intent": "out_of_scope", "confidence": 0.9, "parameters": {},
-        "reasoning": "asks whether to own a security"})
-    assert decision.agents_needed == [] and decision.execution_order == []
+        "reasoning": "asks whether to own a security",
+        "agents_needed": [{"agent": "DataAgent", "task_description": "the model's", "priority": 1}]})
+    assert decision.execution_order == []
+    assert not hasattr(decision, "agents_needed")
 
 
 def test_unknown_is_not_an_intent():
     """The prompt never offered "unknown" and nothing read it; a decision
     carrying it is a decision the graph cannot route, rejected at the schema."""
-    decision = {"intent": "unknown", "confidence": 0.5, "agents_needed": [],
+    decision = {"intent": "unknown", "confidence": 0.5,
                 "execution_order": [], "parameters": {},
                 "reasoning": "a router never emits this value"}
     with pytest.raises(ValueError):
@@ -568,9 +550,6 @@ class TestSafeParse:
         data = {
             "intent": "macro_analysis",
             "confidence": 0.9,
-            "agents_needed": [
-                {"agent": "MacroAgent", "task_description": "Analyze VIX and regime", "priority": 1}
-            ],
             "execution_order": ["MacroAgent"],
             "parameters": {"tickers": []},
             "reasoning": "Test reasoning",

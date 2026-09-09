@@ -67,7 +67,7 @@ def _enum_member_name(agent: str) -> str:
 
 
 # Valid agent names in the system: the roster above as a str Enum, so that
-# AgentTask.agent and RouterDecision.execution_order reject any name the graph
+# RouterDecision.execution_order rejects any name the graph
 # cannot run. Members are not written by hand; add an agent to AGENTS.
 AgentName = Enum(
     "AgentName",
@@ -114,17 +114,6 @@ class TradeAction(str, Enum):
 # =============================================================================
 # ROUTER OUTPUT SCHEMAS
 # =============================================================================
-
-class AgentTask(BaseModel):
-    """A single task to be executed by an agent."""
-    agent: AgentName
-    task_description: str = Field(..., min_length=5, max_length=500)
-    depends_on: Optional[List[AgentName]] = Field(default=None)
-    priority: int = Field(default=1, ge=1, le=10)
-    
-    class Config:
-        use_enum_values = True
-
 
 class ExtractedParameters(BaseModel):
     """Parameters extracted from user input."""
@@ -264,9 +253,8 @@ class RouterDecision(BaseModel):
     confidence: float = Field(..., ge=0.0, le=1.0)
     
     # The plan: derived by the router from the intent and parameters through
-    # TERMINAL and REQUIRES, never asked of the model. Both default empty so
-    # a decision the model wrote without them validates on its own terms.
-    agents_needed: List[AgentTask] = Field(default_factory=list)
+    # TERMINAL and REQUIRES, never asked of the model. Defaults empty so a
+    # decision the model wrote without it validates on its own terms.
     execution_order: List[AgentName] = Field(default_factory=list)
     
     # Extracted information
@@ -305,11 +293,9 @@ class RouterDecision(BaseModel):
         """An out-of-scope request plans nothing. A plan alongside the
         refusal would be trimmed by nothing downstream and run as planned,
         so it is rejected here rather than repaired."""
-        if self.intent == IntentType.OUT_OF_SCOPE and (
-            self.agents_needed or self.execution_order
-        ):
+        if self.intent == IntentType.OUT_OF_SCOPE and self.execution_order:
             raise ValueError(
-                "agents_needed and execution_order must be empty when intent is out_of_scope"
+                "execution_order must be empty when intent is out_of_scope"
             )
         return self
 
