@@ -43,7 +43,6 @@ def _json(intent, plan, **parameters):
                           for a in plan],
         "execution_order": list(plan),
         "parameters": parameters,
-        "requires_confirmation": False,
         "reasoning": "a stubbed decision for the test", "clarification_question": None,
     })
 

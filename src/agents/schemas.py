@@ -275,9 +275,6 @@ class RouterDecision(BaseModel):
     # Extracted information
     parameters: ExtractedParameters
     
-    # For multi-step workflows
-    requires_confirmation: bool = Field(default=False)
-    
     # Router's reasoning
     reasoning: str = Field(..., min_length=10, max_length=1000)
     

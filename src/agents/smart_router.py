@@ -416,7 +416,6 @@ class SmartRouter:
                 max_volatility=extraction.max_volatility,
                 hypothetical_weight=extraction.hypothetical_weight,
             ),
-            requires_confirmation=False,
             reasoning=f"Extraction could not resolve the message: {extraction.clarification}"[:1000],
             clarification_question=extraction.clarification,
             pending=extraction.pending,
@@ -436,7 +435,6 @@ class SmartRouter:
             agents_needed=[],
             execution_order=[],
             parameters=ExtractedParameters(),
-            requires_confirmation=False,
             reasoning=f"Router failed: {error}",
             clarification_question="Es tut mir leid, ich konnte Ihre Anfrage nicht verstehen. Können Sie bitte genauer beschreiben, was Sie tun möchten?"
         )
