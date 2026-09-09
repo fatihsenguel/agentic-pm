@@ -448,28 +448,6 @@ class SmartRouter:
             clarification_question="Es tut mir leid, ich konnte Ihre Anfrage nicht verstehen. Können Sie bitte genauer beschreiben, was Sie tun möchten?"
         )
     
-    def route_sync(
-        self,
-        user_message: str,
-        conversation_history: Optional[List[dict]] = None,
-        available_agents: Optional[List[str]] = None
-    ) -> Tuple[RouterDecision, ValidationResult]:
-        """
-        Synchronous version of route() for non-async contexts.
-        """
-        import asyncio
-        
-        # Get or create event loop
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        
-        return loop.run_until_complete(
-            self.route(user_message, conversation_history, available_agents)
-        )
-    
     def get_stats(self) -> Dict[str, Any]:
         """Get routing statistics."""
         total = self.stats["total_routes"]
@@ -552,46 +530,3 @@ def create_router(config: Optional[RouterConfig] = None) -> SmartRouter:
     Use this when you need isolated instances (e.g., testing).
     """
     return SmartRouter(config)
-
-
-# =============================================================================
-# CONVENIENCE FUNCTIONS
-# =============================================================================
-
-async def route_message(
-    user_message: str,
-    conversation_history: Optional[List[dict]] = None
-) -> RouterDecision:
-    """
-    Quick routing function for simple use cases.
-    
-    Returns only the decision (ignores validation).
-    """
-    router = get_router()
-    decision, _ = await router.route(user_message, conversation_history)
-    return decision
-
-
-def detect_intent_simple(user_message: str) -> Dict[str, Any]:
-    """
-    Simple synchronous intent detection.
-    
-    Returns dict for backwards compatibility with old interface.
-    """
-    router = get_router()
-    decision, validation = router.route_sync(user_message)
-    
-    return {
-        "type": decision.intent.value,
-        "agents_needed": [task.agent for task in decision.agents_needed],
-        "parameters": {
-            "tickers": decision.parameters.tickers,
-            "period": decision.parameters.period,
-            "max_volatility": decision.parameters.max_volatility,
-        },
-        "confidence": decision.confidence,
-        "is_multi_step": decision.is_multi_step,
-        "reasoning": decision.reasoning,
-        "validation_errors": validation.errors,
-        "validation_warnings": validation.warnings,
-    }
