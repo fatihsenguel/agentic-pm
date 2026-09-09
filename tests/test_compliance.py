@@ -59,7 +59,7 @@ def allocation():
         "by_asset_class": {
             "lines": [
                 {"label": label, "market_value": v, "cost_basis": 0.0,
-                 "pct_of_denominator": v / TOTAL,
+                 "pct_of_sectored": None,
                  "pct_of_invested": (v / invested if label != "Cash" else None),
                  "pct_of_total": v / TOTAL,
                  "tickers": list(tickers)}
@@ -73,7 +73,7 @@ def allocation():
         "by_sector": {
             "lines": [
                 {"label": label, "market_value": v, "cost_basis": 0.0,
-                 "pct_of_denominator": (v / sectored if label != "(no sector)" else None),
+                 "pct_of_sectored": (v / sectored if label != "(no sector)" else None),
                  "pct_of_invested": v / invested,
                  "pct_of_total": v / TOTAL,
                  "tickers": list(tickers)}
@@ -88,7 +88,7 @@ def allocation():
         "by_position": {
             "lines": [
                 {"label": t, "market_value": v, "cost_basis": 0.0,
-                 "pct_of_denominator": v / TOTAL,
+                 "pct_of_sectored": None,
                  "pct_of_invested": v / invested,
                  "pct_of_total": v / TOTAL,
                  "tickers": [t]}
@@ -205,7 +205,7 @@ def test_sector_reads_the_published_share_and_does_not_divide(ips):
     alloc = allocation()
     line = _line(alloc, "by_sector", "Technology")
     line["market_value"] = 1.0
-    line["pct_of_denominator"] = None
+    line["pct_of_sectored"] = None
     line["pct_of_invested"] = None
     tech = by_key(check(ips, alloc, INSTRUMENT_TYPES))[("IPS-4.3", "Technology", "max")]
     assert tech.observed * 100 == pytest.approx(27.96, abs=CENT)
@@ -217,19 +217,19 @@ def test_position_reads_the_published_share_and_does_not_divide(ips):
     alloc = allocation()
     line = _line(alloc, "by_position", "JPM")
     line["market_value"] = 1.0
-    line["pct_of_denominator"] = None
+    line["pct_of_invested"] = None
     keys = by_key(check(ips, alloc, INSTRUMENT_TYPES))
     assert keys[("IPS-4.1", "JPM", "max")].observed * 100 == pytest.approx(8.68, abs=CENT)
     assert keys[("IPS-4.2", "JPM", "max")].observed * 100 == pytest.approx(8.68, abs=CENT)
 
 
 def test_band_reads_the_same_field(ips):
-    """Every clause reads one name for the share of total. On an asset-class
-    line `pct_of_denominator` carries the same figure and is not read."""
+    """Every clause reads one name for the share of total. The line's other
+    share and its market value are not read."""
     alloc = allocation()
     line = _line(alloc, "by_asset_class", "Equity")
     line["market_value"] = 1.0
-    line["pct_of_denominator"] = 0.5
+    line["pct_of_invested"] = 0.5
     equity = by_key(check(ips, alloc, INSTRUMENT_TYPES))[("IPS-3.1", "Equity", "max")]
     assert equity.observed * 100 == pytest.approx(69.41, abs=CENT)
 

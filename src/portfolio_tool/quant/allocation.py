@@ -23,9 +23,11 @@ same reason.
 
 Every line also carries `pct_of_total`, its share of total portfolio value
 including cash (D2). That is the figure every IPS limit is written against
-(Part 7): on an asset-class line it is the same number as `pct_of_denominator`,
-on a sector line it is a third figure that neither Part 3 column gives. It is
-computed here so that no reader - the checker, a formatter - divides for it.
+(Part 7): on an asset-class or position line it is the line's only share of
+its own view, on a sector line it is a third figure that neither Part 3
+column gives. It is computed here so that no reader - the checker, a
+formatter - divides for it. Each share names its denominator: there is no
+"percentage of the view's denominator", so no name means two quantities.
 
 A third view, by position, is Part 7's IPS-4.1 table: one line per holding,
 largest first. Concentration is allocation by position, so it is a view here
@@ -55,7 +57,9 @@ class AllocationLine:
 
     # Percentages are left None where they are not meaningful for the bucket,
     # e.g. cash has no "% invested" and unsectored holdings have no "% sectored".
-    pct_of_denominator: Optional[float] = None
+    # Share of sectored value (D3): the sector view only, None on its
+    # unsectored line and in the other views, which have no such quantity.
+    pct_of_sectored: Optional[float] = None
     pct_of_invested: Optional[float] = None
     # Share of total portfolio value including cash (D2), on every line.
     pct_of_total: Optional[float] = None
@@ -160,9 +164,8 @@ def allocation_by_asset_class(
 
     lines = sorted(buckets.values(), key=lambda l: -l.market_value)
     for line in lines:
-        line.pct_of_denominator = line.market_value / total
         line.pct_of_invested = line.market_value / invested if invested else None
-        line.pct_of_total = line.pct_of_denominator
+        line.pct_of_total = line.market_value / total
 
     # Cash last, and with no "% invested" - it is not invested.
     lines.append(
@@ -171,7 +174,6 @@ def allocation_by_asset_class(
             market_value=cash,
             cost_basis=cash,
             tickers=[],
-            pct_of_denominator=cash / total,
             pct_of_invested=None,
             pct_of_total=cash / total,
         )
@@ -198,7 +200,7 @@ def allocation_by_sector(
     Holdings without a sector get their own explicit line (D3) and are counted
     in the invested denominator, but not in the sectored one.
 
-    Each line carries three percentages: `pct_of_denominator` is of sectored
+    Each line carries three percentages: `pct_of_sectored` is of sectored
     value, `pct_of_invested` is of all invested value, `pct_of_total` is of
     total portfolio value including cash (D2) - the IPS-4.3 figure, Part 7.
     The unsectored line has the second and third only.
@@ -240,12 +242,12 @@ def allocation_by_sector(
 
     lines = sorted(buckets.values(), key=lambda l: -l.market_value)
     for line in lines:
-        line.pct_of_denominator = line.market_value / sectored if sectored else None
+        line.pct_of_sectored = line.market_value / sectored if sectored else None
         line.pct_of_invested = line.market_value / invested
         line.pct_of_total = line.market_value / total
 
     if unsectored.market_value > 0:
-        unsectored.pct_of_denominator = None
+        unsectored.pct_of_sectored = None
         unsectored.pct_of_invested = unsectored.market_value / invested
         unsectored.pct_of_total = unsectored.market_value / total
         lines.append(unsectored)
@@ -271,7 +273,7 @@ def allocation_by_position(
     reader sorts. Reference: expected_values.md Part 7, the IPS-4.1 table.
 
     The denominator is total portfolio value including cash (D2), the same
-    as the asset-class view, so `pct_of_denominator` equals `pct_of_total`.
+    as the asset-class view: `pct_of_total` is the line's share of its view.
     No cash line: cash is not a holding and IPS-4.1 is about instruments; it
     is inside the denominator and reported on the Allocation.
 
@@ -307,7 +309,6 @@ def allocation_by_position(
     lines.sort(key=lambda l: -l.market_value)
     for line in lines:
         line.pct_of_total = line.market_value / total
-        line.pct_of_denominator = line.pct_of_total
         line.pct_of_invested = line.market_value / invested if invested else None
 
     return Allocation(

@@ -86,7 +86,7 @@ async def test_asset_class_lines_carry_the_share_of_total_under_the_same_name(pu
     assert lines["Equity"]["pct_of_total"] == pytest.approx(0.6941, abs=0.00005)
     assert lines["Cash"]["pct_of_total"] == pytest.approx(0.0378, abs=0.00005)
     for line in lines.values():
-        assert line["pct_of_total"] == line["pct_of_denominator"]
+        assert line["pct_of_sectored"] is None
 
 
 async def test_position_view_is_published_largest_first(published):
@@ -114,6 +114,6 @@ async def test_position_block_carries_the_same_denominators(published):
 async def test_part_3_columns_are_unchanged(published):
     """Adding a third figure moved neither of the first two."""
     lines = _by_label(published["by_sector"])
-    assert lines["Technology"]["pct_of_denominator"] == pytest.approx(0.5508, abs=0.00005)
+    assert lines["Technology"]["pct_of_sectored"] == pytest.approx(0.5508, abs=0.00005)
     assert lines["Technology"]["pct_of_invested"] == pytest.approx(0.2905, abs=0.00005)
-    assert lines["(no sector)"]["pct_of_denominator"] is None
+    assert lines["(no sector)"]["pct_of_sectored"] is None

@@ -270,9 +270,9 @@ def check_1_1(state):
         fails.append(f"labels {sorted(lines)} != {sorted(COST_BY_CLASS)}")
 
     total = sum(
-        line["pct_of_denominator"]
+        line["pct_of_total"]
         for line in lines.values()
-        if line.get("pct_of_denominator") is not None
+        if line.get("pct_of_total") is not None
     )
     if abs(total - 1.0) > 1e-9:
         fails.append(f"percentages sum to {total}, not 1.0")
@@ -280,7 +280,7 @@ def check_1_1(state):
     fails += _cost_bases_match(lines, COST_BY_CLASS, "by_asset_class")
 
     cash = lines.get("Cash") or {}
-    if cash.get("pct_of_denominator") is None:
+    if cash.get("pct_of_total") is None:
         fails.append("cash has no % of total; D2 puts cash inside the denominator")
     if cash.get("pct_of_invested") is not None:
         fails.append("cash carries a % of invested; cash is not invested")
@@ -289,7 +289,7 @@ def check_1_1(state):
     if held != TICKERS:
         fails.append(f"tickers {sorted(held)} != the nine seeded positions")
 
-    fails += _prose_carries(state, lines, "pct_of_denominator")
+    fails += _prose_carries(state, lines, "pct_of_total")
     fails += _states_as_of(state)
     return fails
 

@@ -812,7 +812,7 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
                     "label": line.label,
                     "market_value": round(line.market_value, 2),
                     "cost_basis": round(line.cost_basis, 2),
-                    "pct_of_denominator": line.pct_of_denominator,
+                    "pct_of_sectored": line.pct_of_sectored,
                     "pct_of_invested": line.pct_of_invested,
                     "pct_of_total": line.pct_of_total,
                     "tickers": line.tickers,
@@ -916,7 +916,7 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
 
         print(f"  Total portfolio value: {by_class.total_value:,.2f}")
         for line in by_class.lines:
-            print(f"    {line.label:<16} {line.pct_of_denominator:>7.2%}")
+            print(f"    {line.label:<16} {line.pct_of_total:>7.2%}")
         print(f"  Position P&L computed for {len(pnl)} positions")
         print(f"  Portfolio volatility: {vol:.4%} over {window['closes']} closes")
 
@@ -2138,7 +2138,7 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
         lines.append("")
         lines.append(f"**By asset class**, % of {by_class['denominator']}:")
         for line in by_class.get("lines", []):
-            pct = line.get("pct_of_denominator")
+            pct = line.get("pct_of_total")
             pct_str = f"{pct:.2%}" if pct is not None else "n/a"
             lines.append(f"  - {line['label']:<13}{pct_str:>8}"
                          f"{line['market_value']:>15,.2f}")
@@ -2155,7 +2155,7 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
                      f"of invested value {by_sector['invested_value']:,.2f}, "
                      f"and of total portfolio value {by_sector['total_value']:,.2f}:")
         for line in by_sector.get("lines", []):
-            of_sectored = line.get("pct_of_denominator")
+            of_sectored = line.get("pct_of_sectored")
             of_invested = line.get("pct_of_invested")
             of_total = line.get("pct_of_total")
             sectored_str = f"{of_sectored:.2%}" if of_sectored is not None else "n/a"

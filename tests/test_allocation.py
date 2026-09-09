@@ -79,16 +79,16 @@ def test_asset_class_percentages_are_the_answer_to_1_1():
     Part 2, market value / % of total. Per D1 and D2 this IS case 1.1's answer.
     """
     lines = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH))
-    assert lines["Equity"].pct_of_denominator == pytest.approx(0.6941, abs=0.00005)
-    assert lines["Fixed Income"].pct_of_denominator == pytest.approx(0.0999, abs=0.00005)
-    assert lines["Commodity"].pct_of_denominator == pytest.approx(0.0982, abs=0.00005)
-    assert lines["Real Estate"].pct_of_denominator == pytest.approx(0.0700, abs=0.00005)
-    assert lines["Cash"].pct_of_denominator == pytest.approx(0.0378, abs=0.00005)
+    assert lines["Equity"].pct_of_total == pytest.approx(0.6941, abs=0.00005)
+    assert lines["Fixed Income"].pct_of_total == pytest.approx(0.0999, abs=0.00005)
+    assert lines["Commodity"].pct_of_total == pytest.approx(0.0982, abs=0.00005)
+    assert lines["Real Estate"].pct_of_total == pytest.approx(0.0700, abs=0.00005)
+    assert lines["Cash"].pct_of_total == pytest.approx(0.0378, abs=0.00005)
 
 
 def test_asset_class_percentages_sum_to_one():
     a = allocation_by_asset_class(HOLDINGS, PRICES, CASH)
-    assert sum(l.pct_of_denominator for l in a.lines) == pytest.approx(1.0, abs=1e-9)
+    assert sum(l.pct_of_total for l in a.lines) == pytest.approx(1.0, abs=1e-9)
 
 
 def test_cash_has_no_percent_invested():
@@ -98,18 +98,15 @@ def test_cash_has_no_percent_invested():
     assert lines["Equity"].pct_of_invested == pytest.approx(0.7213, abs=0.00005)
 
 
-def test_asset_class_percent_of_total_is_the_same_column():
-    """
-    Part 2, market value / % of total, under its own name. On an asset-class
-    line the denominator IS the total, so `pct_of_total` and
-    `pct_of_denominator` carry the same figure; the checker reads the first
-    for every clause so that one name means one quantity in every view.
-    """
+def test_asset_class_lines_have_no_sectored_share():
+    """One name means one quantity in every view: an asset-class line has
+    its share of total and of invested, and no share of sectored value,
+    which is the sector view's own denominator."""
     lines = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH))
     assert lines["Equity"].pct_of_total == pytest.approx(0.6941, abs=0.00005)
     assert lines["Cash"].pct_of_total == pytest.approx(0.0378, abs=0.00005)
     for line in lines.values():
-        assert line.pct_of_total == line.pct_of_denominator
+        assert line.pct_of_sectored is None
 
 
 # --- Part 3: sector -------------------------------------------------------
@@ -146,10 +143,10 @@ def test_asset_class_view_has_no_sectored_value():
 def test_sector_percent_of_sectored():
     """Part 3, market value / % sectored."""
     lines = _by_label(allocation_by_sector(HOLDINGS, PRICES, CASH))
-    assert lines["Technology"].pct_of_denominator == pytest.approx(0.5508, abs=0.00005)
-    assert lines["Healthcare"].pct_of_denominator == pytest.approx(0.1983, abs=0.00005)
-    assert lines["Financials"].pct_of_denominator == pytest.approx(0.1711, abs=0.00005)
-    assert lines["Utilities"].pct_of_denominator == pytest.approx(0.0798, abs=0.00005)
+    assert lines["Technology"].pct_of_sectored == pytest.approx(0.5508, abs=0.00005)
+    assert lines["Healthcare"].pct_of_sectored == pytest.approx(0.1983, abs=0.00005)
+    assert lines["Financials"].pct_of_sectored == pytest.approx(0.1711, abs=0.00005)
+    assert lines["Utilities"].pct_of_sectored == pytest.approx(0.0798, abs=0.00005)
 
 
 def test_sector_percent_of_invested():
@@ -193,14 +190,14 @@ def test_unsectored_is_reported_not_dropped():
     """
     lines = _by_label(allocation_by_sector(HOLDINGS, PRICES, CASH))
     assert "(no sector)" in lines
-    assert lines["(no sector)"].pct_of_denominator is None
+    assert lines["(no sector)"].pct_of_sectored is None
     assert set(lines["(no sector)"].tickers) == {"SPY", "TLT", "GLD", "VNQ"}
 
 
 def test_sectored_percentages_sum_to_one():
     a = allocation_by_sector(HOLDINGS, PRICES, CASH)
-    sectored = [l for l in a.lines if l.pct_of_denominator is not None]
-    assert sum(l.pct_of_denominator for l in sectored) == pytest.approx(1.0, abs=1e-9)
+    sectored = [l for l in a.lines if l.pct_of_sectored is not None]
+    assert sum(l.pct_of_sectored for l in sectored) == pytest.approx(1.0, abs=1e-9)
 
 
 # --- Part 7: position (IPS-4.1 column) --------------------------------------
@@ -230,7 +227,7 @@ def test_position_lines_are_the_ips_4_1_column_largest_first():
     assert [l.label for l in a.lines] == [t for t, _ in IPS_4_1]
     for line, (ticker, share) in zip(a.lines, IPS_4_1):
         assert line.pct_of_total == pytest.approx(share, abs=0.00005), ticker
-        assert line.pct_of_denominator == line.pct_of_total
+        assert line.pct_of_sectored is None
         assert line.tickers == [ticker]
 
 
