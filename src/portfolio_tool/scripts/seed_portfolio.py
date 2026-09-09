@@ -39,6 +39,17 @@ Composition is driven by what the benchmark needs, not realism:
 Cost basis totals 284,500 and cash is 15,500, so the portfolio is 300,000 flat.
 Equity is 187,500 of cost basis — 65.9% excluding cash, 62.5% including it.
 Those two numbers differing is the point: 0.2 has to decide which one 1.1 means.
+
+THE LEDGER (expected_values.md Part 8 A, 9 September). Each position is also
+written as one buy row in `transactions`: the purchase date, the quantity,
+the average price, no fees, amount = quantity x price (D11, D14). Holdings
+derive from those rows (D13), so the ledger and the holdings rows written
+here must agree to the cent - tests/test_ledger_seed.py holds the ledger to
+Part 8 A, and Part 8 A reproduces Part 1.
+
+A rerun without --reset would append nine more buys and double every
+position silently, so the seed refuses when the portfolio already has
+ledger rows. --reset clears the ledger with the holdings.
 """
 
 import argparse
@@ -52,6 +63,7 @@ from portfolio_tool.database_setup import (  # noqa: E402
     Asset,
     Portfolio,
     PortfolioHolding,
+    Transaction,
     get_session,
 )
 
@@ -141,6 +153,24 @@ def seed(reset: bool) -> int:
                 .delete()
             )
             print(f"  deleted {deleted} existing holdings")
+            deleted = (
+                session.query(Transaction)
+                .filter(Transaction.portfolio_id == portfolio.id)
+                .delete()
+            )
+            print(f"  deleted {deleted} existing ledger rows")
+
+        existing_rows = (
+            session.query(Transaction)
+            .filter(Transaction.portfolio_id == portfolio.id)
+            .count()
+        )
+        if existing_rows:
+            raise RuntimeError(
+                f"portfolio {portfolio.id} already has {existing_rows} ledger rows; "
+                "seeding again would append nine more buys and double every "
+                "position. Rerun with --reset."
+            )
 
         for ticker, name, acls, sector, industry, country, kind, qty, price, bought in POSITIONS:
             asset = session.query(Asset).filter(Asset.ticker == ticker).one_or_none()
@@ -184,6 +214,20 @@ def seed(reset: bool) -> int:
                 holding.quantity = qty
                 holding.average_price = price
                 holding.purchase_date = purchase_date
+
+            # The same position as its one ledger row (Part 8 A). `amount` is
+            # data (D14); here, with one currency and no fees, it is the D11
+            # arithmetic.
+            session.add(Transaction(
+                portfolio_id=portfolio.id,
+                asset_id=asset.id,
+                date=datetime.datetime.combine(purchase_date, datetime.time()),
+                type="buy",
+                quantity=qty,
+                price_per_unit=price,
+                fees=0.0,
+                amount=qty * price,
+            ))
 
             print(f"      {qty:>5g} @ {price:>8,.2f}  bought {bought}  "
                   f"{acls}/{sector or '-'}  {kind}")
