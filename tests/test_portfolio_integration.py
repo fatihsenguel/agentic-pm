@@ -91,14 +91,12 @@ async def test_2_router_integration():
             portfolio_id=portfolio_id
         )
         
-        assert decision.parameters.portfolio_id == portfolio_id
         assert len(decision.parameters.tickers) > 0
         print(f"✓ Router loaded tickers: {decision.parameters.tickers}")
         
         # Test routing without portfolio (fallback)
         print("\n2.3 Testing route() without portfolio_id...")
         decision, validation = await router.route("Analyze the market", portfolio_id=None)
-        assert decision.parameters.portfolio_id is None
         print(f"✓ Router works without portfolio")
         
         print("\n✅ TEST 2 PASSED")

@@ -132,7 +132,6 @@ class ExtractedParameters(BaseModel):
     period: Optional[str] = Field(default=None, pattern=r"^\d+[YMD]$")  # e.g., "5Y", "3M", "30D"
     max_volatility: Optional[float] = Field(default=None, ge=0.01, le=1.0)
     portfolio_value: Optional[float] = Field(default=None, gt=0)
-    portfolio_id: Optional[int] = Field(default=None, description="Portfolio ID if analyzing a saved portfolio")
 
     # Which figure a portfolio-analysis question asks for. Each value is the
     # key PortfolioAnalysisAgent publishes it under in shared_data, so the

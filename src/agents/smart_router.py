@@ -246,9 +246,8 @@ class SmartRouter:
             # came from). Nothing read the overwritten value while a portfolio
             # was set - the data layer loads holdings from the database - until
             # position P&L did, where a filled list means "these positions" and
-            # an empty one "every position".
-            if portfolio_tickers and decision:
-                decision.parameters.portfolio_id = portfolio_id
+            # an empty one "every position". The portfolio id is the state's;
+            # nothing is copied onto the parameters after the model call.
             
             # Additional validation if enabled
             if self.config.validate_tickers and decision:
