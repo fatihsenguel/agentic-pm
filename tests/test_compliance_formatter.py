@@ -142,7 +142,8 @@ def test_named_position_renders_its_findings_only():
 
     on_jnj = [f for f in findings if f.subject == "JNJ"]
     assert {f.clause for f in on_jnj} == {"IPS-4.1", "IPS-4.2"}
-    assert set(CLAUSE.findall(answer)) == {"IPS-4.1", "IPS-4.2"}
+    # IPS-5.2 is cited because the conditions section is its own; no other clause.
+    assert set(CLAUSE.findall(answer)) == {"IPS-4.1", "IPS-4.2", "IPS-5.2"}
     assert re.search(r"\bJNJ\b", answer)
     for t in TICKERS - {"JNJ"}:
         assert not re.search(rf"\b{t}\b", answer), t
