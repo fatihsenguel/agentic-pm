@@ -10,7 +10,7 @@ and why it bypassed routing entirely.
 
 Usage:
     python -m agents.cli                # or: python src/agents/cli.py
-    python src/agents/cli.py --portfolio 1
+    python src/agents/cli.py --portfolio 3
 
 Commands:
     :p <id>     switch portfolio (:p with no id clears it)
