@@ -8,9 +8,9 @@ prompts KNOWN_GAPS records, each with the extraction it must produce, so a
 rule change that moves any of them fails here before it costs a run. The
 period vocabulary is passed in from config's keys, never restated.
 
-No LLM, no database. Held tickers are portfolio 3's nine for the pid-3
-prompts, portfolio 1's three and portfolio 2's two for the others, as the
-golden set runs them.
+No LLM, no database. Held tickers are portfolio 3's nine for every golden
+prompt that names a portfolio, as the golden set runs them since 9 September;
+the other cases use a small held set that stands for no portfolio.
 """
 
 import pytest
@@ -19,8 +19,7 @@ from agents.extraction import extract, resolve
 
 
 PERIODS = ("1Y", "2Y", "3Y", "5Y", "10Y")
-P1 = ("SPY", "TLT", "GLD")
-P2 = ("AAPL", "MSFT")
+SOME = ("SPY", "TLT", "GLD")  # a held set that is no portfolio
 P3 = ("SPY", "AAPL", "MSFT", "JNJ", "JPM", "NEE", "TLT", "GLD", "VNQ")
 NONE = ()
 
@@ -30,14 +29,14 @@ CLEAN = [
     ("What is the current market regime?", NONE, [], None, None, None),
     ("Get me the last 1 year of prices for SPY and TLT", NONE, ["SPY", "TLT"], "1Y", None, None),
     ("Optimize a portfolio of SPY, TLT and GLD for maximum Sharpe ratio", NONE, ["SPY", "TLT", "GLD"], None, None, None),
-    ("What is my current allocation by asset class?", P1, [], None, None, None),
-    ("What is my volatility over the past twelve months?", P1, [], "1Y", None, None),
-    ("Should I rebalance my portfolio?", P1, [], None, None, None),
-    ("What is the risk of my portfolio?", P1, [], None, None, None),
-    ("What positions do I hold in the Technology sector?", P2, [], None, None, None),
+    ("What is my current allocation by asset class?", P3, [], None, None, None),
+    ("What is my volatility over the past twelve months?", P3, [], "1Y", None, None),
+    ("Should I rebalance my portfolio?", P3, [], None, None, None),
+    ("What is the risk of my portfolio?", P3, [], None, None, None),
+    ("What positions do I hold in the Technology sector?", P3, [], None, None, None),
     ("Analyze ZZZZFAKE for me", NONE, [], None, None, None),
     ("help", NONE, [], None, None, None),
-    ("Should I buy Nvidia?", P1, [], None, None, None),
+    ("Should I buy Nvidia?", P3, [], None, None, None),
     ("How much has AAPL gained?", P3, ["AAPL"], None, None, None),    # the diagnostic golden query
     ("Is my AAPL position too big?", P3, ["AAPL"], None, None, None),
     ("Is my AAPL position within my policy's limits?", P3, ["AAPL"], None, None, None),
@@ -60,9 +59,9 @@ CLEAN = [
     # prompt few-shots and vocabulary edges
     ("Erstelle ein risiko-optimiertes Portfolio mit SPY, TLT, GLD, VWO", NONE, ["SPY", "TLT", "GLD", "VWO"], None, None, None),
     ("Optimize SPY and TLT with max 12% volatility", NONE, ["SPY", "TLT"], None, 0.12, None),
-    ("Keep vol under 15 % over 2 years", P1, [], "2Y", 0.15, None),
+    ("Keep vol under 15 % over 2 years", SOME, [], "2Y", 0.15, None),
     ("What is the VIX doing?", NONE, [], None, None, None),
-    ("Backtest over the past 10 years", P1, [], "10Y", None, None),
+    ("Backtest over the past 10 years", SOME, [], "10Y", None, None),
     ("three years of prices for GLD", NONE, ["GLD"], "3Y", None, None),
     ("my returns over the last year", P3, [], "1Y", None, None),
     ("Compare SPY with SPY", NONE, ["SPY"], None, None, None),
@@ -87,11 +86,11 @@ CLARIFY = [
     ("How has my portfolio done over the last month?", P3, ["last month", "1Y", "10Y"]),
     ("Show me 6 months of prices for SPY", NONE, ["6 months", "1Y"]),
     ("How have I done since 2021?", P3, ["since 2021", "1Y"]),
-    ("Volatility over 4 years", P1, ["4 years", "5Y"]),
-    ("Prices for the last week", P1, ["last week"]),
+    ("Volatility over 4 years", SOME, ["4 years", "5Y"]),
+    ("Prices for the last week", SOME, ["last week"]),
     ("Put 15% into AAPL and 20% into MSFT", P3, ["15%", "20%"]),
     ("Put 150% into one stock", P3, ["150%"]),
-    ("Over 1 year and 3 years", P1, ["1 year", "3 years"]),
+    ("Over 1 year and 3 years", SOME, ["1 year", "3 years"]),
     # "today" with a change verb asks for a one-day move, a span the
     # vocabulary lacks; the pinned false refusal, then a since-purchase
     # answer with a plausible face (KNOWN_GAPS, 8 September).
@@ -123,9 +122,9 @@ def test_unknown_ticker_needs_a_holding_within_one_edit():
 
 def test_period_vocabulary_is_the_callers():
     """Years the caller's vocabulary lacks clarify; nothing here knows the list."""
-    x = extract("over 2 years", P1, ("1Y", "3Y"))
+    x = extract("over 2 years", SOME, ("1Y", "3Y"))
     assert x.period is None and "2 years" in x.clarification and "3Y" in x.clarification
-    assert extract("over 2 years", P1, ("1Y", "2Y")).period == "2Y"
+    assert extract("over 2 years", SOME, ("1Y", "2Y")).period == "2Y"
 
 
 def test_message_and_held_are_untouched():

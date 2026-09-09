@@ -17,14 +17,14 @@ QUERIES = [
     ("What is the current market regime?", None),
     ("Get me the last 1 year of prices for SPY and TLT", None),
     ("Optimize a portfolio of SPY, TLT and GLD for maximum Sharpe ratio", None),
-    ("What is my current allocation by asset class?", 1),
-    ("What is my volatility over the past twelve months?", 1),
-    ("Should I rebalance my portfolio?", 1),
-    ("What is the risk of my portfolio?", 1),
-    ("What positions do I hold in the Technology sector?", 2),
+    ("What is my current allocation by asset class?", 3),
+    ("What is my volatility over the past twelve months?", 3),
+    ("Should I rebalance my portfolio?", 3),
+    ("What is the risk of my portfolio?", 3),
+    ("What positions do I hold in the Technology sector?", 3),
     ("Analyze ZZZZFAKE for me", None),
     ("help", None),
-    ("Should I buy Nvidia?", 1),
+    ("Should I buy Nvidia?", 3),
     # Near-miss in-scope queries: a held ticker named without "my". Added
     # 8 September after the router refused the first of them in the CLI.
     # 3.2 cannot see a router that refuses too much; these can.
