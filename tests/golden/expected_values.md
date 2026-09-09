@@ -47,6 +47,11 @@ are the ones a run must still reproduce exactly, and they are what
 | D7 | Which volatility implementation is canonical? | **`quant/risk_metrics.py`** for return-series volatility, plus a new `portfolio_volatility(weights, cov_matrix)` there — none of the five existing implementations computes portfolio-level vol. `analytics_tools.py` and `optimization/base.py` delegate to it; `backtest/metrics.py` and the inline `engine.py:523` are scoped backtest-internal. |
 | D8 | Volatility window? | **The 252 most recent daily closes, ending at the last settled close** — 252 because that is D6's annualisation factor and D5's observation count, so the window and the annualisation cannot drift apart. Instantiated 2025-09-03 to 2026-09-02 when this was computed; the dates move with the last close, the count does not. Stated as "one calendar year" in an earlier draft, which is the same thing only on average and is what the code was implementing when it came up a trading day short. The code implements this window since 7 September (`_evaluation_window`, `data_agent.py`); whether it reproduces Part 4 is shown by the fixture over the committed closes, not asserted here. |
 | D9 | Is a figure exactly at an IPS limit a breach? | **No.** "No more than 12%" admits 12.00%; "no less than 3%" admits 3.00%. A breach is strictly over a max or strictly under a min, on the unrounded share. Rounding before comparing is a checker bug, and MSFT (12.11% against 12%) and JNJ (10.06% against 10%) are the rows that catch it on this portfolio. Made on the `Compliance` sheet 8 September; recorded here so both carry it. |
+| D10 | Cost-basis method for a position built in tranches? | **Average cost.** The only method that yields one average price per position, which is what a holding row and every P&L figure here use. FIFO and LIFO differ from it only in realized gains, which matter for tax, permanently out of scope (benchmark.md Part 2). Decided 9 September for Part 8, before the ledger exists. |
+| D11 | Are fees part of cost basis? | **Yes.** Cost basis is what was paid: quantity x price plus fees on a buy. Proceeds are quantity x price minus fees on a sale. A basis without fees understates cost and overstates every P&L. |
+| D12 | What does a sale do under average cost? | Quantity falls by the quantity sold; the average price is unchanged; cost basis falls by quantity sold x average. The realized gain is proceeds minus the basis released. It is stated in Part 8 because D10 to D12 define it, and consumed by nothing: no case asks for realized gains. |
+| D13 | Holdings derive from the ledger, not the other way round. | quantity = buys minus sells; cost basis per D11 and D12; average price = cost basis / quantity; `purchase_date` = the first buy, reported, never used in arithmetic. A holding row is a view of its ledger rows. Portfolio 3's nine rows are its ledger with one buy each, so Part 1 must reproduce from them to the cent - the invariant Part 8 pins. |
+| D14 | A ledger row belongs to a portfolio. | The `transactions` table in the models has an asset and no portfolio, the shape that makes `Dividend` unattributable (Part 6). A row without a portfolio cannot be summed into one; the ledger carries `portfolio_id`, and the dividend fix follows the same rule when total return is built. The row's `amount` is the settled figure in the portfolio's currency, taken from the statement for a real portfolio and equal to the D11 arithmetic for a synthetic one; historical FX is data, never computed. |
 
 Note the tension between D2 and Part 4: the volatility weights exclude cash
 while D2 includes it. Resolved by disclosure — see Part 4.
@@ -293,3 +298,66 @@ a standing fact. Cash is 0.78 pp above IPS-3.5 and can cross the same way.
 - **3.4 (currency risk)** - the policy contains no clause on currency risk.
   Names nothing that is not in `docs/IPS.md`. The nearest clause by topic
   is none; IPS-2.1 lists instrument types and is not about currency.
+
+---
+
+## Part 8 — The transaction ledger
+
+Computed 2026-09-09 by hand, before the ledger exists (DIRECTION.md Order 2,
+item 1), so the code has something independent to be wrong against.
+Decisions D10 to D14. Plain decimal arithmetic, none of the repository's code.
+
+**A ledger row.** `portfolio`, `date`, `type` (buy or sell), `ticker`,
+`quantity`, `price` per unit in the instrument's currency, `fees`, `amount`:
+the settled figure in the portfolio's currency, quantity x price + fees on a
+buy, quantity x price - fees on a sale (D11, D14).
+
+### A. Portfolio 3 as a ledger — the invariant
+
+One buy per position, no fees, the dates and prices of Part 1. The holdings
+derived from these rows (D13) must equal Part 1's quantity, average price,
+cost basis and purchase date to the cent, and the total 284,500.00.
+
+| Date | Type | Ticker | Qty | Price | Fees | Amount |
+|---|---|---|---|---|---|---|
+| 2024-01-15 | buy | SPY  | 100 | 500.00 | 0.00 |  50,000.00 |
+| 2024-02-20 | buy | AAPL | 200 | 200.00 | 0.00 |  40,000.00 |
+| 2024-03-18 | buy | MSFT | 100 | 400.00 | 0.00 |  40,000.00 |
+| 2024-05-06 | buy | JNJ  | 150 | 150.00 | 0.00 |  22,500.00 |
+| 2024-07-15 | buy | JPM  | 100 | 200.00 | 0.00 |  20,000.00 |
+| 2024-09-09 | buy | NEE  | 200 |  75.00 | 0.00 |  15,000.00 |
+| 2025-01-13 | buy | TLT  | 500 |  90.00 | 0.00 |  45,000.00 |
+| 2025-03-10 | buy | GLD  | 100 | 250.00 | 0.00 |  25,000.00 |
+| 2025-06-02 | buy | VNQ  | 300 |  90.00 | 0.00 |  27,000.00 |
+| | | **Total** | | | | **284,500.00** |
+
+### B. One position built in tranches and partly sold
+
+A synthetic position in KO, not part of portfolio 3: a fixture for the
+ledger arithmetic alone. Fees chosen so that every figure is exact to the
+cent, so a rounding step anywhere shows.
+
+| Date | Type | Qty | Price | Fees | Amount | Qty after | Cost basis after | Average after |
+|---|---|---|---|---|---|---|---|---|
+| 2024-09-09 | buy  | 200 | 75.00 | 0.00 | 15,000.00 | 200 | 15,000.00 | 75.00 |
+| 2025-02-03 | buy  | 100 | 90.00 | 3.00 |  9,003.00 | 300 | 24,003.00 | 80.01 |
+| 2025-11-17 | sell |  50 | 85.00 | 2.00 |  4,248.00 | 250 | 20,002.50 | 80.01 |
+
+The sale releases 50 x 80.01 = 4,000.50 of basis against proceeds of
+4,248.00: a realized gain of **247.50** (D12), stated and consumed by nothing.
+The position after: **250 @ 80.01, cost basis 20,002.50, purchase date
+2024-09-09** (D13, the first buy).
+
+At a price of 88.00: market value 22,000.00, P&L **+1,997.50, +9.99%**
+(1,997.50 / 20,002.50 = 0.099863), price return per D4.
+
+### What Part 8 does not cover
+
+- **Currency.** Every row is in the portfolio's currency; the `amount` column
+  is where a second currency enters, as data (D14). Order 2 item 2 adds the
+  column's reference at a stated rate on a stated date, here.
+- **Dividends and corporate actions.** Not ledger rows here; a split or a
+  dividend reinvested is a buy-shaped row when total return is built.
+- **Realized gains as a figure the system reports.** Stated once above;
+  no case asks.
+
