@@ -210,13 +210,6 @@ def add_error(state: AgentState, error: str) -> Dict[str, Any]:
     return {"errors": errors}
 
 
-def add_warning(state: AgentState, warning: str) -> Dict[str, Any]:
-    """Add a warning to the state."""
-    warnings = list(state.get("warnings", []))
-    warnings.append(warning)
-    return {"warnings": warnings}
-
-
 def set_final_response(state: AgentState, response: str) -> Dict[str, Any]:
     """Set the final response to send to user."""
     return {
