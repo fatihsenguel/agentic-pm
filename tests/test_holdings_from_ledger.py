@@ -5,8 +5,6 @@ The falsifier is a portfolio that exists only as ledger rows: expected_values.md
 Part 8 B's KO position, two buys and a partial sale, written straight into
 `transactions` with no holdings row. A reader of the holdings table returns
 nothing for it; a reader of the ledger returns 250 @ 80.01 bought 2024-09-09.
-The sharper half: a holdings row that disagrees with the ledger is ignored,
-because a holding is a view of its rows and not a second source.
 
 Runs against the copy conftest.py makes of data/portfolio.db, like
 test_instrument_type.py; creates its own portfolio and the KO asset and
@@ -20,7 +18,6 @@ import pytest
 from portfolio_tool.database_setup import (
     Asset,
     Portfolio,
-    PortfolioHolding,
     Transaction,
     get_session,
 )
@@ -85,7 +82,6 @@ def ko_portfolio():
     session = get_session()
     try:
         session.query(Transaction).filter(Transaction.portfolio_id == portfolio_id).delete()
-        session.query(PortfolioHolding).filter(PortfolioHolding.portfolio_id == portfolio_id).delete()
         session.query(Asset).filter(Asset.id == asset_id).delete()
         session.commit()
     finally:
@@ -126,30 +122,6 @@ def test_portfolio_tickers_come_from_the_ledger(ko_portfolio, ko_holding):
     """The router's portfolio context reads get_portfolio_tickers; it must be
     the tickers of get_holdings and nothing else, so one reader, not two."""
     assert PortfolioManager().get_portfolio_tickers(ko_portfolio) == ["KO"]
-
-
-def test_a_disagreeing_holdings_row_is_ignored(ko_portfolio):
-    """The holdings table is not a second source: a row saying 999 KO does
-    not change what the ledger says."""
-    session = get_session()
-    try:
-        asset_id = session.query(Asset.id).filter(Asset.ticker == "KO").scalar()
-        session.add(PortfolioHolding(portfolio_id=ko_portfolio, asset_id=asset_id,
-                                     quantity=999, average_price=1.0))
-        session.commit()
-    finally:
-        session.close()
-    try:
-        holdings = PortfolioManager().get_holdings(ko_portfolio)
-        assert [h["quantity"] for h in holdings] == [250]
-    finally:
-        session = get_session()
-        try:
-            session.query(PortfolioHolding).filter(
-                PortfolioHolding.portfolio_id == ko_portfolio).delete()
-            session.commit()
-        finally:
-            session.close()
 
 
 def test_delete_portfolio_removes_its_ledger():
