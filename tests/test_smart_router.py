@@ -193,6 +193,33 @@ class TestRouterDecision:
         with pytest.raises(ValueError):
             RouterDecision.model_validate(self._compliance(["ComplianceAgent"], hypothetical_weight=15))
 
+    # status: the compliance report's second selection value, the model's.
+    # It belongs to intent compliance, has one value, and contradicts a
+    # hypothetical or a lookup, which have no breach list.
+
+    def test_status_belongs_to_compliance(self):
+        full = ["DataAgent", "PortfolioAnalysisAgent", "ComplianceAgent"]
+        decision = RouterDecision.model_validate(self._compliance(full, status="breach"))
+        assert decision.parameters.status == "breach"
+        assert decision.execution_order == full
+        data = self._compliance(["DataAgent"], status="breach")
+        data["intent"] = "data_fetch"
+        with pytest.raises(ValueError, match="belong to intent compliance"):
+            RouterDecision.model_validate(data)
+
+    def test_status_with_a_mode_is_rejected(self):
+        with pytest.raises(ValueError, match="no breach list"):
+            RouterDecision.model_validate(self._compliance(
+                ["ComplianceAgent"], hypothetical_weight=0.15, status="breach"))
+        with pytest.raises(ValueError, match="no breach list"):
+            RouterDecision.model_validate(self._compliance(
+                ["ComplianceAgent"], policy_topic="cash", status="breach"))
+
+    def test_status_has_one_value(self):
+        full = ["DataAgent", "PortfolioAnalysisAgent", "ComplianceAgent"]
+        with pytest.raises(ValueError):
+            RouterDecision.model_validate(self._compliance(full, status="ok"))
+
 
 class TestDependencies:
     """REQUIRES: an agent runs only after what it needs, and ComplianceAgent

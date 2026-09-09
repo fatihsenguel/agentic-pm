@@ -74,6 +74,16 @@ async def test_a_compliance_check_planned_short_is_derived_full(router):
     assert validation.errors == []
 
 
+async def test_status_does_not_change_the_plan(router):
+    """The breach selection is rendering; the check is the full one."""
+    router._llm = _FakeLLM(_json("compliance", ["ComplianceAgent"], status="breach"))
+    decision, validation = await router.route(
+        "Which of my positions are over the limit?", portfolio_id=3)
+    assert decision.execution_order == COMPLIANCE
+    assert decision.parameters.status == "breach"
+    assert validation.errors == []
+
+
 async def test_a_hypothetical_weight_derives_the_agent_alone(router):
     router._llm = _FakeLLM(_json("compliance", COMPLIANCE))
     decision, _ = await router.route(

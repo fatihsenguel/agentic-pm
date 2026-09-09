@@ -38,10 +38,11 @@ def _block(ips, findings, total, as_of, topic=None, no_clause=False):
             "findings": [asdict(f) for f in findings], "no_clause": no_clause, "topic": topic}
 
 
-def _answer(block, tickers=None):
+def _answer(block, tickers=None, status=None):
     """The formatter reads the decision for the selection: `tickers` filled
-    means the findings on those subjects, empty means every finding."""
-    decision = {"parameters": {"tickers": list(tickers or [])}}
+    means the findings on those subjects, empty means every finding;
+    `status` set means the findings of that status only."""
+    decision = {"parameters": {"tickers": list(tickers or []), "status": status}}
     return "\n".join(_format_compliance_response(
         decision, {"ComplianceAgent": {"success": True, "compliance": block}}))
 
@@ -182,3 +183,62 @@ def test_named_ticker_with_no_finding_says_so():
     assert CLAUSE.findall(answer) == []
     assert PCT.findall(answer) == []
     assert not any(re.search(rf"\b{t}\b", answer) for t in TICKERS)
+
+
+# --- the selection axis, second value: the findings in breach only ---
+#
+# "Which of my positions are over the limit?" is the breach list, which the
+# full report carries inside 63 lines (KNOWN_GAPS, the same entry). `status`
+# is the finding's own field and its one allowed value; the model sets it.
+
+
+def test_breaches_only_renders_the_breach_findings():
+    ips = load_ips()
+    alloc = allocation()
+    findings = check(ips, alloc, INSTRUMENT_TYPES)
+    answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"]), status="breach")
+
+    breaches = [f for f in findings if f.status == "breach"]
+    assert breaches, "Part 7 has eight breaches at the 09-02 closes"
+    assert "breach" in answer.splitlines()[0].lower()          # the header says so
+    assert set(CLAUSE.findall(answer)) == {f.clause for f in breaches} | {"IPS-5.2"}
+    for f in breaches:
+        assert f"{f.distance_pp:.2f}" in answer, f
+    assert "within" not in answer and "exempt" not in answer
+    assert _unexplained(answer, breaches) == []
+    assert "2026-09-02" in answer
+    assert "What would have to change" in answer
+    assert "Policy statements" not in answer
+    assert "Not shown" in answer
+    assert not TRADE.search(answer)
+    assert not HEDGE.search(answer)
+
+
+def test_breaches_on_a_named_position():
+    """Both selections at once: the breach findings on the named subject.
+    JNJ, not AAPL: AAPL breaches both of its clauses at the 09-02 closes,
+    so its rendering is the same whether status is read or ignored. JNJ is
+    within IPS-4.1 and over IPS-4.2 (Part 7), so only the second may show."""
+    ips = load_ips()
+    alloc = allocation()
+    findings = check(ips, alloc, INSTRUMENT_TYPES)
+    answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"]),
+                     tickers=["JNJ"], status="breach")
+    on_jnj = [f for f in findings if f.subject == "JNJ" and f.status == "breach"]
+    assert {f.clause for f in on_jnj} == {"IPS-4.2"}
+    assert set(CLAUSE.findall(answer)) == {"IPS-4.2", "IPS-5.2"}
+    assert "within" not in answer
+    for t in TICKERS - {"JNJ"}:
+        assert not re.search(rf"\b{t}\b", answer), t
+    assert _unexplained(answer, on_jnj) == []
+
+
+def test_no_breach_says_so():
+    ips = load_ips()
+    alloc = allocation()
+    findings = [f for f in check(ips, alloc, INSTRUMENT_TYPES) if f.status != "breach"]
+    answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"]), status="breach")
+    assert "no finding is in breach" in answer.lower()
+    assert CLAUSE.findall(answer) == []
+    assert PCT.findall(answer) == []
+    assert "2026-09-02" in answer                                # still priced, so dated

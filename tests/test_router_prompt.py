@@ -59,6 +59,9 @@ def test_the_output_format_carries_what_is_read():
     since 55dd80c and is not asked for."""
     assert '"measure": null' in ROUTER_SYSTEM_PROMPT
     assert '"group_by": null' in ROUTER_SYSTEM_PROMPT
+    # status: the compliance report's breach selection, the model's too.
+    assert '"status": null' in ROUTER_SYSTEM_PROMPT
+    assert '"status": null' in REPAIR_PROMPT
 
 
 def test_group_by_line_names_every_value_the_schema_allows():
@@ -68,6 +71,16 @@ def test_group_by_line_names_every_value_the_schema_allows():
     annotation = ExtractedParameters.model_fields["group_by"].annotation
     literal = [a for a in get_args(annotation) if get_args(a)][0]
     line = [l for l in ROUTER_SYSTEM_PROMPT.splitlines() if l.startswith("- Group by:")][0]
+    for value in get_args(literal):
+        assert f'"{value}"' in line, value
+
+
+def test_status_line_names_every_value_the_schema_allows():
+    """Same rule as group_by: the Status line and ExtractedParameters.status
+    are two statements of one vocabulary."""
+    annotation = ExtractedParameters.model_fields["status"].annotation
+    literal = [a for a in get_args(annotation) if get_args(a)][0]
+    line = [l for l in ROUTER_SYSTEM_PROMPT.splitlines() if l.startswith("- Status:")][0]
     for value in get_args(literal):
         assert f'"{value}"' in line, value
 
