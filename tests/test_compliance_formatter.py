@@ -205,7 +205,9 @@ def test_breaches_only_renders_the_breach_findings():
     for f in breaches:
         assert f"{f.distance_pp:.2f}" in answer, f
     assert "within" not in answer and "exempt" not in answer
-    assert _unexplained(answer, breaches) == []
+    # Explained against the block's findings, as the runner does: IPS-3.1's
+    # clause text quotes its 40% minimum, whose finding is ok and not shown.
+    assert _unexplained(answer, findings) == []
     assert "2026-09-02" in answer
     assert "What would have to change" in answer
     assert "Policy statements" not in answer
