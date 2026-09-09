@@ -17,7 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 rag = ["sentence-transformers", "pypdf", "PyPDF2", "pdfplumber", "PyMuPDF"]
-dev = ["pytest>=7.4", "pytest-asyncio", "black>=23"]
+dev = ["pytest>=7.4", "pytest-asyncio", "black>=23", "openpyxl"]
 
 [tool.setuptools]
 py-modules = ["config"]
