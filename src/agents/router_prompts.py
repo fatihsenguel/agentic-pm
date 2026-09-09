@@ -46,7 +46,8 @@ _PROMPT_AFTER_INTENT_LINE = """\",
   "confidence": 0.0-1.0,
   "parameters": {
     "measure": null,
-    "group_by": null
+    "group_by": null,
+    "status": null
   },
   "reasoning": "Brief explanation of your routing decision",
   "clarification_question": null
@@ -55,6 +56,7 @@ _PROMPT_AFTER_INTENT_LINE = """\",
 PARAMETER RULES:
 - Measure: set ONLY for a question about an existing portfolio's own figures. "allocation" for how the portfolio is divided up, which positions sit in a bucket, or how large a position is; "position_pnl" for how a position or the holdings have performed, gained, lost or done since purchase; "portfolio_volatility" for the volatility of the portfolio as a whole. Otherwise null.
 - Group by: with measure "allocation", "asset_class", "sector" or "position" when the user names one; null when they do not. Always null for any other measure.
+- Status: with intent compliance, "breach" when the user asks which positions, clauses or limits are over, breached, violated or outside - a list of what is over; null when they ask whether the portfolio or one named position complies, what the policy says, or about a proposed weight. Always null for any other intent.
 
 CONFIDENCE GUIDELINES:
 - 0.9+: Clear, unambiguous request with all info provided
@@ -252,7 +254,7 @@ Please fix and return ONLY valid JSON matching this schema:
 
 _REPAIR_AFTER_INTENT_LINE = """\",
   "confidence": 0.0-1.0,
-  "parameters": {{"measure": null, "group_by": null}},
+  "parameters": {{"measure": null, "group_by": null, "status": null}},
   "reasoning": "...",
   "clarification_question": null
 }}
