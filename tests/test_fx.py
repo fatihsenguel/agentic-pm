@@ -39,7 +39,13 @@ from dataclasses import asdict
 
 import pytest
 
-from portfolio_tool.quant.allocation import AllocationError, position_pnl
+from portfolio_tool.quant.allocation import (
+    AllocationError,
+    allocation_by_asset_class,
+    allocation_by_position,
+    allocation_by_sector,
+    position_pnl,
+)
 from portfolio_tool.quant.ledger import derive_holdings
 
 
@@ -217,6 +223,34 @@ def test_position_with_no_rate_entry_raises():
     valuing it at the quote would be the silent 1.0 that D17 forbids."""
     with pytest.raises(AllocationError, match="AAPL"):
         position_pnl(euro_holdings(), {"AAPL": AAPL_CLOSE_USD}, {})
+
+
+@pytest.mark.parametrize("view", [allocation_by_asset_class, allocation_by_sector,
+                                  allocation_by_position])
+def test_allocation_with_no_rate_entry_raises(view):
+    with pytest.raises(AllocationError, match="AAPL"):
+        view(euro_holdings(), {"AAPL": AAPL_CLOSE_USD}, 0.0, {})
+
+
+# ---------------------------------------------------------------------------
+# One path: allocation values through the same rate as P&L
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("view", [allocation_by_asset_class, allocation_by_position])
+def test_allocation_views_value_the_euro_position_at_part_8_c(fx, view):
+    """The three allocation views and position_pnl share one market-value
+    computation, so the Part 8 C position is 27,621.60 EUR in every view
+    and the total of a one-position euro portfolio with no cash is the same
+    figure. Cost basis is the euro amount (D18)."""
+    holdings = [{**h, "asset_class": "Equity", "sector": "Technology"}
+                for h in euro_holdings()]
+    rates = fx.spot_rates(holdings, {"AAPL": PRICE_AS_OF}, BASE, SPOT)
+    a = view(holdings, {"AAPL": AAPL_CLOSE_USD}, 0.0, rates)
+    [line] = a.lines if view is allocation_by_position else [l for l in a.lines if l.label != "Cash"]
+    assert line.market_value == pytest.approx(27_621.60, abs=CENT)
+    assert line.cost_basis == pytest.approx(18_405.00, abs=CENT)
+    assert a.total_value == pytest.approx(27_621.60, abs=CENT)
+    assert line.pct_of_total == pytest.approx(1.0, abs=1e-9)
 
 
 # ---------------------------------------------------------------------------
