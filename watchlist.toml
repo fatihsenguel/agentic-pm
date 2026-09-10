@@ -1,0 +1,82 @@
+# The watchlist and the prediction ledger as config, derived from
+# docs/WATCHLIST.md.
+#
+# One [[candidate]] per watchlist entry, in document order; its predictions
+# are [[candidate.prediction]] rows under it, so a prediction without a
+# thesis cannot be written. `thesis` and each `statement` are the document's
+# words verbatim. Money figures are in the candidate's reporting currency;
+# margins are fractions, 87% written 0.87. `period` names the fiscal year the
+# figure is reported for. A `figure` prediction is scored by one comparison
+# of the reported figure against `bound` and `value`; an `event` prediction
+# by an outcome entered with its source. Score fields (outcome, source,
+# scored_on, result) are absent until the date comes and then all four are
+# written; result is right or wrong.
+#
+# No metric here depends on the price (DIRECTION.md invariant 7). No loader
+# reads this file yet; tests/test_watchlist.py holds it to the document.
+
+[[candidate]]
+id = "W-1"
+ticker = "GOOGL"
+name = "Alphabet"
+currency = "USD"
+added_on = 2026-09-10
+status = "active"
+thesis = """Search and YouTube are the advertising businesses that keep growing through every cycle, the cloud segment is now profitable and taking share, and the company funds its own capital spending from operating cash flow with no debt to speak of. The thesis is that the advertising businesses keep their margins while the cloud segment's margin catches up, and that the capital spending on data centres shows in cloud revenue rather than in lasting margin damage."""
+
+[candidate.entry_condition]
+kind = "valuation"
+clause = "PHI-4.1"
+
+[[candidate.prediction]]
+id = "W-1.1"
+made_on = 2026-09-10
+due = 2027-03-01
+kind = "figure"
+metric = "revenue"
+bound = "min"
+value = 420000000000
+period = "FY2026"
+statement = """By 1 March 2027 Alphabet will have reported revenue for fiscal 2026 of at least 420 billion dollars."""
+
+[[candidate.prediction]]
+id = "W-1.2"
+made_on = 2026-09-10
+due = 2027-03-01
+kind = "event"
+statement = """By 1 March 2027 Alphabet's annual report for fiscal 2026 will show the cloud segment profitable at the operating level for the full year."""
+
+[[candidate]]
+id = "W-2"
+ticker = "ADBE"
+name = "Adobe"
+currency = "USD"
+added_on = 2026-09-10
+status = "active"
+thesis = """The creative and document businesses are subscriptions that customers renew because their work lives in the files, and the gross margin is that of a business selling software it already wrote. The thesis is that the subscription base keeps growing through the shift to generative tools rather than being displaced by them, and that the gross margin holds while it does."""
+
+[candidate.entry_condition]
+kind = "valuation"
+clause = "PHI-4.1"
+
+[[candidate.prediction]]
+id = "W-2.1"
+made_on = 2026-09-10
+due = 2027-02-01
+kind = "figure"
+metric = "revenue"
+bound = "min"
+value = 25500000000
+period = "FY2026"
+statement = """By 1 February 2027 Adobe will have reported revenue for fiscal 2026 of at least 25.5 billion dollars."""
+
+[[candidate.prediction]]
+id = "W-2.2"
+made_on = 2026-09-10
+due = 2027-02-01
+kind = "figure"
+metric = "gross_margin"
+bound = "min"
+value = 0.87
+period = "FY2026"
+statement = """By 1 February 2027 Adobe will have reported a gross margin for fiscal 2026 of at least 87%."""
