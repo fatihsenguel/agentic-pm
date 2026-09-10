@@ -79,7 +79,7 @@ class _StubRouter:
             intent="clarification_needed", confidence=1.0,
             parameters=ExtractedParameters(), execution_order=[],
             clarification_question="Did you mean AAPL?", pending=self._pending,
-            resolved=None,
+            resolved=None, reasoning="Extraction could not resolve APPL",
         )
         return decision, SimpleNamespace(errors=[])
 
@@ -102,6 +102,15 @@ async def test_the_decision_dict_carries_the_question_and_the_record(monkeypatch
     assert decision["clarification_question"] == "Did you mean AAPL?"
     assert decision["pending"] == PENDING
     assert out["final_response"] == "Did you mean AAPL?"
+
+
+async def test_the_decision_dict_carries_the_reasoning(monkeypatch):
+    """The CLI prints `reasoning` from this dict and it was never there
+    (KNOWN_GAPS, pending decision 5): the diagnostic that read the model's
+    `status` printed reasoning: None."""
+    monkeypatch.setattr(smart_router, "get_router", lambda: _StubRouter(PENDING))
+    out = await router_node(create_initial_state("Hows my APPL doing?", portfolio_id=3))
+    assert out["router_decision"]["reasoning"] == "Extraction could not resolve APPL"
 
 
 def test_the_schema_holds_a_record_the_model_cannot_write():
