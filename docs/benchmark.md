@@ -12,7 +12,7 @@
 
 Whoever reads the application materials expects a system that:
 
-1. Answers questions about a portfolio using the owner's own data
+1. Answers questions about a portfolio using my own data
 2. Checks every answer against a written investment policy
 3. States the source of that check rather than asserting it
 4. Makes it traceable afterwards why it answered the way it did
@@ -52,7 +52,7 @@ Either build RAG to match the bullet, or change the bullet to describe determini
 
 ### Out of scope
 
-**Revised 4 September 2026.** The owner's eventual goal includes screening and
+**Revised 4 September 2026.** My eventual goal includes screening and
 candidate generation, which the previous flat list excluded permanently. The
 boundary is now phased rather than absolute. It is not weaker: what changed is
 that it now has a stated reason and a stated end, instead of being a line drawn
@@ -72,7 +72,7 @@ held or not.
 
 *Portfolio mechanics on what is already held are in scope*: drift, trades to
 a stated target, what would have to change to be within limits (2.3). Those
-are arithmetic on a portfolio the owner already chose, not a judgement about
+are arithmetic on a portfolio I already chose, not a judgement about
 what to own.
 
 The reason is order of construction, not caution. A system that recommends
@@ -109,7 +109,7 @@ Must run without errors. Proves little, but a failure here damages everything th
 
 Questions requiring several agents in one run.
 
-**Status note, revised 8 September 2026:** the IPS (`docs/IPS.md`, `ips.toml`) and ComplianceAgent exist, built from the owner's document. The "Risk" agent 2.1 names is PortfolioAnalysisAgent (decided 8 September; RiskManagerAgent is an unused supervisor, `KNOWN_GAPS.md`). 2.1 and 2.2 pass on the runner; 2.3 is blocked on routing — the router does not plan ComplianceAgent for its wording, two failed predictions, stopped (`KNOWN_GAPS.md`). **Revised 8 September, eighth sitting: all three pass; the runner is the status.** Since the router restructure the plan is derived from the intent and the extracted parameters through a terminal-agent table, and the three compliance readings are read from the message, not decided by the model.
+**Status note, revised 8 September 2026:** the IPS (`docs/IPS.md`, `ips.toml`) and ComplianceAgent exist, built from my document. The "Risk" agent 2.1 names is PortfolioAnalysisAgent (decided 8 September; RiskManagerAgent is an unused supervisor, `KNOWN_GAPS.md`). 2.1 and 2.2 pass on the runner; 2.3 is blocked on routing — the router does not plan ComplianceAgent for its wording, two failed predictions, stopped (`KNOWN_GAPS.md`). **Revised 8 September, eighth session: all three pass; the runner is the status.** Since the router restructure the plan is derived from the intent and the extracted parameters through a terminal-agent table, and the three compliance readings are read from the message, not decided by the model.
 
 | # | Prompt | Passes when | Status |
 | --- | --- | --- | --- |
@@ -135,7 +135,7 @@ Cases where the system correctly does **not** deliver. More telling than any suc
 
 **3.5 requires conversation memory, which does not exist.** Each request builds fresh state; `run_agent_graph_sync` never passes prior turns. The router already produces good clarification questions — the follow-up answer arrives with no context, so the loop never closes. `AgentState.messages` and the `conversation_history` parameter on `build_router_prompt` already exist and are simply never populated; wiring them is small. This is a prerequisite for 3.5, not a later enhancement.
 
-**Built 8 September (eighth sitting), and not the way the paragraph above expected.** Memory is an extraction rule, not context for the model (`docs/DIRECTION.md`): the first turn's clarification leaves a structured record of what was asked, `run_agent_graph_sync` takes the previous turn's final state, and the reply is resolved against the record before anything else, with the model never shown the history. `conversation_history` on the prompt builder stayed unpopulated and is dead. The runner's 3.5 is a two-turn case, "Hows my APPL doing?" then "yes", and passes: 12/12.
+**Built 8 September (eighth session), and not the way the paragraph above expected.** Memory is an extraction rule, not context for the model (`docs/DIRECTION.md`): the first turn's clarification leaves a structured record of what was asked, `run_agent_graph_sync` takes the previous turn's final state, and the reply is resolved against the record before anything else, with the model never shown the history. `conversation_history` on the prompt builder stayed unpopulated and is dead. The runner's 3.5 is a two-turn case, "Hows my APPL doing?" then "yes", and passes: 12/12.
 
 ---
 
@@ -162,7 +162,7 @@ Work through it and stop when time runs out. Sorted by effect, not by effort.
 
 1. **Level 1 capabilities.** Allocation aggregation, position P&L against `average_price`, volatility surfaced as an answer, holdings filtered by sector. This is the foundation everything above it stands on. Precede it with the base-agent deduplication described in `docs/HANDOFF.md` §10, otherwise each new capability copies five stale patterns.
 2. **Data-age reporting (test case 3.3).** Promoted from fourth. It is a cross-cutting output-contract change, cheaper to build into Level 1 than to retrofit afterwards, and it is the single most transferable point in the interview.
-3. **The IPS, from the owner's document.** A prose IPS with numbered clauses, `ips.toml` derived from it, a pure checker, then the agent (`docs/HANDOFF.md` §7.2). Not from `wip/phase7-snapshot`, read and rejected 7 September 2026. This unlocks Level 2 and test cases 3.1 and 3.4 simultaneously. It also resolves the open question of where rebalancing targets come from (see `tests/golden/KNOWN_GAPS.md`).
+3. **The IPS, from my document.** A prose IPS with numbered clauses, `ips.toml` derived from it, a pure checker, then the agent (`docs/HANDOFF.md` §7.2). Not from `wip/phase7-snapshot`, read and rejected 7 September 2026. This unlocks Level 2 and test cases 3.1 and 3.4 simultaneously. It also resolves the open question of where rebalancing targets come from (see `tests/golden/KNOWN_GAPS.md`).
 4. **One guardrail path that genuinely blocks** (test case 3.1), with clause citation.
 5. **Minimal conversation history** — enough to close the clarification loop for test case 3.5. *Done 8 September, as an extraction rule over a record of what was asked; see the note under 3.5.*
 6. **Eval set, 20–30 questions** with expected answer and expected source per question. Produces the figure quoted in the CV. Moved last not because it matters least, but because it is the only item that cannot be built before the things it measures.

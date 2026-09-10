@@ -8,7 +8,7 @@ wins on *state*.
 
 ## The end state
 
-A conversation. The owner talks to a strong model the way they would talk to any
+A conversation. I talk to a strong model the way I would talk to any
 assistant; the model remembers the conversation, works out what is wanted, and
 does it. When doing it means computing something about the portfolio, checking
 it against a policy, valuing a company, or reading a filing, the model **calls a
@@ -19,9 +19,9 @@ outputs that are summaries, never raw data.
 Two halves, as in the goal. The **guarantee half** — positions, allocation, P&L,
 risk, compliance — is tools. The **judgement half** — equity analysis: research,
 valuation, a thesis, an entry, a sized position — is the model reading and
-reasoning with further tools, marked as judgement, measured by the owner's own
+reasoning with further tools, marked as judgement, measured by my own
 predictions over time. The seam between them is a gate: any answer that implies
-a position passes through the compliance checker before it reaches the owner.
+a position passes through the compliance checker before it reaches me.
 
 **Composition is dynamic; pipelines are fixed.** The model decides *whether* to
 run a pipeline and in what order with other tools. It never decides *how* a
@@ -29,12 +29,12 @@ pipeline runs, and it never computes what a pipeline computes.
 
 ## The judgement half, concretely
 
-This is what the owner does by hand today, and what the system is for:
+This is what I do by hand today, and what the system is for:
 
 1. **Research** a company — filings, results, news, the business.
-2. **Judge it against a philosophy** — the owner's own criteria for what is
+2. **Judge it against a philosophy** — my own criteria for what is
    worth owning (quality of the business, returns on capital, balance sheet,
-   price against value, a margin of safety; the owner's list, not this file's).
+   price against value, a margin of safety; my list, not this file's).
 3. **Value it** — a range, from stated assumptions, not a point.
 4. **Put it on a watchlist** with a thesis, an entry condition, and a dated
    prediction: what has to be true in a year for the thesis to have been right.
@@ -46,7 +46,7 @@ This is what the owner does by hand today, and what the system is for:
 Each step splits the same way the guarantee half did:
 
 - **Deterministic, with references:** valuation arithmetic from stated inputs
-  (multiples, a discounted cash flow, whatever the owner uses — each a pipeline
+  (multiples, a discounted cash flow, whatever I use — each a pipeline
   with a hand-computed reference); screening a company's figures against the
   philosophy's numeric criteria, clause cited; scoring a dated prediction
   against the outcome; sizing a candidate position against the IPS.
@@ -54,7 +54,7 @@ Each step splits the same way the guarantee half did:
   reading a filing; the thesis itself; whether now is an entry. Uncertainty and
   sources are fields of the output, not tone.
 
-The artifacts this needs, all documents or data the owner owns:
+The artifacts this needs, all documents or data I own:
 
 - **A philosophy document**, the IPS pattern again: numbered clauses, a derived
   config, numeric criteria checked deterministically and cited by clause,
@@ -66,7 +66,7 @@ The artifacts this needs, all documents or data the owner owns:
 - **A prediction ledger**: dated, specific, falsifiable predictions attached to
   a thesis, scored when their date comes. This ledger *is* the eval set for the
   judgement half. There is no golden baseline for judgement; there is the
-  record of whether the owner's — and the system's — predictions were right.
+  record of whether my — and the system's — predictions were right.
 - **Research sources as tools** with the same contracts as everything else:
   filings (EDGAR is free and structured), fundamentals, news. Raw documents
   never enter a context window whole; a reading tool returns a summary with its
@@ -76,7 +76,7 @@ Recommendations are in scope here, and only here: "this clears the philosophy on
 clauses P-2 and P-5, fails P-7 on price, and at 6% would clear every IPS clause;
 at 10% it fails IPS-4.2." A recommendation is a judgement with its reasons, its
 uncertainty, and the two policy checks attached. A recommendation without the
-checks is generic advice; the policies are what make it the owner's.
+checks is generic advice; the policies are what make it mine.
 
 The judgement half is not started, on purpose. It starts when benchmark.md has a
 Level 4 that defines a good answer and the prediction ledger exists to score it.
@@ -100,7 +100,7 @@ moves toward the tool boundary:
 
 Work that makes the router a *better classifier* — more intents, more prose
 rules, tuned few-shots, a bigger model — is debt. Three prompt sentences and a
-few-shot in one sitting moved no golden line the way they were predicted to; the
+few-shot in one session moved no golden line the way they were predicted to; the
 record is in KNOWN_GAPS. **Do not add prompt rules to fix a routing defect. Move
 the defect into extraction or derivation, or log it.**
 
@@ -139,13 +139,13 @@ the defect into extraction or derivation, or log it.**
 1. Finish the guarantee half's vocabulary: the block shapes the CLI questions
    exposed, then the router restructure (registry → extraction → derived plans
    → prompt shrink), then conversation memory as an extraction rule.
-2. Make it the owner's: a transaction ledger and cost-basis method; a base
-   currency and FX source (the owner's portfolio is not single-currency); a
+2. Make it mine: a transaction ledger and cost-basis method; a base
+   currency and FX source (my portfolio is not single-currency); a
    price source that can be defended with real money; the personal IPS, with
    the type vocabulary grown one clause at a time; a Part 8 reference for the
    real portfolio before any figure about it is trusted.
-3. The philosophy document, the watchlist and the prediction ledger — the
-   owner's artifacts, before any tool reads them. Level 4 in benchmark.md: the
+3. The philosophy document, the watchlist and the prediction ledger — my
+   artifacts, before any tool reads them. Level 4 in benchmark.md: the
    definition of a good research answer, scored by the ledger.
 4. The judgement half's tools, one at a time, each with a reference: a
    valuation pipeline; the philosophy check; a filings reader; prediction
@@ -163,5 +163,5 @@ ask. If a change lets the system recommend before the philosophy, the ledger and
 Level 4 exist, stop and ask. Otherwise follow the handoff.
 
 *Written 8 September 2026. Revised the same day: the judgement half specified as
-the owner's workflow, with the philosophy document, the watchlist and the
+my workflow, with the philosophy document, the watchlist and the
 prediction ledger as its artifacts.*
