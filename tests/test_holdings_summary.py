@@ -5,6 +5,10 @@ Pure function over get_holdings rows. The one thing worth pinning is which
 fields survive the reduction and that an absent value is published as None,
 not dropped - every downstream raise-on-missing depends on the absence
 reaching it.
+
+`cost_basis` is the ledger's figure (D13, D14) and is carried, not
+recomputed from quantity and average price downstream; `realized` is
+dropped, since no case asks for it (handoff, pending item 18).
 """
 
 import datetime
@@ -14,6 +18,7 @@ from agents.nodes import build_holdings_summary
 
 ROW = {
     "id": 1, "ticker": "AAPL", "name": "Apple Inc.", "quantity": 200, "average_price": 200.0,
+    "cost_basis": 40000.0, "realized": 0.0,
     "asset_class": "Equity", "sector": "Technology", "instrument_type": "share",
     "industry": "Consumer Electronics", "country": "US", "currency": "USD",
     "created_at": None, "updated_at": None, "purchase_date": datetime.date(2024, 2, 20),
@@ -26,6 +31,7 @@ def test_summary_fields():
         "ticker": "AAPL",
         "quantity": 200.0,
         "average_price": 200.0,
+        "cost_basis": 40000.0,
         "asset_class": "Equity",
         "sector": "Technology",
         "instrument_type": "share",
