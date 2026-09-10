@@ -140,11 +140,15 @@ def _market_values(
 
 
 def _cost_bases(holdings: Sequence[Dict]) -> Dict[str, float]:
-    """Cost basis per ticker: quantity times average price paid."""
-    return {
-        h["ticker"]: float(h["quantity"]) * float(h["average_price"])
-        for h in holdings
-    }
+    """Cost basis per ticker, as the holding states it.
+
+    The figure is the ledger's, the sum of the rows' amounts (D13, D14),
+    carried on the summary. Not quantity times average price: that is the
+    same number only while the average is the basis over the quantity, and
+    a second arithmetic path for a figure the ledger already states. A
+    holding that states no basis raises on the key.
+    """
+    return {h["ticker"]: float(h["cost_basis"]) for h in holdings}
 
 
 def allocation_by_asset_class(

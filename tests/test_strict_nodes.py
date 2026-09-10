@@ -242,7 +242,7 @@ async def test_rebalance_no_fallback_prices():
     state = create_initial_state("Test")
     
     state["portfolio_holdings"] = [
-        {"ticker": "SPY", "quantity": 100, "average_price": 450.0}
+        {"ticker": "SPY", "quantity": 100, "average_price": 450.0, "cost_basis": 45000.0}
     ]
     
     state["shared_data"] = {

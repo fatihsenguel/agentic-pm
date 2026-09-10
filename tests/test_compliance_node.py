@@ -16,7 +16,7 @@ from test_compliance import INSTRUMENT_TYPES, TOTAL, allocation
 
 
 def holdings():
-    return [{"ticker": t, "quantity": 1.0, "average_price": 1.0, "asset_class": "Equity",
+    return [{"ticker": t, "quantity": 1.0, "average_price": 1.0, "cost_basis": 1.0, "asset_class": "Equity",
              "sector": None, "instrument_type": kind, "purchase_date": None}
             for t, kind in INSTRUMENT_TYPES.items()]
 

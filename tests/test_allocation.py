@@ -20,15 +20,15 @@ from portfolio_tool.quant.allocation import (
 
 
 HOLDINGS = [
-    {"ticker": "SPY",  "quantity": 100, "average_price": 500.0, "asset_class": "Equity",       "sector": None},
-    {"ticker": "AAPL", "quantity": 200, "average_price": 200.0, "asset_class": "Equity",       "sector": "Technology"},
-    {"ticker": "MSFT", "quantity": 100, "average_price": 400.0, "asset_class": "Equity",       "sector": "Technology"},
-    {"ticker": "JNJ",  "quantity": 150, "average_price": 150.0, "asset_class": "Equity",       "sector": "Healthcare"},
-    {"ticker": "JPM",  "quantity": 100, "average_price": 200.0, "asset_class": "Equity",       "sector": "Financials"},
-    {"ticker": "NEE",  "quantity": 200, "average_price":  75.0, "asset_class": "Equity",       "sector": "Utilities"},
-    {"ticker": "TLT",  "quantity": 500, "average_price":  90.0, "asset_class": "Fixed Income", "sector": None},
-    {"ticker": "GLD",  "quantity": 100, "average_price": 250.0, "asset_class": "Commodity",    "sector": None},
-    {"ticker": "VNQ",  "quantity": 300, "average_price":  90.0, "asset_class": "Real Estate",  "sector": None},
+    {"ticker": "SPY",  "quantity": 100, "average_price": 500.0, "cost_basis": 50000.0, "asset_class": "Equity",       "sector": None},
+    {"ticker": "AAPL", "quantity": 200, "average_price": 200.0, "cost_basis": 40000.0, "asset_class": "Equity",       "sector": "Technology"},
+    {"ticker": "MSFT", "quantity": 100, "average_price": 400.0, "cost_basis": 40000.0, "asset_class": "Equity",       "sector": "Technology"},
+    {"ticker": "JNJ",  "quantity": 150, "average_price": 150.0, "cost_basis": 22500.0, "asset_class": "Equity",       "sector": "Healthcare"},
+    {"ticker": "JPM",  "quantity": 100, "average_price": 200.0, "cost_basis": 20000.0, "asset_class": "Equity",       "sector": "Financials"},
+    {"ticker": "NEE",  "quantity": 200, "average_price":  75.0, "cost_basis": 15000.0, "asset_class": "Equity",       "sector": "Utilities"},
+    {"ticker": "TLT",  "quantity": 500, "average_price":  90.0, "cost_basis": 45000.0, "asset_class": "Fixed Income", "sector": None},
+    {"ticker": "GLD",  "quantity": 100, "average_price": 250.0, "cost_basis": 25000.0, "asset_class": "Commodity",    "sector": None},
+    {"ticker": "VNQ",  "quantity": 300, "average_price":  90.0, "cost_basis": 27000.0, "asset_class": "Real Estate",  "sector": None},
 ]
 
 PRICES = {

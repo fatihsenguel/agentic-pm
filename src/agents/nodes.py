@@ -199,6 +199,10 @@ def build_holdings_summary(holdings: Optional[List[Dict]]) -> List[Dict[str, Any
     `sector` stays None where the asset has none. Per expected_values.md D3,
     unsectored holdings are reported explicitly rather than bucketed.
 
+    `cost_basis` is the ledger's figure, the sum of the rows' amounts (D13,
+    D14), carried so that nothing downstream multiplies quantity by the
+    average to get it back. `realized` is not carried: no case asks.
+
     `instrument_type` ('share' or 'fund') stays None where the asset has
     none, and is published as None rather than dropped: the compliance
     checker raises on a holding whose type it does not know (IPS-4.2 counts
@@ -220,6 +224,7 @@ def build_holdings_summary(holdings: Optional[List[Dict]]) -> List[Dict[str, Any
             "ticker": h["ticker"],
             "quantity": float(h["quantity"]),
             "average_price": float(h["average_price"]),
+            "cost_basis": float(h["cost_basis"]),
             "asset_class": h.get("asset_class"),
             "sector": h.get("sector"),
             "instrument_type": h.get("instrument_type"),

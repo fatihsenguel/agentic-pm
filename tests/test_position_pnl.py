@@ -15,15 +15,15 @@ from portfolio_tool.quant.allocation import AllocationError, position_pnl
 
 
 HOLDINGS = [
-    {"ticker": "SPY",  "quantity": 100, "average_price": 500.0, "purchase_date": "2024-01-15"},
-    {"ticker": "AAPL", "quantity": 200, "average_price": 200.0, "purchase_date": "2024-02-20"},
-    {"ticker": "MSFT", "quantity": 100, "average_price": 400.0, "purchase_date": "2024-03-18"},
-    {"ticker": "JNJ",  "quantity": 150, "average_price": 150.0, "purchase_date": "2024-05-06"},
-    {"ticker": "JPM",  "quantity": 100, "average_price": 200.0, "purchase_date": "2024-07-15"},
-    {"ticker": "NEE",  "quantity": 200, "average_price":  75.0, "purchase_date": "2024-09-09"},
-    {"ticker": "TLT",  "quantity": 500, "average_price":  90.0, "purchase_date": "2025-01-13"},
-    {"ticker": "GLD",  "quantity": 100, "average_price": 250.0, "purchase_date": "2025-03-10"},
-    {"ticker": "VNQ",  "quantity": 300, "average_price":  90.0, "purchase_date": "2025-06-02"},
+    {"ticker": "SPY",  "quantity": 100, "average_price": 500.0, "cost_basis": 50000.0, "purchase_date": "2024-01-15"},
+    {"ticker": "AAPL", "quantity": 200, "average_price": 200.0, "cost_basis": 40000.0, "purchase_date": "2024-02-20"},
+    {"ticker": "MSFT", "quantity": 100, "average_price": 400.0, "cost_basis": 40000.0, "purchase_date": "2024-03-18"},
+    {"ticker": "JNJ",  "quantity": 150, "average_price": 150.0, "cost_basis": 22500.0, "purchase_date": "2024-05-06"},
+    {"ticker": "JPM",  "quantity": 100, "average_price": 200.0, "cost_basis": 20000.0, "purchase_date": "2024-07-15"},
+    {"ticker": "NEE",  "quantity": 200, "average_price":  75.0, "cost_basis": 15000.0, "purchase_date": "2024-09-09"},
+    {"ticker": "TLT",  "quantity": 500, "average_price":  90.0, "cost_basis": 45000.0, "purchase_date": "2025-01-13"},
+    {"ticker": "GLD",  "quantity": 100, "average_price": 250.0, "cost_basis": 25000.0, "purchase_date": "2025-03-10"},
+    {"ticker": "VNQ",  "quantity": 300, "average_price":  90.0, "cost_basis": 27000.0, "purchase_date": "2025-06-02"},
 ]
 
 PRICES = {
@@ -93,6 +93,6 @@ def test_missing_price_raises():
 
 
 def test_zero_cost_basis_raises():
-    free = [{"ticker": "SPY", "quantity": 100, "average_price": 0.0}]
+    free = [{"ticker": "SPY", "quantity": 100, "average_price": 0.0, "cost_basis": 0.0}]
     with pytest.raises(AllocationError):
         position_pnl(free, PRICES, {"SPY": None})

@@ -62,7 +62,7 @@ def state():
 # expected_values.md Part 8 C: the position after the one euro row, the
 # 09-02 close in dollars, and a stated spot rate on the same date.
 EURO_HOLDING = {
-    "ticker": "AAPL", "quantity": 100.0, "average_price": 184.05,
+    "ticker": "AAPL", "quantity": 100.0, "average_price": 184.05, "cost_basis": 18405.0,
     "asset_class": "Equity", "sector": "Technology", "instrument_type": "share",
     "purchase_date": "2024-02-20", "currency": "USD",
 }

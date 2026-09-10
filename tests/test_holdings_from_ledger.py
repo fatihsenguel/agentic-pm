@@ -48,7 +48,7 @@ PART_1 = {
 }
 
 # What build_holdings_summary reads from a holding row.
-SUMMARY_KEYS = {"ticker", "quantity", "average_price", "asset_class", "sector",
+SUMMARY_KEYS = {"ticker", "quantity", "average_price", "cost_basis", "asset_class", "sector",
                 "instrument_type", "purchase_date"}
 
 
