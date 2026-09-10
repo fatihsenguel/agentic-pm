@@ -482,6 +482,13 @@ class Portfolio(Base):
     # is in this currency, so a portfolio that names none is an error,
     # not a dollar portfolio with a plausible face.
     currency = Column(String(10), nullable=False)
+    # The policy this portfolio is checked against (DIRECTION.md Order 2,
+    # item 4): the path of its ips.toml, relative to the project root or
+    # absolute. Required and defaulted nowhere, like currency: the benchmark
+    # portfolio names the committed file, a personal one names a file the
+    # repository never sees, and a portfolio naming none is not checked
+    # against the committed policy with a plausible face.
+    ips_path = Column(String(500), nullable=False)
     cash_balance = Column(Float, nullable=False, default=0.0)
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
