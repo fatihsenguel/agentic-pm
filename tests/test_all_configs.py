@@ -156,6 +156,15 @@ def test_no_self_config_references():
     print("✅ No self.config violations found")
 
 
+def test_sonnet_config_is_not_haiku():
+    """ANTHROPIC_SONNET pointed at the Haiku id (KNOWN_GAPS): flipping the
+    router's use_stronger_model would silently give Haiku. The id is the
+    one the token counter accepted on 9 September."""
+    from agents.config import ANTHROPIC_HAIKU, ANTHROPIC_SONNET
+    assert ANTHROPIC_SONNET.model != ANTHROPIC_HAIKU.model
+    assert ANTHROPIC_SONNET.model == "claude-sonnet-5"
+
+
 if __name__ == "__main__":
     print("="*60)
     print("COMPREHENSIVE CONFIG TEST")
