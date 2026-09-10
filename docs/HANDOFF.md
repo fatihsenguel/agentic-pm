@@ -1,7 +1,7 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 10 September 2026 (thirteenth session; regenerated at its end)
-**Branch:** `selection`. `baseline-v1` was fast-forwarded to 191829b before this session and both were pushed there; fifteen commits since, this file included, not pushed.
+**Branch:** `selection`. `baseline-v1` was fast-forwarded to 191829b before this session and both were pushed there; eighteen commits since, this file included, not pushed.
 **State:** Green on every loop I ran. pytest 645 passed and 6 expected failures in about three seconds, nine on some runs. The runner and the golden set were not run this session: no routing changed, no prompt changed, no answer text changed, and `expected.txt` is as it was. Commit count: `git rev-list --count baseline-v1..HEAD`.
 
 Written for whoever picks this up cold, myself included.
@@ -21,7 +21,7 @@ claim like any other, and so is a plan I wrote an hour ago.
 
 | File | What it is |
 |---|---|
-| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Order 1 is built; Order 2's first three items, the ledger, the currency and the price source, are built; its fourth, the personal IPS, has its binding built and its document and portfolio still to come, which are mine. Its last section says when to stop and think. |
+| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated; revised this session. Wins over this file on direction; this file wins on state. Order 1 is built; Order 2 is built through the binding that lets a portfolio name its policy file. **The personal policy, philosophy and portfolio are Order 6, last**; everything before it is synthetic. **Next is Order 3**: a synthetic philosophy, watchlist and prediction ledger in the IPS pattern, and Level 4 in benchmark.md. Its last section says when to stop and think. |
 | `docs/benchmark.md` | **The definition of done.** 12 cases, 12 pass on the last run (eleventh session); the runner is the status. |
 | `tests/benchmark/run_cases.py` | **The scoreboard.** Every case has a check. Nothing in it changed this session and it did not run: nothing under `src/` changed an answer's text. |
 | `tests/golden/KNOWN_GAPS.md` | Open decisions, resolved decisions, and why obvious fixes are wrong. Swept at the end of this session. Read at minimum: "The personal IPS: bound to the portfolio, grown one clause at a time" under Directions (the whole of this session's main item, with the rejected shapes), "`get_financial_statements` returns nothing, on every call, silently" under Hygiene, "The tables the agents do not read" and "Mutation testing, once, over the pure modules" under Directions. |
@@ -236,11 +236,10 @@ since this session; 185 rows). **There is no holdings table.**
   2026-09-09, every row a cent print with source `yfinance`, and the 252
   cells per holding inside Part 4's window equal the committed series to
   the cent on every pytest run.
-- **Four leftover tickers** from the deleted portfolios 1 and 2 (AMZN,
-  PLTR, SAP, VWO), ids 3, 5, 4 and 9, still hold 9,140 price rows and 632
-  rows in six other tables, read by nothing. The delete statement with its
-  expected counts is in §9; mine to run, then paste the two counts. 16,079
-  price rows and 13 assets in all until then.
+- **The four leftover tickers are gone.** AMZN, PLTR, SAP and VWO and
+  their 9,772 rows across seven tables were deleted by my hand this
+  session; the statement printed 6939 and 9, the counts predicted. Nine
+  assets, 6,939 price rows, every one a print with its source.
 - Reseeding rewrites the nine assets' metadata to the same values, writes
   `ips_path = "ips.toml"` on the portfolio row, and refuses without
   `--reset` when ledger rows exist. No reseed this session and none needed:
@@ -329,6 +328,14 @@ Directions entries the owner's questions asked for: mutation testing,
 logged with a trigger, and the tables the agents do not read, checked
 against callers.
 
+**After the first handoff: item 21 run, and the Order revised
+(290bfc7).** I ran the delete and it printed the two predicted counts.
+Then a direction decision: the personal IPS, the personal philosophy and
+my real portfolio are the vision, not the next step; they moved from
+Order 2 to a new Order 6, after the conversational layer, and
+DIRECTION.md says under its Order heading that everything before it is
+built and scored on synthetic artifacts. Next is Order 3.
+
 ---
 
 ## 5. Decisions taken, and decisions pending
@@ -353,18 +360,20 @@ against callers.
 - The statements defect is pinned, not fixed.
 - Mutation testing is a one-off diagnostic over five pure modules, logged
   with a trigger, not a fifth loop.
+- The personal policy, philosophy and portfolio are Order 6, last;
+  Orders 3 to 5 are built on synthetic artifacts. Dated in DIRECTION.md.
 
 **Pending — decide before writing code.** Numbers kept from the twelfth
 session's list so that KNOWN_GAPS references still resolve; done items
 are struck.
-1. **Order 2 item 4, the rest, all mine and outside the repository**: the
-   private directory; the personal document in docs/IPS.md's shape; its
-   TOML, loaded once by hand so every type is known or a statement; my
-   real portfolio's ledger rows from my statements and the Part 8
-   reference for them, hand-computed first; then the row with its absolute
-   path, and the committed check script (the shape of item 24, on a path I
-   give it). Each clause that is to become checkable is its own decision
-   in the order the loader's docstring states. **Next, when I say.**
+1. ~~Order 2 item 4, the rest~~ moved to Order 6, last (290bfc7): the
+   private directory, the personal document and TOML, my real portfolio's
+   rows and Part 8 reference, the row with its absolute path, the check
+   script. The code needs no change for any of it when the time comes.
+   **Next instead: Order 3's first decision**, the shape of a synthetic
+   philosophy document in the IPS pattern, Level 4 in benchmark.md, and
+   the prediction ledger, shapes and references only, no tool reading
+   any of it yet.
 6. **The rebalance tools' fixed euro sign**: logged, not built; the path is
    dead until decision 11.
 8. ~~The workbook in Excel~~ done (191829b).
@@ -384,8 +393,7 @@ are struck.
 18. **Realized gains and closed positions as figures the system reports.**
 19. ~~A short README~~ done (ab813ed).
 20. ~~Two more `source` columns~~ done (dda3e24, 71962cf).
-21. **The four leftover tickers' rows**: the statement is in §9; mine to
-    run, and I paste the two counts.
+21. ~~The four leftover tickers' rows~~ done by hand, 6939 and 9.
 22. **Volatility over as-traded closes or over a total-return series**: a
     Part 4 decision with a recomputed Part 4 beside the present one.
 23. **The answer text naming the price source**: a rendering; the runner
@@ -416,17 +424,21 @@ change that touches a formatter runs it.
 
 ## 7. Next steps, in order
 
-**Order 2, item 4, the rest: mine, outside the repository.** The private
-directory and the personal document first; then its TOML and one by-hand
-load; then the real portfolio's rows and reference; the row and the check
-script last. The code is ready for it: a second portfolio row with an
-absolute `ips_path` needs no code change.
+**Order 3, the first decision, before any code.** What a synthetic
+philosophy document looks like in the IPS pattern: numbered clauses, a
+derived config, numeric criteria checked deterministically and cited by
+clause, statements citable but not computed. What Level 4 in
+benchmark.md defines as a good research answer, scored by the ledger.
+The shape of the prediction ledger: dated, specific, falsifiable, attached
+to a thesis. Shapes and references only; no tool reads any of it until
+the documents exist, and DIRECTION.md says the judgement half starts when
+Level 4 and the ledger do.
 
-**Item 21 when convenient**: the statement in §9, the two counts pasted.
+**The small items when convenient**: 25, the macro column required, a
+migration on a scratch copy first; 27, mutation testing once over the
+five pure modules, asked before it runs.
 
-**The first personal clause type, when the document exists**: reference,
-type, checker arm, test, flip; and mutation testing (27) over the checker
-before it, if I want the survivors read first.
+**The personal files are Order 6**: nothing before it waits on them.
 
 ### Later, with reasons
 
@@ -518,9 +530,8 @@ sqlite3 data/portfolio.db "select id, name, currency, ips_path from portfolios;"
 # the whole suite on a migrated scratch copy, while a migration is pending:
 DATABASE_URL="sqlite:///$PWD/scratch.db" USE_MOCK_QUOTA=True PYTHONPATH=src pytest -q --noconftest
 
-# item 21: the four leftover tickers, every child table by name (foreign keys
-# are off). Expected after: 6939 price rows, 9 assets. Paste both counts.
-sqlite3 data/portfolio.db "delete from daily_prices where asset_id in (3,4,5,9); delete from shares_history where asset_id in (3,4,5,9); delete from financial_statements where asset_id in (3,4,5,9); delete from quarterly_earnings where asset_id in (3,4,5,9); delete from corporate_actions where asset_id in (3,4,5,9); delete from fundamentals where asset_id in (3,4,5,9); delete from asset_fetch_metadata where asset_id in (3,4,5,9); delete from dividends where asset_id in (3,4,5,9); delete from transactions where asset_id in (3,4,5,9); delete from assets where id in (3,4,5,9); select count(*) from daily_prices; select count(*) from assets;"
+# the price table after item 21: nine assets, 6939 rows, one convention
+sqlite3 data/portfolio.db "select count(*) from daily_prices; select count(*) from assets;"
 ```
 
 ### The four loops
