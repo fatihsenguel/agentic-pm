@@ -56,6 +56,8 @@ are the ones a run must still reproduce exactly, and they are what
 | D16 | Instrument currency, and a foreign holding's value? | **`Asset.currency`**, filled by the price source; a price is in it. A holding's value in the base currency is quantity x price x the spot rate on the price's as-of date, and the answer states both dates. |
 | D17 | Where does a spot rate come from? | **A price source, like closes.** Stored per day with an as-of date, fetched from the same provider. A missing rate raises; nothing falls back to yesterday's rate or to 1. When the two currencies are the same there is no lookup. |
 | D18 | Which currency are cost basis, average price and realized gain in? | **The base currency**, since they come from `amount` (D14). The average price of a foreign holding is therefore not comparable to its quoted price, and a formatter names the currency of every figure it prints. |
+| D19 | What is a close? | **The instrument's official closing price on that date, in the instrument's currency, as traded**: adjusted for splits, so that the quantity held today times the close is the position's value on every date, and for nothing else. It is the figure a broker statement values the position at. A dividend adjustment is a return method, not a price, and does not belong in the column the valuation reads. Decided 10 September for Part 9, before any code. |
+| D20 | Two sources give two closes for one instrument and one date. Which wins? | **The listing exchange's print.** A stored close that differs from it by a cent or more is a defect in the provider, fixed at the provider, never by editing the reference and never by averaging. Should a second live source ever exist, the system reports both figures, both sources and the date, and picks neither. |
 
 Note the tension between D2 and Part 4: the volatility weights exclude cash
 while D2 includes it. Resolved by disclosure — see Part 4.
@@ -409,3 +411,102 @@ at yesterday's rate and not a value at 1.0000.
 - **Realized gains as a figure the system reports.** Stated once under B;
   no case asks.
 
+---
+
+## Part 9 — The price source
+
+Computed 2026-09-10 by hand, before any code (DIRECTION.md Order 2, item
+3), so the provider has something independent to be wrong against.
+Decisions D19 and D20. No arithmetic beyond a subtraction per row.
+
+**What is being checked.** A close the system stores is defended when a
+source that is not the provider prints the same figure for the same
+instrument and date, to the cent. Two dates are needed. The valuation date,
+2026-09-02, is Part 1's pin: the nine closes every figure in Parts 1 to 3
+and 7 stands on. And dates *before a dividend*, because the provider's
+default returns closes scaled by every later dividend, so a check on the
+most recent date alone passes whether or not the stored history is the
+print. Rows B below are those dates, chosen where the database and the
+committed series disagree most.
+
+**The second source.** The listing exchange's own historical quotes,
+`api.nasdaq.com/api/quote/<TICKER>/historical` with `assetclass=stocks`
+for the shares and `assetclass=etf` for the funds, 20 August to 3 September
+2026, field `Close/Last`. Fetched by me on 2026-09-10 with one command from
+the shell; the output as printed is the record, 99 rows over the nine
+holdings. Not Yahoo, and the exchange's print by definition.
+
+**Tolerance: to the cent.** Two figures agree when they are equal after
+rounding to two decimals. An official close is one print to the cent, so
+two as-traded sources agree exactly; the float32 artefacts in the database
+(324.959991 for 324.96) vanish on rounding. A cent or more is a different
+figure, named here and decided by D20, never averaged.
+
+### A. The valuation date — Part 1's nine closes
+
+| Ticker | Exchange 2026-09-02 | Part 1 | Difference | Verdict |
+|---|---|---|---|---|
+| SPY  | 765.16 | 765.16 | 0.00 | agrees |
+| AAPL | 324.96 | 324.96 | 0.00 | agrees |
+| MSFT | 496.82 | 496.82 | 0.00 | agrees |
+| JNJ  | 275.21 | 275.21 | 0.00 | agrees |
+| JPM  | 356.22 | 356.22 | 0.00 | agrees |
+| NEE  |  83.10 |  83.10 | 0.00 | agrees |
+| TLT  |  81.95 |  81.95 | 0.00 | agrees |
+| GLD  | 402.78 | 402.78 | 0.00 | agrees |
+| VNQ  |  95.78 |  95.78 | 0.00 | agrees |
+
+Nine of nine. Part 1's closes are the exchange's prints, and so is every
+figure derived from them. They agree because 2026-09-02 lies after each
+holding's latest ex-dividend date at the time the closes were fetched; the
+same fetch repeated after the next one would not reproduce them, which is
+what B shows on the dates where it has already happened.
+
+### B. Dates before a dividend — the falsifier
+
+The committed series `benchmark_closes.csv` (Part 4's 252 closes) against
+the exchange, and the database as it stood on 2026-09-10 after the
+provider had refetched:
+
+| Ticker | Date | Exchange | Committed series | Database 2026-09-10 | Database minus exchange | Verdict |
+|---|---|---|---|---|---|---|
+| JNJ | 2026-08-21 | 270.24 | 270.24 | 268.91 | -1.33 | **database wrong** |
+| TLT | 2026-08-28 |  82.88 |  82.88 |  82.56 | -0.32 | **database wrong** |
+
+Over the whole fetch: 90 of the 99 exchange rows fall inside the committed
+series and all 90 agree with it to the cent; the database agrees with the
+exchange on 82 and disagrees on 17, every one of them a JNJ, NEE or TLT
+row dated before that holding's latest ex-dividend date, and every one of
+them lower than the print by that dividend's factor. Across Part 4's full
+window the database disagrees with the committed series on 1,629 of 2,268
+cells, every holding except GLD, which pays no dividend, by up to 4.4% on
+TLT.
+
+**The cause is the provider's call, not the vendor.** The price method
+calls the library's history function with its default, and that default
+replaces the close with the dividend-adjusted close. The library's own
+adjustment divides the print by the product of every later dividend
+factor, which is why a stored figure for a past date changes each time a
+new ex-dividend date passes and the row is fetched again. The exchange
+rate method is unaffected: a rate has no dividend.
+
+**What Part 9 settles.** The committed series is the print (D19), so Part
+4's 10.2936% was computed on as-traded closes and needs no recomputation.
+The database is not the print on any date before a holding's latest
+ex-dividend date, and the fix is at the provider: ask for the unadjusted
+close, then refetch the stored history once so that the table holds one
+convention. Under D20 the reference does not move.
+
+### What Part 9 does not cover
+
+- **Splits.** None of the nine holdings split inside Part 4's window, so
+  there is no row that checks the split half of D19. The first held
+  instrument that splits gets its row here before the code is trusted on
+  it.
+- **A total-return series.** Volatility over as-traded closes sees an
+  ex-dividend drop as a negative return; D5 to D8 are silent on it and
+  Part 4 is computed on the print. Whether the covariance should run on a
+  series adjusted from the dividends table is a Part 4 decision with its
+  own reference, not this one.
+- **Where the source is named.** A close stored with its source on the row
+  is the trace; whether the answer text names it is a rendering decision.
