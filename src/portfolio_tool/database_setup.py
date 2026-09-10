@@ -454,10 +454,9 @@ class MacroData(Base):
     date = Column(Date, nullable=False)
     indicator = Column(String(50), nullable=False)  # "VIX", "TNX_10Y", etc.
     value = Column(Float, nullable=False)
-    # The provider's name, written by the fetch from its DTO, defaulted
-    # nowhere. Still nullable in the database; making it required is its
-    # own decision with its own migration.
-    source = Column(String(50))
+    # The provider's name, written by the fetch from its DTO, required and
+    # defaulted nowhere, like daily_prices.source and fx_rates.source.
+    source = Column(String(50), nullable=False)
     created_at = Column(DateTime, default=None)
     
     __table_args__ = (
