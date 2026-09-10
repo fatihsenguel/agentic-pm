@@ -6,7 +6,8 @@ from portfolio_tool.provider_models import (
     ProviderAssetInfo, ProviderPriceData, ProviderDividendData,
     ProviderSplitData, ProviderSharesData,
     ProviderFundamentalData, ProviderEarningsData, ProviderFinancialStatement,
-    ProviderMacroData, ProviderMacroSnapshot  # NEU
+    ProviderMacroData, ProviderMacroSnapshot,  # NEU
+    ProviderFxRate,
 )
 
 class DataProviderInterface(ABC):
@@ -14,8 +15,20 @@ class DataProviderInterface(ABC):
     Das ist die abstrakte Schnittstelle (der "Vertrag").
     Jeder konkrete Provider MUSS diese Methoden implementieren.
     '''
-    
+
+    # The provider's name, written as `source` on every fx_rates row it
+    # supplies. Set by each implementation; there is no default, because a
+    # rate whose origin is unknown is not a price source.
+    name: str
+
     # ==================== BESTEHENDE METHODEN ====================
+
+    @abstractmethod
+    def get_fx_rates(self, base: str, quote: str, start: date, end: date) -> List[ProviderFxRate]:
+        '''Daily spot rates, units of `base` per one unit of `quote`, for
+        [start, end]. The direction is this method's to get right
+        (expected_values.md D17); nothing downstream inverts.'''
+        pass
     
     @abstractmethod
     def get_asset_info(self, ticker: str) -> Optional[ProviderAssetInfo]:

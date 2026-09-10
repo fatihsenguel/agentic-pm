@@ -34,6 +34,15 @@ class ProviderPriceData:
     volume: Optional[int] = None
 
 @dataclass
+class ProviderFxRate:
+    """One spot rate for one day, as the provider quotes it: units of the
+    portfolio's base currency per one unit of the asset's currency (the
+    fx_rates convention, expected_values.md D17). Direction is the
+    provider adapter's to get right; nothing downstream inverts."""
+    date: date
+    rate: Decimal
+
+@dataclass
 class ProviderDividendData:
     ex_date: date
     amount: Decimal

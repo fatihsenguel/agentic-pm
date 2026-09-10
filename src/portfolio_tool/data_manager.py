@@ -13,7 +13,8 @@ from .models.responses import UpdateResult
 
 from .database_setup import (
     Asset, DailyPrice, Dividend, CorporateAction, SharesHistory,
-    Fundamentals, QuarterlyEarnings, AssetFetchMetadata, Base, FinancialStatement, MacroData
+    Fundamentals, QuarterlyEarnings, AssetFetchMetadata, Base, FinancialStatement, MacroData,
+    FxRate, FxFetchMetadata,
 )
 from .providers.base import DataProviderInterface 
 from datetime import timedelta, date, datetime 
@@ -259,6 +260,130 @@ class DataManager:
                 affected_count=0,
                 entities=[asset.ticker],
                 entity_type="asset",
+                error_message=str(e)
+            )
+
+    def update_fx_rates(self, base: str, quote: str, start_date: date | None = None,
+                        force_update: bool = False) -> UpdateResult:
+        """Updates daily spot rates for one pair, beside the price fetch and
+        under its rules (expected_values.md D17: a rate is a price source).
+
+        `rate` is units of `base` per one unit of `quote`, stored as the
+        provider gives it, with the provider's name as `source`. The cache
+        record is fx_fetch_metadata, keyed by the pair: skip the provider when
+        we have asked this far back before and checked within
+        price_fetch_interval_days; when covered but stale, fetch only from the
+        newest stored date forward. Coverage is what was asked, never whether
+        a row exists on the date - a weekend start has no row and never will.
+
+        Base equal to quote is no lookup (D17), so no fetch and no row. A
+        provider with nothing for the pair stores nothing and says so; the
+        raise on a missing rate is the lookup's (quant/fx.py), not this
+        method's, the same split as prices.
+        """
+        pair = f"{base}/{quote}"
+        try:
+            if base == quote:
+                return UpdateResult(
+                    success=True, operation="update_fx_rates", affected_count=0,
+                    entities=[pair], entity_type="fx_pair",
+                    metadata={"status": "same_currency"}
+                )
+
+            meta = self.session.get(FxFetchMetadata, (base, quote))
+            if meta is None:
+                meta = FxFetchMetadata(base=base, quote=quote)
+                self.session.add(meta)
+
+            first_stored, last_stored = self.session.query(
+                func.min(FxRate.date), func.max(FxRate.date)
+            ).filter(FxRate.base == base, FxRate.quote == quote).one()
+
+            requested_start = start_date or last_stored or date(2000, 1, 1)
+
+            if requested_start > date.today():
+                return UpdateResult(
+                    success=True, operation="update_fx_rates", affected_count=0,
+                    entities=[pair], entity_type="fx_pair", metadata={"status": "up_to_date"}
+                )
+
+            covered = (
+                meta.earliest_start is not None
+                and meta.earliest_start <= requested_start
+            )
+            interval = self.config.get("price_fetch_interval_days", 1)
+
+            if covered and not force_update and not self._should_fetch(
+                meta.last_fetch_time, interval
+            ):
+                return UpdateResult(
+                    success=True, operation="update_fx_rates", affected_count=0,
+                    entities=[pair], entity_type="fx_pair",
+                    date_range=(requested_start, last_stored),
+                    metadata={"status": "cached",
+                              "stored_through": last_stored.isoformat() if last_stored else None}
+                )
+
+            fetch_from = last_stored if (covered and last_stored) else requested_start
+
+            provider_data = self.provider.get_fx_rates(
+                base=base, quote=quote, start=fetch_from, end=date.today()
+            )
+            meta.last_fetch_time = datetime.utcnow()
+            asked_from = [d for d in (meta.earliest_start, fetch_from, first_stored)
+                          if d is not None]
+            meta.earliest_start = min(asked_from)
+            self.session.commit()
+
+            if not provider_data:
+                return UpdateResult(
+                    success=True, operation="update_fx_rates", affected_count=0,
+                    entities=[pair], entity_type="fx_pair",
+                    metadata={"status": "no_new_data_from_provider"}
+                )
+
+            values_to_upsert = [
+                {
+                    'base': base,
+                    'quote': quote,
+                    'date': dto.date,
+                    'rate': float(dto.rate),
+                    'source': self.provider.name,
+                }
+                for dto in provider_data
+                if dto.date >= fetch_from
+            ]
+
+            if not values_to_upsert:
+                return UpdateResult(
+                    success=True, operation="update_fx_rates", affected_count=0,
+                    entities=[pair], entity_type="fx_pair", metadata={"status": "filtered_empty"}
+                )
+
+            affected_count = self._perform_upsert(
+                model=FxRate,
+                values=values_to_upsert,
+                index_elements=['base', 'quote', 'date']
+            )
+
+            return UpdateResult(
+                success=True,
+                operation="update_fx_rates",
+                affected_count=affected_count,
+                entities=[pair],
+                entity_type="fx_pair",
+                date_range=(fetch_from, date.today()),
+                metadata={"provider": self.provider.name}
+            )
+
+        except Exception as e:
+            self.session.rollback()
+            return UpdateResult(
+                success=False,
+                operation="update_fx_rates",
+                affected_count=0,
+                entities=[pair],
+                entity_type="fx_pair",
                 error_message=str(e)
             )
 

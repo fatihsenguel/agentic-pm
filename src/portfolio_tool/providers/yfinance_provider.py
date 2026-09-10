@@ -11,8 +11,9 @@ from ..provider_models import (
     ProviderAssetInfo, ProviderPriceData, ProviderDividendData,
     ProviderSplitData, ProviderSharesData,
     ProviderFundamentalData, ProviderEarningsData, ProviderFinancialStatement,
-    ProviderMacroData, 
-    ProviderMacroSnapshot
+    ProviderMacroData,
+    ProviderMacroSnapshot,
+    ProviderFxRate,
 )
 
 # (1) WIR BEHALTEN SimpleRateLimiter für die FREQUENZ, safe_int und float für unsave int,float conversation fixes
@@ -35,7 +36,9 @@ class YFinanceProvider(DataProviderInterface):
     Konkrete Implementierung des DataProviderInterface für Yahoo Finance.
     Nutzt SimpleRateLimiter für die Frequenz und DatabaseQuotaManager für das Volumen.
     """
-    
+
+    name = "yfinance"
+
     # (4) Der Konstruktor wird per Dependency Injection angepasst
     def __init__(self, 
                  quota_manager: DatabaseQuotaManager, 
@@ -181,6 +184,32 @@ class YFinanceProvider(DataProviderInterface):
                     volume=safe_int(row['Volume'])
                 ))
             return results
+        except (QuotaExceededError, Exception) as e:
+            # Fehler wurde bereits im Wrapper geloggt.
+            return []
+
+    def get_fx_rates(self, base: str, quote: str, start: date, end: date) -> List[ProviderFxRate]:
+        """Daily spot rates, units of `base` per one unit of `quote`.
+
+        Yahoo's symbol for that direction is `{quote}{base}=X`: USDEUR=X
+        quotes euros per dollar (checked live 10 September 2026: 0.8624 on
+        2026-09-02, against EURUSD=X at 1.15955). Each day's close is the
+        rate; nothing is inverted here. Same throttle, quota and logging
+        wrapper as prices.
+        """
+        symbol = f"{quote}{base}=X"
+        try:
+            with self._execute_api_call(endpoint_name="history", asset_ticker=symbol):
+                print(f"   [Provider] Rufe yf.Ticker({symbol}).history(start={start}, end={end}) auf...")
+                df = yf.Ticker(symbol).history(start=start, end=end)
+
+            if df.empty:
+                return []
+
+            return [
+                ProviderFxRate(date=date_ts.date(), rate=safe_decimal(row['Close']))
+                for date_ts, row in df.iterrows()
+            ]
         except (QuotaExceededError, Exception) as e:
             # Fehler wurde bereits im Wrapper geloggt.
             return []
