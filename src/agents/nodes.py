@@ -2189,6 +2189,15 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
                 f"  {analysis.get('error', 'No error recorded.')}"]
 
     allocation = analysis.get("allocation") or {}
+    # Every amount is in the portfolio's base currency (D15, D18), read from
+    # the result. No fallback: a formatter that assumed one would print a
+    # currency nobody published.
+    base = analysis.get("base_currency")
+    if not base:
+        raise ValueError(
+            "PortfolioAnalysisAgent published no base_currency; the allocation "
+            "cannot name the currency of its figures (expected_values.md D18)."
+        )
     by_class = allocation.get("by_asset_class") if group_by in (None, "asset_class") else None
     by_sector = allocation.get("by_sector") if group_by in (None, "sector") else None
     by_position = allocation.get("by_position") if group_by in (None, "position") else None
@@ -2210,13 +2219,14 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
         lines.append("")
 
     if by_class:
-        lines.append(f"**Total portfolio value:** {by_class['total_value']:,.2f}")
-        lines.append(f"  invested {by_class['invested_value']:,.2f} "
-                     f"+ cash {by_class['cash_balance']:,.2f}")
+        lines.append(f"**Total portfolio value:** {by_class['total_value']:,.2f} {base}")
+        lines.append(f"  invested {by_class['invested_value']:,.2f} {base} "
+                     f"+ cash {by_class['cash_balance']:,.2f} {base}")
         lines.append("")
         # Each header names the denominator by the share field's own word
         # and gives its amount from the block; no label travels in the data.
-        lines.append(f"**By asset class**, % of total portfolio value "
+        # One statement of the currency per table covers every amount in it.
+        lines.append(f"**By asset class**, amounts in {base}, % of total portfolio value "
                      f"{by_class['total_value']:,.2f}, cash included:")
         for line in by_class.get("lines", []):
             pct = line.get("pct_of_total")
@@ -2232,7 +2242,8 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
         # cash (Part 7, the IPS-4.3 figure and the answer to "what share of
         # my portfolio"). Every amount is the sector block's own, so the
         # columns are labelled when the asset-class block is not rendered.
-        lines.append(f"**By sector**, % of sectored value {by_sector['sectored_value']:,.2f}, "
+        lines.append(f"**By sector**, amounts in {base}, "
+                     f"% of sectored value {by_sector['sectored_value']:,.2f}, "
                      f"of invested value {by_sector['invested_value']:,.2f}, "
                      f"and of total portfolio value {by_sector['total_value']:,.2f}:")
         for line in by_sector.get("lines", []):
@@ -2251,7 +2262,8 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
             lines.append("")
         # One line per holding, largest first as published; two shares, of
         # total portfolio value (the IPS-4.1 figure) and of invested value.
-        lines.append(f"**By position**, largest first, % of total portfolio value "
+        lines.append(f"**By position**, amounts in {base}, largest first, "
+                     f"% of total portfolio value "
                      f"{by_position['total_value']:,.2f} and of invested value "
                      f"{by_position['invested_value']:,.2f}:")
         for line in by_position.get("lines", []):
@@ -2286,6 +2298,13 @@ def _format_pnl_response(sub_results: Dict, tickers: List[str]) -> List[str]:
     beside it rather than reduced. Price return only, per expected_values.md
     D4, and the answer says so because on five of the nine holdings it
     understates the return.
+
+    Every figure names its currency (D18): cost, average, value and P&L are
+    in the portfolio's base currency, read from the result; the quote is in
+    the asset's, read from the position. A position valued through a spot
+    rate prints the rate, its direction and its date beside the price's
+    (D16), and the answer says the gain's split into a price part and a
+    currency part is not computed (Part 8 C). Nothing here converts.
     """
     analysis = sub_results.get("PortfolioAnalysisAgent", {})
     if not analysis.get("success"):
@@ -2295,6 +2314,13 @@ def _format_pnl_response(sub_results: Dict, tickers: List[str]) -> List[str]:
     pnl = analysis.get("position_pnl") or {}
     if not pnl:
         return ["No position P&L was published for this request."]
+
+    base = analysis.get("base_currency")
+    if not base:
+        raise ValueError(
+            "PortfolioAnalysisAgent published no base_currency; the P&L cannot "
+            "name the currency of its figures (expected_values.md D18)."
+        )
 
     wanted = [t.upper() for t in tickers] or sorted(pnl)
     not_held = [t for t in wanted if t not in pnl]
@@ -2306,19 +2332,27 @@ def _format_pnl_response(sub_results: Dict, tickers: List[str]) -> List[str]:
     if not_held:
         lines.append("")
 
+    converted = False
     for t in shown:
         p = pnl[t]
         sign = "+" if p["pnl_abs"] >= 0 else "-"
-        lines.append(f"**{t}** — {sign}{abs(p['pnl_abs']):,.2f} ({p['pnl_pct']:+.2%}) "
+        lines.append(f"**{t}** — {sign}{abs(p['pnl_abs']):,.2f} {base} ({p['pnl_pct']:+.2%}) "
                      f"since {p.get('purchase_date') or 'an unrecorded purchase date'}")
-        lines.append(f"  {p['quantity']:,.0f} shares, cost {p['cost_basis']:,.2f} "
-                     f"at {p['average_price']:,.2f} average")
-        lines.append(f"  now {p['market_value']:,.2f} at {p['price']:,.2f}, "
-                     f"priced as of {p['as_of']}")
+        lines.append(f"  {p['quantity']:,.0f} shares, cost {p['cost_basis']:,.2f} {base} "
+                     f"at {p['average_price']:,.2f} {base} average")
+        lines.append(f"  now {p['market_value']:,.2f} {base} at {p['price']:,.2f} "
+                     f"{p['currency']}, priced as of {p['as_of']}")
+        if p.get("rate") is not None:
+            converted = True
+            lines.append(f"  converted at {p['rate']:.4f} {base} per {p['currency']} "
+                         f"as of {p['rate_as_of']}")
         lines.append("")
 
     lines.append("**Not done.** Price return only: dividends are not attributed to")
     lines.append("the portfolio, so income is not included (expected_values.md D4).")
+    if converted:
+        lines.append("A gain on a position valued through a rate has a price part and a")
+        lines.append("currency part; that split is not computed (expected_values.md Part 8 C).")
     return lines
 
 
