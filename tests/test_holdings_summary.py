@@ -30,15 +30,21 @@ def test_summary_fields():
         "sector": "Technology",
         "instrument_type": "share",
         "purchase_date": "2024-02-20",
+        "currency": "USD",
     }
 
 
 def test_absent_values_are_published_as_none():
-    row = {**ROW, "sector": None, "instrument_type": None, "purchase_date": None}
+    """`currency` too: the rate lookup (quant/fx.py) raises on a holding
+    whose currency it does not know, and can only do that if the absence
+    reaches it (D16)."""
+    row = {**ROW, "sector": None, "instrument_type": None, "purchase_date": None,
+           "currency": None}
     [summary] = build_holdings_summary([row])
     assert summary["sector"] is None
     assert summary["instrument_type"] is None
     assert summary["purchase_date"] is None
+    assert summary["currency"] is None
 
 
 def test_no_holdings_is_empty():
