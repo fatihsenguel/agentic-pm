@@ -110,3 +110,22 @@ def test_database_rows_read_back_as_dates():
         session.close()
     assert values, "no ledger rows to read; seed portfolio 3"
     assert all(type(d) is datetime.date for d in values), {type(d) for d in values}
+
+
+# --- fees: required, defaulted nowhere ------------------------------------------
+#
+# Fees are part of cost basis (D11). A row written without a fee is a free
+# trade with a plausible face, so the column is required and has no
+# default on the model or in the database; record_transaction already
+# requires the argument, and the schema now says the same.
+
+def test_model_fees_is_required_and_defaulted_nowhere():
+    column = Transaction.__table__.c["fees"]
+    assert column.nullable is False
+    assert column.default is None
+    assert column.server_default is None
+
+
+def test_database_fees_is_required_and_defaulted_nowhere(columns):
+    assert columns["fees"]["nullable"] is False
+    assert columns["fees"]["default"] is None
