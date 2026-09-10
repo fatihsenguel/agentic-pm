@@ -393,8 +393,7 @@ runner prints no figures that would show it.
 
 **Moot 10 September (tenth sitting).** Portfolios 1 and 2 are deleted;
 the nine assets are shared with nothing. The reseed still rewrites their
-metadata, to the same values, and `--reset` is on the deny list so it is
-the owner's to run.
+metadata, to the same values; `--reset` is run by hand.
 
 ### `test_portfolio_integration.py` still does not assert - RESOLVED 10 September (tenth sitting)
 
@@ -2433,8 +2432,8 @@ before the ledger exists, then the migration, then the derivation.
 a test first.** `tests/test_ledger.py` over Part 8 A and B (9f629a9, the
 module imported in a fixture so a missing module is 29 errors and not an
 interrupted suite); the migration adding `portfolio_id` and `amount`, both
-NOT NULL in batch mode (ace01ff; applied by the owner, `alembic *` being
-on the deny list); `quant/ledger.py`, pure, `derive_holdings(rows)`
+NOT NULL in batch mode (ace01ff; applied by hand); `quant/ledger.py`,
+pure, `derive_holdings(rows)`
 (ab66cc3) - cost basis sums `amount` and never recomputes quantity x price
 +/- fees, so a second currency enters as data, and Part 8 A and B cannot
 tell the two apart, which Part 8 C now can; a closed position is not a
@@ -2491,26 +2490,23 @@ stored timestamp to a date.
 
 ### The workbook was written while Excel held it open
 
-Recorded 10 September (tenth sitting), a process failure of the session,
-not of the code. Before writing the `Ledger` sheet's section C, the check
-reported Excel still holding `expected_values.xlsx`, and the script wrote
-anyway. No harm followed: the owner closed Excel without saving and the
-write survived. The rule for the record: a write to the workbook is
-preceded by the check, and a check that says open stops the write; the
-owner closes the workbook first, every time. openpyxl writes formulas
-without cached values, so a sheet written here is recalculated by Excel on
-opening, never here.
+Recorded 10 September (tenth sitting), a process failure, not one of the
+code. Before writing the `Ledger` sheet's section C, `lsof` reported Excel
+still holding `expected_values.xlsx`, and the script wrote anyway. No harm
+followed: Excel was closed without saving and the write survived. The
+rule: check with `lsof` before any openpyxl write, and if the workbook is
+open, close it first, every time. openpyxl writes formulas without cached
+values, so a sheet written that way is recalculated by Excel on opening.
 
-### `alembic *` and the seed's `--reset` are hard denies
+### The migration and the reseed are run by hand
 
-Recorded 10 September (tenth sitting). `.claude/settings.json` denies
-both before any prompt can appear, so "run it, I'll approve the prompt"
-cannot work: the owner runs them with `! .venv/bin/alembic upgrade head`
-and `! .venv/bin/python src/portfolio_tool/scripts/seed_portfolio.py
---reset` (the venv is not active in that shell). A migration is therefore
-committed unexecuted, and the schema tests written before it
+Recorded 10 September (tenth sitting). `alembic upgrade head` and
+`seed_portfolio.py --reset` are run from the shell by hand, never from a
+script or a test: the first changes the schema of `data/portfolio.db`, the
+second rewrites portfolio 3 and the nine assets' metadata. A migration is
+therefore committed unexecuted, and the schema tests written before it
 (`test_transactions_schema.py`, `test_no_holdings_table.py`) are what
-show it did what it says.
+show it did what it says once it has run.
 
 ### pytest warning inventory
 
