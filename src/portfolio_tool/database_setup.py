@@ -363,7 +363,10 @@ class FinancialStatement(Base):
     date = Column(Date, nullable=False, index=True)      # Periodenende (z.B. 2024-12-31)
     report_type = Column(String(32), nullable=False)     # "income", "balance_sheet", "cash_flow"
     period_type = Column(String(16), nullable=False)     # "annual", "quarterly"
-    source = Column(String(32), nullable=False, default="yfinance")
+    # The provider's name, written by the fetch from its DTO. Required and
+    # defaulted nowhere, as on daily_prices and fx_rates: a statement whose
+    # origin is unknown is a claim nobody made.
+    source = Column(String(32), nullable=False)
 
     # Golden Columns – Standardmetriken
     revenue = Column(Float, nullable=True)
@@ -451,7 +454,10 @@ class MacroData(Base):
     date = Column(Date, nullable=False)
     indicator = Column(String(50), nullable=False)  # "VIX", "TNX_10Y", etc.
     value = Column(Float, nullable=False)
-    source = Column(String(50), default="yfinance")
+    # The provider's name, written by the fetch from its DTO, defaulted
+    # nowhere. Still nullable in the database; making it required is its
+    # own decision with its own migration.
+    source = Column(String(50))
     created_at = Column(DateTime, default=None)
     
     __table_args__ = (
