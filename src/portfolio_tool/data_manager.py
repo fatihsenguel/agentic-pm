@@ -148,6 +148,10 @@ class DataManager:
                                 force_update: bool = False) -> UpdateResult:
         """Updates daily prices for an asset.
 
+        Every row stored carries the provider's name as `source` (D17, D19,
+        Part 9), as the rate fetch does; the close itself is the print the
+        provider returns, never adjusted here.
+
         Skips the provider when stored rows already cover the requested range and
         we checked within price_fetch_interval_days. When the range is covered but
         stale, fetches only from the newest stored date forward instead of
@@ -228,7 +232,8 @@ class DataManager:
                     'high': float(price_dto.high), 
                     'low': float(price_dto.low),
                     'close': float(price_dto.close), 
-                    'volume': price_dto.volume
+                    'volume': price_dto.volume,
+                    'source': self.provider.name,
                 })
 
             if not values_to_upsert:
@@ -250,7 +255,7 @@ class DataManager:
                 entities=[asset.ticker],
                 entity_type="asset",
                 date_range=(fetch_from, date.today()),
-                metadata={"provider": "yfinance"}
+                metadata={"provider": self.provider.name}
             )
             
         except Exception as e:
