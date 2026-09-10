@@ -98,6 +98,31 @@ class DailyPrice(Base):
     def __repr__(self):
         return f"<DailyPrice(asset_ticker='{self.asset.ticker}', date={self.date}, close={self.close})>"
 
+class FxRate(Base):
+    """
+    One spot rate for one day: a price source like a close (expected_values.md D17).
+
+    `rate` is units of `base` per one unit of `quote`: with base EUR and
+    quote USD, 0.85 is 0.85 euros per dollar, and a foreign holding's value
+    in the base currency is quantity x price x rate on the price's as-of
+    date (D16). Every column is required and none is defaulted: a rate with
+    no date is not a price source, and a rate with no source is a claim
+    nobody made. One row per (base, quote, date). Nothing here or in the
+    lookup (quant/fx.py) falls back to yesterday's row or to 1; a missing
+    rate raises.
+    """
+    __tablename__ = 'fx_rates'
+    id = Column(Integer, primary_key=True)
+    base = Column(String(3), nullable=False)
+    quote = Column(String(3), nullable=False)
+    date = Column(Date, nullable=False)
+    rate = Column(Float, nullable=False)
+    source = Column(String(50), nullable=False)
+    __table_args__ = (UniqueConstraint('base', 'quote', 'date', name='_fx_base_quote_date_uc'),)
+
+    def __repr__(self):
+        return f"<FxRate({self.base}/{self.quote} {self.date}: {self.rate})>"
+
 class Transaction(Base):
     """
     One ledger row: a buy or a sale of an asset in a portfolio.
