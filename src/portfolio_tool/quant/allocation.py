@@ -78,7 +78,6 @@ class Allocation:
     invested_value: float
     cash_balance: float
     total_value: float
-    denominator_label: str
     sectored_value: Optional[float] = None
 
 
@@ -184,7 +183,6 @@ def allocation_by_asset_class(
         invested_value=invested,
         cash_balance=cash,
         total_value=total,
-        denominator_label="total portfolio value (cash included, D2)",
     )
 
 
@@ -257,7 +255,6 @@ def allocation_by_sector(
         invested_value=invested,
         cash_balance=cash,
         total_value=total,
-        denominator_label="sectored value (cash excluded, unsectored shown, D3)",
         sectored_value=sectored,
     )
 
@@ -316,7 +313,6 @@ def allocation_by_position(
         invested_value=invested,
         cash_balance=cash,
         total_value=total,
-        denominator_label="total portfolio value (cash included, D2)",
     )
 
 

@@ -65,7 +65,6 @@ def allocation():
                  "tickers": list(tickers)}
                 for label, v, tickers in CLASSES
             ],
-            "denominator": "total value including cash",
             "invested_value": invested,
             "cash_balance": 15_500.00,
             "total_value": TOTAL,
@@ -79,7 +78,6 @@ def allocation():
                  "tickers": list(tickers)}
                 for label, v, tickers in SECTORS
             ],
-            "denominator": "sectored value",
             "invested_value": invested,
             "sectored_value": sectored,
             "total_value": TOTAL,
@@ -94,7 +92,6 @@ def allocation():
                  "tickers": [t]}
                 for t, v in sorted(MV.items(), key=lambda kv: -kv[1])
             ],
-            "denominator": "total value including cash",
             "invested_value": invested,
             "cash_balance": 15_500.00,
             "total_value": TOTAL,

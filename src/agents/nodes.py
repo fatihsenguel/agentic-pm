@@ -883,14 +883,12 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
         allocation_summary = {
             "by_asset_class": {
                 "lines": _lines(by_class),
-                "denominator": by_class.denominator_label,
                 "invested_value": round(by_class.invested_value, 2),
                 "cash_balance": round(by_class.cash_balance, 2),
                 "total_value": round(by_class.total_value, 2),
             },
             "by_sector": {
                 "lines": _lines(by_sector),
-                "denominator": by_sector.denominator_label,
                 "invested_value": round(by_sector.invested_value, 2),
                 "sectored_value": round(by_sector.sectored_value, 2),
                 "total_value": round(by_sector.total_value, 2),
@@ -900,7 +898,6 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
             # under IPS-4.1 and 4.2; the formatter prints it largest first.
             "by_position": {
                 "lines": _lines(by_position),
-                "denominator": by_position.denominator_label,
                 "invested_value": round(by_position.invested_value, 2),
                 "cash_balance": round(by_position.cash_balance, 2),
                 "total_value": round(by_position.total_value, 2),
@@ -2134,7 +2131,10 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
         lines.append(f"  invested {by_class['invested_value']:,.2f} "
                      f"+ cash {by_class['cash_balance']:,.2f}")
         lines.append("")
-        lines.append(f"**By asset class**, % of {by_class['denominator']}:")
+        # Each header names the denominator by the share field's own word
+        # and gives its amount from the block; no label travels in the data.
+        lines.append(f"**By asset class**, % of total portfolio value "
+                     f"{by_class['total_value']:,.2f}, cash included:")
         for line in by_class.get("lines", []):
             pct = line.get("pct_of_total")
             pct_str = f"{pct:.2%}" if pct is not None else "n/a"
@@ -2147,9 +2147,9 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
         # Three shares per line, each read from the block: of sectored value,
         # of invested value (Part 3), and of total portfolio value including
         # cash (Part 7, the IPS-4.3 figure and the answer to "what share of
-        # my portfolio"). The total is the sector block's own, so the column
-        # is labelled when the asset-class block is not rendered.
-        lines.append(f"**By sector**, % of {by_sector['denominator']}, "
+        # my portfolio"). Every amount is the sector block's own, so the
+        # columns are labelled when the asset-class block is not rendered.
+        lines.append(f"**By sector**, % of sectored value {by_sector['sectored_value']:,.2f}, "
                      f"of invested value {by_sector['invested_value']:,.2f}, "
                      f"and of total portfolio value {by_sector['total_value']:,.2f}:")
         for line in by_sector.get("lines", []):
@@ -2168,7 +2168,7 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
             lines.append("")
         # One line per holding, largest first as published; two shares, of
         # total portfolio value (the IPS-4.1 figure) and of invested value.
-        lines.append(f"**By position**, largest first, % of {by_position['denominator']} "
+        lines.append(f"**By position**, largest first, % of total portfolio value "
                      f"{by_position['total_value']:,.2f} and of invested value "
                      f"{by_position['invested_value']:,.2f}:")
         for line in by_position.get("lines", []):
