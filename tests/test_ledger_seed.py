@@ -55,7 +55,7 @@ def rows():
         )
         return [
             (
-                t.date.date().isoformat() if isinstance(t.date, datetime.datetime) else t.date.isoformat(),
+                t.date.isoformat(),
                 t.type,
                 ticker,
                 t.quantity,

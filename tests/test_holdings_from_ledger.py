@@ -53,7 +53,7 @@ SUMMARY_KEYS = {"ticker", "quantity", "average_price", "asset_class", "sector",
 
 
 def _stamp(iso):
-    return datetime.datetime.combine(datetime.date.fromisoformat(iso), datetime.time())
+    return datetime.date.fromisoformat(iso)
 
 
 @pytest.fixture(scope="module")

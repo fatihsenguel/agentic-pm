@@ -186,11 +186,10 @@ def seed(reset: bool) -> int:
             # The position as its one ledger row (Part 8 A). `amount` is data
             # (D14); here, with one currency and no fees, it is the D11
             # arithmetic.
-            purchase_date = datetime.date.fromisoformat(bought)
             session.add(Transaction(
                 portfolio_id=portfolio.id,
                 asset_id=asset.id,
-                date=datetime.datetime.combine(purchase_date, datetime.time()),
+                date=datetime.date.fromisoformat(bought),
                 type="buy",
                 quantity=qty,
                 price_per_unit=price,

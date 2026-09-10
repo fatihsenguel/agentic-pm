@@ -341,10 +341,18 @@ class PortfolioManager:
                     f"which creates the Asset with its metadata."
                 )
 
+            # A trade date is a day. A datetime is a date too, so the type
+            # is checked exactly: a caller with a timestamp has a time of
+            # day nobody asked for, and dropping it here would be silent.
+            if type(date) is not date_type:
+                raise TypeError(
+                    f"date must be a datetime.date, not {type(date).__name__}: "
+                    "a ledger row is a day (expected_values.md D13)."
+                )
             row = Transaction(
                 portfolio_id=portfolio_id,
                 asset_id=asset.id,
-                date=datetime.combine(date, time()) if not isinstance(date, datetime) else date,
+                date=date,
                 type=kind,
                 quantity=quantity,
                 price_per_unit=price,
@@ -402,7 +410,7 @@ class PortfolioManager:
             rows = [
                 {
                     "portfolio_id": t.portfolio_id,
-                    "date": t.date.date() if isinstance(t.date, datetime) else t.date,
+                    "date": t.date,
                     "type": t.type,
                     "ticker": asset.ticker,
                     "quantity": t.quantity,

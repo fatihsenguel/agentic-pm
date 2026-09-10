@@ -148,12 +148,14 @@ class Transaction(Base):
     from rows (D13). `amount` is the settled figure in the portfolio's
     currency - what was paid on a buy, what was received on a sale, fees
     included (D11) - and is data, never computed from the other columns.
+    `date` is the trade day, a Date with no default: a row without one is
+    unstorable rather than stamped with today (migration 552ab8900332).
     """
     __tablename__ = 'transactions'
     id = Column(Integer, primary_key=True)
     portfolio_id = Column(Integer, ForeignKey('portfolios.id', ondelete='CASCADE'), nullable=False, index=True)
     asset_id = Column(Integer, ForeignKey('assets.id'), nullable=False)
-    date = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    date = Column(Date, nullable=False)
     type = Column(String(10), nullable=False)
     quantity = Column(Float, nullable=False)
     price_per_unit = Column(Float, nullable=False)
