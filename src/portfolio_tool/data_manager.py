@@ -26,18 +26,17 @@ logger = logging.getLogger(__name__)
 CONFIG_PATH = "config.toml" 
 
 def load_config():
-    """Lädt die Konfigurationsdatei."""
+    """Loads config.toml. The fetch intervals are policy and live there and
+    nowhere else: a missing file raises rather than running a table of
+    intervals from code, and a missing key raises at the reader."""
     try:
         with open(CONFIG_PATH, "rb") as f:
             return tomli.load(f)
     except FileNotFoundError:
-        print(f"WARNUNG: {CONFIG_PATH} nicht gefunden. Verwende Standard-Intervalle.")
-        return {"data_fetch": {
-            "earnings_fetch_interval_days": 7,
-            "profile_fetch_interval_days": 30,
-            "shares_fetch_interval_days": 30,
-            "price_fetch_interval_days": 1
-        }}
+        raise FileNotFoundError(
+            f"{CONFIG_PATH} not found; the fetch intervals are read from it and "
+            f"have no defaults in code"
+        )
     except tomli.TOMLDecodeError:
         print(f"FEHLER: {CONFIG_PATH} ist fehlerhaft.")
         raise
@@ -187,7 +186,7 @@ class DataManager:
                 meta.earliest_price_start is not None
                 and meta.earliest_price_start <= requested_start
             )
-            interval = self.config.get("price_fetch_interval_days", 1)
+            interval = self.config["price_fetch_interval_days"]
 
             if covered and not force_update and not self._should_fetch(
                 meta.last_price_fetch_time, interval
@@ -316,7 +315,7 @@ class DataManager:
                 meta.earliest_start is not None
                 and meta.earliest_start <= requested_start
             )
-            interval = self.config.get("price_fetch_interval_days", 1)
+            interval = self.config["price_fetch_interval_days"]
 
             if covered and not force_update and not self._should_fetch(
                 meta.last_fetch_time, interval

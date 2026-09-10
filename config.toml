@@ -3,4 +3,7 @@
 earnings_fetch_interval_days = 7
 profile_fetch_interval_days  = 30
 shares_fetch_interval_days   = 30
+# Kurse und Wechselkurse: wie oft der Cache den Provider erneut fragt,
+# wenn der Zeitraum schon einmal abgefragt wurde.
+price_fetch_interval_days    = 1
 
