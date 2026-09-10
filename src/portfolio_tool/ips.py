@@ -32,6 +32,17 @@ _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 # never the shell's current directory.
 DEFAULT_IPS_PATH = os.path.join(_PROJECT_ROOT, "ips.toml")
 
+
+def resolve_ips_path(path: str) -> str:
+    """Anchor a relative policy path to the project root; pass an absolute
+    one through. A portfolio row names the committed policy as `ips.toml`
+    and a personal one by an absolute path outside the repository; neither
+    is ever read relative to the shell's current directory, the way
+    config.resolve_database_url treats the database."""
+    if os.path.isabs(path):
+        return path
+    return os.path.join(_PROJECT_ROOT, os.path.normpath(path))
+
 CLAUSE_ID = re.compile(r"^IPS-\d+\.\d+$")
 
 STATEMENT = "statement"
@@ -125,7 +136,7 @@ def normalise_topic(topic: str) -> str:
 def load_ips(path: Optional[str] = None) -> IPS:
     """Load and validate ips.toml. Raises IPSError on anything short of a
     policy every clause of which the checker can either check or cite."""
-    path = path or DEFAULT_IPS_PATH
+    path = resolve_ips_path(path or DEFAULT_IPS_PATH)
     try:
         with open(path, "rb") as f:
             raw = tomli.load(f)

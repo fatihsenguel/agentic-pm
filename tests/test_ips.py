@@ -128,6 +128,17 @@ def test_inline_good_loads(tmp_path):
     assert len(ips) == 1 and ips["IPS-4.1"].params["max"] == 0.12
 
 
+def test_a_relative_path_is_anchored_to_the_project_root(tmp_path, monkeypatch):
+    """A portfolio row names the committed policy as `ips.toml`; the loader
+    finds it from any working directory, the way the database URL is
+    anchored, and never relative to the shell. An absolute path is taken
+    as given."""
+    monkeypatch.chdir(tmp_path)
+    ips = load_ips("ips.toml")
+    assert ips.path == str(ROOT / "ips.toml")
+    assert len(ips) == 17
+
+
 def test_missing_file_is_an_error_not_an_empty_policy(tmp_path):
     with pytest.raises(IPSError, match="no default policy"):
         load_ips(str(tmp_path / "absent.toml"))
