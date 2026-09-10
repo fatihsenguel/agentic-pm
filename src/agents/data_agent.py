@@ -598,6 +598,73 @@ Always include in your responses:
                 "error": str(e)
             }
     
+    def fetch_fx_rates_tool(
+        self,
+        base_currency: str,
+        needed: Dict[str, List[str]],
+        period: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Spot rates into the portfolio's currency, on the dates asked for.
+
+        Beside the price fetch and under its rules (expected_values.md D17):
+        each foreign currency in `needed` is fetched over the same window the
+        prices were, then only the rates on the dates asked for - the held
+        tickers' as-of dates - are returned, so a year of rates stays in the
+        database (hot potato). A date with no row is absent from the result,
+        never filled from a neighbouring day or with 1; the analysis node's
+        lookup is what raises on it.
+
+        Args:
+            base_currency: the portfolio's currency (D15)
+            needed: {asset currency: [YYYY-MM-DD, ...]} - the currencies of
+                    the foreign holdings and the dates of their latest closes
+            period: the price fetch's period, so the rate window matches
+
+        Returns:
+            {"success", "base_currency", "rates": {currency: {date: rate}},
+             "fetched": {currency: status}, "warnings": [...]}; rates is
+            empty when nothing is foreign, and no call is made.
+        """
+        if not needed:
+            return {"success": True, "base_currency": base_currency, "rates": {},
+                    "fetched": {}, "warnings": None}
+
+        try:
+            from portfolio_tool.database_setup import FxRate
+
+            start_date, _, _ = self._calculate_period_dates(period)
+            fetched, warnings = {}, []
+            for quote in sorted(needed):
+                result = self.data_manager.update_fx_rates(
+                    base_currency, quote, start_date=start_date
+                )
+                fetched[quote] = (result.metadata or {}).get("status", "fetched")
+                if not result.success:
+                    warnings.append(f"{base_currency}/{quote}: {result.error_message}")
+
+            session = self.data_manager.session
+            rates: Dict[str, Dict[str, float]] = {}
+            for quote, dates in needed.items():
+                wanted = {date.fromisoformat(d) for d in dates}
+                rows = session.query(FxRate).filter(
+                    FxRate.base == base_currency,
+                    FxRate.quote == quote,
+                    FxRate.date.in_(sorted(wanted)),
+                ).all()
+                rates[quote] = {row.date.isoformat(): float(row.rate) for row in rows}
+
+            return {
+                "success": True,
+                "base_currency": base_currency,
+                "rates": rates,
+                "fetched": fetched,
+                "warnings": warnings or None,
+            }
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
     def calculate_returns_tool(
         self,
         tickers: str,

@@ -101,7 +101,10 @@ def load_portfolio_context(state: "AgentState") -> PortfolioContext:
             "Check portfolio_id is correct."
         )
     cash_balance = float(portfolio["cash_balance"])
-    
+    # The portfolio's own currency (expected_values.md D15): every figure
+    # about it is reported in this, and a foreign holding is valued into it.
+    base_currency = portfolio["currency"]
+
     # Check cache first
     cached_holdings = state.get("portfolio_holdings")
     if cached_holdings:
@@ -110,6 +113,7 @@ def load_portfolio_context(state: "AgentState") -> PortfolioContext:
             tickers=tickers,
             holdings=cached_holdings,
             cash_balance=cash_balance,
+            base_currency=base_currency,
             portfolio_id=portfolio_id,
         )
     
@@ -139,6 +143,7 @@ def load_portfolio_context(state: "AgentState") -> PortfolioContext:
         tickers=tickers,
         holdings=holdings,
         cash_balance=cash_balance,
+        base_currency=base_currency,
         portfolio_id=portfolio_id,
     )
 
@@ -198,7 +203,8 @@ def build_holdings_summary(holdings: Optional[List[Dict]]) -> List[Dict[str, Any
     none, and is published as None rather than dropped: the compliance
     checker raises on a holding whose type it does not know (IPS-4.2 counts
     directly held shares only), and it can only do that if the absence
-    reaches it.
+    reaches it. `currency`, the price's, the same way: the rate lookup
+    (quant/fx.py) raises on a holding whose currency it does not know (D16).
 
     Args:
         holdings: Rows from PortfolioManager.get_holdings, or None
@@ -220,6 +226,7 @@ def build_holdings_summary(holdings: Optional[List[Dict]]) -> List[Dict[str, Any
             "purchase_date": (
                 h["purchase_date"].isoformat() if h.get("purchase_date") else None
             ),
+            "currency": h.get("currency"),
         }
         for h in holdings
     ]
@@ -526,6 +533,36 @@ async def data_agent_node(state: AgentState) -> Dict[str, Any]:
                     "Fix the producer, not the consumer."
                 )
 
+            # Spot rates for every holding priced in a currency other than
+            # the portfolio's, on the date of that holding's latest close
+            # (expected_values.md D16, D17). Fetched beside the prices and
+            # published only for those dates; the year of rates stays in the
+            # database. A single-currency portfolio publishes an empty table
+            # and makes no call. A holding with no currency is left to the
+            # analysis node's lookup, which raises naming it.
+            as_of_dates = price_result.get("as_of_dates", {})
+            base_currency = ctx.base_currency
+            needed: Dict[str, set] = {}
+            for h in holdings or []:
+                currency = h.get("currency")
+                as_of = as_of_dates.get(h["ticker"])
+                if base_currency and currency and currency != base_currency and as_of:
+                    needed.setdefault(currency, set()).add(as_of)
+            fx_rates: Dict[str, Dict[str, float]] = {}
+            if needed:
+                print(f"  Fetching spot rates into {base_currency} for {sorted(needed)}...")
+                fx_result = agent.fetch_fx_rates_tool(
+                    base_currency,
+                    {c: sorted(d) for c, d in needed.items()},
+                    period=period,
+                )
+                if not fx_result.get("success"):
+                    raise DataCalculationError(
+                        f"Spot rate fetch failed for {sorted(needed)} into {base_currency}.\n"
+                        f"Error: {fx_result.get('error', 'Unknown error')}"
+                    )
+                fx_rates = fx_result.get("rates", {})
+
             result = {
                 "success": True,
                 "prices": price_result,
@@ -534,13 +571,15 @@ async def data_agent_node(state: AgentState) -> Dict[str, Any]:
                 "tickers": tickers,
                 "period": period,
             }
-            
+
             # Store shared data
             shared_updates = {
                 "tickers": tickers,
                 "tickers_str": tickers_str,
                 "latest_prices": price_result.get("latest_prices", {}),
-                "as_of_dates": price_result.get("as_of_dates", {}),
+                "as_of_dates": as_of_dates,
+                "base_currency": base_currency,
+                "fx_rates": fx_rates,
                 "price_window": price_result.get("window"),
                 "covariance_matrix": cov_result.get("covariance_matrix", {}),
                 "covariance_method": cov_result.get("method"),
