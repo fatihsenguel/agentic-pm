@@ -91,8 +91,12 @@ class DailyPrice(Base):
     volume = Column(Integer)
     
     market_cap = Column(BigInteger, nullable=True)
-    
-    
+
+    # Where the close came from: the provider's name, written by the fetch
+    # (expected_values.md D17, D19, Part 9). Required and defaulted nowhere,
+    # as on fx_rates: a close whose origin is unknown is a claim nobody made.
+    source = Column(String(50), nullable=False)
+
     asset = relationship('Asset', back_populates='daily_prices')
     __table_args__ = (UniqueConstraint('asset_id', 'date', name='_asset_date_uc'),)
     def __repr__(self):
