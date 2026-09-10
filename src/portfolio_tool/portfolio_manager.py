@@ -12,35 +12,36 @@ DESIGN PRINCIPLES (PRODUCTION-GRADE):
 - Fail-fast with clear error messages
 
 WHAT THIS MODULE DOES:
-✅ Create/Read/Update/Delete portfolios
-✅ Record ledger rows (buys and sales) against EXISTING assets
-✅ Read holdings, derived from the ledger (expected_values.md D13)
-✅ Query portfolio structure
+- Create/Read/Update/Delete portfolios
+- Record ledger rows (buys and sales) against EXISTING assets
+- Read holdings, derived from the ledger (expected_values.md D13)
+- Query portfolio structure
 
 WHAT THIS MODULE DOES NOT DO:
-❌ Create Asset records (use DataManager.fetch_price_data())
-❌ Fetch market data
-❌ Calculate portfolio metrics (use tools)
-❌ Make investment decisions
-❌ Guess asset properties
+- Create Asset records (use DataManager.fetch_price_data())
+- Fetch market data
+- Calculate portfolio metrics (use tools)
+- Make investment decisions
+- Guess asset properties
 
 Usage:
+    from datetime import date, datetime, timedelta
     from portfolio_tool.portfolio_manager import PortfolioManager
-    from portfolio_tool.data_manager import DataManager
-    from datetime import datetime, timedelta
-    
-    # STEP 1: Ensure asset exists (DataManager's job)
-    dm = DataManager()
+    from portfolio_tool.data_manager import get_data_manager
+
+    # STEP 1: Ensure asset exists (DataManager's job). get_data_manager()
+    # builds the manager over the session and the provider.
+    dm = get_data_manager()
     end_date = datetime.now()
     start_date = end_date - timedelta(days=365)
     dm.fetch_price_data("SPY", start_date, end_date)  # Creates Asset with REAL data
-    
+
     # STEP 2: Create portfolio and record what was bought (PortfolioManager's job)
     pm = PortfolioManager()
     portfolio_id = pm.create_portfolio("My 401k", currency="USD")
     pm.record_transaction(portfolio_id, "SPY", date(2024, 1, 15), "buy",
                           quantity=100, price=450.0, fees=0.0, amount=45_000.0)
-    
+
     # Get tickers for agents
     tickers = pm.get_portfolio_tickers(portfolio_id)  # ["SPY"]
 """
