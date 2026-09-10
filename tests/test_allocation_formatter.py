@@ -79,7 +79,8 @@ def test_no_group_by_renders_all_three_views():
 
 def _without_labels(alloc):
     for view in alloc.values():
-        view.pop("denominator", None)
+        if isinstance(view, dict):      # the views; base_currency is a string
+            view.pop("denominator", None)
     return alloc
 
 

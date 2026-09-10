@@ -97,6 +97,9 @@ def allocation():
             "total_value": TOTAL,
         },
         "as_of": {"worst_case": "2026-09-02", "stalest": "SPY", "uniform": True},
+        # The portfolio's currency, as the analysis node publishes it (D15);
+        # every amount above is in it. The checker does not read it.
+        "base_currency": "USD",
     }
 
 

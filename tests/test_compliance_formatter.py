@@ -31,11 +31,15 @@ def _policy(ips):
     return {c.id: {"type": c.type, "text": c.text} for c in ips}
 
 
-def _block(ips, findings, total, as_of, topic=None, no_clause=False):
+def _block(ips, findings, total, as_of, topic=None, no_clause=False, base_currency="USD"):
+    """The block as the node publishes it. `base_currency` is the
+    allocation's on a portfolio check and None in the two modes that
+    measure nothing, which print no amount."""
     return {"policy": _policy(ips),
             "statements": [{"clause": c.id, "text": c.text} for c in ips.statements],
             "total_value": total, "as_of": as_of,
-            "findings": [asdict(f) for f in findings], "no_clause": no_clause, "topic": topic}
+            "findings": [asdict(f) for f in findings], "no_clause": no_clause, "topic": topic,
+            "base_currency": base_currency if total is not None else None}
 
 
 def _answer(block, tickers=None, status=None):
@@ -278,3 +282,49 @@ def test_no_breach_says_so_and_still_names_every_rule():
     assert WITHIN_ROW not in answer and EXEMPT_ROW not in answer
     assert PCT.findall(answer) == []
     assert "2026-09-02" in answer                                # still priced, so dated
+
+
+# --- D18: every amount names its currency ------------------------------------
+
+def test_total_and_every_distance_in_currency_name_the_base():
+    """The total and each breach's distance in currency carry the block's
+    currency; percentages and points carry none."""
+    ips = load_ips()
+    alloc = allocation()
+    findings = check(ips, alloc, INSTRUMENT_TYPES)
+    answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"]))
+    assert f"**Total portfolio value:** {TOTAL:,.2f} USD" in answer
+    for f in findings:
+        if f.status == "breach":
+            assert f"({f.distance_value:,.2f} USD)" in answer, f
+            assert f"({f.distance_value:,.2f} USD at unchanged total)" in answer, f
+
+
+def test_currency_is_read_from_the_block_not_assumed():
+    ips = load_ips()
+    alloc = allocation()
+    findings = check(ips, alloc, INSTRUMENT_TYPES)
+    answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"], base_currency="EUR"))
+    assert f"{TOTAL:,.2f} EUR" in answer
+    assert "USD" not in answer
+
+
+def test_an_amount_with_no_currency_raises():
+    """A formatter with a fallback would print a currency nobody published."""
+    import pytest
+    ips = load_ips()
+    alloc = allocation()
+    findings = check(ips, alloc, INSTRUMENT_TYPES)
+    block = _block(ips, findings, TOTAL, alloc["as_of"])
+    block["base_currency"] = None
+    with pytest.raises(ValueError, match="base_currency"):
+        _answer(block)
+
+
+def test_modes_with_no_amount_need_no_currency():
+    """The hypothetical and the lookup print no amount, so a None currency
+    is right there, not an error."""
+    ips = load_ips()
+    assert "USD" not in _answer(_block(ips, refuse(ips, 0.15), None, None))
+    assert "USD" not in _answer(_block(ips, [], None, None,
+                                       topic={"asked": "cash", "clauses": []}, no_clause=True))

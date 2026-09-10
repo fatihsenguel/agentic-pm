@@ -29,7 +29,8 @@ def state_with(_params=None, **shared):
     return state
 
 
-BLOCK_KEYS = {"policy", "statements", "total_value", "as_of", "findings", "no_clause", "topic"}
+BLOCK_KEYS = {"policy", "statements", "total_value", "as_of", "findings", "no_clause", "topic",
+              "base_currency"}
 
 
 async def test_publishes_the_compliance_block():
@@ -44,6 +45,9 @@ async def test_publishes_the_compliance_block():
         {s["clause"] for s in block["statements"]}
     assert block["total_value"] == TOTAL
     assert block["as_of"] == allocation()["as_of"]
+    # The currency of the total and of every distance in currency: the
+    # allocation's, copied, never decided here (D15, D18).
+    assert block["base_currency"] == "USD"
     assert block["no_clause"] is False
     assert block["topic"] is None
     statuses = [f["status"] for f in block["findings"]]
@@ -66,6 +70,17 @@ async def test_refuses_without_the_analysis_output(missing):
     assert "PortfolioAnalysisAgent" in error
 
 
+async def test_an_allocation_without_a_base_currency_is_an_error():
+    """A total with no currency is not a figure; the node copies the
+    allocation's currency and refuses when there is none to copy."""
+    alloc = allocation()
+    del alloc["base_currency"]
+    out = await compliance_agent_node(state_with(allocation=alloc, holdings=holdings()))
+    assert "compliance" not in (out.get("shared_data") or {})
+    [error] = out["errors"]
+    assert "base_currency" in error
+
+
 async def test_an_unknown_instrument_type_is_an_error_not_a_verdict():
     rows = holdings()
     rows[1]["instrument_type"] = None
@@ -85,6 +100,7 @@ async def test_hypothetical_weight_refuses_without_a_portfolio():
     block = out["shared_data"]["compliance"]
     assert set(block) == BLOCK_KEYS
     assert block["total_value"] is None and block["as_of"] is None
+    assert block["base_currency"] is None   # no portfolio, so no currency to report in
     assert block["no_clause"] is False and block["topic"] is None
     assert {f["clause"]: f["status"] for f in block["findings"]} == {
         "IPS-4.1": "refused", "IPS-4.2": "refused"}
@@ -99,6 +115,7 @@ async def test_topic_the_policy_is_silent_on_sets_no_clause():
     assert block["no_clause"] is True
     assert block["topic"] == {"asked": "currency risk", "clauses": []}
     assert block["total_value"] is None and block["as_of"] is None
+    assert block["base_currency"] is None
     assert len(block["policy"]) == 17   # nothing, said over a visibly full policy
 
 
