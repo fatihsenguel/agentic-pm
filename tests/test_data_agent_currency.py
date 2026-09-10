@@ -40,7 +40,7 @@ DAY_BEFORE = "2026-09-01"
 def test_context_carries_the_portfolios_currency():
     """D15: the base currency is the portfolio's, read from its row."""
     pm = PortfolioManager()
-    portfolio_id = pm.create_portfolio("Euro Context Test", currency="EUR")
+    portfolio_id = pm.create_portfolio("Euro Context Test", currency="EUR", ips_path="ips.toml")
     pm.record_transaction(portfolio_id, "SPY", datetime.date(2024, 1, 15), "buy",
                           100, 450.0, 0.0, 41_400.0)
     try:
@@ -130,7 +130,7 @@ async def test_node_publishes_base_currency_and_an_empty_table_for_a_dollar_port
     the base, an empty table and each holding's currency, and makes no
     rate fetch. SPY's series is in the database copy, so no provider call."""
     pm = PortfolioManager()
-    portfolio_id = pm.create_portfolio("Dollar Node Test", currency="USD")
+    portfolio_id = pm.create_portfolio("Dollar Node Test", currency="USD", ips_path="ips.toml")
     pm.record_transaction(portfolio_id, "SPY", datetime.date(2024, 1, 15), "buy",
                           100, 450.0, 0.0, 45_000.0)
     try:

@@ -60,7 +60,7 @@ def _stamp(iso):
 def ko_portfolio():
     """A portfolio holding KO as Part 8 B's three ledger rows and nothing else."""
     pm = PortfolioManager()
-    portfolio_id = pm.create_portfolio("Ledger Reader Test", currency="USD")
+    portfolio_id = pm.create_portfolio("Ledger Reader Test", currency="USD", ips_path="ips.toml")
     session = get_session()
     try:
         asset = Asset(ticker="KO", name="The Coca-Cola Company", asset_class="Equity",
@@ -129,7 +129,7 @@ def test_delete_portfolio_removes_its_ledger():
     and a reused portfolio id would inherit orphaned rows as holdings -
     seen in test_strict_nodes.py the day the reader changed."""
     pm = PortfolioManager()
-    portfolio_id = pm.create_portfolio("Ledger Delete Test", currency="USD")
+    portfolio_id = pm.create_portfolio("Ledger Delete Test", currency="USD", ips_path="ips.toml")
     pm.record_transaction(portfolio_id, "SPY", datetime.date(2024, 1, 15), "buy",
                           100, 450.0, 0.0, 45_000.0)
     assert pm.get_portfolio_tickers(portfolio_id) == ["SPY"]
@@ -145,7 +145,7 @@ def test_delete_portfolio_removes_its_ledger():
 def test_empty_ledger_is_no_holdings():
     """A portfolio with no rows has no holdings; the node is what refuses it."""
     pm = PortfolioManager()
-    portfolio_id = pm.create_portfolio("Empty Ledger Test", currency="USD")
+    portfolio_id = pm.create_portfolio("Empty Ledger Test", currency="USD", ips_path="ips.toml")
     try:
         assert pm.get_holdings(portfolio_id) == []
     finally:

@@ -55,7 +55,7 @@ def test_a_row_without_a_currency_cannot_be_committed():
     session = get_session()
     _clear(session)
     try:
-        session.add(Portfolio(name=NAME, cash_balance=0.0,
+        session.add(Portfolio(name=NAME, ips_path="ips.toml", cash_balance=0.0,
                               created_at=datetime.datetime.utcnow(),
                               updated_at=datetime.datetime.utcnow()))
         with pytest.raises(IntegrityError):

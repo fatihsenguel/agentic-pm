@@ -38,7 +38,7 @@ Usage:
 
     # STEP 2: Create portfolio and record what was bought (PortfolioManager's job)
     pm = PortfolioManager()
-    portfolio_id = pm.create_portfolio("My 401k", currency="USD")
+    portfolio_id = pm.create_portfolio("My 401k", currency="USD", ips_path="ips.toml")
     pm.record_transaction(portfolio_id, "SPY", date(2024, 1, 15), "buy",
                           quantity=100, price=450.0, fees=0.0, amount=45_000.0)
 
@@ -91,6 +91,7 @@ class PortfolioManager:
         name: str, 
         *,
         currency: str,
+        ips_path: str,
         description: Optional[str] = None,
     ) -> int:
         """
@@ -101,6 +102,11 @@ class PortfolioManager:
             currency: Base currency, required (expected_values.md D15):
                 every figure reported for the portfolio is in it, so
                 nothing supplies one
+            ips_path: The policy file the portfolio is checked against,
+                required (DIRECTION.md Order 2, item 4): the committed
+                `ips.toml` by a path relative to the project root, or a
+                personal policy outside the repository by an absolute
+                path. Nothing supplies one.
             description: Optional description
             
         Returns:
@@ -115,6 +121,7 @@ class PortfolioManager:
                 name=name,
                 description=description,
                 currency=currency,
+                ips_path=ips_path,
                 cash_balance=0.0,
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow()
@@ -157,6 +164,7 @@ class PortfolioManager:
                 "name": portfolio.name,
                 "description": portfolio.description,
                 "currency": portfolio.currency,
+                "ips_path": portfolio.ips_path,
                 "cash_balance": float(portfolio.cash_balance),
                 "created_at": portfolio.created_at,
                 "updated_at": portfolio.updated_at

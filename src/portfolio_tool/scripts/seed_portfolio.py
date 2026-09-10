@@ -70,6 +70,11 @@ PORTFOLIO_DESCRIPTION = (
     "see seed_portfolio.py for why."
 )
 CASH_BALANCE = 15_500.00
+# The policy the benchmark portfolio is checked against: the committed
+# ips.toml, derived from docs/IPS.md, by a path the loader anchors to the
+# project root. A personal portfolio names its own file, outside the
+# repository, on its own row (DIRECTION.md Order 2, item 4).
+IPS_PATH = "ips.toml"
 
 # ticker, name, asset_class, sector, industry, country, instrument_type, qty, avg_price, purchase_date
 #
@@ -133,6 +138,7 @@ def seed(reset: bool) -> int:
                 name=PORTFOLIO_NAME,
                 description=PORTFOLIO_DESCRIPTION,
                 currency="USD",
+                ips_path=IPS_PATH,
                 cash_balance=CASH_BALANCE,
             )
             session.add(portfolio)

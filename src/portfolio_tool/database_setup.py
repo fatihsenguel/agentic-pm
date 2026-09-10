@@ -471,7 +471,7 @@ class Portfolio(Base):
     view of its ledger rows.
 
     Example:
-        Portfolio(name="Retirement 401k", currency="USD")
+        Portfolio(name="Retirement 401k", currency="USD", ips_path="ips.toml")
     """
     __tablename__ = 'portfolios'
     
