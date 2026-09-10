@@ -478,7 +478,10 @@ class Portfolio(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False, index=True)
     description = Column(String(500), nullable=True)
-    currency = Column(String(10), nullable=False, default="USD")
+    # No default (expected_values.md D15): every figure the system reports
+    # is in this currency, so a portfolio that names none is an error,
+    # not a dollar portfolio with a plausible face.
+    currency = Column(String(10), nullable=False)
     cash_balance = Column(Float, nullable=False, default=0.0)
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)

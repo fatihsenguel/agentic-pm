@@ -88,16 +88,19 @@ class PortfolioManager:
     def create_portfolio(
         self, 
         name: str, 
+        *,
+        currency: str,
         description: Optional[str] = None,
-        currency: str = "USD"
     ) -> int:
         """
         Create a new portfolio
         
         Args:
             name: Portfolio name (e.g., "My 401k", "Trading Account")
+            currency: Base currency, required (expected_values.md D15):
+                every figure reported for the portfolio is in it, so
+                nothing supplies one
             description: Optional description
-            currency: Base currency (default: USD)
             
         Returns:
             portfolio_id: ID of created portfolio
