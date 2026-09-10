@@ -162,13 +162,22 @@ class YFinanceProvider(DataProviderInterface):
             return None
 
     def get_daily_prices(self, ticker: str, start: date, end: date) -> List[ProviderPriceData]:
-        """Holt tägliche Kursdaten (Zeitreihe, Typ 1)."""
+        """Daily closes as traded (expected_values.md D19, Part 9).
+
+        `auto_adjust=False`, because the library's default replaces the
+        close with the dividend-adjusted close: a stored figure for a past
+        date would then be lower than the exchange's print by every later
+        dividend, and would change on each refetch after an ex-dividend
+        date. Part 9 B has the rows where that had happened. `Close` with
+        the flag off is the print, split-adjusted only; `Adj Close` is not
+        read.
+        """
         try:
             # Wrapper für diesen spezifischen Aufruf
             with self._execute_api_call(endpoint_name="history", asset_ticker=ticker):
-                print(f"   [Provider] Rufe yf.Ticker({ticker}).history(start={start}, end={end}) auf...")
+                print(f"   [Provider] Rufe yf.Ticker({ticker}).history(start={start}, end={end}, auto_adjust=False) auf...")
                 stock = yf.Ticker(ticker)
-                df = stock.history(start=start, end=end)
+                df = stock.history(start=start, end=end, auto_adjust=False)
             
             if df.empty:
                 return []
