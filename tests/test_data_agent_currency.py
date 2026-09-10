@@ -13,6 +13,12 @@ Three things, each the analysis node's input and nothing it can derive:
   - data_agent_node publishes `base_currency` and `fx_rates`, an empty
     table for a single-currency portfolio, and every holding's currency
 
+And, since DIRECTION.md Order 2 item 4, the policy file the portfolio is
+checked against travels the same road: `ips_path` from the portfolio row
+into the context and into shared_data, where the compliance node reads
+it. The policy belongs to the portfolio, so it is published beside the
+portfolio's currency and by nothing else.
+
 Runs against the copy conftest.py makes of data/portfolio.db, so the tool
 tests pass only once migrations 0f3f60d44ce0 and ee845dad889a have been
 applied. The fetch itself is replaced by a recorder: it has its own test
@@ -51,11 +57,27 @@ def test_context_carries_the_portfolios_currency():
         pm.delete_portfolio(portfolio_id)
 
 
-def test_context_without_a_portfolio_has_no_base_currency():
+def test_context_carries_the_portfolios_policy_path():
+    """The policy is the portfolio's, read from its row, whatever it names."""
+    pm = PortfolioManager()
+    portfolio_id = pm.create_portfolio("Policy Context Test", currency="USD",
+                                       ips_path="/outside/the/repository/ips.toml")
+    pm.record_transaction(portfolio_id, "SPY", datetime.date(2024, 1, 15), "buy",
+                          100, 450.0, 0.0, 45_000.0)
+    try:
+        ctx = load_portfolio_context(create_initial_state("Test", portfolio_id=portfolio_id))
+        assert ctx.ips_path == "/outside/the/repository/ips.toml"
+    finally:
+        pm.delete_portfolio(portfolio_id)
+
+
+def test_context_without_a_portfolio_has_no_base_currency_and_no_policy():
     state = create_initial_state("Analyze SPY and TLT")
     state["router_decision"] = {"intent": "data_fetch",
                                 "parameters": {"tickers": ["SPY", "TLT"]}}
-    assert load_portfolio_context(state).base_currency is None
+    ctx = load_portfolio_context(state)
+    assert ctx.base_currency is None
+    assert ctx.ips_path is None
 
 
 # --- the tool -------------------------------------------------------------
@@ -140,5 +162,8 @@ async def test_node_publishes_base_currency_and_an_empty_table_for_a_dollar_port
         assert shared["base_currency"] == "USD"
         assert shared["fx_rates"] == {}
         assert [h["currency"] for h in shared["holdings"]] == ["USD"]
+        # The policy the compliance node will load: the portfolio's, published
+        # here beside its currency and by nothing else.
+        assert shared["ips_path"] == "ips.toml"
     finally:
         pm.delete_portfolio(portfolio_id)

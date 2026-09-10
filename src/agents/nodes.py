@@ -104,6 +104,9 @@ def load_portfolio_context(state: "AgentState") -> PortfolioContext:
     # The portfolio's own currency (expected_values.md D15): every figure
     # about it is reported in this, and a foreign holding is valued into it.
     base_currency = portfolio["currency"]
+    # The policy this portfolio is checked against, from its row: the
+    # compliance node loads what is named here and nothing else.
+    ips_path = portfolio["ips_path"]
 
     # Check cache first
     cached_holdings = state.get("portfolio_holdings")
@@ -114,6 +117,7 @@ def load_portfolio_context(state: "AgentState") -> PortfolioContext:
             holdings=cached_holdings,
             cash_balance=cash_balance,
             base_currency=base_currency,
+            ips_path=ips_path,
             portfolio_id=portfolio_id,
         )
     
@@ -144,6 +148,7 @@ def load_portfolio_context(state: "AgentState") -> PortfolioContext:
         holdings=holdings,
         cash_balance=cash_balance,
         base_currency=base_currency,
+        ips_path=ips_path,
         portfolio_id=portfolio_id,
     )
 
@@ -585,6 +590,7 @@ async def data_agent_node(state: AgentState) -> Dict[str, Any]:
                 "as_of_dates": as_of_dates,
                 "base_currency": base_currency,
                 "fx_rates": fx_rates,
+                "ips_path": ctx.ips_path,
                 "price_window": price_result.get("window"),
                 "covariance_matrix": cov_result.get("covariance_matrix", {}),
                 "covariance_method": cov_result.get("method"),
