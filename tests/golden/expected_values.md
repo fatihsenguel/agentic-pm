@@ -537,19 +537,21 @@ FY2025 (D21). FY2026 is not a year. Reporting currency USD; money in
 millions except the price and the valuation range, per share.
 
 **The figures block, the checker's input.** Per company, per metric, per
-fiscal year: the value, the fiscal year's end date, the source. Here the
+fiscal year: the value, the fiscal year's end date, the date its report was
+filed (D21 counts a year by this date; the dates here are synthetic, about
+five weeks after each year end), the source. Here the
 source of every row is `expected_values.md Part 10`. For PHI-4.1 also a
 valuation range and a price, each with its as-of date.
 
 ### A. Reported figures (USD millions)
 
-| FY | Ends | Revenue | Gross profit | Operating income | Tax rate | D&A | Operating cash flow | Capex | Equity | Debt | Cash |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| FY2021 | 2021-12-31 | | | 20,000 | 0.20 | | | | 120,000 | 20,000 | 40,000 |
-| FY2022 | 2022-12-31 | | | 13,500 | 0.20 | | | | 128,000 | 22,000 | 42,000 |
-| FY2023 | 2023-12-31 | 100,000 | 55,000 | 24,000 | 0.20 | | | | 140,000 | 20,000 | 40,000 |
-| FY2024 | 2024-12-31 | 112,000 | 63,840 | 30,000 | 0.20 | | | | 150,000 | 18,000 | 43,000 |
-| FY2025 | 2025-12-31 | 125,000 | 72,500 | 36,000 | 0.20 | 16,000 | 52,780 | 22,000 | 170,000 | 16,000 | 42,000 |
+| FY | Ends | Filed | Revenue | Gross profit | Operating income | Tax rate | D&A | Operating cash flow | Capex | Equity | Debt | Cash |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FY2021 | 2021-12-31 | 2022-02-04 | | | 20,000 | 0.20 | | | | 120,000 | 20,000 | 40,000 |
+| FY2022 | 2022-12-31 | 2023-02-03 | | | 13,500 | 0.20 | | | | 128,000 | 22,000 | 42,000 |
+| FY2023 | 2023-12-31 | 2024-02-02 | 100,000 | 55,000 | 24,000 | 0.20 | | | | 140,000 | 20,000 | 40,000 |
+| FY2024 | 2024-12-31 | 2025-02-05 | 112,000 | 63,840 | 30,000 | 0.20 | | | | 150,000 | 18,000 | 43,000 |
+| FY2025 | 2025-12-31 | 2026-02-04 | 125,000 | 72,500 | 36,000 | 0.20 | 16,000 | 52,780 | 22,000 | 170,000 | 16,000 | 42,000 |
 
 A blank cell is a figure the reference does not need, not a figure the
 company did not report; section E is the missing-figure case.
