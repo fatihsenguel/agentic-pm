@@ -87,9 +87,11 @@ class ProviderFinancialStatement:
 @dataclass
 class ProviderMacroData:
     date: date
-    indicator: str 
+    indicator: str
     value: float
-    source: str = "yfinance"
+    # The provider's name, as on every other DTO: required, so a row whose
+    # origin nobody stated cannot be built.
+    source: str
 
 @dataclass
 class ProviderMacroSnapshot:

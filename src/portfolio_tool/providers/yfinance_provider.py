@@ -469,7 +469,7 @@ class YFinanceProvider(DataProviderInterface):
                     date=col_date,
                     report_type=report_type,
                     period_type=period_type,
-                    source="yfinance",
+                    source=self.name,
                     revenue=safe_float(revenue) if revenue is not None else None,
                     net_income=safe_float(net_income) if net_income is not None else None,
                     eps=safe_float(eps) if eps is not None else None,
@@ -511,7 +511,7 @@ class YFinanceProvider(DataProviderInterface):
                         date=idx.date(),
                         indicator="VIX",
                         value=value,
-                        source="yfinance"
+                        source=self.name
                     ))
             return results
         except Exception as e:
@@ -545,7 +545,7 @@ class YFinanceProvider(DataProviderInterface):
                             date=idx.date(),
                             indicator=yield_name,
                             value=value,
-                            source="yfinance"
+                            source=self.name
                         ))
                 results[yield_name] = data_points
             except Exception as e:
@@ -613,7 +613,7 @@ class YFinanceProvider(DataProviderInterface):
                         date=idx.date(),
                         indicator=indicator,
                         value=value,
-                        source="yfinance"
+                        source=self.name
                     ))
             return results
         except Exception as e:
