@@ -258,7 +258,7 @@ Always include in your responses:
         # 4. Get risk-free rate (from macro data in DB)
         rf_result = self.get_risk_free_rate_tool()
         
-        # ✅ STRICT: Fail if risk-free rate is unavailable (no hardcoded default)
+        # STRICT: Fail if risk-free rate is unavailable (no hardcoded default)
         if not rf_result.get("success"):
              return self.create_result(
                 task_id=task.task_id,
@@ -652,7 +652,7 @@ Always include in your responses:
                     ticker: f"{annualized[ticker]:.2%}"
                     for ticker in returns.columns
                 }
-                # ✅ STRICT: Always return raw floats for calculation (Bank Standard)
+                # STRICT: Always return raw floats for calculation (Bank Standard)
                 result["annualized_returns_raw"] = {
                     ticker: round(float(annualized[ticker]), 6)
                     for ticker in returns.columns
@@ -750,7 +750,7 @@ Always include in your responses:
                 "covariance_matrix": cov_matrix.to_dict(),
                 "correlation_matrix": corr_matrix.to_dict(),
                 "annualized_volatilities": {k: f"{v:.2%}" for k, v in vols.items()},
-                # ✅ STRICT: Fallback MUST provide raw floats for math (Bank Standard)
+                # STRICT: Fallback MUST provide raw floats for math (Bank Standard)
                 "annualized_volatilities_raw": vols,
                 "num_observations": len(returns),
                 "estimation_period": f"{returns.index[0].strftime('%Y-%m-%d')} to {returns.index[-1].strftime('%Y-%m-%d')}",
@@ -886,7 +886,7 @@ Always include in your responses:
                         "as_of": indicators["IRX_3M"]["date"]
                     }
             
-            # ✅ STRICT: Check config for manual override/default
+            # STRICT: Check config for manual override/default
             # Never hardcode financial assumptions in code (Bank Standard)
             default_rate = getattr(config.data, 'default_risk_free_rate', None)
             
@@ -899,7 +899,7 @@ Always include in your responses:
                     "note": "Macro data missing, using configured default"
                 }
 
-            # ✅ STRICT: Fail loudly if no data available
+            # STRICT: Fail loudly if no data available
             return {
                 "success": False,
                 "error": "Risk-free rate unavailable in DB and no default configured.",
