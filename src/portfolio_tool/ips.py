@@ -1,10 +1,15 @@
 """
-The Investment Policy Statement, loaded from ips.toml.
+The Investment Policy Statement, loaded from the ips.toml a portfolio names.
 
-Policy lives in config, not code: the numbers are typed once in ips.toml,
-derived from docs/IPS.md, and cited from each clause's `text`. This module
-only loads and validates. It computes nothing; the checker does that, over
-the allocation block PortfolioAnalysisAgent publishes.
+Policy lives in config, not code: the numbers are typed once in an
+ips.toml derived from a prose document with numbered clauses (docs/IPS.md
+for the committed, synthetic one), and cited from each clause's `text`.
+Which file is the portfolio's to say (`portfolios.ips_path`, DIRECTION.md
+Order 2, item 4): the benchmark portfolio names the committed file, a
+personal portfolio names one outside the repository, and this module takes
+the path it is given and has no default. It only loads and validates. It
+computes nothing; the checker does that, over the allocation block
+PortfolioAnalysisAgent publishes.
 
 The type vocabulary is closed. A clause with a type the checker cannot check
 fails to load, as does a checkable clause missing its parameters and a
@@ -21,16 +26,12 @@ import os
 import re
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Dict, Mapping
 
 import tomli
 
 
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# The committed policy, anchored to the repository like the database URL is:
-# never the shell's current directory.
-DEFAULT_IPS_PATH = os.path.join(_PROJECT_ROOT, "ips.toml")
 
 
 def resolve_ips_path(path: str) -> str:
@@ -133,10 +134,13 @@ def normalise_topic(topic: str) -> str:
     return " ".join(str(topic).lower().split())
 
 
-def load_ips(path: Optional[str] = None) -> IPS:
-    """Load and validate ips.toml. Raises IPSError on anything short of a
-    policy every clause of which the checker can either check or cite."""
-    path = resolve_ips_path(path or DEFAULT_IPS_PATH)
+def load_ips(path: str) -> IPS:
+    """Load and validate the ips.toml at `path`, relative to the project root
+    or absolute. Raises IPSError on anything short of a policy every clause
+    of which the checker can either check or cite. No default path: the
+    policy is the portfolio's, and a caller that names none has forgotten
+    which portfolio it is about."""
+    path = resolve_ips_path(path)
     try:
         with open(path, "rb") as f:
             raw = tomli.load(f)

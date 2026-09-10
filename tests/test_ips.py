@@ -43,7 +43,7 @@ STATEMENTS = {"IPS-1.1", "IPS-1.2", "IPS-2.1", "IPS-2.2",
 
 @pytest.fixture(scope="module")
 def ips():
-    return load_ips()
+    return load_ips("ips.toml")
 
 
 def test_document_has_seventeen_clauses():
@@ -137,6 +137,13 @@ def test_a_relative_path_is_anchored_to_the_project_root(tmp_path, monkeypatch):
     ips = load_ips("ips.toml")
     assert ips.path == str(ROOT / "ips.toml")
     assert len(ips) == 17
+
+
+def test_the_loader_takes_no_default():
+    """The policy is the portfolio's; a call that names none is a call that
+    forgot which portfolio it is about, not a call for the committed file."""
+    with pytest.raises(TypeError):
+        load_ips()
 
 
 def test_missing_file_is_an_error_not_an_empty_policy(tmp_path):

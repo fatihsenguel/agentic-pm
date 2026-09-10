@@ -66,7 +66,7 @@ def _unexplained(answer, findings):
 
 
 def test_portfolio_check_answer():
-    ips = load_ips()
+    ips = load_ips("ips.toml")
     alloc = allocation()
     findings = check(ips, alloc, INSTRUMENT_TYPES)
     answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"]))
@@ -87,7 +87,7 @@ def test_portfolio_check_answer():
 
 
 def test_hypothetical_answer():
-    ips = load_ips()
+    ips = load_ips("ips.toml")
     findings = refuse(ips, 0.15)
     answer = _answer(_block(ips, findings, None, None))
     assert "NOT PERMITTED" in answer
@@ -104,7 +104,7 @@ def test_hypothetical_answer():
 
 
 def test_lookup_with_nothing_on_the_topic():
-    ips = load_ips()
+    ips = load_ips("ips.toml")
     block = _block(ips, [], None, None,
                    topic={"asked": "currency risk", "clauses": []}, no_clause=True)
     answer = _answer(block)
@@ -115,7 +115,7 @@ def test_lookup_with_nothing_on_the_topic():
 
 
 def test_lookup_with_clauses_on_the_topic():
-    ips = load_ips()
+    ips = load_ips("ips.toml")
     on = [c.id for c in ips.clauses_on("my concentration risk")]
     block = _block(ips, [], None, None, topic={"asked": "my concentration risk", "clauses": on})
     answer = _answer(block)
@@ -140,7 +140,7 @@ def test_failed_agent_is_reported_not_formatted():
 
 
 def test_named_position_renders_its_findings_only():
-    ips = load_ips()
+    ips = load_ips("ips.toml")
     alloc = allocation()
     findings = check(ips, alloc, INSTRUMENT_TYPES)
     answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"]), tickers=["JNJ"])
@@ -164,7 +164,7 @@ def test_named_position_renders_its_findings_only():
 
 
 def test_empty_tickers_renders_every_finding():
-    ips = load_ips()
+    ips = load_ips("ips.toml")
     alloc = allocation()
     findings = check(ips, alloc, INSTRUMENT_TYPES)
     block = _block(ips, findings, TOTAL, alloc["as_of"])
@@ -178,7 +178,7 @@ def test_empty_tickers_renders_every_finding():
 def test_named_ticker_with_no_finding_says_so():
     """A known symbol that is not held: the check has no finding on it and
     the answer says exactly that - no clause, no figure, no other holding."""
-    ips = load_ips()
+    ips = load_ips("ips.toml")
     alloc = allocation()
     findings = check(ips, alloc, INSTRUMENT_TYPES)
     answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"]), tickers=["NVDA"])
@@ -208,7 +208,7 @@ EXEMPT_ROW = "exempt — a fund"
 
 
 def test_breaches_only_renders_the_breach_findings():
-    ips = load_ips()
+    ips = load_ips("ips.toml")
     alloc = allocation()
     findings = check(ips, alloc, INSTRUMENT_TYPES)
     answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"]), status="breach")
@@ -254,7 +254,7 @@ def test_breaches_on_a_named_position():
     JNJ, not AAPL: AAPL breaches both of its clauses at the 09-02 closes,
     so its rendering is the same whether status is read or ignored. JNJ is
     within IPS-4.1 and over IPS-4.2 (Part 7), so only the second may show."""
-    ips = load_ips()
+    ips = load_ips("ips.toml")
     alloc = allocation()
     findings = check(ips, alloc, INSTRUMENT_TYPES)
     answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"]),
@@ -272,7 +272,7 @@ def test_breaches_on_a_named_position():
 def test_no_breach_says_so_and_still_names_every_rule():
     """The day nothing breaches, 2.2's wording still gets the list: one line
     saying so, then the coverage, no figure."""
-    ips = load_ips()
+    ips = load_ips("ips.toml")
     alloc = allocation()
     findings = [f for f in check(ips, alloc, INSTRUMENT_TYPES) if f.status != "breach"]
     answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"]), status="breach")
@@ -289,7 +289,7 @@ def test_no_breach_says_so_and_still_names_every_rule():
 def test_total_and_every_distance_in_currency_name_the_base():
     """The total and each breach's distance in currency carry the block's
     currency; percentages and points carry none."""
-    ips = load_ips()
+    ips = load_ips("ips.toml")
     alloc = allocation()
     findings = check(ips, alloc, INSTRUMENT_TYPES)
     answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"]))
@@ -301,7 +301,7 @@ def test_total_and_every_distance_in_currency_name_the_base():
 
 
 def test_currency_is_read_from_the_block_not_assumed():
-    ips = load_ips()
+    ips = load_ips("ips.toml")
     alloc = allocation()
     findings = check(ips, alloc, INSTRUMENT_TYPES)
     answer = _answer(_block(ips, findings, TOTAL, alloc["as_of"], base_currency="EUR"))
@@ -312,7 +312,7 @@ def test_currency_is_read_from_the_block_not_assumed():
 def test_an_amount_with_no_currency_raises():
     """A formatter with a fallback would print a currency nobody published."""
     import pytest
-    ips = load_ips()
+    ips = load_ips("ips.toml")
     alloc = allocation()
     findings = check(ips, alloc, INSTRUMENT_TYPES)
     block = _block(ips, findings, TOTAL, alloc["as_of"])
@@ -324,7 +324,7 @@ def test_an_amount_with_no_currency_raises():
 def test_modes_with_no_amount_need_no_currency():
     """The hypothetical and the lookup print no amount, so a None currency
     is right there, not an error."""
-    ips = load_ips()
+    ips = load_ips("ips.toml")
     assert "USD" not in _answer(_block(ips, refuse(ips, 0.15), None, None))
     assert "USD" not in _answer(_block(ips, [], None, None,
                                        topic={"asked": "cash", "clauses": []}, no_clause=True))

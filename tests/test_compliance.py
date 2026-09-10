@@ -105,7 +105,7 @@ def allocation():
 
 @pytest.fixture(scope="module")
 def ips():
-    return load_ips()
+    return load_ips("ips.toml")
 
 
 @pytest.fixture(scope="module")

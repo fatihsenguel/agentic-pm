@@ -51,7 +51,7 @@ def test_the_router_is_never_shown_the_policy_vocabulary():
     The words stay the user's; the node matches them against ips.toml."""
     prompt = build_router_prompt("what does my policy say about cash?", include_examples=True)
     assert "POLICY TOPICS" not in prompt
-    assert ", ".join(load_ips().topics) not in prompt
+    assert ", ".join(load_ips("ips.toml").topics) not in prompt
 
 
 def test_the_output_format_carries_what_is_read():
