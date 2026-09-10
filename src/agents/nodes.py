@@ -363,6 +363,10 @@ def _decision_to_dict(decision) -> Dict[str, Any]:
         "clarification_question": decision.clarification_question,
         "pending": getattr(decision, "pending", None),
         "resolved": getattr(decision, "resolved", None),
+        # The model's sentence, or extraction's "could not resolve", or the
+        # fallback's "Router failed". The CLI prints it; it was dropped here
+        # since the dict was first written (KNOWN_GAPS).
+        "reasoning": getattr(decision, "reasoning", None),
     }
 
 
