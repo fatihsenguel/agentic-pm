@@ -136,21 +136,32 @@ the defect into extraction or derivation, or log it.**
 
 ## Order
 
+Everything through Order 5 is built and scored on synthetic artifacts: the
+benchmark portfolio, the synthetic IPS, and a synthetic philosophy,
+watchlist and ledger in the same pattern. My own policy, my own philosophy
+and my real portfolio are the vision the system is built for, and they
+enter last, each as a file that replaces a synthetic one with no code
+change. Nothing before Order 6 waits on anything personal.
+
 1. Finish the guarantee half's vocabulary: the block shapes the CLI questions
    exposed, then the router restructure (registry → extraction → derived plans
    → prompt shrink), then conversation memory as an extraction rule.
 2. Make it mine: a transaction ledger and cost-basis method; a base
    currency and FX source (my portfolio is not single-currency); a
-   price source that can be defended with real money; the personal IPS, with
-   the type vocabulary grown one clause at a time; a Part 8 reference for the
-   real portfolio before any figure about it is trusted.
-3. The philosophy document, the watchlist and the prediction ledger — my
-   artifacts, before any tool reads them. Level 4 in benchmark.md: the
-   definition of a good research answer, scored by the ledger.
+   price source that can be defended with real money; the binding that lets
+   a portfolio name its own policy file.
+3. The philosophy document, the watchlist and the prediction ledger,
+   synthetic, in the IPS pattern, before any tool reads them. Level 4 in
+   benchmark.md: the definition of a good research answer, scored by the
+   ledger.
 4. The judgement half's tools, one at a time, each with a reference: a
    valuation pipeline; the philosophy check; a filings reader; prediction
    scoring. A stronger model for the reading. Then the research agent.
 5. The conversational layer replaces the router. The pipelines do not change.
+6. Make it mine, the rest: the personal IPS, its clause types grown one at a
+   time, each with its reference first; the personal philosophy; my real
+   portfolio, its ledger and its Part 8 reference, hand-computed before any
+   figure about it is trusted. Last, when the system works.
 
 Scope creep is the live risk at every step, not under-delivery. No deadline.
 
@@ -164,4 +175,6 @@ Level 4 exist, stop and ask. Otherwise follow the handoff.
 
 *Written 8 September 2026. Revised the same day: the judgement half specified as
 my workflow, with the philosophy document, the watchlist and the
-prediction ledger as its artifacts.*
+prediction ledger as its artifacts. Revised 10 September 2026: the personal
+policy, philosophy and portfolio moved from Order 2 to a new Order 6, the
+end; everything before it is built on synthetic artifacts.*
