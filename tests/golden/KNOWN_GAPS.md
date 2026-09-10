@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 10 September 2026, tenth sitting, on branch `selection`, after the ledger (built end to end, the holdings table dropped), portfolios 1 and 2 deleted, Part 8 C with D15-D18, and the small pending items.
+Last updated 10 September 2026, eleventh session, on branch `selection`, after the FX code against Part 8 C (built end to end: two tables, the fetch, the lookup, the node, the formatters), `Transaction.date` a Date and `fees` required, the two hand-run scripts and the uncalled helper deleted, and the leaked asset row gone.
 
 ---
 
@@ -567,7 +567,7 @@ seeded - so this bites the first real portfolio, not the benchmark one.
 Fixing it means a migration to nullable plus a decision about what None means at
 every read site. Not blocking; decide before a real portfolio is loaded.
 
-### No FX conversion anywhere
+### No FX conversion anywhere - RESOLVED 10 September (eleventh session)
 
 `Asset.currency` is populated at `data_manager.py:413` and read only for display;
 `rebalance_tools.py` stamps `cfg.currency_symbol` on numbers regardless of their
@@ -593,6 +593,38 @@ migration, the analysis node multiplying by the rate, the formatters
 naming currencies. Not started; the runner should not move on portfolio 3,
 which is USD throughout. The currency split of a gain is named and not
 computed.
+
+**Built 10 September (eleventh session), in that order, each step a test
+first.** `tests/test_fx.py` over Part 8 C (bf8305c, d40d4ed), which fixed
+the shape before any code: one rate entry per holding, None when the
+currencies agree, the rate on the price's as-of date otherwise, and a
+missing one raising. The tables: `fx_rates` (base, quote, date, rate,
+source; every column required, rate meaning base units per one unit of
+quote, so Part 8 C's "EUR/USD 0.85" is euros per dollar; 210f8c8) and
+`fx_fetch_metadata`, the pair's cache record kept apart from
+`asset_fetch_metadata` because a pair has no asset (7921d2e). The fetch,
+`DataManager.update_fx_rates`, under the price cache's rules, and the
+provider method asking Yahoo for `{quote}{base}=X`: `USDEUR=X` quotes
+euros per dollar, checked live against `EURUSD=X` (3b3a2a6). The lookup,
+`quant/fx.py`, and `rates` as a required argument on the three allocation
+views and `position_pnl`, `_market_values` the one place the rate is
+applied (07fa460). The analysis node reading `base_currency` and
+`fx_rates` from `shared_data`, valuing through the rate and publishing
+the rate and its date beside the price's (116119e); DataAgent publishing
+the two keys, the holdings' currencies, and only the rates on the held
+tickers' as-of dates (441f633). The formatters naming the currency of
+every amount: the allocation total and each table's header, the P&L with
+the quote in the asset's currency beside the euro average and a
+"converted at 0.8500 EUR per USD as of" line, the compliance total and
+distances (42f3dc9, 6d86818). Part 8 C reproduces through the node:
+27,621.60 EUR, +9,216.60, +50.08%, both dates; without the rate the node
+refuses naming USD and 2026-09-02 and publishes nothing. Runner 12/12
+after the formatters, as predicted; the golden set was not run, since
+no routing changed. What stays: the rebalance tools' fixed euro sign
+below is untouched and still the wrong-currency stamp; the currency
+split of a gain is named in the answer and not computed; a euro
+portfolio exists as fixtures only, and the workbook's `Ledger` sheet C
+still has no cached values until it is opened and saved in Excel.
 
 ### Prices are reported as current with no as-of date — RESOLVED 7 September
 
@@ -2455,7 +2487,7 @@ portfolio's holdings in `test_strict_nodes.py`. Pinned by
 `test_delete_portfolio_removes_its_ledger`. Anything else that deletes a
 portfolio row by hand has the same hole.
 
-### Two run-by-hand scripts call the deleted `add_holding`
+### Two run-by-hand scripts call the deleted `add_holding` - RESOLVED 10 September (eleventh session)
 
 Recorded 10 September (tenth sitting), from the grep before be14e4b.
 `tests/check_portfolio_manager.py` and `tests/system_diagnostic.py` are
@@ -2464,20 +2496,36 @@ not collected by pytest (no `test_` prefix) and call
 amount. Both are broken as scripts. Either they record buys with dates, or
 they go; each its own decision after the grep. Logged, not chased.
 
-### `ensure_asset_exists_helper` has no caller
+**Resolved 10 September (eleventh session), by deletion (20973e8,
+ae1bbb8).** The 26-line round trip is `test_holdings_from_ledger.py`'s
+delete and tickers tests; the six diagnostics are `test_strict_nodes.py`'s
+six, one for one. Not rewritten: a hand-run copy of a check the suite runs
+drifts again the next time the manager changes, which is how both broke.
+
+### `ensure_asset_exists_helper` has no caller - RESOLVED 10 September (eleventh session)
 
 Recorded 10 September (tenth sitting). Its callers were
 `add_holding_with_auto_fetch` and `get_or_create_demo_portfolio`, both
 deleted in be14e4b. Deletion is safe; own commit after the grep.
 
-### A leaked asset row with no ticker
+**Resolved 10 September (eleventh session), 282a25d.** Deleted after the
+grep found the definition and nothing else. It was also broken as
+written: it constructed `DataManager()` without the session and provider
+the constructor takes. The module docstring's usage example still shows
+that call; its own entry under Hygiene.
+
+### A leaked asset row with no ticker - RESOLVED 10 September (eleventh session)
 
 Recorded 10 September (tenth sitting), seen while listing the assets'
 currencies. `assets` id 10 has no ticker, no name, no currency and no
 type. Nothing holds it and no ledger row names it. Delete by hand, the
 owner's, when convenient; the seed does not touch it.
 
-### `Transaction.date` defaults to now, and `fees` to zero
+**Resolved 10 September (eleventh session).** Nine child tables counted
+zero rows against id 10; I deleted it by hand with one statement. The ids
+run 1 to 14 without it.
+
+### `Transaction.date` defaults to now, and `fees` to zero - RESOLVED 10 September (eleventh session)
 
 Recorded 10 September (tenth sitting), seen with the migration. The model
 gives `date` a DateTime with a `utcnow` default and `fees` a default of
@@ -2487,6 +2535,14 @@ row written without a fee gets a free trade, each with a plausible face.
 the seed passes both. Dropping the defaults (and `date` becoming a Date)
 is a model-and-migration change, own decision. The reader converts the
 stored timestamp to a date.
+
+**Resolved 10 September (eleventh session), two migrations, schema tests
+first.** `date` is a Date with no default (76005d0, 552ab8900332):
+`record_transaction` takes a date and refuses a datetime, the reader and
+the seed test stop converting. `fees` is NOT NULL with no default
+(6d04179, 88d7b7afdce7). The nine stored timestamps were rewritten to
+their day by the migration, so no reseed; how that had to be done is
+under "The migration and the reseed are run by hand".
 
 ### The workbook was written while Excel held it open
 
@@ -2508,6 +2564,84 @@ therefore committed unexecuted, and the schema tests written before it
 (`test_transactions_schema.py`, `test_no_holdings_table.py`) are what
 show it did what it says once it has run.
 
+**10 September (eleventh session): four migrations, one command, and two
+lessons.** The four (fx_rates, fx_fetch_metadata, date, fees) were each
+committed unexecuted with their schema test, and each was applied and
+reverted on a scratch copy of the database first, through the alembic
+API with the database URL set before any import; the real file stayed
+untouched until I ran the upgrade. The one `alembic upgrade head` that
+applied them ran hours after the first migration landed: two earlier
+attempts of mine left no trace on the file, and the cause was never seen
+because I reported "done" and not what the command printed. The output
+is the record, not the word. The second lesson: alembic's
+batch rebuild copies a column whose type changes through `CAST`, and
+SQLite's `CAST(... AS DATE)` has numeric affinity, so `2024-01-15` came
+out as the number 2024 on the scratch copy. A type change on a populated
+SQLite column is add-fill-drop-rename, never `alter_column` with a
+`type_`; migration 552ab8900332 says so and does it that way.
+
+The suite copies the database, so while a migration is pending every
+test that reads the affected table fails through the suite and passes on
+the scratch copy. This session that was 55 tests at the peak, and the
+scratch run was the only instrument that could see the code was right.
+
+### `Portfolio.currency` defaults to USD
+
+Recorded 10 September (eleventh session), seen while the base currency
+became the analysis node's input. `Portfolio.currency` is NOT NULL with a
+default of `"USD"` on the model and `create_portfolio` defaults its
+argument the same way, so a portfolio created without a currency is a
+dollar portfolio with a plausible face: the fee default's shape, on the
+column every figure is now reported in (D15). Nothing trips it today;
+every caller names a currency or is portfolio 3. Dropping both defaults
+is a model-and-migration change plus a signature change, own decision.
+Logged, not chased.
+
+### `price_fetch_interval_days` is not in config.toml
+
+Recorded 10 September (eleventh session), seen while the rate fetch took
+the price fetch's cache rules. `config.toml`'s `[data_fetch]` carries the
+earnings, profile and shares intervals and not the price one;
+`DataManager` reads it with a code default of 1, and so does
+`update_fx_rates`. The value that runs is the default, which is policy in
+code. Adding the key to the file and dropping the default is one change;
+logged, not chased.
+
+### Cost basis is recomputed in the allocation layer
+
+Recorded 10 September (eleventh session), seen while the rate entered
+`_market_values`. `allocation._cost_bases` computes quantity x
+`average_price`, and `build_holdings_summary` drops the ledger's own
+`cost_basis` and `realized` on the way to `shared_data`, so the figure
+the allocation and P&L blocks carry is a recomputation of the ledger's
+figure, not the figure. They agree to the cent on every reference,
+including Part 8 C's 18,405.00, because the average is the basis divided
+by the quantity; they would differ only by rounding. Still a second
+arithmetic path for a figure the ledger already states, the shape this
+file keeps removing. The fix is the summary carrying `cost_basis` and the
+layer reading it; a formatter change follows, since the P&L prints the
+average. Own decision; logged, not chased.
+
+### `test_shrinkage.py` is collected and calls a signature that no longer exists
+
+Recorded 10 September (eleventh session), seen while looking for a stub
+provider pattern. `tests/test_shrinkage.py` has a `test_` name and one
+`test_` function, so pytest collects it; the function builds a live
+provider and calls `update_prices_for_asset(ticker, days=756)`, a
+signature that has not existed for weeks, inside a `try` that prints the
+error and continues, then reads prices from the database and prints a
+comparison. It passes on every run and checks nothing. The unguarded-file
+shape from the ninth session, one file later: a script with a test's
+name. Delete or rewrite as an assertion; own decision.
+
+### `portfolio_manager.py`'s usage example cannot run
+
+Recorded 10 September (eleventh session), seen while deleting the helper
+below it. The module docstring's usage shows `DataManager()` with no
+arguments; the constructor takes a session and a provider, and
+`get_data_manager()` is the way in. The docstring also carries the
+check-mark and cross emoji I strip as I go. Both a docstring edit; logged.
+
 ### pytest warning inventory
 
 Recorded 7 September (third sitting), from a green run of 132. Twenty
@@ -2528,6 +2662,11 @@ during the run, so the inventory's number is a floor.
 And the suite runs in about three seconds, not fourteen: the fourteen were
 uncached provider calls and the deleted file's two model calls, measured
 by running the suite at HEAD with the reader change set aside.
+
+**10 September (eleventh session).** Twenty-three at 572 tests, in about
+four seconds: two more SQLAlchemy `.get()` warnings from the one live
+`data_agent_node` run in `test_data_agent_currency.py`, the same floor
+that moves with the price cache.
 
 ### `.gitignore` is corrupted
 
