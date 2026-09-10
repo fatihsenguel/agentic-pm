@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 10 September 2026, twelfth session, on branch `selection`, after the price source (Part 9 with D19 and D20; the provider fetching closes as traded; `daily_prices.source`, migrated; the nine holdings' history refetched by hand), the six small items from the eleventh session's handoff, and the sweep below.
+Last updated 10 September 2026, thirteenth session, on branch `selection`, after the personal IPS's binding (the policy a portfolio is checked against is named on its row, `portfolios.ips_path`, migrated; the compliance node loads that file in every mode; the loader has no default) and the growth rule for the type vocabulary, entry under Directions.
 
 ---
 
@@ -3055,6 +3055,108 @@ the current prompt (a no-op today, the Sonnet config carrying the Haiku
 id); a hybrid with extraction first and the model on a miss (two readers,
 two failure directions, the answer depending on phrasing).
 
+
+### The personal IPS: bound to the portfolio, grown one clause at a time
+
+**Built 10 September (thirteenth session), the binding; the personal
+document and the real portfolio are mine and come later.** DIRECTION.md
+Order 2, item 4. Decided before any code, in this order of questions.
+
+**Where the file lives so that it never enters the repository and the
+code still finds it: on the portfolio's row.** The policy belongs to the
+portfolio, not to the process. My real portfolio will be a second row in
+the same untracked database beside portfolio 3, and the benchmark is
+scored against docs/IPS.md: case 3.4 passes because that policy has no
+clause on currency, so a personal policy with one must never be the
+policy portfolio 3 is checked against. `portfolios.ips_path`, required,
+defaulted nowhere, like `currency` (adec72f, 76e3da6, migration
+7b1c4e2d9a05, applied by me from the shell and the output pasted: one
+upgrade line, the column NOT NULL, row 3 reading `ips.toml`). The
+migration fills row 3 by id and no other row, so a portfolio it does not
+know is refused by the NOT NULL step rather than handed the committed
+policy. `create_portfolio` requires the path and the seed writes
+`ips.toml` (f64cb30). A relative path is anchored to the project root
+the way the database URL is (f3e7a2a), so the committed file is found
+from any directory; a personal one is absolute and outside the tree.
+The loader takes the path it is given and has no default (ba18e86): a
+call naming none has forgotten which portfolio it is about.
+
+Rejected: an environment variable in `.env` naming the file (a switch is
+per process while a policy is per portfolio; with it set the runner
+would check portfolio 3 against my policy and 3.4 would fail, and which
+policy ran would be invisible in the data); a fixed path under my home
+tried first with the committed file as fallback (a default with a
+plausible face); an ignored file inside the working tree (a `.gitignore`
+edit, or an exclude entry a clone does not have); a mapping in
+`config.toml` (a committed file carrying a path on my machine).
+
+**Who resolves the path: the compliance node, from the row, in every
+mode (9ba662e).** My first shape had DataAgent publish it to
+`shared_data` beside `base_currency` (c18054c), and that was wrong on
+inspection of the plan table: the hypothetical and lookup modes plan
+ComplianceAgent alone, so in 3.1 and 3.4 DataAgent never runs and the
+path would have been absent exactly when a policy question is asked
+without a check of the portfolio. Taken back out (352104c). The node
+now reads `ips_path` from the portfolio the state names through
+`load_portfolio_policy_path`, separate from `load_portfolio_context`
+because a policy question needs no holdings and an empty portfolio still
+has a policy. No portfolio is no policy: a refusal, never the committed
+file. The node's "reads only shared_data" rule narrowed to what it was
+protecting, no second arithmetic path; its tests name portfolio 3 on the
+suite's copy and are no longer database-free. Rejected: DataAgent in
+every compliance plan (prices fetched for a policy question, two golden
+plan lines move); the row in the two thin modes and shared_data in the
+full one (two sources, the second a fallback); the committed policy when
+no portfolio is set; resolving the row at the graph entry into the state
+(a new seam for one value, maybe right when the router goes).
+
+**What the system says when a clause has a type the checker does not
+know: the whole file refuses to load, as before, now saying what to do
+(90fd67c).** The message names the clause, the type, the known types,
+and the growth rule: a rule the checker cannot check yet is written as a
+`statement` until its checker and its reference exist. A half-loaded
+policy is the repair shape; a refusal is honest, and the cost, that my
+file cannot load until every unknown type is downgraded to a statement,
+is the point. Rejected: a loaded clause with status `unchecked` (a
+clause nobody validates, a vocabulary value with no consumer).
+
+**How the vocabulary grows: one clause, one decision, in this order.**
+The personal document is written in docs/IPS.md's shape, numbered
+clauses with ids, and its TOML derived. Every clause whose type exists
+loads and is checked; every rule the checker cannot check yet is a
+`statement`, cited by id and listed by every full check as a statement
+outside the check, so the policy is visibly incomplete rather than
+silently so. When a clause is to become checkable: a Part 7-style
+reference for that one clause on my real portfolio, computed by hand in
+the private directory; then the type in the loader's vocabulary with its
+parameters; then the checker's arm with the test over that reference;
+then the TOML entry's type flips from statement to the new type. The
+loader's docstring carries the same order.
+
+**Where the Part 8 reference for my real portfolio lives: the same
+private directory, outside the repository.** The document, the derived
+TOML, a hand-computed expected-values file for my rows and rates, and
+the statements the figures come from. Nothing in the suite reads it, so
+a fresh clone stays green. What the repository will hold is the check,
+not the data: when the portfolio enters, a committed script that derives
+holdings from a portfolio's ledger rows and compares them to a
+hand-typed reference file at a path I give it, run by hand, the same
+shape as pending item 24. Not built until the portfolio enters, last.
+
+**Seen in the CLI on portfolio 3 after the binding.** The compliance
+agent's line names the policy it loaded, the resolved absolute path of
+the committed file; the lookup plans ComplianceAgent alone and answers
+"contains nothing"; the full check plans all three agents and reports
+seven breaches against Part 7's eight, the cents pair on the other side
+of its limit at today's closes, as Part 7 says it will. Golden set and
+runner not run: no routing, no prompt and no answer text changed.
+
+**What remains of item 4, all mine, in order.** The private directory
+and the personal document in it; its TOML, loaded once by hand to see
+that every type is known or a statement; the real portfolio's ledger
+rows from my statements and the Part 8 reference for them, hand-computed
+first; then the row, with its absolute path, and the check script. My
+real portfolio's data stays out of the repository and enters last.
 
 ### Direction for `quant/`: one implementation per formula
 
