@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 10 September 2026, eleventh session, on branch `selection`, after the FX code against Part 8 C (built end to end: two tables, the fetch, the lookup, the node, the formatters), `Transaction.date` a Date and `fees` required, the two hand-run scripts and the uncalled helper deleted, and the leaked asset row gone.
+Last updated 10 September 2026, twelfth session, on branch `selection`, after the price source (Part 9 with D19 and D20; the provider fetching closes as traded; `daily_prices.source`, migrated; the nine holdings' history refetched by hand), the six small items from the eleventh session's handoff, and the sweep below.
 
 ---
 
@@ -427,6 +427,61 @@ calls and its two return-value warnings. The demo helper it alone called,
 The recurring failure shape in this codebase: repair instead of raise, so a wrong
 answer arrives with a plausible face instead of an error. Same family as bugs 5,
 6 and 9 from the recovery session.
+
+
+### The stored closes were dividend-adjusted, and changed after the fact - RESOLVED 10 September (twelfth session)
+
+Found 10 September (twelfth session) while designing DIRECTION.md Order 2
+item 3, before any code. `YFinanceProvider.get_daily_prices` called the
+library's `history()` with its default, and the default replaces the close
+with the dividend-adjusted close: every stored figure for a date before a
+holding's latest ex-dividend date was lower than the exchange's print by
+the product of the later dividend factors, and changed on each refetch
+after a new ex-dividend date. Measured against the committed 252-close
+series (`benchmark_closes.csv`, as-traded prints): 1,629 of 2,268 cells
+disagreed, every holding except GLD, which pays no dividend, up to 4.4% on
+TLT; 1,124 of the 1,579 rows dated 2026 were not on a cent. Part 1's nine
+09-02 closes still agreed only because 09-02 lay after each holding's
+latest ex-dividend date at the time they were fetched. The valuation on the
+as-of date was therefore right by coincidence, and the volatility ran on a
+series that was not the reference's.
+
+**What "defended with real money" came to mean.** expected_values.md Part 9
+(608d5be), decisions D19 and D20: a close is the exchange's official
+closing price as traded, split-adjusted and nothing else, the figure a
+broker statement values the position at; when two sources disagree the
+exchange's print wins, nothing averages, and the reference does not move.
+The second source is the listing exchange's own historical quotes, fetched
+by the owner from the shell on 2026-09-10, 99 rows: all nine 09-02 closes
+agree with Part 1 to the cent, all 90 rows inside the committed series
+agree with it, and the two falsifier rows before a dividend (JNJ
+2026-08-21, TLT 2026-08-28) showed the database wrong by exactly one
+dividend factor. A check on the most recent date alone passes in both
+states, which is why the falsifier rows exist. The workbook's `Prices`
+sheet carries the same rows as formulas (57a3966), unopened in Excel.
+
+**Built, one commit per layer, test first.** `tests/test_price_source.py`
+(d79a1e0): Part 9's figures against the csv, and a stand-in for the
+library whose `history` does what the documented default does, so the test
+failed on the provider that took the default and passed on the one flag
+(`auto_adjust=False`, 314b707). Then `daily_prices.source`, the mirror of
+`fx_rates.source`: schema test (9d3cb6f), model and migration 2ee0c9249a9f
+(736d8fa; applied and reverted on a scratch copy first, the existing rows
+filled with the literal `yfinance`), the fetch writing `provider.name`
+instead of a literal (614c5fb, b3f245a). Then, by the owner's hand and
+with the output pasted: the migration applied, the nine holdings' price
+rows and their fetch records deleted, one CLI question refetching 771 rows
+per holding as traded. After it the database reproduces every one of the
+2,268 committed cells, every row is a cent print, and the two falsifier
+rows read the exchange's figures. Suite 595 after this item.
+
+**What stays.** The rate fetch and the VIX fetch are untouched: nothing to
+adjust. Whether the covariance should run on a total-return series built
+from prints and the dividends table is a Part 4 decision (D5 to D8 are
+silent; Part 4 was computed on prints; entry under Directions). The answer
+text does not name the source (entry under Hygiene). The four leftover
+tickers still hold adjusted rows (entry under Hygiene). A held instrument
+that splits gets its Part 9 row before the code is trusted on it.
 
 ### `RouterDecision.validate_execution_order` repairs instead of raising - RESOLVED 8 September (eighth sitting)
 
@@ -2585,7 +2640,24 @@ test that reads the affected table fails through the suite and passes on
 the scratch copy. This session that was 55 tests at the peak, and the
 scratch run was the only instrument that could see the code was right.
 
-### `Portfolio.currency` defaults to USD
+**10 September (twelfth session): one migration, one refetch, both by
+hand, both pasted.** Migration 2ee0c9249a9f (`daily_prices.source`) was
+committed unexecuted with its schema test, applied and reverted on a
+scratch copy through the alembic API with the database URL set before any
+import, and then run by the owner; the pasted output showed the one
+`Running upgrade` line and the schema read back NOT NULL. The refetch was
+a second by-hand step of the same class: a delete of the nine holdings'
+price rows and their fetch records, then one CLI question. The first CLI
+run happened before the delete and fetched nothing, which the output
+showed at once (no provider line, 204 ms) - the cache doing its job, and
+the reason the order matters. My predicted row count after the delete was
+8,760; the file said 9,140, the four leftover tickers added up by hand.
+Seven tests were red through the suite between the model commit and the
+owner's upgrade; the migrated scratch copy ran the whole suite green
+meanwhile, run with `--noconftest` and the database URL in the
+environment.
+
+### `Portfolio.currency` defaults to USD - RESOLVED 10 September (twelfth session)
 
 Recorded 10 September (eleventh session), seen while the base currency
 became the analysis node's input. `Portfolio.currency` is NOT NULL with a
@@ -2597,7 +2669,16 @@ every caller names a currency or is portfolio 3. Dropping both defaults
 is a model-and-migration change plus a signature change, own decision.
 Logged, not chased.
 
-### `price_fetch_interval_days` is not in config.toml
+**Resolved 10 September (twelfth session), ba73fa1 and ee9659d.** No
+migration: the database column was NOT NULL with no server default all
+along, and the dollars came from the model's Python-side default and the
+manager's argument default. Both gone; `create_portfolio(name, *,
+currency, description=None)`; the eight test call sites that omitted it
+name USD. The test saw three of four red, not the two I predicted: a row
+committed through the model without a currency also passed, because the
+model filled the USD in before the database saw it.
+
+### `price_fetch_interval_days` is not in config.toml - RESOLVED 10 September (twelfth session)
 
 Recorded 10 September (eleventh session), seen while the rate fetch took
 the price fetch's cache rules. `config.toml`'s `[data_fetch]` carries the
@@ -2607,7 +2688,13 @@ earnings, profile and shares intervals and not the price one;
 code. Adding the key to the file and dropping the default is one change;
 logged, not chased.
 
-### Cost basis is recomputed in the allocation layer
+**Resolved 10 September (twelfth session), 4fe83cb and a12e4ed.** The
+key is in `config.toml` beside the three intervals; both readers index it
+and a missing key raises; the table of intervals that ran when the file
+was missing is gone, and a missing file raises naming the path. Three
+tests, three red first.
+
+### Cost basis is recomputed in the allocation layer - RESOLVED 10 September (twelfth session)
 
 Recorded 10 September (eleventh session), seen while the rate entered
 `_market_values`. `allocation._cost_bases` computes quantity x
@@ -2622,7 +2709,22 @@ file keeps removing. The fix is the summary carrying `cost_basis` and the
 layer reading it; a formatter change follows, since the P&L prints the
 average. Own decision; logged, not chased.
 
-### `test_shrinkage.py` is collected and calls a signature that no longer exists
+**Resolved 10 September (twelfth session), 7365f6a and 244645d.** The
+summary carries `cost_basis`, the ledger's figure; `_cost_bases` reads it
+and multiplies nothing; a holding without it raises on the key. The
+falsifier is a contract test, not a reference one: a holding stating a
+basis that is not quantity times average (10 at 5.00, basis 60.00) reaches
+all three views and the P&L as 60.00. Part 8 B cannot tell (250 x 80.01 is
+exactly 20,002.50). Thirty hand-built holdings in six test files gained
+the key at the product of their own figures, so no reference moved; the
+P&L formatter prints the same words. `realized` is still not carried
+(pending item 18). One lesson from the edit itself: a regex pass over two
+fixture files inserted the key twice and truncated the averages, and the
+suite stayed green because Python accepted both; I read the lines and
+repaired them in place. A check that passes on a mangled fixture is the
+false-pass shape applied to my own edit.
+
+### `test_shrinkage.py` is collected and calls a signature that no longer exists - RESOLVED 10 September (twelfth session)
 
 Recorded 10 September (eleventh session), seen while looking for a stub
 provider pattern. `tests/test_shrinkage.py` has a `test_` name and one
@@ -2634,13 +2736,63 @@ comparison. It passes on every run and checks nothing. The unguarded-file
 shape from the ninth session, one file later: a script with a test's
 name. Delete or rewrite as an assertion; own decision.
 
-### `portfolio_manager.py`'s usage example cannot run
+**Resolved 10 September (twelfth session), by deletion (5849c7d).**
+Nothing referenced it; the covariance estimator has its asserting test in
+`test_portfolio_volatility.py`. Not rewritten: the question it asked has
+no reference to assert against.
+
+### `portfolio_manager.py`'s usage example cannot run - RESOLVED 10 September (twelfth session)
 
 Recorded 10 September (eleventh session), seen while deleting the helper
 below it. The module docstring's usage shows `DataManager()` with no
 arguments; the constructor takes a session and a provider, and
 `get_data_manager()` is the way in. The docstring also carries the
 check-mark and cross emoji I strip as I go. Both a docstring edit; logged.
+
+**Resolved 10 September (twelfth session), 7a3c054.** The example goes
+through `get_data_manager()`, imports what it uses, and the two lists are
+plain dashes. Docstring only.
+
+### Two more `source` columns default to `yfinance`
+
+Recorded 10 September (twelfth session), seen while adding
+`daily_prices.source`. `FinancialStatement.source` (NOT NULL, default
+`yfinance`) and `MacroData.source` (nullable, default `yfinance`) in
+`database_setup.py` carry the default the price and rate tables now
+refuse: a row written without a source is stamped with the one provider
+the system has ever had. Neither table is on the benchmark's path; both
+are the repair shape. Dropping the defaults is a model change each, with a
+migration only if the database carries a server default (it did not for
+`portfolios.currency`; check before assuming). Logged, not chased.
+
+### Four leftover tickers hold adjusted rows that nothing reads
+
+Recorded 10 September (twelfth session). AMZN (6,549 rows), PLTR (1,328),
+SAP (513) and VWO (750) are assets from the deleted portfolios 1 and 2;
+no ledger row names them, and their price rows were fetched under the old
+default, so most are dividend-adjusted and none carries a convention the
+table now claims (`source` says `yfinance` on them too). They were left
+out of the refetch on purpose: nothing reads them and a refetch is nine
+provider calls per question already. Delete the four assets and their
+rows by hand when convenient, the owner's, the way the leaked row 10 went;
+the price fetch test creates and removes its own asset and does not touch
+them.
+
+### The answer text does not name the price source
+
+Recorded 10 September (twelfth session). A close now carries its source
+on the row, and the as-of line in every answer says the date and not the
+provider. Part 3b asks for the data age and for the source of a policy
+claim, not for the source of a price, so no case is failing; a "priced as
+of 2026-09-02, yfinance" line is a rendering decision with the runner as
+the loop that sees the text. Logged, not built.
+
+### The CLI reads `exit` as a question
+
+Recorded 10 September (twelfth session), from the owner's run. The quit
+command is `:q`; `exit` went to the router, which refused it as an order
+to sell, one model call. Harmless and easy to hit. A word in the banner or
+a second alias is a CLI change; logged.
 
 ### pytest warning inventory
 
@@ -2667,6 +2819,10 @@ by running the suite at HEAD with the reader change set aside.
 four seconds: two more SQLAlchemy `.get()` warnings from the one live
 `data_agent_node` run in `test_data_agent_currency.py`, the same floor
 that moves with the price cache.
+
+**10 September (twelfth session).** Twenty-six at 606 tests, in about
+three seconds: three more SQLAlchemy `.get()` warnings from the price
+fetch test's own fetches over the database copy, the same floor.
 
 ### `.gitignore` is corrupted
 
@@ -2918,6 +3074,22 @@ test.
 package (D7, roadmap item 4). Its check is a pytest fixture over the 252 closes
 extracted from `expected_values.xlsx` and committed, not read from
 `data/portfolio.db`, which is untracked and would not survive a fresh clone.
+
+### Volatility over as-traded closes or over a total-return series?
+
+**Deferred, with the reference on the as-traded side. Recorded 10
+September (twelfth session).** D19 fixed the stored close as the exchange's
+print, and Part 4's 252 closes are prints, so the 10.2936% is a volatility
+of as-traded closes: an ex-dividend drop counts as a negative daily return
+(about 0.5% on JNJ each quarter, about 0.3% on TLT each month). Before
+this session the live figure ran on the library's dividend-adjusted series
+and the reference did not, which is one of the reasons the two never met
+and nobody could say by how much. Now they run on the same series. Whether
+the covariance *should* see dividends as returns is a D5-to-D8 question:
+if it should not, the series is built from `close` and the dividends
+table, deterministic and referenceable, never cached from a provider whose
+adjusted figure changes with each later dividend. Decide with a recomputed
+Part 4 beside the present one, not by flipping the provider flag back.
 
 ### Spans versus counts: is a window calendar days or closes?
 
