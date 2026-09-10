@@ -123,6 +123,23 @@ class FxRate(Base):
     def __repr__(self):
         return f"<FxRate({self.base}/{self.quote} {self.date}: {self.rate})>"
 
+class FxFetchMetadata(Base):
+    """
+    The rate fetch's cache record, one row per (base, quote).
+
+    The same two facts asset_fetch_metadata keeps for prices, kept apart
+    because a pair has no asset. Coverage is "how far back have we asked
+    the provider" (`earliest_start`), never "do we hold a row on that
+    date", which fails on every weekend and holiday; `last_fetch_time` is
+    for the interval rule. Both nullable: the row is created before the
+    first fetch and filled by it.
+    """
+    __tablename__ = 'fx_fetch_metadata'
+    base = Column(String(3), primary_key=True)
+    quote = Column(String(3), primary_key=True)
+    last_fetch_time = Column(DateTime, nullable=True)
+    earliest_start = Column(Date, nullable=True)
+
 class Transaction(Base):
     """
     One ledger row: a buy or a sale of an asset in a portfolio.
