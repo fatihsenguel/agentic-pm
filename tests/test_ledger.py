@@ -110,6 +110,12 @@ PART_8_B = [
 CENT = 0.005
 
 
+def _same_currency(holdings):
+    """Part 8 A and B are single-currency: no holding needs a rate, and
+    saying so per holding is what quant/fx.spot_rates would say (D17)."""
+    return {h["ticker"]: None for h in holdings}
+
+
 # ---------------------------------------------------------------------------
 # Part 8 A - the invariant: portfolio 3's ledger reproduces Part 1
 # ---------------------------------------------------------------------------
@@ -146,7 +152,7 @@ def test_derived_holding_is_what_position_pnl_reads(ledger, ticker):
     reproduces Part 1's P&L columns at the 09-02 closes. Pins the shape:
     the ledger's output is a holding as the rest of the code knows one."""
     holdings = [asdict(h) for h in ledger.derive_holdings(PART_8_A).values()]
-    p = position_pnl(holdings, PRICES_09_02)[ticker]
+    p = position_pnl(holdings, PRICES_09_02, _same_currency(holdings))[ticker]
     value, pnl_abs, pnl_pct = PART_1_PNL[ticker]
     assert p.market_value == pytest.approx(value, abs=CENT)
     assert p.pnl_abs == pytest.approx(pnl_abs, abs=CENT)
@@ -186,7 +192,7 @@ def test_part_8_b_average_unchanged_by_sale(ledger):
 def test_part_8_b_pnl_at_88(ledger):
     """Part 8 B at a price of 88.00: +1,997.50, +9.99%, price return per D4."""
     holdings = [asdict(h) for h in ledger.derive_holdings(PART_8_B).values()]
-    p = position_pnl(holdings, {"KO": 88.00})["KO"]
+    p = position_pnl(holdings, {"KO": 88.00}, _same_currency(holdings))["KO"]
     assert p.market_value == pytest.approx(22_000.00, abs=CENT)
     assert p.pnl_abs == pytest.approx(1_997.50, abs=CENT)
     assert p.pnl_pct == pytest.approx(0.099863, abs=0.0000005)

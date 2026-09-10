@@ -31,6 +31,10 @@ PRICES = {
     "NEE": 83.10, "TLT": 81.95, "GLD": 402.78, "VNQ": 95.78,
 }
 
+# Portfolio 3 is USD throughout: no holding needs a rate, and saying so per
+# holding is what quant/fx.spot_rates would say (D17). Not a default.
+RATES = {h["ticker"]: None for h in HOLDINGS}
+
 # expected_values.md Part 1: cost basis, market value, P&L abs, P&L %.
 PART_1 = {
     "SPY":  (50000.00, 76516.00,  26516.00,  0.5303),
@@ -48,7 +52,7 @@ PART_1 = {
 @pytest.mark.parametrize("ticker", list(PART_1))
 def test_part_1_row(ticker):
     cost, value, pnl_abs, pnl_pct = PART_1[ticker]
-    p = position_pnl(HOLDINGS, PRICES)[ticker]
+    p = position_pnl(HOLDINGS, PRICES, RATES)[ticker]
     assert p.cost_basis == pytest.approx(cost, abs=0.005)
     assert p.market_value == pytest.approx(value, abs=0.005)
     assert p.pnl_abs == pytest.approx(pnl_abs, abs=0.005)
@@ -60,7 +64,7 @@ def test_part_1_row(ticker):
 
 def test_part_1_total():
     """Total invested 284,500.00 -> 394,700.50, +110,200.50, +38.73%."""
-    pnl = position_pnl(HOLDINGS, PRICES).values()
+    pnl = position_pnl(HOLDINGS, PRICES, RATES).values()
     cost = sum(p.cost_basis for p in pnl)
     value = sum(p.market_value for p in pnl)
     assert cost == pytest.approx(284500.00, abs=0.005)
@@ -71,7 +75,7 @@ def test_part_1_total():
 
 def test_jpm_carries_the_purchase_date():
     """Benchmark 1.2 passes only when the purchase date is named."""
-    p = position_pnl(HOLDINGS, PRICES)["JPM"]
+    p = position_pnl(HOLDINGS, PRICES, RATES)["JPM"]
     assert p.purchase_date == "2024-07-15"
     assert p.quantity == 100
     assert p.average_price == 200.0
@@ -79,16 +83,16 @@ def test_jpm_carries_the_purchase_date():
 
 
 def test_every_position_is_computed():
-    assert set(position_pnl(HOLDINGS, PRICES)) == set(PART_1)
+    assert set(position_pnl(HOLDINGS, PRICES, RATES)) == set(PART_1)
 
 
 def test_missing_price_raises():
     partial = {k: v for k, v in PRICES.items() if k != "JPM"}
     with pytest.raises(AllocationError):
-        position_pnl(HOLDINGS, partial)
+        position_pnl(HOLDINGS, partial, RATES)
 
 
 def test_zero_cost_basis_raises():
     free = [{"ticker": "SPY", "quantity": 100, "average_price": 0.0}]
     with pytest.raises(AllocationError):
-        position_pnl(free, PRICES)
+        position_pnl(free, PRICES, {"SPY": None})

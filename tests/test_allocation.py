@@ -38,6 +38,10 @@ PRICES = {
 
 CASH = 15500.0
 
+# Portfolio 3 is USD throughout: no holding needs a rate, and saying so per
+# holding is what quant/fx.spot_rates would say (D17). Not a default.
+RATES = {h["ticker"]: None for h in HOLDINGS}
+
 
 def _by_label(allocation):
     return {line.label: line for line in allocation.lines}
@@ -47,7 +51,7 @@ def _by_label(allocation):
 
 def test_asset_class_denominators():
     """Invested 394,700.50 plus cash 15,500 gives total 410,200.50."""
-    a = allocation_by_asset_class(HOLDINGS, PRICES, CASH)
+    a = allocation_by_asset_class(HOLDINGS, PRICES, CASH, RATES)
     assert a.invested_value == pytest.approx(394700.50, abs=0.01)
     assert a.cash_balance == pytest.approx(15500.00, abs=0.01)
     assert a.total_value == pytest.approx(410200.50, abs=0.01)
@@ -55,7 +59,7 @@ def test_asset_class_denominators():
 
 def test_asset_class_market_values():
     """Part 2, market value column."""
-    lines = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH))
+    lines = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH, RATES))
     assert lines["Equity"].market_value == pytest.approx(284713.50, abs=0.01)
     assert lines["Fixed Income"].market_value == pytest.approx(40975.00, abs=0.01)
     assert lines["Commodity"].market_value == pytest.approx(40278.00, abs=0.01)
@@ -65,12 +69,12 @@ def test_asset_class_market_values():
 
 def test_asset_class_cost_basis():
     """Part 2, cost basis column. Totals 300,000 flat including cash."""
-    lines = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH))
+    lines = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH, RATES))
     assert lines["Equity"].cost_basis == pytest.approx(187500.00, abs=0.01)
     assert lines["Fixed Income"].cost_basis == pytest.approx(45000.00, abs=0.01)
     assert lines["Commodity"].cost_basis == pytest.approx(25000.00, abs=0.01)
     assert lines["Real Estate"].cost_basis == pytest.approx(27000.00, abs=0.01)
-    total = sum(l.cost_basis for l in allocation_by_asset_class(HOLDINGS, PRICES, CASH).lines)
+    total = sum(l.cost_basis for l in allocation_by_asset_class(HOLDINGS, PRICES, CASH, RATES).lines)
     assert total == pytest.approx(300000.00, abs=0.01)
 
 
@@ -78,7 +82,7 @@ def test_asset_class_percentages_are_the_answer_to_1_1():
     """
     Part 2, market value / % of total. Per D1 and D2 this IS case 1.1's answer.
     """
-    lines = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH))
+    lines = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH, RATES))
     assert lines["Equity"].pct_of_total == pytest.approx(0.6941, abs=0.00005)
     assert lines["Fixed Income"].pct_of_total == pytest.approx(0.0999, abs=0.00005)
     assert lines["Commodity"].pct_of_total == pytest.approx(0.0982, abs=0.00005)
@@ -87,13 +91,13 @@ def test_asset_class_percentages_are_the_answer_to_1_1():
 
 
 def test_asset_class_percentages_sum_to_one():
-    a = allocation_by_asset_class(HOLDINGS, PRICES, CASH)
+    a = allocation_by_asset_class(HOLDINGS, PRICES, CASH, RATES)
     assert sum(l.pct_of_total for l in a.lines) == pytest.approx(1.0, abs=1e-9)
 
 
 def test_cash_has_no_percent_invested():
     """D2 puts cash in the total denominator; it is still not invested."""
-    lines = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH))
+    lines = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH, RATES))
     assert lines["Cash"].pct_of_invested is None
     assert lines["Equity"].pct_of_invested == pytest.approx(0.7213, abs=0.00005)
 
@@ -102,7 +106,7 @@ def test_asset_class_lines_have_no_sectored_share():
     """One name means one quantity in every view: an asset-class line has
     its share of total and of invested, and no share of sectored value,
     which is the sector view's own denominator."""
-    lines = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH))
+    lines = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH, RATES))
     assert lines["Equity"].pct_of_total == pytest.approx(0.6941, abs=0.00005)
     assert lines["Cash"].pct_of_total == pytest.approx(0.0378, abs=0.00005)
     for line in lines.values():
@@ -113,7 +117,7 @@ def test_asset_class_lines_have_no_sectored_share():
 
 def test_sector_market_values():
     """Part 3, market value column."""
-    lines = _by_label(allocation_by_sector(HOLDINGS, PRICES, CASH))
+    lines = _by_label(allocation_by_sector(HOLDINGS, PRICES, CASH, RATES))
     assert lines["Technology"].market_value == pytest.approx(114674.00, abs=0.01)
     assert lines["Healthcare"].market_value == pytest.approx(41281.50, abs=0.01)
     assert lines["Financials"].market_value == pytest.approx(35622.00, abs=0.01)
@@ -128,7 +132,7 @@ def test_sector_denominators():
     total (D2), which the sector view carries so that the IPS-4.3 share of
     total is computed here and not by a reader dividing.
     """
-    a = allocation_by_sector(HOLDINGS, PRICES, CASH)
+    a = allocation_by_sector(HOLDINGS, PRICES, CASH, RATES)
     assert a.sectored_value == pytest.approx(208197.50, abs=0.01)
     assert a.invested_value == pytest.approx(394700.50, abs=0.01)
     assert a.cash_balance == pytest.approx(15500.00, abs=0.01)
@@ -136,13 +140,13 @@ def test_sector_denominators():
 
 
 def test_asset_class_view_has_no_sectored_value():
-    a = allocation_by_asset_class(HOLDINGS, PRICES, CASH)
+    a = allocation_by_asset_class(HOLDINGS, PRICES, CASH, RATES)
     assert a.sectored_value is None
 
 
 def test_sector_percent_of_sectored():
     """Part 3, market value / % sectored."""
-    lines = _by_label(allocation_by_sector(HOLDINGS, PRICES, CASH))
+    lines = _by_label(allocation_by_sector(HOLDINGS, PRICES, CASH, RATES))
     assert lines["Technology"].pct_of_sectored == pytest.approx(0.5508, abs=0.00005)
     assert lines["Healthcare"].pct_of_sectored == pytest.approx(0.1983, abs=0.00005)
     assert lines["Financials"].pct_of_sectored == pytest.approx(0.1711, abs=0.00005)
@@ -151,7 +155,7 @@ def test_sector_percent_of_sectored():
 
 def test_sector_percent_of_invested():
     """Part 3, market value / % invested."""
-    lines = _by_label(allocation_by_sector(HOLDINGS, PRICES, CASH))
+    lines = _by_label(allocation_by_sector(HOLDINGS, PRICES, CASH, RATES))
     assert lines["Technology"].pct_of_invested == pytest.approx(0.2905, abs=0.00005)
     assert lines["Healthcare"].pct_of_invested == pytest.approx(0.1046, abs=0.00005)
     assert lines["Financials"].pct_of_invested == pytest.approx(0.0903, abs=0.00005)
@@ -166,7 +170,7 @@ def test_sector_percent_of_total_is_the_ips_4_3_column():
     figure. The unsectored line carries it too - Part 7 reports it and does
     not count it.
     """
-    lines = _by_label(allocation_by_sector(HOLDINGS, PRICES, CASH))
+    lines = _by_label(allocation_by_sector(HOLDINGS, PRICES, CASH, RATES))
     assert lines["Technology"].pct_of_total == pytest.approx(0.2796, abs=0.00005)
     assert lines["Healthcare"].pct_of_total == pytest.approx(0.1006, abs=0.00005)
     assert lines["Financials"].pct_of_total == pytest.approx(0.0868, abs=0.00005)
@@ -176,8 +180,8 @@ def test_sector_percent_of_total_is_the_ips_4_3_column():
 
 def test_sector_shares_of_total_and_cash_sum_to_one():
     """Every sector line plus the asset-class view's cash line is the whole."""
-    sectors = allocation_by_sector(HOLDINGS, PRICES, CASH)
-    cash = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH))["Cash"]
+    sectors = allocation_by_sector(HOLDINGS, PRICES, CASH, RATES)
+    cash = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH, RATES))["Cash"]
     total = sum(l.pct_of_total for l in sectors.lines) + cash.pct_of_total
     assert total == pytest.approx(1.0, abs=1e-9)
 
@@ -188,14 +192,14 @@ def test_unsectored_is_reported_not_dropped():
     double every sector figure, which is why the line exists and why it has no
     '% sectored' of its own.
     """
-    lines = _by_label(allocation_by_sector(HOLDINGS, PRICES, CASH))
+    lines = _by_label(allocation_by_sector(HOLDINGS, PRICES, CASH, RATES))
     assert "(no sector)" in lines
     assert lines["(no sector)"].pct_of_sectored is None
     assert set(lines["(no sector)"].tickers) == {"SPY", "TLT", "GLD", "VNQ"}
 
 
 def test_sectored_percentages_sum_to_one():
-    a = allocation_by_sector(HOLDINGS, PRICES, CASH)
+    a = allocation_by_sector(HOLDINGS, PRICES, CASH, RATES)
     sectored = [l for l in a.lines if l.pct_of_sectored is not None]
     assert sum(l.pct_of_sectored for l in sectored) == pytest.approx(1.0, abs=1e-9)
 
@@ -213,7 +217,7 @@ IPS_4_1 = [
 
 def test_position_denominators():
     """The same three denominators as the other views; no sectored value."""
-    a = allocation_by_position(HOLDINGS, PRICES, CASH)
+    a = allocation_by_position(HOLDINGS, PRICES, CASH, RATES)
     assert a.invested_value == pytest.approx(394700.50, abs=0.01)
     assert a.cash_balance == pytest.approx(15500.00, abs=0.01)
     assert a.total_value == pytest.approx(410200.50, abs=0.01)
@@ -223,7 +227,7 @@ def test_position_denominators():
 def test_position_lines_are_the_ips_4_1_column_largest_first():
     """Part 7, IPS-4.1: one line per holding, share of total, largest first,
     so "what is my biggest position" is the first line and no reader sorts."""
-    a = allocation_by_position(HOLDINGS, PRICES, CASH)
+    a = allocation_by_position(HOLDINGS, PRICES, CASH, RATES)
     assert [l.label for l in a.lines] == [t for t, _ in IPS_4_1]
     for line, (ticker, share) in zip(a.lines, IPS_4_1):
         assert line.pct_of_total == pytest.approx(share, abs=0.00005), ticker
@@ -233,7 +237,7 @@ def test_position_lines_are_the_ips_4_1_column_largest_first():
 
 def test_position_market_value_and_cost_basis():
     """Part 1, SPY and NEE rows."""
-    lines = _by_label(allocation_by_position(HOLDINGS, PRICES, CASH))
+    lines = _by_label(allocation_by_position(HOLDINGS, PRICES, CASH, RATES))
     assert lines["SPY"].market_value == pytest.approx(76516.00, abs=0.01)
     assert lines["SPY"].cost_basis == pytest.approx(50000.00, abs=0.01)
     assert lines["NEE"].market_value == pytest.approx(16620.00, abs=0.01)
@@ -242,7 +246,7 @@ def test_position_market_value_and_cost_basis():
 
 def test_position_percent_of_invested():
     """Part 5, 1.4: AAPL 16.47% and MSFT 12.59% of invested."""
-    lines = _by_label(allocation_by_position(HOLDINGS, PRICES, CASH))
+    lines = _by_label(allocation_by_position(HOLDINGS, PRICES, CASH, RATES))
     assert lines["AAPL"].pct_of_invested == pytest.approx(0.1647, abs=0.00005)
     assert lines["MSFT"].pct_of_invested == pytest.approx(0.1259, abs=0.00005)
 
@@ -250,14 +254,14 @@ def test_position_percent_of_invested():
 def test_position_view_has_no_cash_line():
     """Cash is not a holding (IPS-4.1 is about instruments); it is in the
     denominator and in the header, not a line."""
-    a = allocation_by_position(HOLDINGS, PRICES, CASH)
+    a = allocation_by_position(HOLDINGS, PRICES, CASH, RATES)
     assert "Cash" not in {l.label for l in a.lines}
     assert len(a.lines) == 9
 
 
 def test_position_shares_of_total_and_cash_sum_to_one():
-    positions = allocation_by_position(HOLDINGS, PRICES, CASH)
-    cash = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH))["Cash"]
+    positions = allocation_by_position(HOLDINGS, PRICES, CASH, RATES)
+    cash = _by_label(allocation_by_asset_class(HOLDINGS, PRICES, CASH, RATES))["Cash"]
     total = sum(l.pct_of_total for l in positions.lines) + cash.pct_of_total
     assert total == pytest.approx(1.0, abs=1e-9)
 
@@ -272,15 +276,15 @@ def test_missing_price_raises_rather_than_skipping():
     """
     partial = {k: v for k, v in PRICES.items() if k != "GLD"}
     with pytest.raises(AllocationError, match="GLD"):
-        allocation_by_asset_class(HOLDINGS, partial, CASH)
+        allocation_by_asset_class(HOLDINGS, partial, CASH, RATES)
 
 
 def test_empty_holdings_raises():
     with pytest.raises(AllocationError):
-        allocation_by_asset_class([], PRICES, CASH)
+        allocation_by_asset_class([], PRICES, CASH, {})
 
 
 def test_position_missing_price_raises():
     partial = {k: v for k, v in PRICES.items() if k != "GLD"}
     with pytest.raises(AllocationError, match="GLD"):
-        allocation_by_position(HOLDINGS, partial, CASH)
+        allocation_by_position(HOLDINGS, partial, CASH, RATES)

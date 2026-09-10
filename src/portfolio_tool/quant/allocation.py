@@ -32,10 +32,20 @@ formatter - divides for it. Each share names its denominator: there is no
 A third view, by position, is Part 7's IPS-4.1 table: one line per holding,
 largest first. Concentration is allocation by position, so it is a view here
 and not a second computation elsewhere.
+
+Every market value is in the portfolio's base currency (Part 8 C, D15-D18).
+A price is in the asset's currency; `rates` says, per holding, the spot rate
+to value it at or None when the currencies agree. It is produced by
+quant/fx.py and required here: a holding absent from it was never compared
+with the base currency, and valuing it at its quote would be the silent 1.0
+D17 forbids. `_market_values` is the one place the rate is applied, so the
+three views and position_pnl share one path.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Mapping, Optional, Sequence
+
+from portfolio_tool.quant.fx import SpotRate
 
 
 UNSECTORED_LABEL = "(no sector)"
@@ -84,13 +94,17 @@ class Allocation:
 def _market_values(
     holdings: Sequence[Dict],
     prices: Dict[str, float],
+    rates: Mapping[str, Optional[SpotRate]],
 ) -> Dict[str, float]:
     """
-    Market value per ticker.
+    Market value per ticker, in the base currency: quantity x price, times
+    the spot rate where the holding's currency is not the base (D16).
 
     Raises rather than skipping when a price is missing. A skipped holding
     shrinks the denominator and moves every percentage in the answer, which
-    looks like a valid result and is not.
+    looks like a valid result and is not. Raises too on a holding absent
+    from `rates`: None there is the lookup's finding that no rate is
+    needed; absence is no finding at all.
     """
     if not holdings:
         raise AllocationError("No holdings to allocate.")
@@ -105,10 +119,24 @@ def _market_values(
             "percentage would shift and the result would look valid."
         )
 
-    return {
-        h["ticker"]: float(h["quantity"]) * float(prices[h["ticker"]])
-        for h in holdings
-    }
+    unrated = [h["ticker"] for h in holdings if h["ticker"] not in rates]
+    if unrated:
+        raise AllocationError(
+            f"No rate entry for: {', '.join(sorted(unrated))}.\n"
+            "Every holding is compared with the base currency before it is "
+            "valued (quant/fx.py); a holding with no entry would be valued at "
+            "its quote as if the currencies agreed."
+        )
+
+    values = {}
+    for h in holdings:
+        ticker = h["ticker"]
+        value = float(h["quantity"]) * float(prices[ticker])
+        rate = rates[ticker]
+        if rate is not None:
+            value *= rate.rate
+        values[ticker] = value
+    return values
 
 
 def _cost_bases(holdings: Sequence[Dict]) -> Dict[str, float]:
@@ -123,6 +151,7 @@ def allocation_by_asset_class(
     holdings: Sequence[Dict],
     prices: Dict[str, float],
     cash_balance: float,
+    rates: Mapping[str, Optional[SpotRate]],
 ) -> Allocation:
     """
     Allocation by asset class, as a percentage of total portfolio value.
@@ -133,13 +162,14 @@ def allocation_by_asset_class(
     Args:
         holdings: summary dicts carrying ticker, quantity, average_price,
                   asset_class
-        prices: current price per ticker
-        cash_balance: portfolio cash
+        prices: current price per ticker, in the asset's currency
+        cash_balance: portfolio cash, in the base currency
+        rates: one entry per holding from quant/fx.spot_rates (D16, D17)
 
     Returns:
         Allocation whose lines sum to 100% of total_value.
     """
-    values = _market_values(holdings, prices)
+    values = _market_values(holdings, prices, rates)
     costs = _cost_bases(holdings)
     cash = float(cash_balance)
 
@@ -190,6 +220,7 @@ def allocation_by_sector(
     holdings: Sequence[Dict],
     prices: Dict[str, float],
     cash_balance: float,
+    rates: Mapping[str, Optional[SpotRate]],
 ) -> Allocation:
     """
     Allocation by sector, over invested value, with each sector's share of total.
@@ -205,13 +236,14 @@ def allocation_by_sector(
 
     Args:
         holdings: summary dicts carrying ticker, quantity, average_price, sector
-        prices: current price per ticker
+        prices: current price per ticker, in the asset's currency
         cash_balance: portfolio cash, needed for the total and nothing else
+        rates: one entry per holding from quant/fx.spot_rates (D16, D17)
 
     Returns:
         Allocation whose sectored lines sum to 100% of sectored value.
     """
-    values = _market_values(holdings, prices)
+    values = _market_values(holdings, prices, rates)
     costs = _cost_bases(holdings)
 
     buckets: Dict[str, AllocationLine] = {}
@@ -263,6 +295,7 @@ def allocation_by_position(
     holdings: Sequence[Dict],
     prices: Dict[str, float],
     cash_balance: float,
+    rates: Mapping[str, Optional[SpotRate]],
 ) -> Allocation:
     """
     Allocation by position: one line per holding, labelled by ticker, largest
@@ -276,13 +309,14 @@ def allocation_by_position(
 
     Args:
         holdings: summary dicts carrying ticker, quantity, average_price
-        prices: current price per ticker
+        prices: current price per ticker, in the asset's currency
         cash_balance: portfolio cash, inside the total
+        rates: one entry per holding from quant/fx.spot_rates (D16, D17)
 
     Returns:
         Allocation whose lines plus cash sum to 100% of total_value.
     """
-    values = _market_values(holdings, prices)
+    values = _market_values(holdings, prices, rates)
     costs = _cost_bases(holdings)
     cash = float(cash_balance)
 
@@ -318,7 +352,13 @@ def allocation_by_position(
 
 @dataclass
 class PositionPnL:
-    """Unrealised profit and loss of one position since purchase."""
+    """Unrealised profit and loss of one position since purchase.
+
+    `price` is the quote in the asset's currency (`currency`); cost basis,
+    average price, market value and P&L are in the portfolio's base currency
+    (D18). `rate` and `rate_as_of` are the spot rate the value went through
+    and its day, None when the two currencies are the same (D16, D17).
+    """
 
     ticker: str
     quantity: float
@@ -329,16 +369,20 @@ class PositionPnL:
     pnl_abs: float
     pnl_pct: float
     purchase_date: Optional[str]
+    currency: Optional[str] = None
+    rate: Optional[float] = None
+    rate_as_of: Optional[str] = None
 
 
 def position_pnl(
     holdings: Sequence[Dict],
     prices: Dict[str, float],
+    rates: Mapping[str, Optional[SpotRate]],
 ) -> Dict[str, PositionPnL]:
     """
     Unrealised P&L per position: market value against cost basis.
 
-    Reference: expected_values.md Part 1, and D4.
+    Reference: expected_values.md Part 1 and Part 8 C, and D4, D16-D18.
 
       D4  PRICE return, not total return. Forced by the data model rather than
           chosen: `Dividend` has no `portfolio_id`, so no dividend can be
@@ -347,12 +391,13 @@ def position_pnl(
 
     Every position is computed, whichever one was asked about. Selecting is
     the caller's job. Same inputs as the allocation functions: a holding's
-    quantity, average price and purchase date, and a price per ticker.
+    quantity, average price and purchase date, a price per ticker, and one
+    rate entry per holding from quant/fx.spot_rates.
 
-    Raises through `_market_values` on a missing price, and here on a cost
-    basis of zero, where a percentage is undefined.
+    Raises through `_market_values` on a missing price or rate entry, and
+    here on a cost basis of zero, where a percentage is undefined.
     """
-    values = _market_values(holdings, prices)
+    values = _market_values(holdings, prices, rates)
     costs = _cost_bases(holdings)
 
     result: Dict[str, PositionPnL] = {}
@@ -364,6 +409,7 @@ def position_pnl(
                 f"{ticker}: cost basis is {cost}, so P&L % is undefined."
             )
         value = values[ticker]
+        spot = rates[ticker]
         result[ticker] = PositionPnL(
             ticker=ticker,
             quantity=float(h["quantity"]),
@@ -374,5 +420,8 @@ def position_pnl(
             pnl_abs=value - cost,
             pnl_pct=(value - cost) / cost,
             purchase_date=h.get("purchase_date"),
+            currency=h.get("currency"),
+            rate=spot.rate if spot is not None else None,
+            rate_as_of=spot.as_of if spot is not None else None,
         )
     return result
