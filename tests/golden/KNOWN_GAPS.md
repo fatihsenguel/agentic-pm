@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 10 September 2026, thirteenth session, on branch `selection`, after the personal IPS's binding (the policy a portfolio is checked against is named on its row, `portfolios.ips_path`, migrated; the compliance node loads that file in every mode; the loader has no default), the growth rule for the type vocabulary, the stored closes held to the committed series, the two `source` defaults dropped, and the sweep below.
+Last updated 10 September 2026, thirteenth session, on branch `selection`, after the personal IPS's binding (the policy a portfolio is checked against is named on its row, `portfolios.ips_path`, migrated; the compliance node loads that file in every mode; the loader has no default), the growth rule for the type vocabulary, the stored closes held to the committed series, the two `source` defaults dropped, the four leftover tickers deleted by hand, DIRECTION.md's Order revised so that the personal files come last, and the sweep below.
 
 ---
 
@@ -2800,7 +2800,7 @@ returns rows and the marker has to come off. Not fixed: off the
 benchmark's path, and whether these Yahoo-fed statements are the
 judgement half's source at all is Order 4's decision.
 
-### Four leftover tickers hold adjusted rows that nothing reads
+### Four leftover tickers hold adjusted rows that nothing reads - RESOLVED 10 September (thirteenth session)
 
 Recorded 10 September (twelfth session). AMZN (6,549 rows), PLTR (1,328),
 SAP (513) and VWO (750) are assets from the deleted portfolios 1 and 2;
@@ -2823,6 +2823,11 @@ transactions 0, assets 4. After it daily_prices reads 6,939 (16,079 less
 in the router's vocabulary and few-shots are words, not rows. The
 statement is in the handoff's quick reference; it is mine to run and I
 paste the two counts.
+
+**Resolved, the same session, by my hand.** The statement printed 6939
+and 9, the two counts predicted; the suite ran 645 and 6 after it, since
+nothing read those rows. The price table holds one convention on every
+row it has.
 
 ### The answer text does not name the price source
 
@@ -3227,6 +3232,14 @@ that every type is known or a statement; the real portfolio's ledger
 rows from my statements and the Part 8 reference for them, hand-computed
 first; then the row, with its absolute path, and the check script. My
 real portfolio's data stays out of the repository and enters last.
+
+**Moved to the end, the same session (290bfc7).** The personal policy,
+the personal philosophy and the real portfolio are DIRECTION.md's Order
+6 now, after the conversational layer: the vision, not the next step.
+Everything before it is built and scored on synthetic artifacts, the way
+the IPS was, and the binding built above is what lets each personal file
+replace a synthetic one later with no code change. Next is Order 3 on a
+synthetic philosophy, watchlist and ledger.
 
 ### Mutation testing, once, over the pure modules
 
