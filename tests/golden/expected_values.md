@@ -58,6 +58,11 @@ are the ones a run must still reproduce exactly, and they are what
 | D18 | Which currency are cost basis, average price and realized gain in? | **The base currency**, since they come from `amount` (D14). The average price of a foreign holding is therefore not comparable to its quoted price, and a formatter names the currency of every figure it prints. |
 | D19 | What is a close? | **The instrument's official closing price on that date, in the instrument's currency, as traded**: adjusted for splits, so that the quantity held today times the close is the position's value on every date, and for nothing else. It is the figure a broker statement values the position at. A dividend adjustment is a return method, not a price, and does not belong in the column the valuation reads. Decided 10 September for Part 9, before any code. |
 | D20 | Two sources give two closes for one instrument and one date. Which wins? | **The listing exchange's print.** A stored close that differs from it by a cent or more is a defect in the provider, fixed at the provider, never by editing the reference and never by averaging. Should a second live source ever exist, the system reports both figures, both sources and the date, and picks neither. |
+| D21 | "Each of the last n fiscal years" means which years? | **The n most recent fiscal years whose reports were filed on or before the as-of date.** A year not yet reported does not count as a year; the check does not wait for it and does not fill it. Decided 10 September for Part 10, before any checker. |
+| D22 | A clause over n years: one finding or n? | **One finding, decided by the worst year against the bound**: the lowest year for a floor, the highest for a ceiling. The distance is from that year, and every year is listed so the reader sees which one decided it. Rejected: the average (hides the bad year the screen exists to find), n findings (a clause has one verdict). |
+| D23 | Is a figure exactly at a philosophy limit a failure? | **No.** The mirror of D9: strict, unrounded comparison, at the limit passes. Part 10 carries a row at exactly 2.0 times EBITDA to catch a checker that rounds or uses the wrong inequality. |
+| D24 | What is a figure? | **The company's reported figure in its reporting currency, as filed**, adjusted by nobody. A metric that is a ratio of reported figures is computed by one stated formula, written out in Part 10, and that formula is the pipeline's definition of the metric key: return on invested capital, gross margin, net debt to EBITDA, free cash flow yield. A different formula is a different metric key. |
+| D25 | A figure the company did not report, or a fiscal year missing from the block? | **The whole check stops and names the figure.** No verdict on that clause, no verdict on the others, no verdict on the company: PHI-1.2 says a clause is never skipped to let the rest of the screen report. The same shape as the compliance checker raising on a holding with no instrument type. |
 
 Note the tension between D2 and Part 4: the volatility weights exclude cash
 while D2 includes it. Resolved by disclosure — see Part 4.
@@ -510,3 +515,126 @@ convention. Under D20 the reference does not move.
   own reference, not this one.
 - **Where the source is named.** A close stored with its source on the row
   is the trace; whether the answer text names it is a rendering decision.
+
+---
+
+## Part 10 — The philosophy check
+
+Computed 2026-09-10 by hand, before any checker exists (DIRECTION.md Order
+4, first tool), so the checker has something independent to be wrong
+against. Decisions D21 to D25. Plain decimal arithmetic, none of the
+repository's code. Policy: `docs/PHILOSOPHY.md`, `philosophy.toml`.
+
+**The candidate and its figures are synthetic.** W-1 on the synthetic
+watchlist is Alphabet, and the figures below are stand-ins typed for this
+reference, not the company's filings. This Part is a reference for the
+checker's arithmetic, not for the company. Real reported figures arrive
+with the filings reader, which defends them the way Part 9 defended the
+closes.
+
+**As-of date:** 2026-09-10. Fiscal years reported by then: FY2021 to
+FY2025 (D21). FY2026 is not a year. Reporting currency USD; money in
+millions except the price and the valuation range, per share.
+
+**The figures block, the checker's input.** Per company, per metric, per
+fiscal year: the value, the fiscal year's end date, the source. Here the
+source of every row is `expected_values.md Part 10`. For PHI-4.1 also a
+valuation range and a price, each with its as-of date.
+
+### A. Reported figures (USD millions)
+
+| FY | Ends | Revenue | Gross profit | Operating income | Tax rate | D&A | Operating cash flow | Capex | Equity | Debt | Cash |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| FY2021 | 2021-12-31 | | | 20,000 | 0.20 | | | | 120,000 | 20,000 | 40,000 |
+| FY2022 | 2022-12-31 | | | 13,500 | 0.20 | | | | 128,000 | 22,000 | 42,000 |
+| FY2023 | 2023-12-31 | 100,000 | 55,000 | 24,000 | 0.20 | | | | 140,000 | 20,000 | 40,000 |
+| FY2024 | 2024-12-31 | 112,000 | 63,840 | 30,000 | 0.20 | | | | 150,000 | 18,000 | 43,000 |
+| FY2025 | 2025-12-31 | 125,000 | 72,500 | 36,000 | 0.20 | 16,000 | 52,780 | 22,000 | 170,000 | 16,000 | 42,000 |
+
+A blank cell is a figure the reference does not need, not a figure the
+company did not report; section E is the missing-figure case.
+
+Shares outstanding 4,000 million. Price 171.00 as of 2026-09-10. Valuation
+range 180.00 to 240.00 per share as of 2026-09-10, typed here; Part 11 will
+compute one from stated assumptions.
+
+### B. The metric formulas (D24)
+
+- **return_on_invested_capital** = operating income x (1 - tax rate) /
+  (equity + debt - cash), per fiscal year, on that year's figures.
+- **gross_margin** = gross profit / revenue.
+- **net_debt_to_ebitda** = (debt - cash) / (operating income + D&A).
+- **free_cash_flow_yield** = (operating cash flow - capex) / (price x shares
+  outstanding), the latest fiscal year's cash flows at the as-of price.
+
+### C. The metrics by year
+
+| FY | Invested capital | NOPAT | ROIC | Gross margin |
+|---|---|---|---|---|
+| FY2021 | 100,000 | 16,000 | 0.1600 | |
+| FY2022 | 108,000 | 10,800 | **0.1000** | |
+| FY2023 | 120,000 | 19,200 | 0.1600 | 0.5500 |
+| FY2024 | 125,000 | 24,000 | 0.1920 | 0.5700 |
+| FY2025 | 144,000 | 28,800 | 0.2000 | 0.5800 |
+
+FY2025: net debt = 16,000 - 42,000 = -26,000; EBITDA = 36,000 + 16,000 =
+52,000; net_debt_to_ebitda = -0.5000. Free cash flow = 52,780 - 22,000 =
+30,780; market value = 171.00 x 4,000 = 684,000; free_cash_flow_yield =
+0.0450. Discount to the low end of the range = 1 - 171.00 / 180.00 = 0.0500.
+
+### D. The findings
+
+One finding per numeric clause (D22). Distance in the metric's own unit,
+signed so that positive is a failure: `limit - observed` against a floor,
+`observed - limit` against a ceiling. Percentage points where the metric is
+a share.
+
+| Clause | Type | Metric | Years read | Deciding year | Observed | Limit | Bound | Status | Distance |
+|---|---|---|---|---|---|---|---|---|---|
+| PHI-2.1 | metric_band | return_on_invested_capital | FY2021 to FY2025 | FY2022 | 0.1000 | 0.12 | min | **fail** | +2.00 pp |
+| PHI-2.2 | metric_band | gross_margin | FY2023 to FY2025 | FY2023 | 0.5500 | 0.35 | min | pass | -20.00 pp |
+| PHI-3.1 | metric_band | net_debt_to_ebitda | FY2025 | FY2025 | -0.5000 | 2.0 | max | pass | -2.50 x |
+| PHI-4.1 | margin_of_safety | discount to the low end of the range | as of 2026-09-10 | | 0.0500 | 0.25 | min | **fail** | +20.00 pp |
+| PHI-4.2 | metric_band | free_cash_flow_yield | FY2025 | FY2025 | 0.0450 | 0.04 | min | pass | -0.50 pp |
+
+PHI-4.1 read another way: the most I would pay is 180.00 x (1 - 0.25) =
+135.00, and the price is 171.00, 36.00 over. The finding carries the
+discount, a fraction like every other observed value; the price form is the
+formatter's to print from the same figures.
+
+**Statements, cited and not computed:** PHI-1.1, PHI-1.2, PHI-2.3, PHI-3.2,
+PHI-4.3, PHI-5.1, PHI-5.2, PHI-6.1, PHI-6.2, PHI-6.3, PHI-7.1, PHI-7.2. A
+full check lists them, so the philosophy is visibly all of it.
+
+**The candidate does not clear the philosophy** on these figures: two of
+five numeric clauses fail. That is a fact about the synthetic figures, chosen
+so that both directions of a finding and the range-based clause's failing
+side are in the reference; it says nothing about the company.
+
+### E. Falsifier rows
+
+**At the limit passes (D23).** The same FY2025 with debt 120,000 and cash
+16,000: net debt 104,000, EBITDA 52,000, net_debt_to_ebitda = 2.0000
+exactly against a ceiling of 2.0. Status **pass**, distance 0.00. A checker
+that rounds before comparing, or compares with the wrong inequality, fails
+this row.
+
+**A missing figure stops the check (D25).** The same block with FY2024's
+gross profit absent. The check stops on PHI-2.2 naming `gross_margin` for
+`FY2024` and reports no finding on any clause. Not a pass on PHI-2.1, not a
+verdict on the company, not a finding on PHI-2.2 over the two years it has.
+
+**A year not yet reported is not a year (D21).** The same block asked for
+as of 2025-06-30, before FY2025 was filed: PHI-2.1 reads FY2020 to FY2024
+and the block has no FY2020, so the check stops naming
+`return_on_invested_capital` for `FY2020`. It does not read FY2021 to
+FY2025 and it does not read four years.
+
+### Expected answers, in the Part 3b shape
+
+- **4.1 (does X clear my philosophy)** - the five findings above with their
+  deciding years and distances, each citing its clause; the twelve
+  statements named as not computed; every figure with its fiscal year and
+  its source; no recommendation.
+- **4.6 (a missing figure)** - "the check stopped: FY2024 gross margin is
+  not in the figures", no finding on any clause, nothing invented.
