@@ -17,6 +17,14 @@ statement carrying any. A policy that loads is therefore a policy every
 clause of which is either computed or visibly not computed - which is what
 lets "the policy contains nothing on this" be an honest answer.
 
+The vocabulary grows one clause at a time. A rule a personal policy states
+and this checker cannot check yet is written as a statement: cited by id,
+listed by every full check as a statement outside the check, carrying no
+number here. When it is to be checked, in this order: a hand-computed
+reference for that clause on the portfolio first, then its type here with
+its parameters, then the checker's arm with the test over that reference,
+then the entry's type in the file flips from statement to the new type.
+
 No defaults. A missing file is an error, not an empty policy; a compliance
 verdict against a policy nobody wrote is the shape wip/phase7-snapshot was
 rejected for (tests/golden/KNOWN_GAPS.md).
@@ -194,7 +202,9 @@ def _parse_clause(entry: Dict[str, Any], n: int) -> Clause:
         raise IPSError(
             f"{where}: type {clause_type!r} is not one the checker knows "
             f"({', '.join(CLAUSE_TYPES)}). A clause with no type is not a clause; "
-            "a topic with no clause is one the policy contains nothing on."
+            "a topic with no clause is one the policy contains nothing on. A rule "
+            "the checker cannot check yet is written as a statement until its "
+            "checker and its reference exist: cited, and visibly not computed."
         )
 
     required, optional = CLAUSE_TYPES[clause_type]

@@ -153,6 +153,10 @@ def test_missing_file_is_an_error_not_an_empty_policy(tmp_path):
 
 @pytest.mark.parametrize("body, message", [
     (GOOD.replace("max_instrument_weight", "max_currency_exposure"), "not one the checker knows"),
+    # The growth rule (DIRECTION.md Order 2, item 4): a rule the checker
+    # cannot check yet is written as a statement, citable and visibly not
+    # computed, until its checker and its reference exist. The refusal says so.
+    (GOOD.replace("max_instrument_weight", "max_currency_exposure"), "as a statement until"),
     (GOOD.replace("max = 0.12\n", ""), "needs \\['max'\\]"),
     (GOOD.replace("max_instrument_weight", "statement"), "statement carries"),
     (GOOD.replace("max = 0.12", "max = 12"), "not a fraction"),
