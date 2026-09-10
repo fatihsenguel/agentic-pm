@@ -1,279 +1,71 @@
-> **⚠️ Outdated — written January 2026, describes an architecture that no longer exists.**
-> It refers to RiskManagerAgent as an active supervisor (it is not wired at all),
-> references `demos/` scripts that were deleted, and specifies `gpt-4-turbo` (the
-> system runs Claude Haiku 4.5). The Design Principles section below is still
-> accurate and worth reading.
->
-> For the current state see `docs/HANDOFF.md`, `docs/benchmark.md`, and
-> `tests/golden/KNOWN_GAPS.md`.
+# AGENTIC_FINANCE
 
-# 🏦 Quant Portfolio Manager - Multi-Agent System
+A portfolio-management and equity-research assistant on LangGraph, driven by
+my own written Investment Policy Statement. Underneath it is a deterministic
+core: positions derived from a transaction ledger, allocation, P&L, portfolio
+volatility, and a compliance check that blocks a request and cites the clause
+it breaks. The portfolio is the example, not the point. What this is, is an
+agent system over my own documents, with source attribution for every policy
+claim and a hand-computed reference for every figure.
 
-An institutional-grade portfolio management system powered by AI agents.
+## Two halves
 
-## 🎯 Overview
+**The guarantee half is built.** Everything the system says about what I
+hold is computed by a fixed pipeline, checked against a reference computed
+by hand before the code existed, and scored by a benchmark of twelve cases
+that all pass. Three of the twelve are cases where the right answer is a
+refusal.
 
-This system uses a **multi-agent architecture** to handle portfolio optimization, macro analysis, backtesting, and rebalancing. Each agent is specialized for a specific task, coordinated by a supervisor agent (RiskManager).
+**The judgement half is not started, on purpose.** Research, valuation, a
+thesis, a sized position: that is a model reading and reasoning with further
+tools, marked as judgement, and it starts only when the benchmark defines
+what a good research answer is and a prediction ledger exists to score it. A
+system that recommends before it can correctly compute what is already held
+recommends against a wrong picture.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         USER REQUEST                             │
-└─────────────────────────────┬───────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    🎯 RISK MANAGER AGENT                         │
-│                       (Supervisor)                               │
-│         Analyzes requests, delegates to specialists              │
-└─────────────────────────────┬───────────────────────────────────┘
-                              │
-          ┌───────────────────┼───────────────────┐
-          ▼                   ▼                   ▼
-   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
-   │ 📊 DATA      │   │ 🌍 MACRO     │   │ ⚖️ REBALANCE │
-   │    AGENT     │   │    AGENT     │   │    AGENT     │
-   └──────────────┘   └──────────────┘   └──────────────┘
-          │                   │                   │
-          ▼                   ▼                   ▼
-   ┌──────────────────────────────────────────────────────────────┐
-   │                      TOOL LAYER                               │
-   │   (data_tools, macro_tools, rebalance_tools, analytics)       │
-   └──────────────────────────────────────────────────────────────┘
-          │
-          ▼
-   ┌──────────────────────────────────────────────────────────────┐
-   │                    DATA LAYER                                 │
-   │              (DataManager, Providers)                         │
-   └──────────────────────────────────────────────────────────────┘
-          │
-          ▼
-   ┌──────────────────────────────────────────────────────────────┐
-   │                    SQLite DATABASE                            │
-   │        (daily_prices, macro_data, portfolios)                 │
-   └──────────────────────────────────────────────────────────────┘
-```
+## What holds it up
 
-## ✨ Features
+- **Agents never see raw data.** Tools return summaries; raw arrays move
+  through shared state and never into a context window.
+- **Policy lives in a document, not in code.** The policy has numbered
+  clauses and a derived config file; a check cites the clause, never a
+  paraphrase; a personal policy replaces the synthetic one as a file, with
+  no code change.
+- **Every number traces to a tool output.** The model narrates around
+  figures; it never produces one.
+- **Raise, do not repair.** A missing input, a value the vocabulary lacks,
+  a holding of unknown type: the pipeline stops and says why. A default is
+  a wrong answer with a plausible face.
+- **References before code.** `tests/golden/expected_values.md` holds the
+  figures, computed by hand, that the code has to reproduce to the cent;
+  when code and reference disagree, one of them is wrong and the reference
+  is never edited to match.
 
-### Agents
-- **RiskManagerAgent** - Supervisor that coordinates all other agents
-- **DataAgent** - Market data fetching, covariance calculation, returns
-- **MacroAgent** - VIX analysis, yield curve, market regime detection
-- **RebalanceAgent** - Portfolio drift analysis, trade generation
-- **OptimizationAgent** - Mean-variance, risk parity optimization
-- **BacktestAgent** - Historical strategy simulation
+## Where to read
 
-### Capabilities
-- 📊 **SAA (Strategic Asset Allocation)** - Optimal portfolio weights
-- 🌍 **Macro Analysis** - VIX, yield curve, Fed sentiment
-- 📈 **TAA (Tactical Asset Allocation)** - Regime-based adjustments
-- ⚖️ **Rebalancing** - Drift detection, trade generation with costs
-- 📉 **Backtesting** - Historical performance simulation
-- 🔍 **Observability** - Full tracing, token tracking, cost estimation
+| File | What it is |
+|---|---|
+| `docs/DIRECTION.md` | The end state, the invariants, and the order of work. |
+| `docs/benchmark.md` | The definition of done: the twelve cases and what each passes on. |
+| `tests/golden/KNOWN_GAPS.md` | Open decisions, resolved ones, and why the obvious fixes were wrong. |
+| `docs/HANDOFF.md` | The state of the code, regenerated at the end of every session. |
 
-## 🏗️ Architecture
-
-See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed design documentation.
-
-### Design Principles
-
-1. **Separation of Concerns (SoC)**
-   - `DataManager`: Only CRUD/DB operations
-   - `MetricsCalculator`: Only math
-   - `Provider`: Only API communication
-   - `Tools`: Only agent interface
-
-2. **Hot Potato Principle**
-   - LLMs **NEVER** receive raw data (no CSV dumps)
-   - Layers aggregate data: DB → Calculator → Tool → Agent
-   - Example: Agent receives `{return: "13.6%", vol: "12%"}`, not 1000 prices
-
-3. **Idempotent Operations**
-   - All DB writes use `ON CONFLICT UPDATE`
-   - Safe to retry, no duplicates
-
-4. **Provider Abstraction**
-   - Interfaces decouple logic from source (YFinance vs Bloomberg)
-
-5. **Agent-Ready Responses**
-   - Tools return structured dicts: `{success, data, metadata, error}`
-
-6. **Session Isolation**
-   - `DataManager` and `QuotaManager` use separate DB sessions
-
-## 🚀 Quick Start
-
-### Installation
+## Running it
 
 ```bash
-# Clone repository
-git clone <repo-url>
-cd AGENTIC_FINANCE
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# or
-.\venv\Scripts\activate   # Windows
-
-# Install dependencies
-pip install -e .
-
-# Setup environment
-cp .env.example .env
-# Edit .env with your API keys (OPENAI_API_KEY, etc.)
-
-# Initialize database
-alembic upgrade head
+source .venv/bin/activate
+pytest -q                                   # no model calls, a few seconds
+python src/agents/cli.py --portfolio 3      # one model call per question; :q to quit
 ```
 
-### Run Demo
+The golden set (`tests/golden/run_golden.py`) and the benchmark runner
+(`tests/benchmark/run_cases.py`) make model calls and cost money. A
+synthetic portfolio and a synthetic policy are in the repository; my real
+ones are not, and enter last.
 
-```bash
-# Full workflow demo (choreographed, safe for presentations)
-python demos/demo_full_workflow.py
+## Status
 
-# Interactive multi-agent CLI
-python demos/multi_agent_cli.py
-```
-
-### Example Prompts
-
-```
-"Optimiere ein Portfolio mit SPY, TLT, GLD und max 12% Volatilität"
-"Wie ist die aktuelle Marktlage? Analysiere VIX und Yield Curve"
-"Mein Portfolio ist gedriftet - soll ich rebalancen?"
-"Backteste diese Strategie über 5 Jahre"
-```
-
-## 📁 Project Structure
-
-```
-AGENTIC_FINANCE/
-├── alembic/              # Database migrations
-├── data/                 # SQLite database
-├── demos/                # Demo scripts
-│   ├── demo_full_workflow.py
-│   └── multi_agent_cli.py
-├── docs/                 # Documentation
-├── src/
-│   ├── agents/           # AI Agents
-│   │   ├── data_agent.py
-│   │   ├── macro_agent.py
-│   │   ├── rebalance_agent.py
-│   │   └── risk_manager_agent.py
-│   ├── observability/    # Tracing & Monitoring
-│   │   ├── tracer.py
-│   │   └── token_counter.py
-│   └── portfolio_tool/   # Core Business Logic
-│       ├── analytics/    # Metrics calculation
-│       ├── backtest/     # Backtesting engine
-│       ├── models/       # Data models
-│       ├── optimization/ # Portfolio optimization
-│       ├── providers/    # Data providers (YFinance)
-│       ├── quant/        # Quantitative functions
-│       ├── rag/          # Fed Minutes analysis
-│       ├── services/     # Quota management
-│       └── tools/        # Agent tools
-├── tests/                # Test suite
-└── outputs/              # Generated files
-```
-
-## 🔧 Configuration
-
-### Environment Variables (.env)
-
-```env
-OPENAI_API_KEY=sk-...
-DATABASE_URL=sqlite:///data/portfolio.db
-LOG_LEVEL=INFO
-```
-
-### Config File (config.toml)
-
-```toml
-[database]
-path = "data/portfolio.db"
-
-[providers]
-default = "yfinance"
-
-[agents]
-default_model = "gpt-4-turbo"
-```
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-pytest
-
-# Run specific test
-pytest tests/test_rebalance.py -v
-
-# Run with coverage
-pytest --cov=src
-```
-
-## 📊 Observability
-
-The system includes comprehensive tracing:
-
-```python
-from observability import get_tracer
-
-tracer = get_tracer()
-
-with tracer.trace_request("req_123", "User message") as req:
-    with req.trace_agent("DataAgent") as agent:
-        agent.log_thinking("Fetching data...")
-        with agent.trace_tool("fetch_prices") as tool:
-            result = fetch_prices(...)
-            tool.set_output(result)
-
-print(tracer.get_summary())
-```
-
-Output:
-```
-┌─ 🤖 [DataAgent] Starting...
-│  💭 Fetching data...
-│  🔧 Calling: fetch_prices
-│     ✓ fetch_prices (50ms)
-└─ ✓ [DataAgent] Done (50ms | 80 tokens)
-
-📊 REQUEST SUMMARY
-   Duration:      50ms
-   Total Tokens:  80
-   Est. Cost:     $0.0012
-```
-
-## 📈 Roadmap
-
-- [x] Phase 5: Core Agents (Data, Macro, Rebalance)
-- [x] Phase 6.3: Observability & Tracing
-- [ ] Phase 6.1: Smart Router (LLM-based)
-- [ ] Phase 6.2: LangGraph State Machine
-- [ ] Phase 6.6: RAG Pipeline (Fed Minutes)
-- [ ] Phase 6.7: Chainlit UI
-- [ ] Phase 6.11: Human-in-the-Loop Approval
-
-See [ROADMAP_PHASE_6.md](docs/ROADMAP_PHASE_6.md) for details.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing`)
-5. Open Pull Request
-
-## 📄 License
-
-MIT License - see LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Built with [LangChain](https://langchain.com/) and [LangGraph](https://github.com/langchain-ai/langgraph)
-- Market data from [Yahoo Finance](https://finance.yahoo.com/)
-- Optimization powered by [scipy](https://scipy.org/)
+The benchmark passes twelve of twelve. The ledger, the base currency with
+its exchange rates, and the price source are built against their
+references; the personal policy is next. This file says less than the
+documents above on purpose, and is dated: 10 September 2026.
