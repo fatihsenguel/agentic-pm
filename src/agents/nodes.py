@@ -1096,6 +1096,7 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
         ips = load_ips()
         total_value = None
         as_of = None
+        base_currency = None
         no_clause = False
         topic_block = None
         by_status = {}
@@ -1136,6 +1137,17 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
                     )
             instrument_types = {h["ticker"]: h.get("instrument_type") for h in holdings}
 
+            # The currency of the total and of every distance in currency:
+            # the allocation's, copied (D15, D18). A total with no currency
+            # is not a figure, so an allocation without one is refused.
+            base_currency = allocation.get("base_currency")
+            if not base_currency:
+                raise DataCalculationError(
+                    "No base_currency on the allocation block.\n"
+                    "PortfolioAnalysisAgent publishes the portfolio's currency with "
+                    "its figures; a total with no currency cannot be checked or reported."
+                )
+
             # The checker is this agent's one tool call, traced as one: inputs
             # and outputs as counts, never the findings themselves (hot potato).
             # A raise inside leaves the trace with the exception recorded.
@@ -1167,6 +1179,7 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
             "statements": [{"clause": c.id, "text": c.text} for c in ips.statements],
             "total_value": total_value,
             "as_of": as_of,
+            "base_currency": base_currency,
             "findings": [asdict(f) for f in findings],
             "no_clause": no_clause,
             "topic": topic_block,
@@ -1919,8 +1932,17 @@ def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict],
                          f"close among the holdings ({as_of.get('stalest')}). "
                          f"No figure below is fresher than that.")
         lines.append("")
+    # Every amount is in the portfolio's base currency, read from the block
+    # (D18). Percentages and points carry none. No fallback: an amount with
+    # no currency is not printed under an assumed one.
+    base = block.get("base_currency")
     if block.get("total_value") is not None:
-        lines.append(f"**Total portfolio value:** {block['total_value']:,.2f} "
+        if not base:
+            raise ValueError(
+                "ComplianceAgent published a total_value with no base_currency; "
+                "an amount cannot be printed without its currency (expected_values.md D18)."
+            )
+        lines.append(f"**Total portfolio value:** {block['total_value']:,.2f} {base} "
                      "(including cash; every limit is a share of it)")
         lines.append("")
 
@@ -1942,7 +1964,7 @@ def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict],
                 elif f.get("status") == "breach":
                     lines.append(f"  {f['subject']}: {f['observed']:.2%} of total against "
                                  f"{f['bound']} {f['limit']:.0%} → BREACH, "
-                                 f"{f['distance_pp']:+.2f} pp ({f['distance_value']:,.2f}).")
+                                 f"{f['distance_pp']:+.2f} pp ({f['distance_value']:,.2f} {base}).")
                 else:
                     lines.append(f"  {f['subject']}: {f['observed']:.2%} of total against "
                                  f"{f['bound']} {f['limit']:.0%} → within.")
@@ -1956,7 +1978,7 @@ def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict],
         for f in breaches:
             direction = "down" if f["bound"] == "max" else "up"
             lines.append(f"  {f['clause']} {f['subject']}: {direction} {f['distance_pp']:.2f} pp "
-                         f"of total ({f['distance_value']:,.2f} at unchanged total).")
+                         f"of total ({f['distance_value']:,.2f} {base} at unchanged total).")
 
     statements = block.get("statements") or []
     selected = bool(subjects) or status is not None
