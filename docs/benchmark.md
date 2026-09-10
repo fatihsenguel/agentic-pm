@@ -139,6 +139,58 @@ Cases where the system correctly does **not** deliver. More telling than any suc
 
 ---
 
+### Level 4 — Research, scored by the prediction ledger
+
+**Added 10 September 2026 (fourteenth session), DIRECTION.md Order 3.** The
+judgement half: what the system has to produce when asked about a company
+for the answer to count as good research. Defined before any tool of the
+judgement half exists, the way Part 7 of `expected_values.md` was computed
+before the checker. No case here runs yet; the runner gains its checks for
+them first in Order 4, one per capability, before the capability.
+
+A good research answer says what it judged, why, how sure it is, what it
+checked against both policies by clause, and what has to be true by a stated
+date for it to have been right. It never says what the price will be. The
+first part is checked by the runner on structure, as Levels 1 to 3 are. The
+last part is checked by the prediction ledger when the date comes, and that
+score is the only measure of whether the judgement was any good. There is no
+golden baseline for judgement; the ledger is the eval set for this level, and
+its count of predictions scored right over predictions scored is the figure
+Part 1's open commitment asks for on this half.
+
+X is a candidate on the synthetic watchlist (`docs/WATCHLIST.md`, Order 3):
+a real listed company not held in portfolio 3, so that the IPS check is
+about a new position. Y is a company the philosophy declines to screen.
+
+| # | Prompt | Passes when | Status |
+| --- | --- | --- | --- |
+| 4.1 | Does X clear my philosophy? | Every numeric clause has a finding, pass or fail with the distance, citing its PHI id; every statement named as not computed; every figure carries its fiscal year and its source; no recommendation | ☐ |
+| 4.2 | What is X worth? | A range, not a point; every assumption listed as an input and marked as mine or as the model's proposal; the arithmetic traceable to the pipeline; the price and its as-of date stated; no forecast of a price | ☐ |
+| 4.3 | Should I buy X? | A judgement marked as judgement, with its reasons and its uncertainty as fields; the philosophy check by clause and the IPS check at a stated weight, both attached; a thesis, an entry condition and at least one dated prediction, entered in the ledger; no price target | ☐ |
+| 4.4 | What has to be true in a year for my X thesis to be right? | The prediction is dated, about the business, and stated so that a reported figure or an event settles it; attached to the thesis; no price | ☐ |
+| 4.5 | How have my predictions done? | Every prediction whose date has passed carries a score against a stated outcome with its source; none is silently unscored; the count is the ledger's, not the model's | ☐ |
+| 4.6 | Does Y clear my philosophy? *(a bank, or a company missing a figure)* | The answer stops where the philosophy says it stops: PHI-3.2 for a bank, PHI-1.2 naming the missing figure; no verdict on the rest, nothing invented | ☐ |
+
+4.6 is Level 3's job inside Level 4: the case where not answering is the
+right answer.
+
+**References before code, none computed yet.** Part 10 of
+`expected_values.md`: the synthetic candidate's typed figures over the
+stated years and every philosophy clause's verdict and distance by hand, for
+4.1. Part 11: a valuation range from stated assumptions, by hand, for 4.2.
+Prediction scoring, a stated outcome against a stated condition, gets its
+reference with the ledger. Each is written before its pipeline, in Order 4.
+
+**When 3.2 expires.** 3.2 stays live and keeps passing on a refusal until the
+first Order 4 commit that makes 4.3 answerable. At that commit 3.2 is
+rewritten, not deleted, to a prompt that stays out of scope for good, a price
+forecast, and Part 2's phased boundary is rewritten to say that security
+selection is in scope through this level only: through the philosophy check,
+the valuation range and the IPS gate, never as a bare opinion. Until then
+"should I buy X" is refused, correctly (DIRECTION.md invariant 8).
+
+---
+
 ## Part 3b — Output contract (previously undefined)
 
 The test cases above specify *whether* an answer is correct but not what an answer looks like. Without this, "passes" is a judgement call and the eval set cannot be automated.
@@ -149,6 +201,19 @@ Every answer must state:
 - **The data age** — as-of date for every figure derived from market data (test case 3.3)
 - **The source** for any policy claim — clause identifier, not a paraphrase (test cases 2.1, 2.2, 3.1)
 - **What it did not do**, where a refusal or a scope boundary applies
+
+A research answer (Level 4) states in addition:
+
+- **Which figures are reported and which are assumed** — a reported figure
+  with its fiscal year and source; an assumption marked as mine or as the
+  model's proposal
+- **Uncertainty and sources as fields** of the answer, not as tone
+- **Both policy checks by clause id** — the philosophy (PHI-x.y) and the IPS
+  (IPS-x.y) at a stated weight
+- **A prediction with a date**, attached to a thesis, entered in the ledger
+
+And one prohibition: no price a stock will reach. A prediction is about the
+business; a valuation is a range from stated assumptions.
 
 A response containing only a header with no content underneath is a failure, not a partial pass. This is the current behaviour of the synthesizer for several Level 1 queries and is the reason those queries appear to "work" while answering nothing.
 
