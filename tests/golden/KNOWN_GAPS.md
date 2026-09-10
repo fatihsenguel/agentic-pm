@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 10 September 2026, thirteenth session, on branch `selection`, after the personal IPS's binding (the policy a portfolio is checked against is named on its row, `portfolios.ips_path`, migrated; the compliance node loads that file in every mode; the loader has no default) and the growth rule for the type vocabulary, entry under Directions.
+Last updated 10 September 2026, thirteenth session, on branch `selection`, after the personal IPS's binding (the policy a portfolio is checked against is named on its row, `portfolios.ips_path`, migrated; the compliance node loads that file in every mode; the loader has no default), the growth rule for the type vocabulary, the stored closes held to the committed series, the two `source` defaults dropped, and the sweep below.
 
 ---
 
@@ -2753,7 +2753,7 @@ check-mark and cross emoji I strip as I go. Both a docstring edit; logged.
 through `get_data_manager()`, imports what it uses, and the two lists are
 plain dashes. Docstring only.
 
-### Two more `source` columns default to `yfinance`
+### Two more `source` columns default to `yfinance` - RESOLVED 10 September (thirteenth session)
 
 Recorded 10 September (twelfth session), seen while adding
 `daily_prices.source`. `FinancialStatement.source` (NOT NULL, default
@@ -2764,6 +2764,41 @@ the system has ever had. Neither table is on the benchmark's path; both
 are the repair shape. Dropping the defaults is a model change each, with a
 migration only if the database carries a server default (it did not for
 `portfolios.currency`; check before assuming). Logged, not chased.
+
+**Resolved 10 September (thirteenth session), dda3e24 and 71962cf.** No
+migration: I checked the database this time and neither column had a
+server default. Both model defaults dropped, six tests, two red first.
+Then the second statement of the same name: the provider typed the
+literal `yfinance` at four DTO sites where the price and rate fetches
+write `self.name`, and the macro DTO defaulted its own `source` to the
+literal too; all five write or require the provider's name now, ten
+tests against a stand-in library, red on the literal. The macro column
+stays nullable in the database; making it required is its own decision
+with its own migration and I did not take it. What the stand-in found
+on the way is its own entry below, "get_financial_statements returns
+nothing".
+
+### `get_financial_statements` returns nothing, on every call, silently
+
+Recorded 10 September (thirteenth session), found by the stand-in
+library in `test_provider_names_its_source.py`. The provider builds
+`ProviderFinancialStatement` with 26 keyword arguments the dataclass
+does not have (`cost_of_revenue`, `operating_cash_flow` and the rest;
+the DTO has revenue, net income, EPS, free cash flow, total assets,
+total liabilities and the raw dict), so the constructor raises on the
+first period, and the method's last line, `except (QuotaExceededError,
+Exception): return []`, returns an empty list as if the provider had
+nothing. The data manager's writer reads those 26 attributes off the
+DTO, so the DTO once had them; the 102 stored rows, dated to September
+2025, were written then. Since the fields went the method has returned
+nothing and nothing has noticed, because nothing in the graph reads the
+table (the "unused tables" entry under Directions). Two shapes in one:
+a blanket except that turns any error into an empty result, and a DTO
+narrower than its writer and its reader. Pinned as six strict expected
+failures in that test file, so the pin turns red the day the method
+returns rows and the marker has to come off. Not fixed: off the
+benchmark's path, and whether these Yahoo-fed statements are the
+judgement half's source at all is Order 4's decision.
 
 ### Four leftover tickers hold adjusted rows that nothing reads
 
@@ -2778,6 +2813,17 @@ rows by hand when convenient, the owner's, the way the leaked row 10 went;
 the price fetch test creates and removes its own asset and does not touch
 them.
 
+**10 September (thirteenth session): the statement, counted.** Ids 3, 4,
+5 and 9. Foreign keys are off in this database, so each child table is
+deleted by name; the rows, added up from the file: daily_prices 9,140,
+shares_history 576, financial_statements 37, quarterly_earnings 10,
+corporate_actions 4, asset_fetch_metadata 3, fundamentals 2, dividends 0,
+transactions 0, assets 4. After it daily_prices reads 6,939 (16,079 less
+9,140) and assets 9 (13 less 4). No test reads those rows; VWO and AMZN
+in the router's vocabulary and few-shots are words, not rows. The
+statement is in the handoff's quick reference; it is mine to run and I
+paste the two counts.
+
 ### The answer text does not name the price source
 
 Recorded 10 September (twelfth session). A close now carries its source
@@ -2786,6 +2832,24 @@ provider. Part 3b asks for the data age and for the source of a policy
 claim, not for the source of a price, so no case is failing; a "priced as
 of 2026-09-02, yfinance" line is a rendering decision with the runner as
 the loop that sees the text. Logged, not built.
+
+### The csv-versus-database comparison was a script run by hand - RESOLVED 10 September (thirteenth session)
+
+Pending item 24 of the twelfth session. The zero-mismatch comparison of
+the 2,268 committed cells against the database was a script of mine,
+run once, not in the repository. Now `tests/test_stored_closes_are_the_print.py`
+(cc3d432): every cell of the series against the stored close for that
+ticker and date, to the cent, one case per holding, on every pytest run
+over the suite's copy. It is the falsifier for "the table holds one
+convention" and the only loop that can see a refetch storing an adjusted
+close again: the schema test sees a source name, the price-source test a
+stand-in, the runner today's close, which agrees with the print either
+way (Part 9 A). Written against a database already right, so it could
+not be seen failing for its own reason; I scaled one JNJ close on a
+scratch copy by a dividend factor and it failed there naming JNJ,
+2026-08-21, 270.24 against 268.92, Part 9 B's row. A database not
+refetched as traded fails it and says which holding; a clone with no
+database is refused by conftest first.
 
 ### The CLI reads `exit` as a question
 
@@ -2823,6 +2887,12 @@ that moves with the price cache.
 **10 September (twelfth session).** Twenty-six at 606 tests, in about
 three seconds: three more SQLAlchemy `.get()` warnings from the price
 fetch test's own fetches over the database copy, the same floor.
+
+**10 September (thirteenth session).** Twenty-six at 645 passed and six
+expected failures. The wall time alternated between about three seconds
+and about nine across the day's runs with no change between them that
+could explain it; I did not measure where the six seconds go, so this
+is an observation and not a cause. Measure before explaining.
 
 ### `.gitignore` is corrupted
 
@@ -3157,6 +3227,45 @@ that every type is known or a statement; the real portfolio's ledger
 rows from my statements and the Part 8 reference for them, hand-computed
 first; then the row, with its absolute path, and the check script. My
 real portfolio's data stays out of the repository and enters last.
+
+### Mutation testing, once, over the pure modules
+
+**Logged 10 September (thirteenth session), not run.** Mutation testing
+changes the code on purpose, one small change at a time (a flipped
+comparison, a dropped condition, a replaced constant), and runs the
+suite against each; a change the suite does not catch names a test that
+cannot tell two states apart, which is this file's recurring lesson as
+a tool. Right for the pure modules, whose tests are deterministic and
+run in seconds: `quant/ledger.py`, `quant/allocation.py`,
+`compliance.py`, `ips.py`, `agents/extraction.py`. Wrong for the router
+and the nodes, where a mutant costs a model call or a database copy and
+the answer is nondeterministic. The shape if taken: one run with a
+standard Python mutation tool over those five modules, the survivors
+read and each one logged as what it shows, not a fifth loop and not a
+number to keep. Trigger: when I say, or before the checker grows its
+first personal clause type.
+
+### The tables the agents do not read
+
+**Recorded 10 September (thirteenth session), checked against callers.**
+Fundamentals, quarterly earnings and financial statements are read by
+three query tools in `tools/data_tools.py`, and nothing in the agent
+package imports that module, so no graph run reaches them; corporate
+actions and shares history have no reader outside the data layer;
+`Dividend` appears in the allocation module as the comment behind D4.
+The one table of the family the agents read is macro data, on the
+tolerated path. They will be wanted in kind, each when a reference and
+a case ask: dividends for total return (D4, Part 8's buy-shaped row,
+pending item 22); corporate actions for splits (D19, Part 9's missing
+split row, and a ledger decision before a table read); fundamentals and
+statements for the judgement half's valuation and philosophy check
+(Order 4), where DIRECTION.md names EDGAR for filings and whether these
+Yahoo-fed tables are the source is that step's decision. They were
+filled before the references-before-code rule, they carried the
+repair-shaped default item 20 removed, and nothing has ever checked a
+row of them against anything; the statements method has in fact
+returned nothing for months (entry under Hygiene). Untrusted until a
+reference exists, the way the stored closes turned out to deserve.
 
 ### Direction for `quant/`: one implementation per formula
 
