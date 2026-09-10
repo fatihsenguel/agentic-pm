@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 9 September 2026, ninth sitting, on branch `selection`, after the compliance selection axis, the rename to named denominators, the deletions and Part 8.
+Last updated 10 September 2026, tenth sitting, on branch `selection`, after the ledger (built end to end, the holdings table dropped), portfolios 1 and 2 deleted, Part 8 C with D15-D18, and the small pending items.
 
 ---
 
@@ -342,7 +342,7 @@ five hand-build `PortfolioResult` (`backtest_agent:250`, `macro_agent:321`,
 So the job is migrating five files to a helper that exists and works, not
 designing one.
 
-### No golden query runs against portfolio 3
+### No golden query runs against portfolio 3 - RESOLVED 10 September (tenth sitting)
 
 `run_golden.py`'s `QUERIES` list runs four of its ten queries against portfolio 1
 and one — the Technology-sector query — against portfolio 2. Portfolio 3, the
@@ -366,7 +366,16 @@ Note an earlier claim that the golden set uses only portfolio 1 was wrong. Both
 1 and 2 appear in `QUERIES`, and `expected.txt` carries `pid=2` on the
 Technology-sector query. `run_golden.py` has one commit and has never changed.
 
-### Seeding portfolio 3 rewrites metadata shared with portfolios 1 and 2
+**Resolved 10 September (tenth sitting), the other way round (c94603c,
+93290af).** The six queries on portfolios 1 and 2 moved to portfolio 3
+with the prediction that all five routing fields hold on all sixteen
+lines; two runs, identical, only the printed pid moved. Then portfolios 1
+and 2 were deleted from the database on the owner's decision: they had no
+purchase dates and could have no ledger. Every portfolio query in the fast
+loop now runs on the portfolio the benchmark is scored on; the extraction
+table mirrors it (its `SOME` tuple is a held set that is no portfolio).
+
+### Seeding portfolio 3 rewrites metadata shared with portfolios 1 and 2 - MOOT 10 September (tenth sitting)
 
 `asset_class` and `sector` live on `Asset`, not on `PortfolioHolding`, and
 `seed_portfolio.py` always rewrites that metadata. `Asset` rows are shared across
@@ -382,7 +391,12 @@ So "do not modify or delete portfolio 1" is not sufficient protection. Reseeding
 portfolio 3 mutates the data the baseline runs against, silently, and the golden
 runner prints no figures that would show it.
 
-### `test_portfolio_integration.py` still does not assert
+**Moot 10 September (tenth sitting).** Portfolios 1 and 2 are deleted;
+the nine assets are shared with nothing. The reseed still rewrites their
+metadata, to the same values, and `--reset` is on the deny list so it is
+the owner's to run.
+
+### `test_portfolio_integration.py` still does not assert - RESOLVED 10 September (tenth sitting)
 
 Confirmed by pytest emitting `PytestReturnNotNoneWarning` for
 `test_1_portfolio_crud` and `test_3_state_portfolio_context`. Every test function
@@ -400,6 +414,12 @@ false since the padding block went; the `except Exception` swallows the
 error and the function returns False, which pytest ignores. Two asserts
 on the deleted `parameters.portfolio_id` were removed from it (1238792);
 the rest is untouched and still passes unconditionally.
+
+**Resolved 10 September (tenth sitting), by deletion (c6241a4).** The
+round trip it checked is covered with assertions by
+`test_holdings_from_ledger.py`; the suite lost its last two live model
+calls and its two return-value warnings. The demo helper it alone called,
+`get_or_create_demo_portfolio`, went with `add_holding` (be14e4b).
 
 ---
 
@@ -515,7 +535,7 @@ silently uses GPT-4-Turbo rates.
 Fix the table and raise on unknown models. Matters disproportionately: the target
 role names LLM monitoring and evaluation, and this is the monitoring layer.
 
-### `ANTHROPIC_SONNET` points at the Haiku model id
+### `ANTHROPIC_SONNET` points at the Haiku model id - RESOLVED 10 September (tenth sitting)
 
 `agents/config.py:73-75`. Flipping `ACTIVE_LLM_CONFIG` would silently give Haiku
 with no error. `smart_router.py:104` imports it behind
@@ -525,6 +545,10 @@ Sonnet string against `GET /v1/models` rather than typing one in.
 **9 September (ninth sitting).** `claude-sonnet-5` is accepted by the
 token counter, so the id is known; the config line is unchanged, since
 decision 16 was logged rather than taken (its entry under Directions).
+
+**Resolved 10 September (tenth sitting), fc8c13c.** `claude-sonnet-5`,
+with a test that the two configs no longer share an id. The switch stays
+off; decision 16 is still logged, not taken.
 
 ### `cash_balance` cannot be absent, so D2 is unenforceable
 
@@ -553,6 +577,23 @@ USD-quoted yfinance prices for US tickers makes 1.2's P&L wrong by the exchange
 rate, silently. Severity depends on whether tickers carry an exchange suffix
 (`AAPL` vs `AAPL.DE`) — with the suffix, prices come back in EUR and the problem
 does not arise.
+
+**10 September (tenth sitting): the reference exists, the code does
+not.** expected_values.md Part 8 C and decisions D15-D18 (0aa030c; the
+workbook's `Ledger` sheet section C, cf8eb66): the base currency is the
+portfolio's; a price is in the asset's currency and a foreign holding's
+value is quantity x price x the spot rate on the price's as-of date, both
+dates stated; spot rates are a price source, per day, dated, a missing
+rate raises; cost basis, average price and realized gain are in the base
+currency, so a foreign holding's average is not comparable to its quote
+and a formatter names the currency of every figure. One buy of 100 AAPL at
+200.00 USD at a stated 0.9200 with 5.00 EUR fees is 18,405.00 EUR, 184.05
+average; at 324.96 and a stated 0.8500 spot, 27,621.60, +9,216.60,
++50.08%. The order when built: tests over Part 8 C, a rate table and its
+migration, the analysis node multiplying by the rate, the formatters
+naming currencies. Not started; the runner should not move on portfolio 3,
+which is USD throughout. The currency split of a gain is named and not
+computed.
 
 ### Prices are reported as current with no as-of date — RESOLVED 7 September
 
@@ -1597,7 +1638,7 @@ case behind them.
 decision carrying it is rejected at the schema.
 
 
-### `_decision_to_dict` drops `reasoning` and `clarification_question`
+### `_decision_to_dict` drops `reasoning` and `clarification_question` - RESOLVED 10 September (tenth sitting)
 
 Recorded 8 September (seventh sitting). The dict `router_node` stores
 carries intent, confidence, agents_needed, parameters and execution_order.
@@ -1614,6 +1655,10 @@ printed for the first time. `reasoning` is still dropped.
 **9 September (ninth sitting).** Still dropped: the diagnostic that read
 the model's `status` printed `reasoning: None` from the decision dict.
 Pending decision 6, unchanged.
+
+**Resolved 10 September (tenth sitting), 82d1d8e.** `reasoning` carried;
+the CLI's line prints. The golden runner does not print it, so no line
+moved.
 
 
 ### `AgentTask.depends_on` has no reader
@@ -1872,7 +1917,7 @@ risk than the record is worth. The rule it adds to the brief: `git status
 --short` before every `commit -am`, and a modified tracked binary is its
 own commit with its own message. Confirm with `git show --stat 22508c9`.
 
-### `graph.py` carries dead duplicates of the state helpers
+### `graph.py` carries dead duplicates of the state helpers - RESOLVED 10 September (tenth sitting)
 
 `_get_next_agent_internal` and `_is_execution_complete_internal` duplicate
 `state.get_next_agent` / `state.is_execution_complete` and have no caller;
@@ -1881,6 +1926,9 @@ own commit with its own message. Confirm with `git show --stat 22508c9`.
 **9 September (ninth sitting).** The task-list fallback inside
 `_get_next_agent_internal` went with the task list (a7a24bc); the two
 dead duplicates themselves remain, still with no caller.
+
+**Resolved 10 September (tenth sitting), be15869.** Both deleted after
+the grep: the first was called only by the second, the second by nothing.
 
 ### Clarification exits the graph on a proxy, not on the intent
 
@@ -2355,6 +2403,10 @@ deleted. The only exercise of `load_portfolio_context` outside
 collection. The right instrument is a pytest with a stubbed portfolio
 manager, the way `test_router_plans.py` stubs it. Not built.
 
+**10 September (tenth sitting).** Still not built with a stub; it is
+exercised live by `test_strict_nodes.py` over the database copy, through
+`record_transaction` since be14e4b.
+
 ### `max_conversation_history` is read by nothing
 
 Recorded 9 September (ninth sitting), seen while deleting
@@ -2362,7 +2414,7 @@ Recorded 9 September (ninth sitting), seen while deleting
 (`agents/config.py`) carries it with a default of 10; no reader. Same
 family as `log_tool_calls`. Logged, not chased.
 
-### The `transactions` table has no portfolio
+### The `transactions` table has no portfolio - RESOLVED 10 September (tenth sitting)
 
 Recorded 9 September (ninth sitting), for Order 2's first item. The
 models carry a `Transaction` with asset, date, type, quantity, price and
@@ -2376,6 +2428,89 @@ synthetic position built in two tranches and partly sold, exact to the
 cent. The workbook's `Ledger` sheet carries the same as formulas (64a9bec),
 not recalculated here. The code is next: a test over Part 8 that fails
 before the ledger exists, then the migration, then the derivation.
+
+**Built 10 September (tenth sitting), in the handoff's order, each step
+a test first.** `tests/test_ledger.py` over Part 8 A and B (9f629a9, the
+module imported in a fixture so a missing module is 29 errors and not an
+interrupted suite); the migration adding `portfolio_id` and `amount`, both
+NOT NULL in batch mode (ace01ff; applied by the owner, `alembic *` being
+on the deny list); `quant/ledger.py`, pure, `derive_holdings(rows)`
+(ab66cc3) - cost basis sums `amount` and never recomputes quantity x price
++/- fees, so a second currency enters as data, and Part 8 A and B cannot
+tell the two apart, which Part 8 C now can; a closed position is not a
+holding; one fixture error on the way (7cbf799: selling exactly what is
+held closes the position and is not an error). Then the reader: the seed
+writes one buy row per position (a46a522, and refuses a rerun without
+`--reset`, which would double every position); `get_holdings` derives from
+the rows and `get_portfolio_tickers` is its tickers, `add_holding` and
+its inline weighted average became `record_transaction` with every field
+required (be14e4b). Runner 12/12 after, as predicted. Then the holdings
+table dropped (4a3506f, migration 45b959c05420), D13 in the schema and not
+only in the reader.
+
+**A bug the reader exposed, fixed in be14e4b.** `delete_portfolio` deleted
+the holdings and the portfolio and not the ledger rows; SQLite does not
+enforce ON DELETE CASCADE unless foreign keys are switched on, and it
+reuses a deleted portfolio's id, so an orphaned ledger became the next
+portfolio's holdings in `test_strict_nodes.py`. Pinned by
+`test_delete_portfolio_removes_its_ledger`. Anything else that deletes a
+portfolio row by hand has the same hole.
+
+### Two run-by-hand scripts call the deleted `add_holding`
+
+Recorded 10 September (tenth sitting), from the grep before be14e4b.
+`tests/check_portfolio_manager.py` and `tests/system_diagnostic.py` are
+not collected by pytest (no `test_` prefix) and call
+`pm.add_holding(...)`, which became `record_transaction` with a date and an
+amount. Both are broken as scripts. Either they record buys with dates, or
+they go; each its own decision after the grep. Logged, not chased.
+
+### `ensure_asset_exists_helper` has no caller
+
+Recorded 10 September (tenth sitting). Its callers were
+`add_holding_with_auto_fetch` and `get_or_create_demo_portfolio`, both
+deleted in be14e4b. Deletion is safe; own commit after the grep.
+
+### A leaked asset row with no ticker
+
+Recorded 10 September (tenth sitting), seen while listing the assets'
+currencies. `assets` id 10 has no ticker, no name, no currency and no
+type. Nothing holds it and no ledger row names it. Delete by hand, the
+owner's, when convenient; the seed does not touch it.
+
+### `Transaction.date` defaults to now, and `fees` to zero
+
+Recorded 10 September (tenth sitting), seen with the migration. The model
+gives `date` a DateTime with a `utcnow` default and `fees` a default of
+0.0. Both are repair-shaped: a row written without a date gets today, a
+row written without a fee gets a free trade, each with a plausible face.
+`record_transaction` requires both, so the live writer cannot trip them;
+the seed passes both. Dropping the defaults (and `date` becoming a Date)
+is a model-and-migration change, own decision. The reader converts the
+stored timestamp to a date.
+
+### The workbook was written while Excel held it open
+
+Recorded 10 September (tenth sitting), a process failure of the session,
+not of the code. Before writing the `Ledger` sheet's section C, the check
+reported Excel still holding `expected_values.xlsx`, and the script wrote
+anyway. No harm followed: the owner closed Excel without saving and the
+write survived. The rule for the record: a write to the workbook is
+preceded by the check, and a check that says open stops the write; the
+owner closes the workbook first, every time. openpyxl writes formulas
+without cached values, so a sheet written here is recalculated by Excel on
+opening, never here.
+
+### `alembic *` and the seed's `--reset` are hard denies
+
+Recorded 10 September (tenth sitting). `.claude/settings.json` denies
+both before any prompt can appear, so "run it, I'll approve the prompt"
+cannot work: the owner runs them with `! .venv/bin/alembic upgrade head`
+and `! .venv/bin/python src/portfolio_tool/scripts/seed_portfolio.py
+--reset` (the venv is not active in that shell). A migration is therefore
+committed unexecuted, and the schema tests written before it
+(`test_transactions_schema.py`, `test_no_holdings_table.py`) are what
+show it did what it says.
 
 ### pytest warning inventory
 
@@ -2391,6 +2526,12 @@ blocks anything; the Pydantic one has a removal date.
 warning went with the class; the SQLAlchemy `.get()` count was twenty on
 this day's runs, not sixteen - it moves with what the price cache does
 during the run, so the inventory's number is a floor.
+
+**10 September (tenth sitting).** Twenty-one: the two
+`PytestReturnNotNoneWarning` went with `test_portfolio_integration.py`.
+And the suite runs in about three seconds, not fourteen: the fourteen were
+uncached provider calls and the deleted file's two model calls, measured
+by running the suite at HEAD with the reader change set aside.
 
 ### `.gitignore` is corrupted
 
@@ -2442,6 +2583,14 @@ and in the other views; `pct_of_total` is the checker's field on every
 line. The block's `denominator` label stays as the formatter's header;
 dropping it is its own decision. Runner 12/12 after, 1.1's own check
 having moved to the new name.
+
+**The label dropped 10 September (tenth sitting), 3edf370.** No
+`denominator` key in the block and no `denominator_label` on the
+dataclass; the three headers name each denominator by the share field's
+own word and give the amount from the block ("% of total portfolio value
+410,200.50", "% of sectored value 208,197.50"). D2 and D3 left the answer
+text; they are the reference's, not the reader's. Pending decision 14
+closed.
 
 
 ### Router parameter ordering is nondeterministic — RESOLVED 7 September
