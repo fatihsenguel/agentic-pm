@@ -1,0 +1,137 @@
+# The investment philosophy as config, derived from docs/PHILOSOPHY.md.
+#
+# One [[clause]] per clause of the document, in document order. `text` is the
+# clause verbatim: an answer cites these words, not a paraphrase. Limits are
+# in each metric's own unit: a share (return on capital, gross margin, free
+# cash flow yield, the discount) as a fraction, 12% written 0.12; a ratio
+# (net debt to EBITDA) as a ratio. `years` is how many of the latest fiscal
+# years the figure must satisfy the bound in, every one of them, 1 meaning the
+# latest year only.
+#
+# Types: statement (citable, not computed), metric_band (one named figure
+# held to min and/or max over `years` fiscal years), margin_of_safety (price
+# at most the low end of the valuation range less `discount`). Every `metric`
+# key names one figure a pipeline will compute with a hand-computed
+# reference first (DIRECTION.md Order 4); until then these are words in a
+# file and nothing reads them. A key nothing computes will fail to load.
+#
+# `topics` are my words for what a clause is about, lowercase, matched by
+# exact membership, never by similarity, the way ips.toml's are.
+#
+# tests/test_philosophy.py holds this file to the document: same clause ids,
+# same text, the document's numbers.
+
+[[clause]]
+id = "PHI-1.1"
+type = "statement"
+topics = ["purpose", "ips", "sizing"]
+text = """This document says what is worth wanting. The IPS says what may be held and how much. A company clears this document before the IPS sizes it; nothing here sizes a position, and nothing here overrides an IPS clause."""
+
+[[clause]]
+id = "PHI-1.2"
+type = "statement"
+topics = ["missing figures", "reported figures"]
+text = """A figure a company does not report is neither a pass nor a fail. The check stops and says which figure is missing. A clause is never skipped silently to let the rest of the screen report a verdict."""
+
+[[clause]]
+id = "PHI-2.1"
+type = "metric_band"
+topics = ["quality", "return on capital", "roic"]
+metric = "return_on_invested_capital"
+min = 0.12
+years = 5
+text = """Return on invested capital of at least 12% in each of the last five fiscal years."""
+
+[[clause]]
+id = "PHI-2.2"
+type = "metric_band"
+topics = ["quality", "gross margin", "margins"]
+metric = "gross_margin"
+min = 0.35
+years = 3
+text = """Gross margin of at least 35% in each of the last three fiscal years."""
+
+[[clause]]
+id = "PHI-2.3"
+type = "statement"
+topics = ["quality", "understanding", "business model"]
+text = """I own businesses I can explain in a paragraph: what is sold, to whom, why they keep buying, and what would make them stop. If I cannot write that paragraph the company is not a candidate, whatever its figures."""
+
+[[clause]]
+id = "PHI-3.1"
+type = "metric_band"
+topics = ["balance sheet", "debt", "leverage", "net debt"]
+metric = "net_debt_to_ebitda"
+max = 2.0
+years = 1
+text = """Net debt of at most 2.0 times EBITDA in the latest fiscal year."""
+
+[[clause]]
+id = "PHI-3.2"
+type = "statement"
+topics = ["balance sheet", "banks", "insurers", "financials"]
+text = """Banks and insurers are not screened by this section; their balance sheet is their business. I do not own them until this document has clauses for them."""
+
+[[clause]]
+id = "PHI-4.1"
+type = "margin_of_safety"
+topics = ["price", "value", "margin of safety", "valuation", "discount"]
+discount = 0.25
+text = """I pay at most the low end of my valuation range less a 25% discount. The range comes from assumptions I state; the price is the last close."""
+
+[[clause]]
+id = "PHI-4.2"
+type = "metric_band"
+topics = ["price", "free cash flow", "yield"]
+metric = "free_cash_flow_yield"
+min = 0.04
+years = 1
+text = """Free cash flow yield of at least 4% at the last close, on the latest fiscal year's free cash flow."""
+
+[[clause]]
+id = "PHI-4.3"
+type = "statement"
+topics = ["valuation", "assumptions", "range", "forecast"]
+text = """A valuation is a range from stated assumptions, never a point, and never a forecast of a price. The assumptions are mine and are written down; the arithmetic that follows from them is not. An answer says which is which."""
+
+[[clause]]
+id = "PHI-5.1"
+type = "statement"
+topics = ["exclusions", "commodity", "customer concentration", "regulation"]
+text = """No business whose result depends on the price of one commodity, on one customer, or on one regulatory decision I cannot read."""
+
+[[clause]]
+id = "PHI-5.2"
+type = "statement"
+topics = ["exclusions", "restatement", "accounts"]
+text = """No business that has restated its accounts in the last five years."""
+
+[[clause]]
+id = "PHI-6.1"
+type = "statement"
+topics = ["watchlist", "thesis", "entry condition", "prediction"]
+text = """Every candidate on the watchlist carries a thesis in a paragraph, an entry condition stated against the valuation range or as an event, and at least one dated prediction: what has to be true about the business within a year for the thesis to have been right."""
+
+[[clause]]
+id = "PHI-6.2"
+type = "statement"
+topics = ["prediction", "scoring", "ledger"]
+text = """A prediction is a statement about the business with a date, never a price. It is scored when its date comes, against what the company reported, and the score is recorded whether or not I still hold the position."""
+
+[[clause]]
+id = "PHI-6.3"
+type = "statement"
+topics = ["prediction", "thesis", "failed prediction", "watchlist"]
+text = """A failed prediction reopens the thesis. A thesis with two failed predictions is closed and the candidate leaves the watchlist; it may return with a new thesis, not with the old one repaired."""
+
+[[clause]]
+id = "PHI-7.1"
+type = "statement"
+topics = ["review", "philosophy change"]
+text = """This document is reviewed once a year. A change to a number in sections 2 to 4 is a change in what I look for and is dated."""
+
+[[clause]]
+id = "PHI-7.2"
+type = "statement"
+topics = ["review", "holdings", "annual report", "thesis review"]
+text = """A holding is rechecked against sections 2 to 4 after every annual report. A holding that fails a screen it passed at entry is not sold by this document; it is a thesis review, and the IPS says nothing about it either."""
