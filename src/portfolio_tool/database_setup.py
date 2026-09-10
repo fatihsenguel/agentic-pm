@@ -150,6 +150,8 @@ class Transaction(Base):
     included (D11) - and is data, never computed from the other columns.
     `date` is the trade day, a Date with no default: a row without one is
     unstorable rather than stamped with today (migration 552ab8900332).
+    `fees` is required with no default: a row without one is a free trade
+    with a plausible face (migration 88d7b7afdce7).
     """
     __tablename__ = 'transactions'
     id = Column(Integer, primary_key=True)
@@ -159,7 +161,7 @@ class Transaction(Base):
     type = Column(String(10), nullable=False)
     quantity = Column(Float, nullable=False)
     price_per_unit = Column(Float, nullable=False)
-    fees = Column(Float, default=0.0)
+    fees = Column(Float, nullable=False)
     amount = Column(Float, nullable=False)
     asset = relationship('Asset', back_populates='transactions')
 
