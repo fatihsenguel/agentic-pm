@@ -1,18 +1,28 @@
 """
-compliance_agent_node over a synthetic state: what it publishes, and that
-it refuses to run without PortfolioAnalysisAgent's output.
+compliance_agent_node over a synthetic state: what it publishes, that it
+refuses to run without PortfolioAnalysisAgent's output, and that the policy
+it loads is the portfolio's.
 
-No database, no LLM. The allocation is the Part 7 fixture from
-test_compliance.py; the holdings summary carries the instrument types the
-way build_holdings_summary publishes them.
+No LLM. The allocation is the Part 7 fixture from test_compliance.py; the
+holdings summary carries the instrument types the way
+build_holdings_summary publishes them. One database read: the policy file
+is named on the portfolio row (DIRECTION.md Order 2, item 4), and the node
+resolves it from the portfolio the state names, in every mode, since the
+hypothetical and lookup modes plan no DataAgent and nothing else has read
+the row. The states here name portfolio 3 on the suite's copy of the
+database, whose row names the committed `ips.toml`.
 """
 
 import pytest
 
 from agents.nodes import compliance_agent_node
 from agents.state import create_initial_state
+from portfolio_tool.portfolio_manager import PortfolioManager
 
 from test_compliance import INSTRUMENT_TYPES, TOTAL, allocation
+
+
+BENCHMARK_PORTFOLIO = 3
 
 
 def holdings():
@@ -21,8 +31,9 @@ def holdings():
             for t, kind in INSTRUMENT_TYPES.items()]
 
 
-def state_with(_params=None, **shared):
-    state = create_initial_state("Does my allocation violate any rule of my policy?")
+def state_with(_params=None, portfolio_id=BENCHMARK_PORTFOLIO, **shared):
+    state = create_initial_state("Does my allocation violate any rule of my policy?",
+                                 portfolio_id=portfolio_id)
     state["shared_data"] = shared
     state["agents_to_run"] = ["ComplianceAgent"]
     state["router_decision"] = {"intent": "compliance", "parameters": _params or {}}
@@ -140,3 +151,60 @@ async def test_both_modes_is_an_error():
         state_with({"hypothetical_weight": 0.15, "policy_topic": "cash"}))
     [error] = out["errors"]
     assert "Both" in error
+
+
+# --- the policy is the portfolio's -------------------------------------------
+
+ONE_CLAUSE = """
+[[clause]]
+id = "IPS-9.1"
+type = "max_instrument_weight"
+topics = ["concentration"]
+max = 0.20
+text = "No single instrument exceeds 20% of total portfolio value."
+"""
+
+
+@pytest.fixture
+def portfolio_naming(tmp_path):
+    """A portfolio whose row names a policy file outside the repository."""
+    pm = PortfolioManager()
+    created = []
+
+    def make(path):
+        portfolio_id = pm.create_portfolio("Policy Node Test", currency="USD", ips_path=path)
+        created.append(portfolio_id)
+        return portfolio_id
+
+    yield make
+    for portfolio_id in created:
+        pm.delete_portfolio(portfolio_id)
+
+
+@pytest.mark.parametrize("params", [{"policy_topic": "concentration"}, {"hypothetical_weight": 0.15}])
+async def test_the_policy_loaded_is_the_portfolios(tmp_path, portfolio_naming, params):
+    """A personal file, one clause, named on the row: every mode loads it and
+    not the committed policy."""
+    personal = tmp_path / "ips.toml"
+    personal.write_text(ONE_CLAUSE, encoding="utf-8")
+    out = await compliance_agent_node(state_with(params, portfolio_id=portfolio_naming(str(personal))))
+    assert out.get("errors") is None, out.get("errors")
+    block = out["shared_data"]["compliance"]
+    assert list(block["policy"]) == ["IPS-9.1"]
+
+
+async def test_no_portfolio_is_no_policy():
+    """A policy question with no portfolio set has no policy to answer from:
+    a refusal, not the committed file with a plausible face."""
+    out = await compliance_agent_node(state_with({"policy_topic": "cash"}, portfolio_id=None))
+    assert "compliance" not in (out.get("shared_data") or {})
+    [error] = out["errors"]
+    assert "no portfolio" in error.lower() and "policy" in error.lower()
+
+
+async def test_a_portfolio_naming_an_absent_file_is_refused_by_name(tmp_path, portfolio_naming):
+    absent = str(tmp_path / "absent.toml")
+    out = await compliance_agent_node(state_with({"policy_topic": "cash"}, portfolio_id=portfolio_naming(absent)))
+    assert "compliance" not in (out.get("shared_data") or {})
+    [error] = out["errors"]
+    assert absent in error

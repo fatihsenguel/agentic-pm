@@ -148,6 +148,31 @@ def load_portfolio_context(state: "AgentState") -> PortfolioContext:
     )
 
 
+def load_portfolio_policy_path(state: "AgentState") -> str:
+    """The policy file the portfolio a request is about is checked against,
+    from its row (DIRECTION.md Order 2, item 4).
+
+    Separate from load_portfolio_context because a policy question needs no
+    holdings: the hypothetical and lookup modes plan no DataAgent, and an
+    empty portfolio still has a policy. No portfolio is no policy - a
+    refusal, never the committed file with a plausible face.
+    """
+    portfolio_id = state.get("portfolio_id")
+    if not portfolio_id:
+        raise PortfolioContextError(
+            "No portfolio specified, so no policy to read: the policy is the "
+            "portfolio's (create_initial_state(..., portfolio_id=X))."
+        )
+    from portfolio_tool.portfolio_manager import PortfolioManager
+    portfolio = PortfolioManager().get_portfolio(portfolio_id)
+    if portfolio is None:
+        raise PortfolioContextError(
+            f"Portfolio {portfolio_id} not found.\n"
+            "Check portfolio_id is correct."
+        )
+    return portfolio["ips_path"]
+
+
 def get_current_positions(holdings: Optional[List[Dict]]) -> Dict[str, float]:
     """
     Convert holdings list to position dictionary.
@@ -1041,12 +1066,15 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
     """
     Compliance Agent node - the IPS applied to the published allocation.
 
-    Reads only `shared_data`: the allocation block PortfolioAnalysisAgent
-    published, and the holdings summary for each position's instrument
-    type. No database, no provider, no recomputation
+    Reads `shared_data` for its figures: the allocation block
+    PortfolioAnalysisAgent published, and the holdings summary for each
+    position's instrument type. No provider, no recomputation
     (tests/golden/KNOWN_GAPS.md, "wip/phase7-snapshot was read and rejected").
-    Loads the policy from ips.toml on every run, so a broken policy file
-    fails the run that needs it and not the import of everything.
+    One database read: which policy file the portfolio is checked against
+    is on its row (DIRECTION.md Order 2, item 4), resolved here in every
+    mode because the two portfolio-free modes plan no DataAgent. Loads that
+    policy on every run, so a broken policy file fails the run that needs
+    it and not the import of everything; no portfolio is no policy.
 
     Publishes `shared_data["compliance"]`: the loaded policy (id, type and
     the clause text a citation quotes), its statements, the D2 denominator,
@@ -1098,7 +1126,8 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
         from portfolio_tool.compliance import check, refuse
         from portfolio_tool.ips import load_ips, normalise_topic
 
-        ips = load_ips()
+        ips = load_ips(load_portfolio_policy_path(state))
+        print(f"  policy: {ips.path}")
         total_value = None
         as_of = None
         base_currency = None
