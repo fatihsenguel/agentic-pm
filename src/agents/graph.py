@@ -52,36 +52,6 @@ if set(AGENT_NODES) != set(AGENTS):
 
 
 # =============================================================================
-# HELPER LOGIC (Internal)
-# =============================================================================
-
-def _get_next_agent_internal(state: AgentState) -> str | None:
-    """
-    Determines the next agent to run based on the plan and completion status.
-    Self-contained logic to ensure robustness.
-    """
-    decision = state.get("router_decision", {})
-    
-    # 1. Get the plan (List of agent names)
-    plan = decision.get("execution_order", [])
-    
-    # 2. Check who has finished
-    completed_agents = state.get("sub_results", {}).keys()
-    
-    # 3. Find first agent in plan that hasn't finished
-    for agent_name in plan:
-        if agent_name not in completed_agents:
-            return agent_name
-            
-    return None
-
-
-def _is_execution_complete_internal(state: AgentState) -> bool:
-    """Checks if all agents in the plan have run."""
-    next_agent = _get_next_agent_internal(state)
-    return next_agent is None
-
-# =============================================================================
 # ROUTING LOGIC (THE BRAIN)
 # =============================================================================
 
