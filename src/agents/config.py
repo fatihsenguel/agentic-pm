@@ -68,11 +68,13 @@ ANTHROPIC_HAIKU = LLMConfig(
     max_tokens=1024,
 )
 
-# TODO: update to a current Sonnet model id when a stronger model is needed.
-# Points at Haiku for now so the name resolves and agents/__init__.py imports.
+# The stronger model behind the router's use_stronger_model switch, off by
+# default. Decision 16 (KNOWN_GAPS) is logged, not taken; this is only the
+# id, accepted by the token counter on 9 September, so that flipping the
+# switch gives Sonnet and not Haiku with a plausible face.
 ANTHROPIC_SONNET = LLMConfig(
     provider="anthropic",
-    model="claude-haiku-4-5-20251001",
+    model="claude-sonnet-5",
     temperature=0.1,
     max_tokens=2048,
 )
