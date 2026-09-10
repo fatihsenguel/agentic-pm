@@ -13,9 +13,11 @@ from agents.nodes import _format_allocation_response
 from test_compliance import allocation
 
 
-def _answer(alloc, group_by=None):
-    return "\n".join(_format_allocation_response(
-        {"PortfolioAnalysisAgent": {"success": True, "allocation": alloc}}, group_by))
+def _answer(alloc, group_by=None, base_currency="USD"):
+    result = {"success": True, "allocation": alloc}
+    if base_currency is not None:
+        result["base_currency"] = base_currency
+    return "\n".join(_format_allocation_response({"PortfolioAnalysisAgent": result}, group_by))
 
 
 def test_sector_lines_carry_the_share_of_total():
@@ -89,3 +91,34 @@ def test_headers_name_each_denominator_from_the_block_itself():
     assert "sectored value 208,197.50" in text
     assert "invested value 394,700.50" in text
     assert "D2" not in text and "D3" not in text
+
+
+# --- D18: every figure names its currency -----------------------------------
+
+def test_total_lines_name_the_base_currency():
+    """The block's currency, read from the result, on the total and on the
+    invested-plus-cash line."""
+    text = _answer(allocation())
+    assert "**Total portfolio value:** 410,200.50 USD" in text
+    assert "invested 394,700.50 USD + cash 15,500.00 USD" in text
+
+
+def test_every_rendered_table_says_its_amounts_are_in_the_base():
+    """One statement per table covers every amount in it; a cell-by-cell
+    suffix would say the same thing thirty times."""
+    assert _answer(allocation()).count("amounts in USD") == 3
+    assert _answer(allocation(), group_by="sector").count("amounts in USD") == 1
+
+
+def test_currency_is_read_from_the_block_not_assumed():
+    text = _answer(allocation(), base_currency="EUR")
+    assert "410,200.50 EUR" in text
+    assert "amounts in EUR" in text
+    assert "USD" not in text
+
+
+def test_missing_base_currency_raises():
+    """A formatter with a fallback would print a currency nobody published."""
+    import pytest
+    with pytest.raises(ValueError, match="base_currency"):
+        _answer(allocation(), base_currency=None)
