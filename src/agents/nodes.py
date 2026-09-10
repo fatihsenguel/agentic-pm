@@ -705,7 +705,14 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
     The router's `measure` says which was asked for; the synthesizer reads it,
     this node does not.
 
-    Reference: expected_values.md Parts 1-4, decisions D1-D8.
+    Every figure is in the portfolio's base currency (D15). A holding priced
+    in another currency is valued through the spot rate on its price's date,
+    read from the table DataAgent published; the rate and its date are
+    published beside the price's (D16). A foreign holding with no rate for
+    that day stops the node (D17): the answer is a refusal naming the
+    currency and the date, and nothing is published.
+
+    Reference: expected_values.md Parts 1-4 and 8 C, decisions D1-D8, D15-D18.
     """
     tracer = get_tracer()
     agent_ctx = None
@@ -762,17 +769,44 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
                 "denominator, and the percentages would all be wrong."
             )
 
+        # The base currency and the rate table are DataAgent's to publish
+        # (D15, D17). An absent key is neither a dollar portfolio nor an
+        # empty table: it is an input nobody supplied. An empty table is a
+        # valid one, and is what a single-currency portfolio carries.
+        base_currency = shared.get("base_currency")
+        if not base_currency:
+            raise DataCalculationError(
+                "No base_currency in shared_data.\n"
+                "Every figure is reported in the portfolio's currency "
+                "(expected_values.md D15); without it nothing can be valued."
+            )
+        if "fx_rates" not in shared:
+            raise DataCalculationError(
+                "No fx_rates in shared_data.\n"
+                "DataAgent publishes the spot rates on the held tickers' as-of "
+                "dates (D17), an empty table when no holding is foreign. An "
+                "absent table is not an empty one."
+            )
+        fx_rates = shared["fx_rates"]
+
         from portfolio_tool.quant.allocation import (
             allocation_by_asset_class,
             allocation_by_position,
             allocation_by_sector,
             position_pnl,
         )
+        from portfolio_tool.quant.fx import spot_rates
 
-        by_class = allocation_by_asset_class(holdings, prices, cash_balance)
-        by_sector = allocation_by_sector(holdings, prices, cash_balance)
-        by_position = allocation_by_position(holdings, prices, cash_balance)
-        pnl = position_pnl(holdings, prices)
+        # One entry per holding: None when its currency is the base, else the
+        # rate on its price's date (D16). A foreign holding with no rate for
+        # that day raises here, before anything is valued, and the answer is
+        # the refusal Part 8 C describes, not a value at another rate.
+        rates = spot_rates(holdings, as_of_dates, base_currency, fx_rates)
+
+        by_class = allocation_by_asset_class(holdings, prices, cash_balance, rates)
+        by_sector = allocation_by_sector(holdings, prices, cash_balance, rates)
+        by_position = allocation_by_position(holdings, prices, cash_balance, rates)
+        pnl = position_pnl(holdings, prices, rates)
 
         # An allocation line aggregates several holdings, so no single holding's
         # date describes it. Reduce to the worst case: no figure is presented as
@@ -865,22 +899,31 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
             "annualisation": config.data.trading_days_per_year,
         }
 
+        # `price` is the quote in `currency`; cost basis, average price,
+        # market value and P&L are in the base currency (D18). `rate` and
+        # `rate_as_of` are the spot rate the value went through and its
+        # day, None when the currencies agree (D16, D17). Both dates travel
+        # so the formatter states them and derives nothing.
         position_pnl_summary = {
             t: {
                 "quantity": p.quantity,
                 "average_price": p.average_price,
                 "price": p.price,
+                "currency": p.currency,
                 "cost_basis": round(p.cost_basis, 2),
                 "market_value": round(p.market_value, 2),
                 "pnl_abs": round(p.pnl_abs, 2),
                 "pnl_pct": p.pnl_pct,
                 "purchase_date": p.purchase_date,
                 "as_of": as_of_dates[t],
+                "rate": p.rate,
+                "rate_as_of": p.rate_as_of,
             }
             for t, p in pnl.items()
         }
 
         allocation_summary = {
+            "base_currency": base_currency,
             "by_asset_class": {
                 "lines": _lines(by_class),
                 "invested_value": round(by_class.invested_value, 2),
@@ -918,6 +961,7 @@ async def portfolio_analysis_agent_node(state: AgentState) -> Dict[str, Any]:
         result = {
             "success": True,
             "agent_name": "PortfolioAnalysisAgent",
+            "base_currency": base_currency,
             "allocation": allocation_summary,
             "position_pnl": position_pnl_summary,
             "portfolio_volatility": portfolio_volatility_summary,
