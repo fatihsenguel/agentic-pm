@@ -117,3 +117,11 @@ async def test_part_3_columns_are_unchanged(published):
     assert lines["Technology"]["pct_of_sectored"] == pytest.approx(0.5508, abs=0.00005)
     assert lines["Technology"]["pct_of_invested"] == pytest.approx(0.2905, abs=0.00005)
     assert lines["(no sector)"]["pct_of_sectored"] is None
+
+
+@pytest.mark.parametrize("view", ["by_asset_class", "by_sector", "by_position"])
+async def test_blocks_carry_no_denominator_label(published, view):
+    """Every share names its own denominator (pct_of_total, pct_of_sectored,
+    pct_of_invested) and the block carries the amounts; a prose label in the
+    block was the formatter's words living in the computation."""
+    assert "denominator" not in published[view]

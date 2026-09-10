@@ -73,3 +73,19 @@ def test_no_group_by_renders_all_three_views():
     assert "By position" in text
     assert "so all three are" in text   # the sentence wraps after "are"
 
+
+
+def _without_labels(alloc):
+    for view in alloc.values():
+        view.pop("denominator", None)
+    return alloc
+
+
+def test_headers_name_each_denominator_from_the_block_itself():
+    """No prose label in the block: the formatter writes each header from
+    the share fields' own names and the block's amounts."""
+    text = _answer(_without_labels(allocation()))
+    assert "% of total portfolio value 410,200.50" in text
+    assert "sectored value 208,197.50" in text
+    assert "invested value 394,700.50" in text
+    assert "D2" not in text and "D3" not in text
