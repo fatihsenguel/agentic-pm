@@ -220,7 +220,7 @@ false-pass shape on the case benchmark.md calls its most important.
 
 # OPEN
 
-**70 open entries: 1 blocks the next commit, 10 block a named Order,
+**70 open entries: 0 block the next commit, 11 block a named Order,
 59 block nothing.** One line under each open heading says which. The tag is
 what an entry blocks now, not how serious it looked when it was written, and
 it moves when the work moves. This pass adds the tags and nothing else: no
@@ -437,7 +437,7 @@ answer arrives with a plausible face instead of an error. Same family as bugs 5,
 
 ### The compliance gate is a plan step, and one live path prints weights around it
 
-**Blocks:** the next commit.
+**Blocks:** Order 4, the research node.
 
 **Found 11 September (fourteenth session), from an outside reading of the
 project, and confirmed against the code the same hour.** DIRECTION.md
@@ -479,6 +479,43 @@ checks attached, and building the node, its formatter and its runner probes
 on the assumption that compliance is a step makes the gate a retrofit under
 all three. The failure mode is silent: a research answer that skipped the
 check looks exactly like one that passed it.
+
+**Shape 2 taken, 11 September (fifteenth session), 33b31d5 to 710e877.** The
+paragraph above says none of the three was taken; the second is, and the two
+sentences stand as written rather than being rewritten. The check came first
+and was seen failing for both surfaces
+(`tests/test_no_weight_outside_compliance.py`, 33b31d5): an intent that
+cannot plan the checker renders no proposed weight and no trade, asserted
+against the optimiser's `optimal_weights` and the rebalancer's `trades`, with
+the intents that run no checker derived from `TERMINAL` rather than listed.
+Narrow on purpose - a share of a holding the portfolio already has is not a
+proposed position, so the allocation answer's per-position table is untouched,
+and a blanket rule over a ticker near a percentage would have failed it. Then
+the two surfaces (b618ba0, 710e877): the optimiser keeps its return,
+volatility and Sharpe, the rebalancer its drift, and each answer names what it
+did not show and why (Part 3b). Neither `Optimal Allocation` nor `Proposed
+Trades` is a string in `nodes.py` any more, so the search the paragraph above
+names finds nothing; the one `Optimal Allocation` left in the tree is
+`risk_manager_agent.py`'s, in the supervisor nothing instantiates.
+
+**What that does and does not settle.** Invariant 2 is true today because
+nothing outside intent `compliance` states a position, not because a gate
+exists. The three things a real gate needs are still absent: a declared mark
+saying which answers imply a position, a checker entry point taking a proposed
+weight set (neither `check` nor `refuse` does, and it needs its own
+hand-computed reference Part - Part 7 is over a held portfolio), and a policy
+to check against, which the pinned optimisation query has not got, since it
+runs at `pid=None` and no portfolio is no policy. The gate is therefore
+designed with the research node, where case 4.3 defines what checked means,
+rather than built now over surfaces benchmark.md's roster does not name.
+Shape 3, narrowing the invariant in DIRECTION.md, is rejected: nothing needed
+narrowing once the surfaces went.
+
+Runner 12/12 after, as predicted, and the prediction was that it could not
+see the change at all: no case exercises optimization or rebalancing. The
+golden set was not run - no intent, plan, period or `agents_run` moves, and a
+formatter cannot raise here, so `errors` holds and `expected.txt` does not
+move. pytest is the loop that sees this, 735 to 738.
 
 
 
