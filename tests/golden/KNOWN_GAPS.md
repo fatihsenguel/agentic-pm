@@ -220,9 +220,17 @@ false-pass shape on the case benchmark.md calls its most important.
 
 # OPEN
 
+**70 open entries: 1 blocks the next commit, 10 block a named Order,
+59 block nothing.** One line under each open heading says which. The tag is
+what an entry blocks now, not how serious it looked when it was written, and
+it moves when the work moves. This pass adds the tags and nothing else: no
+entry below is edited, resolved, or moved.
+
 ## Verification instruments do not cover what they appear to cover
 
 ### The golden runner prints five routing fields and nothing else
+
+**Blocks:** nothing.
 
 `run_golden.py` prints `intent`, `plan`, `execution_order`, `period`,
 `agents_run` and an error count. It never prints answer content or any numeric
@@ -429,6 +437,8 @@ answer arrives with a plausible face instead of an error. Same family as bugs 5,
 
 ### The compliance gate is a plan step, and one live path prints weights around it
 
+**Blocks:** the next commit.
+
 **Found 11 September (fourteenth session), from an outside reading of the
 project, and confirmed against the code the same hour.** DIRECTION.md
 invariant 2 says an answer that implies a position is checked against the
@@ -586,6 +596,8 @@ exactly, the error naming both plans; nothing reorders.
 
 ### A router failure becomes a clarification with confidence 0.0
 
+**Blocks:** nothing.
+
 Recorded 7 September (third sitting). `SmartRouter.route` catches every exception and returns
 `_create_fallback_decision`, which is `clarification_needed` with a fixed
 German apology. Any failure between the LLM call and the decision - parse,
@@ -624,6 +636,8 @@ question). The fallback is still confidence 0.0 with the German apology.
 
 ### CostCalculator reports costs for the wrong model
 
+**Blocks:** nothing.
+
 `observability/tracer.py:406` — `PRICING` is a 2024 table with no Anthropic 4.x
 entries, and `estimate_cost` does `PRICING.get(model, PRICING["gpt-4-turbo"])`.
 The active model (`claude-haiku-4-5-20251001`) is absent, so every cost figure
@@ -648,6 +662,8 @@ with a test that the two configs no longer share an id. The switch stays
 off; decision 16 is still logged, not taken.
 
 ### `cash_balance` cannot be absent, so D2 is unenforceable
+
+**Blocks:** Order 6, the real portfolio.
 
 `Portfolio.cash_balance` is `Column(Float, nullable=False, default=0.0)`.
 
@@ -859,6 +875,8 @@ needing.
 
 ### The synthesizer returns the same answer regardless of the question
 
+**Blocks:** nothing.
+
 All four benchmark Level 1 queries return a byte-identical response:
 
     Analysis complete. See details below:
@@ -927,6 +945,8 @@ under Hygiene, "Optimization failed: None").
 
 ### `shared_data` carries 160KB of raw prices — hot potato violated
 
+**Blocks:** Order 5, the conversational layer.
+
 `price_data_json` was 67,190 characters of daily OHLC on the 3Y queries and
 22,501 on the 1Y query. **Measured again 4 September on portfolio 3: 161,557
 characters**, 2.4x the recorded figure — the earlier measurement was taken on
@@ -944,6 +964,8 @@ gets centralised. The agents downstream need returns and covariance, both alread
 computed and already in shared_data separately.
 
 ### Rebalance has no target allocation source
+
+**Blocks:** nothing.
 
 "Should I rebalance my portfolio?" fails with "No target weights from
 OptimizationAgent." RebalanceAgent needs a target to measure drift against; the
@@ -1090,6 +1112,8 @@ the lookup from its phrasing (55dd80c), otherwise the portfolio check.
 
 ### RiskManagerAgent is not a risk agent - it is an unused second orchestrator
 
+**Blocks:** nothing.
+
 `src/agents/risk_manager_agent.py` exists but has no graph node, no routing entry,
 and no mention in `router_prompts.py`. The router classifies
 `intent: risk_analysis` correctly and then has nowhere to send it. Risk queries
@@ -1129,6 +1153,8 @@ recorded there. Nothing from this file was salvaged for it: the
 concentration figures 2.1 needs are the compliance findings.
 
 ### No API path to set `asset_class` or `sector`
+
+**Blocks:** nothing.
 
 `PortfolioManager.update_holding:456` accepts only `quantity` and
 `average_price`. Those fields live on `Asset`, reachable only via SQLAlchemy
@@ -1186,6 +1212,8 @@ Expected answer for portfolio 3: 10.2936%.
 
 ### Case 3.2 fails, and not by recommending
 
+**Blocks:** Order 4, the commit that makes 4.3 answerable.
+
 "Should I buy Nvidia?" returns `intent: clarification_needed` and offers four ways
 to proceed with buying NVDA. 3.2 passes only when the system refers to the scope
 boundary and gives no recommendation. It did neither — it treated an out-of-scope
@@ -1208,6 +1236,8 @@ Do not "fix" 3.2 by widening the router toward recommendations. The out_of_scope
 intent is still the correct build.
 
 ### The router cannot express an absolute date range
+
+**Blocks:** nothing.
 
 `ExtractedParameters.period` is `Optional[str]` with pattern `^\d+[YMD]$`, so a
 period is always relative and always anchored to the moment of the query. "My
@@ -1387,6 +1417,8 @@ Nothing to build now. This exists so that when the analyst arrives, the question
 
 ### The macro path has not produced an answer since at least 3 September
 
+**Blocks:** nothing.
+
 Recorded 7 September (third sitting). Every live macro run ends in
 `MacroAgent error: Yield curve data missing from snapshot`: `fetch_macro_data_tool`
 reports 60 rows imported, `get_macro_snapshot_tool` returns a yield curve
@@ -1399,6 +1431,8 @@ success branch has not run in a month, which is why a CLI check of it could
 not see anything.
 
 ### MacroAgent is live but outside the target architecture
+
+**Blocks:** nothing.
 
 Wired into the graph (`graph.py:118`, routing map at 135) and named in
 `router_prompts.py`, with two of the four few-shot examples using it. Absent from
@@ -1416,6 +1450,8 @@ reading `shared["macro_regime"]` for `regime` and `equity_adjustment`,
 `risk_manager_agent.py:374` delegates regime analysis to it.
 
 ### The macro `equity_adjustment` surface is a market-timing recommendation
+
+**Blocks:** nothing.
 
 Rewritten 7 September. The entry used to be titled after
 `generate_taa_signal_tool`, and the 7 September handoff turned that into
@@ -1453,6 +1489,8 @@ here.
 ## Configuration and policy duplication
 
 ### Period vocabulary lives in three places
+
+**Blocks:** nothing.
 
 `DataConfig.period_days` (`config.py:40`) holds the valid period keys. The router
 prompt hardcodes the same list independently in its extraction rules. Policy
@@ -1628,12 +1666,16 @@ registry reads; see "Roster sites the registry does not read" under Hygiene.
 
 ### `hawkish_threshold` and `dovish_threshold` are now unreferenced
 
+**Blocks:** nothing.
+
 `config.py:67-68`, in `MacroConfig`. Their only consumers were the Fed blocks
 removed in ccfa1e1. Left in place rather than deleted, because dead config keys
 that imply a Fed signal exists are worth one deliberate decision rather than a
 drive-by removal.
 
 ### `regime_confidence` now derives from VIX alone
+
+**Blocks:** nothing.
 
 After ccfa1e1, `_calculate_regime_confidence` takes only `vix_regime` and returns
 0.1, 0.2 or 0.3. The formula was built as a 50/50 Fed/VIX blend; with Fed gone it
@@ -1672,6 +1714,8 @@ vocabulary decision, being the last intent whose plan was the model's.
 
 ### Router parameters are restated by hand in two more places
 
+**Blocks:** nothing.
+
 `nodes.py` `_decision_to_dict` listed `parameters` key by key, and would have
 validated `measure` in the schema and then dropped it before any node could
 read it - a field that exists and does nothing. Replaced with
@@ -1681,6 +1725,8 @@ and was not touched; check whether anything reads it before it drops a field
 for someone.
 
 ### `CovarianceResult.to_dict` drops the matrix above ten tickers
+
+**Blocks:** nothing.
 
 `covariance.py`: the covariance and correlation matrices are included in the
 dict only when `len(tickers) <= 10`, with a comment about output size. At
@@ -1692,6 +1738,8 @@ motivated the cap is `price_data_json`, not this.
 
 ### The returns convention is not published
 
+**Blocks:** nothing.
+
 `portfolio_volatility` states its basis from `shared_data` - window, method,
 weights, annualisation - and cannot state whether the covariance is over
 simple or log returns, because DataAgent does not publish it. `data_agent.py`
@@ -1700,6 +1748,8 @@ path uses `pct_change`. The formatter says "daily returns" and no more. A
 `returns_type` beside `covariance_method` would close it.
 
 ### Inline `sqrt(w'Σw)` inside optimiser objectives cannot delegate
+
+**Blocks:** nothing.
 
 `optimization/constraints.py` (four sites), `mean_variance.py` and
 `risk_parity.py` compute the portfolio variance inline inside objective and
@@ -1710,6 +1760,8 @@ function wraps, or accept that objective internals are scoped like the
 backtest engine's inline volatility. Decide before the next optimiser change.
 
 ### `AgentConfig` fields declared but unenforced
+
+**Blocks:** nothing.
 
 `log_tool_calls` and `max_tool_calls_per_turn` are read nowhere. The first reads
 as "tool calls are being logged" and they are not; the second reads as a loop
@@ -1724,6 +1776,8 @@ ae6f220 — model identity lives in `agents/config.py`.
 ## Hygiene
 
 ### Two router few-shot examples are benchmark prompts verbatim
+
+**Blocks:** nothing.
 
 "What is my current allocation by asset class?" and "What is my volatility
 over the past twelve months?" appear in `router_prompts.py` word for word as
@@ -1773,6 +1827,8 @@ message until a case asks for more.
 
 ### Patches that delete whitespace-only lines need `--ignore-whitespace`
 
+**Blocks:** nothing.
+
 `git apply --unidiff-zero` matches removed lines exactly. A patch removing
 indented blank lines failed on 7 September on the owner's machine and applied
 with `--ignore-whitespace`; every patch since has been applied that way.
@@ -1813,6 +1869,8 @@ moved.
 
 ### `AgentTask.depends_on` has no reader
 
+**Blocks:** nothing.
+
 Recorded 8 September (seventh sitting). Declared on the schema, filled by
 the model if it chooses, read nowhere. The dependency validator holds the
 plan to `REQUIRES`, the code's facts, and deliberately not to this field,
@@ -1834,6 +1892,8 @@ extra field, ignored; two tests send one to prove it.
 
 ### `SmartRouter.route` opens its own request span behind the observability flag
 
+**Blocks:** nothing.
+
 Recorded 8 September (seventh sitting). `route` calls
 `self.tracer.trace_request(...)` and closes it in its own `finally` when
 `self.tracer` is set, and `self.tracer` is set only when
@@ -1854,6 +1914,8 @@ the helper existed, the call existed, the value went nowhere.
 `state.add_warning` now has no caller.
 
 ### Four wrong-faced answers behind 11/12, from the CLI, 8 September
+
+**Blocks:** nothing.
 
 Recorded 8 September (seventh sitting, after the merge). The owner ran nine
 prompts in `cli.py` against portfolio 3. Four came back correct, one was the
@@ -1932,6 +1994,8 @@ rows and one condition, no other holding named.
 
 ### `ExtractedParameters` fields with no reader - grep, 8 September
 
+**Blocks:** nothing.
+
 Recorded 8 September (seventh sitting, after the merge), from
 `grep -rnE '(parameters|params)(\.get\("F"|\["F"\]|\.F\b)' src/` for each
 field F, excluding the schema and the router prompt. Readers exist for
@@ -1969,6 +2033,8 @@ and no writer, and stays.
 
 ### BaseAgent's tool-calling loop has no live caller - confirmed, 8 September
 
+**Blocks:** nothing.
+
 Grep run 8 September (seventh sitting, after the merge): `.process(` is
 called on an agent nowhere in `src/`; the only caller is
 `tests/test_phase5_4_integration.py:332`. `get_tools` is called from
@@ -1987,6 +2053,8 @@ reaches the loop.
 
 
 ### Roster sites the registry does not read
+
+**Blocks:** nothing.
 
 Recorded 7 September (fourth sitting), while building the registry. Each
 names agents by hand, none is read by anything live, and none was in the
@@ -2025,6 +2093,8 @@ from the builder and from `route()` (1320913); `prompts.py` deleted
 
 ### `get_agent_prompt`, `build_agent_prompt` and `build_system_prompt` have no caller
 
+**Blocks:** nothing.
+
 Recorded 7 September (fourth sitting). `prompts.py`: `get_agent_prompt` is
 read only by `build_agent_prompt`, which nothing calls. `build_system_prompt`
 is a separate function - it does not call `get_agent_prompt` - exported from
@@ -2041,6 +2111,8 @@ of it.
 
 ### `_validate_decision`'s agent check is unreachable
 
+**Blocks:** nothing.
+
 Recorded 7 September (fourth sitting). `smart_router.py` `_validate_decision`
 builds `valid_agents` from `AgentName` and errors on a task naming anything
 else. It cannot fire: `AgentTask.agent` and `RouterDecision.execution_order`
@@ -2053,6 +2125,8 @@ the length warning deleted, with the `AgentName` import that served only
 the first.
 
 ### A workbook edit rode into a KNOWN_GAPS commit
+
+**Blocks:** nothing.
 
 Recorded 8 September. Commit `22508c9` ("Record that the router refuses
 in-scope questions naming a held ticker...") reports two files changed,
@@ -2082,6 +2156,8 @@ the grep: the first was called only by the second, the second by nothing.
 
 ### Clarification exits the graph on a proxy, not on the intent
 
+**Blocks:** nothing.
+
 `router_node` writes `final_response` for `clarification_needed` and
 `route_next_step` exits on "`final_response` set and no `sub_results`".
 `out_of_scope` exits differently: empty plan → synthesizer → END, with the
@@ -2096,12 +2172,16 @@ otherwise.
 
 ### `taa_signal` is still attached to the rebalance result
 
+**Blocks:** nothing.
+
 `rebalance_agent_node` copies `shared_data["macro_regime"]`'s regime and
 `equity_adjustment` into `result["taa_signal"]`. The formatter line that
 printed it went on 7 September (third sitting); the field stays because removing it is a
 RebalanceAgent change. No reader.
 
 ### The first `out_of_scope` definition moved "Should I rebalance?" to clarification
+
+**Blocks:** nothing.
 
 Recorded 7 September (third sitting). The first wording listed in-scope
 mechanics as "drift, rebalancing trades to a target" and closed with "if a
@@ -2238,6 +2318,8 @@ either is a fourth wording on this line.
 
 ### "Is my AAPL position too big?" flips between compliance and risk_analysis
 
+**Blocks:** nothing.
+
 Recorded 8 September (sixth sitting), after the compliance intent landed
 (b0807f5). Prediction for that commit: the line moves to `compliance` /
 `[DataAgent, PortfolioAnalysisAgent, ComplianceAgent]` / errors 0. Run 1
@@ -2367,6 +2449,8 @@ prompt.
 
 ### The prompt shrink moved two lines: the plan text was doing the mode's work
 
+**Blocks:** nothing.
+
 Recorded 8 September (eighth sitting). The shrink (9364d24) predicted all fifteen golden lines hold.
 Two moved, identically on both runs, and the runner fell to 10/12: "Is AAPL
 too concentrated?" and runner 2.1 both came back as `[ComplianceAgent]`
@@ -2387,6 +2471,8 @@ only the lines that mention it.
 
 ### "Optimization failed: None": the node formats an absent error key
 
+**Blocks:** nothing.
+
 Recorded 8 September (eighth sitting), from the CLI. "Backtest SPY and TLT over 5 years" with no
 portfolio ran the derived plan `[DataAgent, OptimizationAgent,
 BacktestAgent]`; the optimiser returned `success: False` with no `error`
@@ -2400,6 +2486,8 @@ time, so this is a failure made visible, not a regression. Not chased.
 
 ### No window return exists, so "last month" and "today" clarify
 
+**Blocks:** nothing.
+
 Recorded 8 September (eighth sitting). "How has my portfolio done over the last month?" and "How
 much did AAPL gain today?" are now honest clarifications naming the five
 spans, because the only return the system computes is P&L since purchase
@@ -2410,6 +2498,8 @@ system can say until it exists. The change-verb list that reads "today" as
 a span is in `extraction.py`; its miss is the since-purchase answer.
 
 ### `measure` set by the model under intent compliance is unread
+
+**Blocks:** nothing.
 
 Recorded 8 September (eighth sitting). On "Is my JNJ position over any limit?" the model set
 `measure: allocation, group_by: position` under `compliance`; the terminal
@@ -2433,6 +2523,8 @@ each later change to the block.
 
 
 ### The extraction bridge reads symbols, not company names
+
+**Blocks:** nothing.
 
 Recorded 9 September (between sittings), from conversation with the owner.
 `agents/extraction.py` recognises a holding by its symbol only: an all-caps
@@ -2468,6 +2560,8 @@ taken; entry under Directions.
 
 ### The four phrase rules in extraction read English
 
+**Blocks:** nothing.
+
 Recorded 9 September (between sittings). Intent in German works: the
 prompt's few-shots are German and the model reads it. Tickers, percentages
 and the typo rule are language-free. Four rules read English phrasing and
@@ -2495,6 +2589,8 @@ Directions.
 
 ### The lookup sentence quotes the whole question
 
+**Blocks:** nothing.
+
 Recorded 9 September, from the CLI session. Since f099101 the topic the
 compliance node receives is the user's whole message, and the lookup
 formatter's sentence was written for a phrase: "The investment policy
@@ -2505,6 +2601,8 @@ say the policy contains nothing on this and name what was asked on its own
 line, or nothing at all. Logged, not chased.
 
 ### One-figure questions get the whole block
+
+**Blocks:** nothing.
 
 Recorded 9 September, from the CLI session. "How much is my portfolio
 worth?" is `measure: allocation` with no `group_by`, so the answer is the
@@ -2526,6 +2624,8 @@ until a case asks.
 
 ### CLI session, 9 September: twenty-seven prompts
 
+**Blocks:** nothing.
+
 Run after the eighth sitting's sweep, against portfolio 3, with the nine
 recorded CLI prompts, three typo pairs, three name-and-language prompts,
 four compliance phrasings in plain words, three span-and-figure prompts and
@@ -2546,6 +2646,8 @@ needed: nothing under `src/` changed.
 
 ### `load_portfolio_context` has no asserting test
 
+**Blocks:** nothing.
+
 Recorded 9 September (ninth sitting), when the five unguarded files were
 deleted. The only exercise of `load_portfolio_context` outside
 `test_portfolio_integration.py`, whose functions return booleans, was
@@ -2558,6 +2660,8 @@ exercised live by `test_strict_nodes.py` over the database copy, through
 `record_transaction` since be14e4b.
 
 ### `max_conversation_history` is read by nothing
+
+**Blocks:** nothing.
 
 Recorded 9 September (ninth sitting), seen while deleting
 `conversation_history` from the router path (1320913). `AgentConfig`
@@ -2665,6 +2769,8 @@ under "The migration and the reseed are run by hand".
 
 ### The workbook was written while Excel held it open
 
+**Blocks:** nothing.
+
 Recorded 10 September (tenth sitting), a process failure, not one of the
 code. Before writing the `Ledger` sheet's section C, `lsof` reported Excel
 still holding `expected_values.xlsx`, and the script wrote anyway. No harm
@@ -2674,6 +2780,8 @@ open, close it first, every time. openpyxl writes formulas without cached
 values, so a sheet written that way is recalculated by Excel on opening.
 
 ### The migration and the reseed are run by hand
+
+**Blocks:** nothing.
 
 Recorded 10 September (tenth sitting). `alembic upgrade head` and
 `seed_portfolio.py --reset` are run from the shell by hand, never from a
@@ -2856,6 +2964,8 @@ macro row now names its provider or is refused.
 
 ### `get_financial_statements` returns nothing, on every call, silently
 
+**Blocks:** Order 4, the filings reader.
+
 Recorded 10 September (thirteenth session), found by the stand-in
 library in `test_provider_names_its_source.py`. The provider builds
 `ProviderFinancialStatement` with 26 keyword arguments the dataclass
@@ -2907,6 +3017,8 @@ row it has.
 
 ### The answer text does not name the price source
 
+**Blocks:** nothing.
+
 Recorded 10 September (twelfth session). A close now carries its source
 on the row, and the as-of line in every answer says the date and not the
 provider. Part 3b asks for the data age and for the source of a policy
@@ -2934,12 +3046,16 @@ database is refused by conftest first.
 
 ### The CLI reads `exit` as a question
 
+**Blocks:** nothing.
+
 Recorded 10 September (twelfth session), from the owner's run. The quit
 command is `:q`; `exit` went to the router, which refused it as an order
 to sell, one model call. Harmless and easy to hit. A word in the banner or
 a second alias is a CLI change; logged.
 
 ### pytest warning inventory
+
+**Blocks:** nothing.
 
 Recorded 7 September (third sitting), from a green run of 132. Twenty
 warnings, four kinds: two Pydantic class-based `Config` declarations in
@@ -2981,6 +3097,8 @@ loops, unmeasured.
 
 ### A question about the philosophy runs the IPS check
 
+**Blocks:** Order 4, the research node.
+
 Recorded 11 September (fourteenth session), from the prompt batch below.
 "What does my philosophy say about debt?" routed `compliance` in its
 default mode and printed the 63-line portfolio check against the IPS.
@@ -2996,12 +3114,16 @@ is a known wrong face.
 
 ### Two formatter headers still carry an emoji
 
+**Blocks:** nothing.
+
 Recorded 11 September (fourteenth session), seen in the prompt batch.
 The compliance report's header and the out-of-scope refusal's header
 each print one. Removing them changes the answers' text, so it is a
 change the runner sees, own commit, and not a drive-by inside another.
 
 ### Prompt batch, 11 September: fourteen prompts
+
+**Blocks:** nothing.
 
 Run after the golden set and the runner, both clean, before the first
 routing change of Order 4. Nine answered as designed: JNJ's two rows,
@@ -3020,6 +3142,8 @@ case 4.5. Every answer priced as of 2026-09-09 and said so.
 
 ### The CLI's identical-answer check fires on two correct refusals
 
+**Blocks:** nothing.
+
 Recorded 11 September (fourteenth session), from the owner's CLI session.
 "Does Alphabet pass my quality criteria?" and "Is it a good time to buy
 Adobe given my thesis?" were both refused, correctly, with the fixed
@@ -3037,6 +3161,8 @@ becomes annoying rather than now.
 
 ### `.gitignore` is corrupted
 
+**Blocks:** nothing.
+
 A PowerShell here-string was written into it literally. Line 1 is `@"`, there is a
 `` *`$py.class `` line with a PowerShell escape, and mid-file sits
 `"@ | Out-File -FilePath .gitignore -Encoding UTF8data/portfolio.db`. The DB is
@@ -3047,6 +3173,8 @@ now say `.gitignore` is the owner's to edit. "Rewrite it" stands as a
 description of what the file needs and is the owner's to do.
 
 ### `portfolio_tool/__init__.py` opens a database connection at import
+
+**Blocks:** nothing.
 
 Line 43 imports `database_setup`, which prints a German DEBUG line and constructs
 an engine as an import side effect; line 52 imports `data_manager`, which needs
@@ -3269,6 +3397,8 @@ two failure directions, the answer depending on phrasing).
 
 ### The personal IPS: bound to the portfolio, grown one clause at a time
 
+**Blocks:** Order 6, the personal policy.
+
 **Built 10 September (thirteenth session), the binding; the personal
 document and the real portfolio are mine and come later.** DIRECTION.md
 Order 2, item 4. Decided before any code, in this order of questions.
@@ -3379,6 +3509,8 @@ synthetic philosophy, watchlist and ledger.
 
 ### Mutation testing, once, over the pure modules
 
+**Blocks:** nothing.
+
 **Logged 10 September (thirteenth session), not run.** Mutation testing
 changes the code on purpose, one small change at a time (a flipped
 comparison, a dropped condition, a replaced constant), and runs the
@@ -3402,6 +3534,8 @@ that is.
 
 ### The tables the agents do not read
 
+**Blocks:** Order 4, the filings reader.
+
 **Recorded 10 September (thirteenth session), checked against callers.**
 Fundamentals, quarterly earnings and financial statements are read by
 three query tools in `tools/data_tools.py`, and nothing in the agent
@@ -3423,6 +3557,8 @@ returned nothing for months (entry under Hygiene). Untrusted until a
 reference exists, the way the stored closes turned out to deserve.
 
 ### Order 3: the philosophy, the watchlist and the ledger, and Level 4
+
+**Blocks:** nothing.
 
 **Built 11 September (fourteenth session), 94ac112 to 5814279 and
 722456a to 67210aa.** Three decisions, each a shape brought and taken
@@ -3491,6 +3627,8 @@ does not read 14/14 as the system being good at research.
 
 ### Order 4, the philosophy check: Part 10 and three pure modules
 
+**Blocks:** Order 4, the research node.
+
 **Built 11 September (fourteenth session), c0b9d13 to 70c993a.** Taken
 before the valuation pipeline, against DIRECTION.md's listed order,
 because it is the IPS pattern repeated exactly and it fixes the figures
@@ -3536,6 +3674,8 @@ Order 6 and not a column invented now.
 
 ### The judgement half's figures come from a reader, never a file
 
+**Blocks:** Order 4, the filings reader.
+
 **Recorded 11 September (fourteenth session), a wrong turn taken back
 the same session (19de4a5, reversed by f865bac).** With the screen built
 and nothing fetching a company's figures, I brought and started a
@@ -3560,6 +3700,8 @@ company runs on filed figures with a source and a filed date on each,
 defended the way Part 9 defended the closes.
 
 ### What is `reasoning` for: a debugging artifact, or something checked?
+
+**Blocks:** Order 4, Level 4's prose fields.
 
 **Recorded 11 September (fourteenth session), from an outside reading, with
 one claim corrected against the code.** The router emits `reasoning`, free
@@ -3605,6 +3747,8 @@ extracted from `expected_values.xlsx` and committed, not read from
 
 ### Volatility over as-traded closes or over a total-return series?
 
+**Blocks:** nothing.
+
 **Deferred, with the reference on the as-traded side. Recorded 10
 September (twelfth session).** D19 fixed the stored close as the exchange's
 print, and Part 4's 252 closes are prints, so the 10.2936% is a volatility
@@ -3620,6 +3764,8 @@ adjusted figure changes with each later dividend. Decide with a recomputed
 Part 4 beside the present one, not by flipping the provider flag back.
 
 ### Spans versus counts: is a window calendar days or closes?
+
+**Blocks:** nothing.
 
 **Deferred until a non-year period actually exists. Not now.**
 
