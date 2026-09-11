@@ -1,7 +1,10 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 11 September 2026 (fourteenth session, begun 10 September; regenerated at its end)
-**Branch:** `selection`. `baseline-v1` is at 191829b and pushed; forty-four commits since, this file included, not pushed, deliberately.
+**Branch:** `selection`. **Both `selection` and `baseline-v1` are at 20160b0, local and remote**: the owner pushed at the end of this session and moved the baseline with it, so the next session's commit count starts from zero. Everything between 191829b and 20160b0 is the thirteenth and fourteenth sessions' work.
+
+**Three parts of this file were patched after it was regenerated** - this header, the branches, §5, §7 and §8 - because the session continued past its writing: the push happened, the owner ran a CLI session, and an outside reading of the project found one real defect. Patching rather than regenerating is a departure from the rule below, taken because the document was an hour old and every change is additive. The fifteenth session regenerates it as usual.
+
 **State:** Green on every loop. pytest 735 passed and 6 expected failures in about three seconds. The runner ran once this session, 12/12, and the golden set once, zero diff, both before the first change that will touch routing; neither has run since, because nothing under `src/` changed an answer or a route after them. Commit count: `git rev-list --count baseline-v1..HEAD`.
 
 Written for whoever picks this up cold, myself included.
@@ -185,8 +188,9 @@ decision writes the checks first.
 
 ### Branches and tags
 
-`selection` is the working branch. `baseline-v1` sits at 191829b, pushed.
-`vocabulary` and `compliance` are merged into `baseline-v1`.
+`selection` is the working branch. **`baseline-v1` sits at 20160b0**, where
+this session ended, and both branches are pushed there; the remote and the
+local refs agree. `vocabulary` and `compliance` are merged into `baseline-v1`.
 `wip/phase7-snapshot` holds rejected Compliance/IPS code; nothing on it is
 scheduled. `wip/rag-early` and tag `rag-early-parked` hold the deleted RAG
 code.
@@ -347,7 +351,12 @@ KNOWN_GAPS references resolve; done items struck.
 30. **What a philosophy is bound to.** It is the investor's, not the portfolio's, so `ips_path`'s shape does not transfer. The committed file by path until Order 6; not a column invented now.
 31. **The bank variant of 4.6.** PHI-3.2 is a statement and cannot decide "bank" without data on the figures block; a decision with the reader, which is where such data would come from.
 32. **Two formatter headers carry an emoji**: an answer-text change, own commit, the runner sees it.
-33. **The workbook's cached values**: absent since the openpyxl writes; return when the workbook is opened and saved in Excel.
+33. ~~The workbook's cached values~~ done: opened and saved in Excel by the owner (20160b0); 3,048 of 3,240 formula cells carry values again and the `Philosophy` sheet's findings agree with Part 10.
+34. **The compliance gate is a plan step, and `optimization` prints weights around it.** Found and confirmed at the end of this session; the KNOWN_GAPS entry under "Silent-wrong bugs found, not yet fixed" carries the three shapes. **This comes before the research node** (§7), because case 4.3 is a recommendation with both checks attached.
+35. **A rank selection in extraction** ("my two biggest holdings"): the third value of the selection axis, logged with `filter`. Seen twice in one session.
+36. **What `reasoning` is for**: a debugging artifact no answer may carry, or something checked against what ran. Before Level 4's prose fields.
+37. **A tagging pass over KNOWN_GAPS**: one line per live entry saying what it blocks, an Order or nothing. The file is 3,600 lines and the rule says to reread it before logging a finding; nobody rereads that, and §0's "read at minimum" list is the symptom. It makes the record usable as a to-do list filtered by where we are.
+38. **The CLI's identical-answer check** fires on two correct refusals, a false positive; exempting the intents whose answer is fixed by design is a CLI change.
 
 ---
 
@@ -361,7 +370,17 @@ no scored one, so its score is 0 of 0 and stays so until early 2027.
 
 ## 7. Next steps, in order
 
-**Decision 28, the filings reader, before any node.** Reported figures per
+**Decision 34 first, the compliance gate.** DIRECTION.md invariant 2 says
+compliance is a gate the model cannot route around; the code has it as a
+plan step under one intent, and `optimization` prints an allocation with a
+weight per ticker and no clause checked, on a path the golden set pins.
+Three shapes in the KNOWN_GAPS entry: a real gate the graph cannot bypass,
+deleting the two answer surfaces that emit weights, or narrowing the
+invariant deliberately. A graph-shape decision and the owner's. Before the
+research node, because building that node on "compliance is a step" makes
+the gate a retrofit under the node, its formatter and its runner probes.
+
+**Then decision 28, the filings reader, before any node.** Reported figures per
 fiscal year for a company from a structured, free source (DIRECTION.md
 names EDGAR; its company-facts data is filed figures with the fiscal
 period and the filing date on each), published in the figures block's
@@ -395,6 +414,14 @@ scoring with its Part.
 ---
 
 ## 8. Rules learned the hard way
+
+**An invariant is checked against the code, not read as a description.**
+DIRECTION.md has said "compliance is a gate, not a tool" since it was
+written, and compliance has been a plan step the whole time, with one
+intent printing weights around it. Nobody checked, because the line reads
+as a statement of what the system does rather than as a claim to verify.
+An invariant is the highest-value claim in the repository and therefore
+the one most worth grepping; the other seven deserve the same pass.
 
 **A shape is checked against the invariants, not against the day's
 pattern.** Three synthetic documents in a row made "a synthetic file,
