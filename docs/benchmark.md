@@ -160,6 +160,21 @@ golden baseline for judgement; the ledger is the eval set for this level, and
 its count of predictions scored right over predictions scored is the figure
 Part 1's open commitment asks for on this half.
 
+**What a passing Level 4 case means, and what it does not.** Corrected
+11 September 2026, the day this level was written. A case here passes on
+the answer being **well-formed**: the clauses cited, each figure with its
+fiscal year and source, uncertainty and assumptions as fields, a dated
+prediction present, no price forecast. That is the floor, not the result.
+Whether the judgement was any good is the ledger's to say, and the ledger
+cannot say it yet: the predictions in it today are mine, typed into
+`docs/WATCHLIST.md`, so scoring them in early 2027 measures me rather than
+the system. The system's own record starts when case 4.3 makes it produce
+a prediction of its own, and the first score on that arrives a year after
+it is made. Until then **n/14 is a count of well-formed answers**, and no
+session should read it as the system being good at research. Every case in
+Levels 1 to 3 had a hand-computed reference behind its verdict; this level
+is the first where passing and being right are different questions.
+
 X is a candidate on the synthetic watchlist (`docs/WATCHLIST.md`, Order 3):
 a real listed company not held in portfolio 3, so that the IPS check is
 about a new position. Y is a company the philosophy declines to screen.
