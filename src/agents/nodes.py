@@ -2137,29 +2137,33 @@ def _format_macro_response(sub_results: Dict) -> List[str]:
 
 
 def _format_rebalance_response(sub_results: Dict) -> List[str]:
-    """Format rebalancing results."""
+    """Format rebalancing results, without the trades.
+
+    A trade names an instrument and a size, so an answer carrying one states
+    a position. Intent `rebalancing` derives [DataAgent, RebalanceAgent] and
+    `validate_compliance` rejects a plan that puts ComplianceAgent there, so
+    no clause is checked on this path and none can be (DIRECTION.md invariant
+    2). The drift is a figure about the portfolio as it stands and stays.
+
+    The surface has not been reached live since it was written - RebalanceAgent
+    errors on a missing target, its own entry - which is why the hole was
+    visible only in the optimiser. It is closed here rather than when
+    decision 13 gives the rebalancer a target and it starts printing.
+    """
     lines = ["⚖️ **REBALANCING ANALYSIS**", ""]
-    
+
     rebal = sub_results.get("RebalanceAgent", {})
     if rebal.get("success"):
         decision = rebal.get("decision", {})
-        trades = rebal.get("trades", [])
-        
+
         lines.append(f"**Recommendation:** {decision.get('recommendation', 'N/A').upper()}")
         lines.append(f"**Max Drift:** {decision.get('max_drift', 0):.1%}")
-        
-        if trades:
-            lines.append("")
-            lines.append("**Proposed Trades:**")
-            for trade in trades[:5]:
-                lines.append(
-                    f"  • {trade['action']} {trade['shares']:.0f} {trade['ticker']} "
-                    f"(~€{trade.get('value', 0):,.0f})"
-                )
-            
-            lines.append("")
-            lines.append(f"**Est. Transaction Cost:** €{rebal.get('total_cost', 0):.2f}")
-    
+
+        lines.append("")
+        lines.append("**Not shown:** the trades, their sizes and their cost. A trade "
+                     "states a position, and nothing on this path checks one against "
+                     "the policy.")
+
     return lines
 
 

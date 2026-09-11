@@ -54,9 +54,15 @@ def test_macro_formatter_prints_regime_without_an_equity_recommendation():
     assert "Adjust equity" not in text
 
 
-def test_rebalance_formatter_prints_trades_without_a_tactical_signal():
+def test_rebalance_formatter_prints_drift_without_trades_or_a_tactical_signal():
+    """This asserted "SELL 10 AAPL" until the trades went (invariant 2, and
+    tests/test_no_weight_outside_compliance.py). It keeps its original job -
+    the tactical signal stays gone - over an answer that now states the drift
+    and no position."""
     text = "\n".join(_format_rebalance_response(REBALANCE_SUCCESS))
-    assert "SELL 10 AAPL" in text
+    assert "7.0%" in text
+    assert "SELL 10 AAPL" not in text
+    assert "AAPL" not in text
     assert "Tactical Signal" not in text
     assert "risk_off" not in text
 
