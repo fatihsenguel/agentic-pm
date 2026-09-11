@@ -65,6 +65,12 @@ def test_rebalance_formatter_prints_drift_without_trades_or_a_tactical_signal():
     assert "AAPL" not in text
     assert "Tactical Signal" not in text
     assert "risk_off" not in text
+    # benchmark.md Part 1 says investment recommendations are not built, 2.3
+    # passes only on giving none, and the refusal this system prints ends "No
+    # recommendation is given here." The drift verdict is a threshold word
+    # from a tool; the label said Recommendation.
+    assert "Recommendation" not in text
+    assert "Drift verdict" in text
 
 
 def test_macro_formatter_on_failure_is_header_only():

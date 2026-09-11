@@ -2149,6 +2149,16 @@ def _format_rebalance_response(sub_results: Dict) -> List[str]:
     errors on a missing target, its own entry - which is why the hole was
     visible only in the optimiser. It is closed here rather than when
     decision 13 gives the rebalancer a target and it starts printing.
+
+    The drift verdict is the tool's threshold word, rendered under that name
+    and not under "Recommendation". benchmark.md Part 1 says investment
+    recommendations are not built, 2.3 passes only on giving none, and the
+    refusal this system prints ends "No recommendation is given here"; a field
+    labelled Recommendation contradicted all three. The value is unchanged and
+    is the tool's, not this formatter's. Note it is not a clean threshold
+    classification either - one branch of `decide_rebalance_need`'s caller
+    sets it from transaction cost - which is a defect of the tool and belongs
+    with decision 13 (KNOWN_GAPS).
     """
     lines = ["⚖️ **REBALANCING ANALYSIS**", ""]
 
@@ -2156,8 +2166,8 @@ def _format_rebalance_response(sub_results: Dict) -> List[str]:
     if rebal.get("success"):
         decision = rebal.get("decision", {})
 
-        lines.append(f"**Recommendation:** {decision.get('recommendation', 'N/A').upper()}")
-        lines.append(f"**Max Drift:** {decision.get('max_drift', 0):.1%}")
+        lines.append(f"**Drift verdict:** {decision.get('recommendation', 'N/A').upper()}")
+        lines.append(f"**Max drift:** {decision.get('max_drift', 0):.1%}")
 
         lines.append("")
         lines.append("**Not shown:** the trades, their sizes and their cost. A trade "
