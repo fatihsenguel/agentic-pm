@@ -1,19 +1,22 @@
 # AGENTIC_FINANCE — Session Handoff
 
-**Session date:** 10 September 2026 (thirteenth session; regenerated at its end)
-**Branch:** `selection`. `baseline-v1` was fast-forwarded to 191829b before this session and both were pushed there; eighteen commits since, this file included, not pushed.
-**State:** Green on every loop I ran. pytest 645 passed and 6 expected failures in about three seconds, nine on some runs. The runner and the golden set were not run this session: no routing changed, no prompt changed, no answer text changed, and `expected.txt` is as it was. Commit count: `git rev-list --count baseline-v1..HEAD`.
+**Session date:** 11 September 2026 (fourteenth session, begun 10 September; regenerated at its end)
+**Branch:** `selection`. `baseline-v1` is at 191829b and pushed; forty-four commits since, this file included, not pushed, deliberately.
+**State:** Green on every loop. pytest 735 passed and 6 expected failures in about three seconds. The runner ran once this session, 12/12, and the golden set once, zero diff, both before the first change that will touch routing; neither has run since, because nothing under `src/` changed an answer or a route after them. Commit count: `git rev-list --count baseline-v1..HEAD`.
 
 Written for whoever picks this up cold, myself included.
 
 **Regenerate this document at the end of each session rather than patching it.**
 **Check every claim here against the code before acting on it, including
-this file.** Grep for the caller, not the registration, and for the reader
-of a return value; and read the plan table before choosing who publishes a
-value. This session I had DataAgent publish the policy path and found on
-inspection that two of the three compliance modes never run DataAgent; the
-commit and its removal are both in the history. A claim in a document is a
-claim like any other, and so is a plan I wrote an hour ago.
+this file.** The thirteenth session's handoff said `financial_statements`
+held 102 rows; it held 65, the item 21 delete having removed 37 after the
+paragraph was written. Grep for the caller, not the registration; read the
+plan table before choosing who publishes a value; and check a shape against
+DIRECTION.md's invariants, not only against the pattern used all day. This
+session I brought a directory of invented company figures as a runtime
+source, by analogy to the synthetic policy files, and the owner caught it
+before I did; the commit and its reversal are both in the history and the
+entry is under Directions in KNOWN_GAPS.
 
 ---
 
@@ -21,15 +24,17 @@ claim like any other, and so is a plan I wrote an hour ago.
 
 | File | What it is |
 |---|---|
-| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated; revised this session. Wins over this file on direction; this file wins on state. Order 1 is built; Order 2 is built through the binding that lets a portfolio name its policy file. **The personal policy, philosophy and portfolio are Order 6, last**; everything before it is synthetic. **Next is Order 3**: a synthetic philosophy, watchlist and prediction ledger in the IPS pattern, and Level 4 in benchmark.md. Its last section says when to stop and think. |
-| `docs/benchmark.md` | **The definition of done.** 12 cases, 12 pass on the last run (eleventh session); the runner is the status. |
-| `tests/benchmark/run_cases.py` | **The scoreboard.** Every case has a check. Nothing in it changed this session and it did not run: nothing under `src/` changed an answer's text. |
-| `tests/golden/KNOWN_GAPS.md` | Open decisions, resolved decisions, and why obvious fixes are wrong. Swept at the end of this session. Read at minimum: "The personal IPS: bound to the portfolio, grown one clause at a time" under Directions (the whole of this session's main item, with the rejected shapes), "`get_financial_statements` returns nothing, on every call, silently" under Hygiene, "The tables the agents do not read" and "Mutation testing, once, over the pure modules" under Directions. |
-| `tests/golden/expected_values.md` | Hand-computed reference for portfolio 3, Parts 1–9. **Part 9 is reproduced by the database, and since this session the suite says so on every run**: `test_stored_closes_are_the_print.py` holds all 2,268 committed cells to the stored closes. Never update it to match code output. The workbook was opened and saved in Excel last session. |
-| `docs/IPS.md` | The policy, synthetic. `ips.toml` is derived from it and is the policy portfolio 3's row names. Do not edit `docs/IPS.md` casually; my personal one is a separate file outside the repository, named on my portfolio's row. |
+| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1, 2 and 3 are built. **Order 4 is in progress**: the philosophy check exists as pure modules held to Part 10; the filings reader is the next decision, then the node that answers cases 4.1 and 4.6. Its last section says when to stop and think. |
+| `docs/benchmark.md` | **The definition of done.** Levels 1 to 3: 12 cases, 12 pass on this session's run. **Level 4, added this session**: six research cases, none running yet, the prediction ledger as their eval set, and the rule for when 3.2 expires. |
+| `tests/benchmark/run_cases.py` | **The scoreboard.** Twelve cases; the Level 4 checks are written first when the node decision starts, blocked probes and all, and the headline becomes n/14. |
+| `tests/golden/KNOWN_GAPS.md` | Open decisions, resolved decisions, and why obvious fixes are wrong. Swept at the end of this session. Read at minimum, under Directions: "Order 3", "Order 4, the philosophy check" (the three questions left inside the node decision), and "The judgement half's figures come from a reader, never a file"; under Hygiene: "A question about the philosophy runs the IPS check" and the prompt batch. |
+| `tests/golden/expected_values.md` | Hand-computed reference for portfolio 3, Parts 1 to 9, and since this session **Part 10, the philosophy check** on synthetic figures for the watchlist's first candidate, with decisions D21 to D25. Never update it to match code output. The workbook has a `Philosophy` sheet with the same formulas and has not been opened in Excel since, so its cached values are absent until it is. |
+| `docs/IPS.md` | The policy, synthetic. `ips.toml` is derived from it and named on portfolio 3's row. Not edited casually. |
+| `docs/PHILOSOPHY.md` | **New.** What is worth wanting, synthetic, first person, the IPS pattern: seventeen `PHI-x.y` clauses, five numeric screens and twelve statements; `philosophy.toml` derived and held to it. Not yet bound to anything; the committed file by path until Order 6 decides what a philosophy belongs to. |
+| `docs/WATCHLIST.md` | **New.** Two synthetic candidates, Alphabet and Adobe, each a thesis, an entry condition, and its predictions; the predictions across the file are the prediction ledger, four of them, due in early 2027. `watchlist.toml` derived and held to it. Nothing reads it. |
 | `docs/PM-Assistant — Roadmap.md` | Stale, header lists what is superseded. DIRECTION.md's Order supersedes its ordering. |
 
-Two Part 7 figures are decided by cents (MSFT 12.16% v 12%, JNJ 10.05% v 10% at the 09-04 closes); the runner asserts structure. Today's CLI run reported seven breaches against Part 7's eight, which is that pair crossing.
+Two Part 7 figures are decided by cents (MSFT 12.16% v 12%, JNJ 10.05% v 10% at the 09-04 closes); the runner asserts structure. This session's batch reported seven breaches against Part 7's eight, JNJ at 9.87% on the other side of its limit.
 
 ---
 
@@ -38,135 +43,107 @@ Two Part 7 figures are decided by cents (MSFT 12.16% v 12%, JNJ 10.05% v 10% at 
 **AGENTIC_FINANCE** — a portfolio-management and equity-research assistant on LangGraph. Fatih Sengul.
 
 **Path:** `/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE`
-**Repo:** https://github.com/fatihsenguel/agentic-pm (public; the README is the short one from ab813ed)
+**Repo:** https://github.com/fatihsenguel/agentic-pm (public; the README is the short one from ab813ed). The push URL of `origin` is set to `no_push`.
 **Machine:** MacBook Air, Apple Silicon.
 
 ### Ultimate goal
 
 `docs/DIRECTION.md` states it. A conversation with a strong model that calls
 deterministic pipelines as tools; a guarantee half (positions, allocation,
-P&L, risk, compliance) that is tools, and a judgement half (research,
-valuation, a thesis) that has not started, on purpose. The router is
-scaffolding until the tool layer is complete. **No deadline. Correctness over
-speed. Scope creep is the risk.**
+P&L, risk, compliance) that is tools and done, and a judgement half
+(research, valuation, a thesis, a prediction) whose first tool now exists as
+pure modules. The router is scaffolding until the tool layer is complete.
+**No deadline. Correctness over speed. Scope creep is the risk.**
 
 ### Design principles
 
 - **Hot potato — agents never see raw data.** Tools return summaries; raw
-  arrays move through `shared_data`. A year of spot rates stays in the
-  database; DataAgent publishes only the rates on the held tickers' as-of
-  dates.
-- **Policy lives in config, not code.** `ips.toml` holds every number and
-  topic word of the synthetic policy; `config.toml` holds every fetch
-  interval, and a missing file raises. The vocabularies are registries:
+  arrays move through `shared_data`.
+- **Policy lives in config, not code.** `ips.toml` and `philosophy.toml`
+  hold every number of the two synthetic policies; `config.toml` every
+  fetch interval; a missing file raises. The vocabularies are registries:
   `AGENTS`, `INTENTS`, `REQUIRES`, `TERMINAL` in `schemas.py`; the period
-  keys in `config.py`; the clause types in `ips.py`. An agent computes;
-  the synthesizer formats; the checker reads published shares and divides
-  nowhere; a formatter reads the currency from the block and never assumes
-  one.
-- **The policy belongs to the portfolio (this session).** `portfolios.ips_path`
-  names the file a portfolio is checked against: the committed `ips.toml`
-  for the benchmark portfolio, by a relative path the loader anchors to the
-  project root; a personal file outside the repository, by an absolute
-  path, for mine. The compliance node resolves it from the row in every
-  mode; the loader has no default; no portfolio is no policy. Two
-  portfolios in one database are checked against two policies, and the
-  benchmark keeps its own.
-- **Raise, do not repair.** A span the vocabulary lacks, a typo of a holding,
-  two weights in one message: extraction asks back. A sale over the
-  position, a ledger row with no portfolio, a missing rate on the price's
-  date, a holding with no currency, a portfolio with no currency or no
-  policy, a holding with no cost basis, a config with no interval, a
-  policy clause with a type the checker does not know: the pipeline stops
-  and says why. A default is a wrong answer with a plausible face.
-- **Holdings derive from the ledger (D13).** `transactions` is the record
-  of what was bought and sold; a holding is computed from it by
-  `quant/ledger.py` and there is no holdings table. Cost basis sums the
-  row's `amount`, which is data from the statement (D14), carried on the
-  summary and read by the allocation layer, never recomputed.
-- **A rate is a price source (D17).** Stored per day with a date and a
-  source, fetched under the price cache's rules, keyed by base and quote
-  with the rate meaning base units per one unit of quote. A foreign holding
-  is valued at quantity x price x the rate on the price's as-of date (D16),
-  and both dates are published.
-- **A close is the print (D19).** The exchange's official closing price as
-  traded, split-adjusted and nothing else. The provider asks for it
-  unadjusted; every row carries its source; when two sources disagree the
-  exchange's print wins and nothing averages (D20). Part 9 is the
-  check, and since this session the suite holds every stored cell of the
-  window to it.
-- **Every figure names its currency (D18).** Cost basis, average price,
-  market value and P&L are in the portfolio's base currency; the quote is
-  in the asset's; the answer says which is which and prints the rate it
-  went through.
-- **Every row names its source, from one statement of the name.** Price,
-  rate, statement and macro rows carry the provider's name, written from
-  `provider.name`, defaulted nowhere on any model or DTO (this session
-  closed the last two).
+  keys in `config.py`; the clause types in `ips.py` and `philosophy.py`
+  over one loader, `clauses.py`; the metric keys in
+  `quant/fundamentals.METRICS`. An agent computes; the synthesizer
+  formats; a checker reads published figures and subtracts once.
+- **Two policies, two questions.** The IPS says what may be held and how
+  much; the philosophy says what is worth wanting. A company clears the
+  philosophy before the IPS sizes it; neither overrides the other.
+- **The policy belongs to the portfolio.** `portfolios.ips_path` names the
+  file; no portfolio is no policy. What a philosophy belongs to is not
+  decided (pending 30).
+- **Raise, do not repair.** A span the vocabulary lacks, a typo of a
+  holding, a missing rate, a holding with no currency, a clause with an
+  unknown type, a metric key nothing computes, a figure a year lacks, a
+  year not yet filed: the pipeline stops and says why. A default is a
+  wrong answer with a plausible face.
+- **Typed facts are not a source.** A synthetic policy is an honest
+  stand-in because the policy is the owner's to state. A company's figures
+  are facts; typed ones live in tests as references and never in a file
+  the system reads to answer (this session's reversal).
+- **Holdings derive from the ledger (D13); a rate is a price source (D17);
+  a close is the print (D19); every figure names its currency (D18); every
+  row names its source, and now every table's source column is NOT NULL.**
 - **Extraction and derivation before the model.** Tickers, periods,
   percentages and the compliance mode are read from the message; the plan
-  is derived from the intent and those parameters. The model decides
-  intent, `measure`, `group_by`, `status`, confidence and a clarification
-  question, and nothing else it emits is read.
-- **Selection is rendering.** A formatter selects from a block the node
-  computed in full; the selection's values are the block's own words.
-- **References before code.** Part 8 A and B before the ledger; Part 8 C
-  before any FX code; Part 9 before the provider changed. For the
-  personal policy: a Part 7-style reference for a clause before its
-  checker, and a Part 8 reference for my real portfolio before any figure
-  about it is trusted.
+  is derived. The model decides intent, `measure`, `group_by`, `status`,
+  confidence and a clarification question.
+- **References before code.** Part 7 before the checker; Part 8 before the
+  ledger; Part 9 before the provider changed; **Part 10 before the
+  screen**, this session, with the metrics' formulas written out as the
+  definition of each metric key (D24).
+- **No price forecasts as numbers.** A prediction is about the business
+  with a date; a valuation is a range from stated assumptions.
+  `test_philosophy.py` and `test_watchlist.py` hold the documents to it.
 
 ### How I work on this
 
-- Every change starts as a written decision: what it is, what each rule
-  means, what changes if it is taken, the rejected alternatives, which loop
-  sees it and what it will show, in plain words. Then one commit per
-  layer, tests written first and seen failing, `git status --short` and
-  the diff read before each commit, and a yes before it lands.
-- `grep -rn "Name" src/ tests/ --include='*.py'` before deleting any symbol;
-  grep for the caller and for the reader of a return value; **read the
-  plan table (`TERMINAL`, `REQUIRES`) before deciding which agent
-  publishes a value the next one reads.**
-- **A prompt change is a hypothesis.** Line-by-line prediction in the commit
-  message before the run; golden twice. After the second failed prediction
-  on a line, stop. No prompt changed this session and the golden set did
-  not run.
+- Every change starts as a written decision in plain words: what it is,
+  what each rule means, what changes on a yes, the rejected alternatives,
+  which loop sees it and what it will show. Then one commit per layer,
+  tests written first and seen failing, `git status --short` and the diff
+  read before each commit, and the word yes before it lands; "okay" is not
+  one.
+- **Check a shape against the invariants before bringing it.** The
+  pattern used all day is not the rule; DIRECTION.md's eight invariants
+  are, and they take a minute to reread.
+- `grep -rn "Name" src/ tests/ --include='*.py'` before deleting any
+  symbol; grep for the caller and for the reader; read the plan table
+  before choosing a publisher.
+- **A prompt change is a hypothesis.** Line-by-line prediction in the
+  commit message before the run; golden twice; stop after the second
+  failed prediction on a line. No prompt changed this session; the next
+  decision changes one.
 - Never `commit -a`/`-am`, never `add -A`/`.`; name the files. Never
-  rebase, amend, reset, stash. Never edit `.gitignore`. An edit of mine
-  that sits in a file about to change gets its own commit first, so it
-  does not ride into another message.
+  rebase, amend, reset, stash; a wrong turn is taken back by a new
+  commit that says why. Never edit `.gitignore`. A modified tracked binary
+  is its own commit.
 - **The migration, the reseed and any rewrite of stored rows are run by
-  hand**, from the shell, from the project root: `alembic upgrade head`;
-  `python src/portfolio_tool/scripts/seed_portfolio.py --reset` when the
-  seed changed; a delete of rows when the stored convention changed. A
-  migration is committed unexecuted; the schema test written before it is
-  the check; it is applied and reverted on a scratch copy of the database
-  before it is committed, and the schema is read back after each
-  direction. **I paste what the command printed, not "done."** This
-  session: one migration, one upgrade line pasted, the schema read back.
-- **A test written against a database that is already right cannot be
-  seen failing for its own reason.** Make a scratch copy, break the one
-  thing the test is for, and run it there; this session the stored-closes
-  test failed on a copy with one JNJ close scaled by a dividend factor,
-  naming the row.
-- **The workbook is closed in Excel before any openpyxl write.** `lsof`
-  first. No workbook write this session.
-- A count I predict is a count I add up. The delete statement in §9 has
-  its expected results computed from the file, not recalled.
-- No emoji in code or comments; I strip the old ones as I go.
+  hand** from the project root; the migration is committed unexecuted,
+  the schema test before it is the check, and it is applied and reverted
+  on a scratch copy first with the schema read back each way. **I paste
+  what the command printed, not "done."** This session: one migration,
+  one upgrade line pasted, the column read back NOT NULL.
+- **A test written against data that is already right has not been seen
+  failing.** Break the one thing on a scratch copy and run it there. This
+  session: a nulled macro source, an altered clause text, a due date
+  before its made-on date, a price metric on a prediction.
+- **The workbook is closed in Excel before any openpyxl write**, `lsof`
+  first; the nine older sheets are compared cell for cell after.
+- A count I predict is a count I add up. No emoji in code; two formatter
+  headers still carry one (KNOWN_GAPS, Hygiene).
 
 ### What I do NOT want
 
 A pure asyncio/regex deterministic version without LangGraph. Prompt rules
 added to fix a routing defect (DIRECTION.md). My real portfolio's data in
-the repo: it enters last, when everything works, as a row whose policy
-path points outside the tree. No more concurrency until independent tools
-exist (Order 4/5) and a measurement asks for it; no cached holdings table;
-no currency symbol table, no rate inverted in code, no fallback rate of 1
-and no fallback currency anywhere; no fallback policy: a portfolio names
-its file or is refused; no adjusted close in the price table; no second
-live provider bolted on for its own sake; no environment-wide switch for
-which policy runs.
+the repo: Order 6, last. No more concurrency until independent tools exist.
+No cached holdings table; no currency symbol table; no fallback rate,
+currency or policy; no adjusted close in the price table; no environment
+switch for which policy runs. **No invented figures as a runtime source, and
+no price a stock will reach anywhere in a document or an answer.** No
+mutation testing until it is necessary.
 
 ---
 
@@ -180,70 +157,68 @@ pytest -q
 
 python tests/golden/run_golden.py > /tmp/golden_now.txt 2>/dev/null
 diff tests/golden/expected.txt /tmp/golden_now.txt
-
 python tests/benchmark/run_cases.py
 python tests/benchmark/run_cases.py --case 2.2
 
 python src/agents/cli.py --portfolio 3
 ```
 
-**645 passed, 6 xfailed, 26 warnings, about three seconds; nine on some
-runs, unmeasured, entry under the warning inventory.** Up from 606: the
-policy-path schema test (9), the manager test (4), the loader's three new
-tests, the node's four, the stored-closes test (9), the source-default
-test (6), the provider-name test (4 passing, 6 pinned as strict expected
-failures on the statements defect), and one folded context test. The
-six expected failures are a pin, like the golden set's two: they go red
-the day `get_financial_statements` returns rows, and the marker comes
-off then.
+**735 passed, 6 xfailed, 26 warnings, about three seconds.** Up from 645:
+the philosophy document test (8), the watchlist test (6), the macro schema
+test (8), the fundamentals test (22), the loader raise tests (30), the
+screening test (16), and the philosophy test gaining one and losing one on
+its move. The six expected failures are the statements-method pin, as
+before.
 
-**The golden set has sixteen queries, every portfolio query on portfolio
-3**, two pinned failures (the macro query; "Should I rebalance my
-portfolio?"). Not run this session; `expected.txt` unchanged since 93290af.
+**The golden set, sixteen queries on portfolio 3**, two pinned failures
+(the macro query; "Should I rebalance my portfolio?"). Run once this
+session before any routing change: zero diff. `expected.txt` unchanged
+since 93290af.
 
-**Runner 12/12** on its last run, in the eleventh session. Not run this
-session: nothing under `src/` changed an answer's text. The compliance
-node's console line now names the policy file it loaded; the answer does
-not.
+**Runner 12/12** on this session's run, the first since the eleventh
+session and three sessions of data changes: the as-traded refetch, the
+ledger's date and fees columns, three required source columns, the policy
+binding, the loader refactor. None moved a case.
+
+**Level 4: 0 of 6 cases run.** No check exists for them yet; the node
+decision writes the checks first.
 
 ### Branches and tags
 
-`selection` is the working branch. `baseline-v1` sits at 191829b, where
-this session began, and both are pushed there. `vocabulary` and
-`compliance` are merged into `baseline-v1`. `wip/phase7-snapshot` holds
-rejected Compliance/IPS code; nothing on it is scheduled. `wip/rag-early`
-and tag `rag-early-parked` hold the deleted RAG code.
+`selection` is the working branch. `baseline-v1` sits at 191829b, pushed.
+`vocabulary` and `compliance` are merged into `baseline-v1`.
+`wip/phase7-snapshot` holds rejected Compliance/IPS code; nothing on it is
+scheduled. `wip/rag-early` and tag `rag-early-parked` hold the deleted RAG
+code.
 
 ### Database
 
 `data/portfolio.db` is untracked runtime state. Alembic head is
-**`7b1c4e2d9a05`** (`portfolios.ips_path`), 20 migrations, linear, all
-applied; this session's one applied by hand, output pasted, schema read
-back. Tables that matter: `portfolios` (`currency` and **`ips_path`**
-NOT NULL, no default anywhere; row 3 names `ips.toml`), `transactions`
-(`portfolio_id`, `amount`, `date` a DATE, `fees`, all NOT NULL, none
-defaulted), `assets`, `daily_prices` (`source` NOT NULL; every close as
-traded for the nine holdings, held to the committed series by the suite),
-`fx_rates` and `fx_fetch_metadata` (empty), `financial_statements`
-(`source` NOT NULL, no default since this session; 102 rows from before
-the statements method broke), `macro_data` (`source` nullable, no default
-since this session; 185 rows). **There is no holdings table.**
+**`87d3ec68c2ed`** (`macro_data.source` NOT NULL), 21 migrations, linear,
+all applied; this session's one applied by the owner, output pasted,
+schema read back. Tables that matter: `portfolios` (`currency` and
+`ips_path` NOT NULL; row 3 names `ips.toml`), `transactions`
+(`portfolio_id`, `amount`, `date` a DATE, `fees`, all NOT NULL), `assets`
+(9 rows), `daily_prices` (6,939 rows, `source` NOT NULL, every close a
+print held to the committed series by the suite), `fx_rates` and
+`fx_fetch_metadata` (empty), `financial_statements` (`source` NOT NULL, 65
+rows, untrusted), `macro_data` (**`source` NOT NULL since this session**,
+185 rows, all `yfinance`). **There is no holdings table.** The watchlist,
+the philosophy and the ledger are files, not tables.
 
 - **Portfolio 3, "Benchmark Portfolio" — the only portfolio.** Nine ledger
-  rows, one buy each, Part 8 A; cost basis 284,500 plus 15,500 cash; base
-  currency USD, every asset USD; policy `ips.toml`.
-- **The nine holdings' price history** is 771 rows each, 2023-08-14 to
-  2026-09-09, every row a cent print with source `yfinance`, and the 252
-  cells per holding inside Part 4's window equal the committed series to
-  the cent on every pytest run.
-- **The four leftover tickers are gone.** AMZN, PLTR, SAP and VWO and
-  their 9,772 rows across seven tables were deleted by my hand this
-  session; the statement printed 6939 and 9, the counts predicted. Nine
-  assets, 6,939 price rows, every one a print with its source.
-- Reseeding rewrites the nine assets' metadata to the same values, writes
-  `ips_path = "ips.toml"` on the portfolio row, and refuses without
-  `--reset` when ledger rows exist. No reseed this session and none needed:
-  the migration filled row 3.
+  rows, one buy each, Part 8 A; cost basis 284,500 plus 15,500 cash; USD
+  throughout; policy `ips.toml`.
+- Reseeding rewrites the nine assets' metadata to the same values and
+  refuses without `--reset`. No reseed this session and none needed.
+
+### The documents and their tests
+
+| Document | Config | Held by | Read by |
+|---|---|---|---|
+| `docs/IPS.md` | `ips.toml` | `test_ips.py` | the compliance node, per portfolio row |
+| `docs/PHILOSOPHY.md` | `philosophy.toml` | `test_philosophy.py`, `test_philosophy_loader.py` | nothing yet; `screening.screen` takes it loaded |
+| `docs/WATCHLIST.md` | `watchlist.toml` | `test_watchlist.py` | nothing yet |
 
 ---
 
@@ -255,247 +230,205 @@ since this session; 185 rows). **There is no holdings table.**
 - `.env` holds keys. Never print it.
 - **OpenAI: no credits.** **Anthropic: working.** `ACTIVE_LLM_CONFIG = ANTHROPIC_HAIKU`
   (`claude-haiku-4-5-20251001`). `ANTHROPIC_SONNET` is `claude-sonnet-5`,
-  behind `use_stronger_model`, which is off.
-- **yfinance 1.7.0.** `Ticker.history()` defaults to `auto_adjust=True`.
-  The price method passes `auto_adjust=False` and reads `Close`; the rate
-  and VIX methods take the default, having nothing to adjust.
-- `openpyxl` is in the venv and the `dev` extras. No LibreOffice.
-- `config.toml` is required: `data_manager.py` raises without it, and its
-  `[data_fetch]` carries all four intervals.
-- `config.features.observability_enabled` is **false** here. Do not turn it
-  on without reading the KNOWN_GAPS entry on the router's own span.
-- `portfolio_tool/__init__.py` opens a DB connection at import. `config`
-  reads `DATABASE_URL` at import, which is why a scratch copy of the
-  database has to be named in the environment before any project import.
-  **The whole suite runs on a migrated scratch copy** with
-  `DATABASE_URL=sqlite:///<copy> USE_MOCK_QUOTA=True PYTHONPATH=src pytest
-  -q --noconftest`; `conftest.py` would otherwise copy the real file.
+  behind `use_stronger_model`, off.
+- **yfinance 1.7.0.** The price method passes `auto_adjust=False`.
+- `openpyxl` in the venv and the `dev` extras. No LibreOffice. No mutation tool.
+- `config.toml` is required and carries all four fetch intervals.
+- `config.features.observability_enabled` is **false** here.
+- `portfolio_tool/__init__.py` opens a DB connection at import; `config`
+  reads `DATABASE_URL` at import, so a scratch copy is named in the
+  environment before any project import. **The whole suite on a migrated
+  scratch copy**: `DATABASE_URL=sqlite:///<copy> USE_MOCK_QUOTA=True
+  PYTHONPATH=src pytest -q --noconftest`.
 - `alembic.ini` names the database by a relative path: `alembic upgrade
-  head` runs from the project root or touches nothing. The alembic API
-  with `sqlalchemy.url` overridden is how a migration runs on a scratch
-  copy.
-- **A policy path on a portfolio row** is relative to the project root or
-  absolute; `ips.resolve_ips_path` anchors it, the way
-  `config.resolve_database_url` anchors the database. The compliance
-  node's tests name portfolio 3 on the suite's copy, so they are no longer
-  database-free.
-- Yahoo quotes a currency pair as `{quote}{base}=X`.
-- The CLI's quit command is `:q`. `exit` is sent to the router as a
-  question and refused as an order (KNOWN_GAPS, Hygiene). With the
-  portfolio cleared (`:p`), a policy question is now refused: no
-  portfolio, no policy.
+  head` runs from the project root. The alembic API with `sqlalchemy.url`
+  overridden is how a migration runs on a scratch copy.
+- **The clause loader** is `portfolio_tool/clauses.py`; `ips.py` and
+  `philosophy.py` are thin specs over it (prefix, type table, parameter
+  checks, error class). A relative document path anchors to the project
+  root through `clauses.resolve_path`; `ips.resolve_ips_path` is the same
+  function under its old name.
+- **The screen's input** is a figures block: ticker, currency, source,
+  fiscal years with `ends` and `filed` dates and reported figures by name,
+  `shares_outstanding`, `price` and `valuation_range` with `as_of`. Its
+  shape is `tests/test_fundamentals.py`'s fixture, Part 10 A typed. No
+  tool publishes one yet.
+- The CLI's quit command is `:q`.
 
 ---
 
-## 4. What the thirteenth session did
+## 4. What the fourteenth session did
 
-`git log --oneline 191829b..HEAD` for the list, in order.
+`git log --oneline 4ca00b0..HEAD` for the list, in order.
 
-**Order 2, item 4: the personal IPS's binding (adec72f to 90fd67c, with
-482d3e4).** The decision first, in four questions, before any code. Where
-the file lives so that it never enters the repository and the code still
-finds it: on the portfolio's row, `portfolios.ips_path`, required and
-defaulted nowhere; the migration fills row 3 with `ips.toml` by id and
-refuses any other row. `create_portfolio` requires it; the seed writes it.
-A relative path is anchored to the project root; the loader lost its
-default. Who resolves it: the compliance node, from the row, in every
-mode, through `load_portfolio_policy_path`, because the hypothetical and
-lookup modes plan ComplianceAgent alone. My first shape had DataAgent
-publish it to `shared_data` (c18054c); reading the plan table showed the
-hole and I took it back out (352104c) before the node change. What the
-system says on a type the checker does not know: the file refuses to
-load, as before, and the message now ends with the growth rule. How the
-vocabulary grows: one clause at a time through the statement type, the
-reference for that clause first, the order in the loader's docstring.
-Where my Part 8 reference lives: the same private directory, outside the
-repository, with a committed check script when the portfolio enters. The
-CLI on portfolio 3 showed the policy line on both modes. Golden set and
-runner not run: nothing routed or rendered differently.
+**Order 3, three decisions, each a shape before its file (94ac112 to
+67210aa).** The philosophy in the IPS pattern: two documents because they
+change for different reasons and the compliance loader refuses a type it
+cannot check; seventeen clauses, three types, first person, synthetic. Level
+4 in benchmark.md: six cases, Part 3b's research lines, the ledger as the
+eval set, 3.2's expiry rule. The watchlist with its ledger: a prediction
+nested under its thesis, dated, about the business, figure or event, scored
+all four fields or none, never a price; two candidates, four predictions
+due in early 2027; the check record absent and saying so. Each document
+held to its TOML by a test seen failing on an altered copy first.
 
-**The three small items from §5 (cc3d432 to 71962cf).** Item 24: the
-stored closes held to the committed series, cell for cell, on every
-pytest run; seen failing on a scratch copy with one JNJ close scaled by a
-dividend factor. Item 20: the two `source` model defaults dropped, no
-migration needed, checked; then the provider's four literal `yfinance`
-sites became `self.name` and the macro DTO's own default went. The
-stand-in library that test needed found `get_financial_statements`
-returning nothing on every call, a DTO narrower than its writer behind a
-blanket except; pinned as six strict expected failures, logged, not
-fixed. Item 21: the delete statement, every count added up, mine to run.
+**Item 25 (bd2d04a, ced6bee).** `macro_data.source` NOT NULL: schema test
+first, model and migration 87d3ec68c2ed with no fill and a refusal on any
+null row, applied and reverted on a scratch copy, then by the owner. The
+last source column.
 
-**The sweep (5666ee0).** Everything above in KNOWN_GAPS, with the two
-Directions entries the owner's questions asked for: mutation testing,
-logged with a trigger, and the tables the agents do not read, checked
-against callers.
+**Order 4, the philosophy check (c0b9d13 to 70c993a).** Part 10 by hand
+with D21 to D25, D25 corrected before it was written from "that clause" to
+"the whole check". The workbook's `Philosophy` sheet, then a `Filed` column
+in both for D21. `clauses.py` extracted from `ips.py`, no behaviour change.
+Then, test first each and in this order because the loader checks metric
+keys against the metrics module: `quant/fundamentals.py` (Part 10 B and C,
+D21's year selection, divisions by zero raise, blanks do not),
+`philosophy.py`, `screening.py` (Part 10 D and E: worst year per bound,
+strict comparison, the whole check stopping on a missing figure or a year
+not yet filed, the margin of safety carrying both as-of dates).
 
-**After the first handoff: item 21 run, and the Order revised
-(290bfc7).** I ran the delete and it printed the two predicted counts.
-Then a direction decision: the personal IPS, the personal philosophy and
-my real portfolio are the vision, not the next step; they moved from
-Order 2 to a new Order 6, after the conversational layer, and
-DIRECTION.md says under its Order heading that everything before it is
-built and scored on synthetic artifacts. Next is Order 3.
+**The runs, before any routing change.** Runner 12/12, golden zero diff,
+and a fourteen-prompt batch read in full: nine as designed, four known
+wrong faces standing, two new before-faces (KNOWN_GAPS, Hygiene).
+
+**The wrong turn (19de4a5, reversed by f865bac).** Invented figures per
+watchlist candidate as a runtime source, brought as a decision, one commit
+landed, caught by the owner's question, taken back with the reason in the
+commit and the entry under Directions.
+
+**Mutation testing** brought as a decision and not run: only when
+necessary, the owner's decision; it leaves §5.
+
+**The sweep (75bcb62)**, then this file.
 
 ---
 
 ## 5. Decisions taken, and decisions pending
 
 **Taken this session.**
-- The policy a portfolio is checked against is named on its row; a
-  portfolio names its file or is refused; a relative path is the project
-  root's, an absolute one is taken as given. Rejected: an environment
-  variable, a home-directory fallback, an ignored file in the tree, a
-  `config.toml` mapping.
-- The compliance node resolves the policy from the row in every mode; the
-  node's "no database" rule narrowed to "no second arithmetic path".
-  Rejected: DataAgent in every compliance plan, two sources by mode, the
-  committed file when no portfolio is set, a graph-entry resolution.
-- A clause with a type the checker does not know refuses the whole file;
-  a rule the checker cannot check yet is written as a statement until its
-  checker and its reference exist. Rejected: an `unchecked` status.
-- The stored closes are held to the committed series by the suite, to the
-  cent, not by a script run by hand.
-- The two `source` defaults are gone; the macro column stays nullable
-  as its own decision; the provider's name is stated once.
-- The statements defect is pinned, not fixed.
-- Mutation testing is a one-off diagnostic over five pure modules, logged
-  with a trigger, not a fifth loop.
-- The personal policy, philosophy and portfolio are Order 6, last;
-  Orders 3 to 5 are built on synthetic artifacts. Dated in DIRECTION.md.
+- The philosophy is a second clause document, not a section of the IPS;
+  three types; metric keys are a closed vocabulary owned by the metrics
+  module; first person.
+- Level 4 is six cases scored on structure by the runner and on outcomes
+  by the ledger; a judge model and price-based scoring rejected; 3.2
+  expires at the first Order 4 commit that makes 4.3 answerable.
+- The ledger lives on the watchlist, a prediction under its thesis; figure
+  or event; no partial credit; never edited; never a price; the range is
+  never typed into the file.
+- Part 10 before the screen; D21 to D25; the screen after the metrics
+  module, the metrics module before the loader.
+- One clause loader for both documents.
+- Invented figures are not a runtime source; a reader with a defended
+  source comes before the node.
+- The macro column is required, with no fill.
+- Mutation testing only when necessary.
 
-**Pending — decide before writing code.** Numbers kept from the twelfth
-session's list so that KNOWN_GAPS references still resolve; done items
-are struck.
-1. ~~Order 2 item 4, the rest~~ moved to Order 6, last (290bfc7): the
-   private directory, the personal document and TOML, my real portfolio's
-   rows and Part 8 reference, the row with its absolute path, the check
-   script. The code needs no change for any of it when the time comes.
-   **Next instead: Order 3's first decision**, the shape of a synthetic
-   philosophy document in the IPS pattern, Level 4 in benchmark.md, and
-   the prediction ledger, shapes and references only, no tool reading
-   any of it yet.
-6. **The rebalance tools' fixed euro sign**: logged, not built; the path is
-   dead until decision 11.
-8. ~~The workbook in Excel~~ done (191829b).
-9. **Records and rules for the span and two-weights clarifications**, when
-   a case asks.
-10. **A window return** as a measure with a reference; not an extraction rule.
-11. Replace the two verbatim benchmark few-shots (1.1, 1.3); the
-    rebalancing few-shot with four percentages.
-12. The hypothetical mode's instrument type ("11% into a new ETF").
-13. A target-weights clause and `OUT_OF_SCOPE_RESPONSE` moving into the
-    IPS — both edit `docs/IPS.md`.
-14. "Optimization failed: None": the message, and the two-asset failure.
+**Pending — decide before writing code.** Old numbers kept so that
+KNOWN_GAPS references resolve; done items struck.
+6. **The rebalance tools' fixed euro sign**: logged, not built.
+9. Records and rules for the span and two-weights clarifications, when a case asks.
+10. A window return as a measure with a reference.
+11. Replace the two verbatim benchmark few-shots.
+12. The hypothetical mode's instrument type ("11% into a new ETF"), seen again this session.
+13. A target-weights clause and `OUT_OF_SCOPE_RESPONSE` moving into the IPS.
+14. "Optimization failed: None".
 15. A golden line for 2.3.
-16. **Company names, German phrasings, the softer 3.5**: logged, not
-    built; decision 16 is their path (Order 5, or a case that needs it).
-17. **`group_by` as the subject kind of a compliance finding**, when a case asks.
-18. **Realized gains and closed positions as figures the system reports.**
-19. ~~A short README~~ done (ab813ed).
-20. ~~Two more `source` columns~~ done (dda3e24, 71962cf).
-21. ~~The four leftover tickers' rows~~ done by hand, 6939 and 9.
-22. **Volatility over as-traded closes or over a total-return series**: a
-    Part 4 decision with a recomputed Part 4 beside the present one.
-23. **The answer text naming the price source**: a rendering; the runner
-    sees it.
-24. ~~The csv-versus-database comparison as a committed check~~ done (cc3d432).
-25. **`macro_data.source` NOT NULL**: the mirror of the price column; a
-    migration filling 185 rows, all one source. Off the benchmark's path.
-26. **`get_financial_statements` returning nothing**: the DTO is narrower
-    than its writer and reader, and the blanket except hides it. Whether
-    the fix is the DTO regaining its fields or the provider passing fewer
-    is a decision with Order 4, when it is known whether these tables are
-    the judgement half's source at all; the six pinned tests are the
-    check.
-27. **Mutation testing, once**, over the five pure modules, survivors read
-    and logged. Trigger: when I say, or before the checker grows its first
-    personal clause type.
+16. Company names, German phrasings, the softer 3.5: decision 16's path.
+17. `group_by` as the subject kind of a compliance finding, when a case asks.
+18. Realized gains and closed positions.
+22. Volatility over as-traded closes or a total-return series: a Part 4 decision.
+23. The answer text naming the price source.
+25. ~~`macro_data.source` NOT NULL~~ done (ced6bee, applied).
+26. `get_financial_statements` returning nothing: with the reader decision, since the reader decides whether those tables are a source at all.
+27. ~~Mutation testing~~ only when necessary; off this list.
+28. **The filings reader, the next decision** (§7).
+29. **The node for the screen**, after the reader: intent `research`, `ScreeningAgent` alone in its plan, the runner checks for 4.1 and 4.6 first, a golden line, golden twice. Inside it: which document the word "philosophy" routes to (today the IPS check, KNOWN_GAPS Hygiene).
+30. **What a philosophy is bound to.** It is the investor's, not the portfolio's, so `ips_path`'s shape does not transfer. The committed file by path until Order 6; not a column invented now.
+31. **The bank variant of 4.6.** PHI-3.2 is a statement and cannot decide "bank" without data on the figures block; a decision with the reader, which is where such data would come from.
+32. **Two formatter headers carry an emoji**: an answer-text change, own commit, the runner sees it.
+33. **The workbook's cached values**: absent since the openpyxl writes; return when the workbook is opened and saved in Excel.
 
 ---
 
 ## 6. Where we stand against the benchmark
 
-12/12 on the last run, in the eleventh session. Level 1, Level 2 and Level
-3 in full. benchmark.md's notes are current; nothing in it changed this
-session. Not run this session because no answer's text changed; the first
-change that touches a formatter runs it.
+Levels 1 to 3: 12/12 on this session's run. Level 4: defined, six cases,
+none with a check, none running; the ledger has four open predictions and
+no scored one, so its score is 0 of 0 and stays so until early 2027.
 
 ---
 
 ## 7. Next steps, in order
 
-**Order 3, the first decision, before any code.** What a synthetic
-philosophy document looks like in the IPS pattern: numbered clauses, a
-derived config, numeric criteria checked deterministically and cited by
-clause, statements citable but not computed. What Level 4 in
-benchmark.md defines as a good research answer, scored by the ledger.
-The shape of the prediction ledger: dated, specific, falsifiable, attached
-to a thesis. Shapes and references only; no tool reads any of it until
-the documents exist, and DIRECTION.md says the judgement half starts when
-Level 4 and the ledger do.
+**Decision 28, the filings reader, before any node.** Reported figures per
+fiscal year for a company from a structured, free source (DIRECTION.md
+names EDGAR; its company-facts data is filed figures with the fiscal
+period and the filing date on each), published in the figures block's
+shape with a source and a filed date on every figure, cached under the
+price cache's rules, and defended the way Part 9 defended the closes: a
+reference Part with a few rows fetched by the owner from a second source
+by hand, to the dollar, before the provider method is trusted. Open inside
+it: whether the existing `financial_statements` table is the store or a new
+one is (26); how a fiscal year is labelled when the filer's year does not
+end in December (the watchlist's second candidate does not); what the
+block carries for a bank (31). Bring the shape, a recommendation and the
+rejected alternatives; compute nothing until the owner says.
 
-**The small items when convenient**: 25, the macro column required, a
-migration on a scratch copy first; 27, mutation testing once over the
-five pure modules, asked before it runs.
+**Decision 29, the node**, after the reader: runner checks for 4.1 and 4.6
+first, seen BLOCKED; the intent and agent in the registries with their
+plan test; the node with a test over a synthetic state held to Part 10 D;
+the formatter with its test; the golden line and the prompt, golden twice
+with the prediction written first.
 
-**The personal files are Order 6**: nothing before it waits on them.
+**Then the valuation pipeline** with Part 11 by hand, and prediction
+scoring with its Part.
 
 ### Later, with reasons
 
-- The judgement half stays unstarted until benchmark.md has a Level 4 and
-  the prediction ledger exists (DIRECTION.md).
-- `measure`, `group_by` and `status` are the model's classification beyond
-  intent; whether they become extraction is a question for the tool
-  boundary, not for a prompt.
-- A total-return series for volatility (22): with a recomputed Part 4, not
-  by flipping the provider flag back.
-- The statements defect (26) and the macro column (25): with Order 4, or
-  when a case reads those tables.
-- More concurrency: when Order 4/5 has independent tools and a measurement
-  says a request waits on several things at once.
-- The inline `sqrt(w'Σw)` copies; the hot-potato violation in
-  `price_data_json`.
+- 3.2's rewrite and Part 2's boundary: at the commit that makes 4.3 answerable, not before.
+- `measure`, `group_by` and `status` are the model's; whether they become extraction is a tool-boundary question.
+- A total-return series for volatility (22): with a recomputed Part 4.
+- More concurrency: when Order 4/5 has independent tools and a measurement asks.
+- The inline `sqrt(w'Σw)` copies; the hot-potato violation in `price_data_json`.
 
 ---
 
 ## 8. Rules learned the hard way
 
-**Read the plan table before choosing a publisher.** I had DataAgent
-publish the policy path because DataAgent publishes the currency, and
-the hypothetical and lookup modes plan ComplianceAgent alone. The value
-would have been absent in exactly the two cases that ask a policy
-question without a portfolio check. The plan table was one grep away
-and I wrote the commit first. Committed, then taken out, both in the
-history.
+**A shape is checked against the invariants, not against the day's
+pattern.** Three synthetic documents in a row made "a synthetic file,
+replaced later" feel like the rule. The rule is invariant 1, and it
+distinguishes a policy the owner states from a fact the world provides. I
+brought invented figures as a source; the owner asked whether that broke
+a principle; it broke three. The check takes a minute and belongs before
+the decision reaches the owner.
 
-**A test written against data that is already right has not been seen
-failing.** The stored-closes test was green on its first run because the
-history was refetched last session. That is not evidence it can fail. A
-scratch copy with one close scaled by a dividend factor was, and it
-failed naming Part 9 B's row.
+**A decision's wording is checked against the documents it cites before
+it is written down.** D25 as brought said the check stops "on that
+clause"; PHI-1.2 and case 4.6 say the whole check stops. Caught while
+writing the reference, not after.
 
-**A stand-in finds what the network hid.** The provider test needed a
-stand-in library for the statements method, and the method returned
-nothing from it: it has returned nothing from the real library too, for
-as long as the DTO has lacked the fields the provider passes, and a
-blanket except turned the error into an empty list every time. Nothing
-reads the table, so nothing noticed. A tool that returns an empty list
-on any exception is the repair shape at the boundary.
+**A regex in a test asserts the message's order.** Two raise tests
+failed on "EBITDA.*FY2025" because the module, like every other message
+in it, puts the year first. The module was right; the test moved.
 
-**Check the schema before promising a migration, again.** The two
-`source` defaults were Python-side only; the database had no server
-default on either. Checked this time before the decision was brought,
-not after.
+**Dependencies decide the order, not the list.** The loader holds metric
+keys to the metrics module, so the metrics module came first, against the
+order I had written down an hour earlier.
+
+**Two statements of one source line are both right.** The typed
+reference and a file both said where their figures came from, in
+different words; the comparison excludes provenance and holds the cells.
 
 **A count is added up, not recalled; a policy is per portfolio, not per
 process; a raise is honest and a half-loaded policy is not; the output is
 the record, not the word; a check on the most recent date passes in both
-states; a library default is a claim to check; a required argument breaks
-the callers, and that is the point; registration is not reachability;
-predict from the whole prompt; a refusal is an honest failure; a fixture
-that passes in both states is no check; a collection error is a blind
-suite; measure a timing change before explaining it — still true.**
-Earlier handoffs' §8 have the examples.
+states; registration is not reachability; predict from the whole prompt;
+a refusal is an honest failure; a fixture that passes in both states is
+no check; read the plan table before choosing a publisher; a test against
+data already right has not been seen failing — still true.** Earlier
+handoffs' §8 have the examples.
 
 ---
 
@@ -521,27 +454,30 @@ git log --oneline baseline-v1..HEAD
 alembic upgrade head
 python src/portfolio_tool/scripts/seed_portfolio.py --reset
 
-# what the database says it is at:
+# what the database says it is at (expected 87d3ec68c2ed):
 sqlite3 data/portfolio.db "select version_num from alembic_version;"
 
-# which policy each portfolio is checked against:
-sqlite3 data/portfolio.db "select id, name, currency, ips_path from portfolios;"
+# every source column required:
+sqlite3 data/portfolio.db ".schema macro_data" | grep source
+
+# the price table: nine assets, 6939 rows, one convention
+sqlite3 data/portfolio.db "select count(*) from daily_prices; select count(*) from assets;"
 
 # the whole suite on a migrated scratch copy, while a migration is pending:
 DATABASE_URL="sqlite:///$PWD/scratch.db" USE_MOCK_QUOTA=True PYTHONPATH=src pytest -q --noconftest
 
-# the price table after item 21: nine assets, 6939 rows, one convention
-sqlite3 data/portfolio.db "select count(*) from daily_prices; select count(*) from assets;"
+# the three documents held to their config:
+pytest -q tests/test_ips.py tests/test_philosophy.py tests/test_watchlist.py
 ```
 
 ### The four loops
 
 | Loop | Cost | Answers |
 |---|---|---|
-| `pytest` | ~3s, no model calls | Do the components still work; does the ledger reproduce Part 8 A, B to the cent and the rate arithmetic Part 8 C; does every stored close in Part 4's window equal the committed print and does the provider return the print; does the schema have the tables and columns and not the defaults; does every portfolio name its policy and does the compliance node load that file and refuse without one; does every table row derive its plan; does extraction read every recorded prompt the same way; does the node publish the block the checker reads; does each formatter select what its parameters say and name the currency it was given |
-| CLI | ~4s, one call | What it is actually doing — the plan, the parameters, the reasoning line, what was asked back, the answer's header, `base_currency` and `fx_rates` in `shared_data`, which policy file the compliance node loaded, and whether the provider was called at all and with which flag |
-| Golden set | ~70s, cents | Did routing change anywhere (sixteen lines on portfolio 3 or none, two pinned failures, `retries` when a plan was rejected). Blind to `measure`, `group_by`, `status`, `tickers`, the compliance mode, every currency and the policy file |
-| Benchmark runner | ~1.5min, cents | How many cases pass; the only loop that sees the compliance mode, the second turn, a model-owned field set where it should not be, and the answers' text as a whole |
+| `pytest` | ~3s, no model calls | Do the components still work; does the ledger reproduce Part 8, the rate arithmetic Part 8 C, every stored close Part 9, the checker Part 7, **the metrics and the screen Part 10**; does the schema have the columns and not the defaults; is every document held to its config; does every table row derive its plan; does extraction read every recorded prompt the same way; does each formatter select what its parameters say |
+| CLI | ~4s, one call | What it is actually doing: the plan, the parameters, the reasoning line, what was asked back, the answer's header, which policy file the compliance node loaded, whether the provider was called |
+| Golden set | ~70s, cents | Did routing change anywhere (sixteen lines or none, two pinned failures, `retries` when a plan was rejected). Blind to `measure`, `group_by`, `status`, `tickers`, the mode, the currencies and the policy file |
+| Benchmark runner | ~1.5min, cents | How many cases pass; the only loop that sees the compliance mode, the second turn, a model-owned field set where it should not be, and the answers' text as a whole. Level 4's cases join it with decision 29 |
 
 `golden set → change → golden set → decide → then update expected.txt, its own
 commit`. Prediction first, twice for a prompt change, stop at the second
