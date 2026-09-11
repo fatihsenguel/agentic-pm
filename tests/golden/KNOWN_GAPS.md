@@ -1,7 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 10 September 2026, thirteenth session, on branch `selection`, after the personal IPS's binding (the policy a portfolio is checked against is named on its row, `portfolios.ips_path`, migrated; the compliance node loads that file in every mode; the loader has no default), the growth rule for the type vocabulary, the stored closes held to the committed series, the two `source` defaults dropped, the four leftover tickers deleted by hand, DIRECTION.md's Order revised so that the personal files come last, and the sweep below.
-
+Last updated 11 September 2026, fourteenth session, on branch `selection`, after Order 3 (the synthetic philosophy, the watchlist with its prediction ledger, and Level 4 in benchmark.md, each document held to its config by a test), `macro_data.source` made required, and Order 4's first tool: Part 10 by hand, the clause loader shared between the IPS and the philosophy, the metrics, and the screen, reproducing Part 10. One wrong turn taken back the same session, the figures files, recorded under Directions. The runner and the golden set ran once each, 12/12 and zero diff, and a fourteen-prompt batch is recorded under Hygiene.
 ---
 
 # RESOLVED
@@ -2778,6 +2777,18 @@ with its own migration and I did not take it. What the stand-in found
 on the way is its own entry below, "get_financial_statements returns
 nothing".
 
+**The macro column made required 11 September (fourteenth session),
+bd2d04a and ced6bee, migration 87d3ec68c2ed.** Schema test first, red
+by two through the suite and seen failing a third way on a scratch copy
+with one source nulled; then the model and the migration, nullability
+only in batch mode, no fill: a row with no source is of unknown origin,
+so the migration counts null or empty sources and refuses naming the
+count, and it was seen refusing a copy with one. Applied and reverted on
+a scratch copy with the schema read back each way, then by the owner
+from the shell, one upgrade line pasted, the column read back NOT NULL
+over 185 rows. The last source column; every price, rate, statement and
+macro row now names its provider or is refused.
+
 ### `get_financial_statements` returns nothing, on every call, silently
 
 Recorded 10 September (thirteenth session), found by the stand-in
@@ -2898,6 +2909,49 @@ expected failures. The wall time alternated between about three seconds
 and about nine across the day's runs with no change between them that
 could explain it; I did not measure where the six seconds go, so this
 is an observation and not a cause. Measure before explaining.
+
+**11 September (fourteenth session).** Twenty-six at 735 passed and six
+expected failures, about three seconds; 4.6 on one run after the paid
+loops, unmeasured.
+
+### A question about the philosophy runs the IPS check
+
+Recorded 11 September (fourteenth session), from the prompt batch below.
+"What does my philosophy say about debt?" routed `compliance` in its
+default mode and printed the 63-line portfolio check against the IPS.
+Two causes: the lookup rule in `extraction.py` reads "policy", "IPS" and
+"investment policy statement" and not "philosophy", so no lookup fired;
+and there is no intent for the philosophy at all, so the compliance
+intent takes the sentence. A question about one document answered from
+the other, with a plausible face. Not fixed by a word in the lookup
+pattern: the philosophy's lookup is `clauses_on` on the loaded
+philosophy, the same mechanism, and it belongs to the screen's intent
+when that intent exists (Order 4, the node decision). Until then this
+is a known wrong face.
+
+### Two formatter headers still carry an emoji
+
+Recorded 11 September (fourteenth session), seen in the prompt batch.
+The compliance report's header and the out-of-scope refusal's header
+each print one. Removing them changes the answers' text, so it is a
+change the runner sees, own commit, and not a drive-by inside another.
+
+### Prompt batch, 11 September: fourteen prompts
+
+Run after the golden set and the runner, both clean, before the first
+routing change of Order 4. Nine answered as designed: JNJ's two rows,
+the position table largest first, "last month" asking which span,
+breaches only, JPM's cost inside its P&L block, and the three
+judgement-half prompts ("Does GOOGL clear my philosophy?", "What is
+Adobe worth?", "Should I buy GOOGL?") refused as out of scope, which is
+right until the screen has an intent and is the before-face for it.
+Four wrong faces already logged still stand: "Apple Inc." and the
+German span (decision 16), the ETF refused as an issuer (pending
+decision 12), the whole allocation block for "How much is my portfolio
+worth?" (the one-figure entry). Two new: the philosophy lookup above,
+and "How have my predictions done?" asking whether positions or a
+backtest are meant, an honest clarification and the before-face for
+case 4.5. Every answer priced as of 2026-09-09 and said so.
 
 ### `.gitignore` is corrupted
 
@@ -3258,6 +3312,12 @@ read and each one logged as what it shows, not a fifth loop and not a
 number to keep. Trigger: when I say, or before the checker grows its
 first personal clause type.
 
+**11 September (fourteenth session).** Brought as a decision with the
+tool, the copy-of-the-tree method and the 20 to 40 minutes it would
+take; the owner's decision: only when necessary, and it leaves the
+handoff's pending list. The trigger above stands as the record of when
+that is.
+
 ### The tables the agents do not read
 
 **Recorded 10 September (thirteenth session), checked against callers.**
@@ -3279,6 +3339,127 @@ repair-shaped default item 20 removed, and nothing has ever checked a
 row of them against anything; the statements method has in fact
 returned nothing for months (entry under Hygiene). Untrusted until a
 reference exists, the way the stored closes turned out to deserve.
+
+### Order 3: the philosophy, the watchlist and the ledger, and Level 4
+
+**Built 11 September (fourteenth session), 94ac112 to 5814279 and
+722456a to 67210aa.** Three decisions, each a shape brought and taken
+before its file was written, no tool reading any of it.
+
+**The philosophy** (`docs/PHILOSOPHY.md`, `philosophy.toml`,
+`tests/test_philosophy.py`): the IPS pattern for the second question.
+The IPS says what may be held; the philosophy says what is worth
+wanting, and they are two documents because they change for different
+reasons and because the compliance loader refuses a type it cannot
+check. Seventeen clauses, `PHI-<section>.<number>`: five numeric
+screens, twelve statements; three types, `statement`, `metric_band`
+(one metric key held to min and/or max over every one of the last n
+fiscal years) and `margin_of_safety` (a discount to the low end of a
+valuation range). First person, synthetic, replaced as a file in Order
+6. Rejected: a section 7 of the IPS; a scored rubric (a score launders
+judgement into arithmetic); the criteria in the reader's prompt (a
+number in a model's hands); "must" and "prefer" weights (a value
+nothing consumes); an n-year average (hides the bad year); flat `P-n`
+ids.
+
+**Level 4** (benchmark.md): six cases in the shape of Levels 1 to 3,
+the philosophy check by clause, a valuation as a range from stated
+assumptions, a recommendation with both policy checks and a dated
+prediction attached, the prediction itself, the ledger's score, and
+the case where the philosophy declines to screen. Part 3b gained what a
+research answer states in addition and the one prohibition, no price a
+stock will reach. The ledger is the eval set for the level. 3.2 stays
+live until the first Order 4 commit that makes 4.3 answerable and is
+rewritten to a price forecast then; Part 2 and Level 3 point at that
+rule. Rejected: a judge model over the prose; scoring by what the price
+did; one case for the whole half; rewriting 3.2 now.
+
+**The watchlist and the ledger** (`docs/WATCHLIST.md`,
+`watchlist.toml`, `tests/test_watchlist.py`): a candidate is a thesis
+in a paragraph, an entry condition (`valuation`, PHI-4.1 against the
+current range, or an `event`), the philosophy check that put it there,
+and its predictions nested under it so a prediction without a thesis
+cannot be written. A prediction is dated, about the business, a
+`figure` (metric, bound, value, fiscal period, scored by one
+comparison) or an `event` (scored by an outcome entered with a source);
+score fields all four or none; never edited after it is made; never a
+price. Two candidates, Alphabet and Adobe, real US filers not held in
+portfolio 3, four predictions on fiscal 2026 due in early 2027; the
+check record absent and marked not yet checked, since a record saying
+"cleared" before any check ran would be a plausible face. Rejected:
+database tables with a writer; two files; free-text predictions scored
+by reading; partial credit; the valuation range typed into the file; a
+price in the entry condition.
+
+### Order 4, the philosophy check: Part 10 and three pure modules
+
+**Built 11 September (fourteenth session), c0b9d13 to 70c993a.** Taken
+before the valuation pipeline, against DIRECTION.md's listed order,
+because it is the IPS pattern repeated exactly and it fixes the figures
+block the valuation, the reader and the scorer all read.
+
+**Part 10 first**, by hand, with D21 to D25: a year counts by its filed
+date; a clause over n years is one finding decided by the worst year; at
+the limit passes; a metric is one stated formula over reported figures
+and the formula is the key's definition; a missing figure stops the
+whole check. The decision as brought said the check stops "on that
+clause"; PHI-1.2 and case 4.6 say the whole check, and D25 says the
+whole check, corrected before it was written. Five findings on
+synthetic figures for W-1, two failing, and three falsifier rows: a
+ceiling met exactly, a missing FY2024 gross profit, a year not yet
+filed. A `Filed` column added the same session for D21. The workbook's
+`Philosophy` sheet carries the same as formulas; the nine older sheets
+lost the cached values Excel saved at 191829b, which is why the file
+shrank, and were compared cell for cell, 8,958 cells, zero differences.
+
+**Then the code, test first each.** `clauses.py` extracted from
+`ips.py` with no behaviour change, the fourteen loader raise tests and
+every compliance test holding it, so the loading is stated once and a
+`DocumentSpec` names what differs per document. `quant/fundamentals.py`
+before the loader, because the loader holds every `metric` key to
+`METRICS` and a key nothing computes must fail to load. `philosophy.py`
+the thin spec. `screening.py` the mirror of `compliance.py`: reads the
+metrics, one subtraction per finding, D21, D22, D23, D25 as raises and
+choices, a type the loader accepts and the screen does not dispatch
+raising. `test_philosophy.py` moved onto the loader and lost the type
+table it carried. Part 10 D and E reproduce.
+
+**What remains of the tool, the node decision, not started:** the
+intent (`research`), the agent (`ScreeningAgent`) alone in its plan
+with no DataAgent, the node loading the committed philosophy and
+publishing `shared_data["screening"]`, the formatter, the runner checks
+for 4.1 and 4.6 written first, a golden line, golden twice. Three open
+questions inside it: which document the word "philosophy" routes to
+(the Hygiene entry above); the bank variant of 4.6, since PHI-3.2 is a
+statement and cannot decide "bank" without data on the block; and what
+a philosophy is bound to, since it is the investor's and not the
+portfolio's, so `ips_path`'s shape does not transfer, a question for
+Order 6 and not a column invented now.
+
+### The judgement half's figures come from a reader, never a file
+
+**Recorded 11 September (fourteenth session), a wrong turn taken back
+the same session (19de4a5, reversed by f865bac).** With the screen built
+and nothing fetching a company's figures, I brought and started a
+`figures/<TICKER>.toml` per watchlist candidate, invented figures in
+the block's shape with a header saying so, read by the node so that 4.1
+could run end to end, "replaced later by the reader with no change to
+the screen", the way the synthetic IPS is replaced by the personal one.
+The owner asked whether that violated the principles, and it does, in
+three places: DIRECTION.md invariant 1, every number traces to a tool
+output; invariant 5 and the handoff's rule, a default is a wrong answer
+with a plausible face; and this file's entry on the tables the agents
+do not read, filled before the references-before-code rule and never
+checked, which a figures directory would have been again. The analogy
+breaks on one distinction: a policy is the owner's to state, so a
+synthetic one is an honest stand-in; a company's figures are facts, and
+a stand-in fact is an invented number with a label. Typed figures stay
+where they belong, in the tests that hold the screen to Part 10. The
+lesson for the record: check a shape against the invariants, not only
+against the pattern used all day; the decision reached the owner before
+the check did. Next is the filings reader, so the first answer about a
+company runs on filed figures with a source and a filed date on each,
+defended the way Part 9 defended the closes.
 
 ### Direction for `quant/`: one implementation per formula
 
