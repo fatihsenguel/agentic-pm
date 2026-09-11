@@ -427,6 +427,50 @@ The recurring failure shape in this codebase: repair instead of raise, so a wron
 answer arrives with a plausible face instead of an error. Same family as bugs 5,
 6 and 9 from the recovery session.
 
+### The compliance gate is a plan step, and one live path prints weights around it
+
+**Found 11 September (fourteenth session), from an outside reading of the
+project, and confirmed against the code the same hour.** DIRECTION.md
+invariant 2 says an answer that implies a position is checked against the
+IPS before it reaches the owner, and that the model cannot route around
+it. ComplianceAgent is not a gate. It is a row in `TERMINAL`, reached only
+when the derived plan for intent `compliance` includes it, and
+`validate_compliance` **raises** if it is planned under any other intent.
+
+So the invariant is not merely "a step rather than a gate", waiting to be
+retrofitted under the research node. It is already unenforced on a live
+path. Intent `optimization` derives `[DataAgent, OptimizationAgent]`, and
+`_format_optimization_response` (`nodes.py`, search `Optimal Allocation`)
+prints one line per ticker with a weight as a percentage. That is an answer
+stating positions, reaching the owner with no clause checked, and the
+validator makes adding the checker to that plan an error rather than a fix.
+The golden set pins the path: "Optimize a portfolio of SPY, TLT and GLD for
+maximum Sharpe ratio". `rebalancing` has the same hole, hidden only because
+RebalanceAgent errors on a missing target (its own entry); when decision 13
+gives it one, it will print trades the same way.
+
+Why it was invisible: every loop asks its own question. The runner has no
+optimization case, the twelve being portfolio and policy questions. The
+golden set prints five routing fields and no answer text. pytest has one
+formatter test. Nothing in any loop asks "did an answer that names a
+weight pass the checker", because no case names a weight outside the
+compliance intent.
+
+**Not fixed, and it is a decision, not a patch.** Three shapes, none taken:
+a real gate the graph cannot bypass, which means compliance runs after the
+synthesizer or wraps it and is a graph-shape change touching every intent;
+deleting the optimization and rebalance answer surfaces as outside the
+target architecture, the way MacroAgent is tolerated, except that these two
+emit weights rather than merely existing; or narrowing invariant 2 in
+DIRECTION.md to say what is actually enforced, which is the honest option
+only if the first two are rejected deliberately. **Settle it before the
+research node**, because case 4.3 is a recommendation with both policy
+checks attached, and building the node, its formatter and its runner probes
+on the assumption that compliance is a step makes the gate a retrofit under
+all three. The failure mode is silent: a research answer that skipped the
+check looks exactly like one that passed it.
+
+
 
 ### The stored closes were dividend-adjusted, and changed after the fact - RESOLVED 10 September (twelfth session)
 
@@ -1285,6 +1329,27 @@ narrow the breach list by it; the model once set `group_by: position`
 under compliance unasked. The one-figure entry's principle was decided
 with this: selection is a parameter the formatter reads, its values the
 block's own words, never a new measure.
+
+**A third value, 11 September (fourteenth session), from the owner's CLI
+session.** "Compare my two biggest holdings to my policy" routed
+`compliance` with the three-agent plan and answered with the full report:
+every clause against all nine holdings, five classes, four sectors, nine
+statements. The figures are right and the shape is not. The diagnostic is
+the router's own `reasoning`, which the CLI printed: "requires identifying
+which two holdings are l[argest]". The model read the question correctly
+and had no field to put the answer in. So the selection axis has at least
+three values - a named position (`tickers`), breaches only (`status`), and
+now a rank, "the largest N" - and the third is the first that is neither a
+subject nor a status but an ordering with a cut. Under DIRECTION.md this is
+extraction's, not a prompt rule: "two biggest", "top three", "my largest"
+are a countable phrase over a view the allocation block already publishes
+largest-first (`by_position`). Logged, not built; it belongs with `filter`,
+and the same hole produced "What share of my portfolio is technology?"
+before. **The compounding reason to build it**: this schema becomes the
+tools' input validation when the conversational layer lands, so a
+restriction extraction cannot express is a question that layer will not be
+able to ask either.
+
 
 
 ## Where non-determinism is allowed to live
@@ -2953,6 +3018,23 @@ and "How have my predictions done?" asking whether positions or a
 backtest are meant, an honest clarification and the before-face for
 case 4.5. Every answer priced as of 2026-09-09 and said so.
 
+### The CLI's identical-answer check fires on two correct refusals
+
+Recorded 11 September (fourteenth session), from the owner's CLI session.
+"Does Alphabet pass my quality criteria?" and "Is it a good time to buy
+Adobe given my thesis?" were both refused, correctly, with the fixed
+out-of-scope sentence, and the CLI flagged the second as "IDENTICAL ANSWER
+to an earlier, different question". The check was built in the recovery
+work to catch the opposite shape: two different questions handed the same
+block because the formatter had no selection. It cannot tell that from two
+questions correctly refused by one fixed sentence, which is what a fixed
+refusal is for. A false positive, not a defect in the answer, and worth
+knowing before trusting the warning: the check is a heuristic over answer
+text, and the intents whose answer is a constant (`out_of_scope`, and the
+clarification texts) will always trip it in pairs. Exempting an intent
+whose answer is fixed by design is a CLI change, own commit, when it
+becomes annoying rather than now.
+
 ### `.gitignore` is corrupted
 
 A PowerShell here-string was written into it literally. Line 1 is `@"`, there is a
@@ -3391,6 +3473,22 @@ database tables with a writer; two files; free-text predictions scored
 by reading; partial credit; the valuation range typed into the file; a
 price in the entry condition.
 
+**What the ledger does not yet measure, recorded the same session.** The
+four predictions in it are the owner's, typed into a document. The system
+has never made a prediction. So when the dates come in early 2027 the
+ledger scores the owner's judgement, not the system's, and the figure it
+yields is not a measurement of this project. The system's own eval set
+starts filling only when case 4.3 makes it produce predictions of its own,
+and the first feedback on those arrives a year after the first one is
+made. Between the first Order 4 commit and then, a Level 4 case passing
+means the answer was **well-formed** - clauses cited, figures with their
+fiscal years, uncertainty as fields, a dated prediction present - and says
+nothing about whether the judgement was any good. That is a new shape for
+this project: every earlier case had a hand-computed reference behind its
+verdict. Said out loud here and in benchmark.md so that a future session
+does not read 14/14 as the system being good at research.
+
+
 ### Order 4, the philosophy check: Part 10 and three pure modules
 
 **Built 11 September (fourteenth session), c0b9d13 to 70c993a.** Taken
@@ -3461,7 +3559,32 @@ the check did. Next is the filings reader, so the first answer about a
 company runs on filed figures with a source and a filed date on each,
 defended the way Part 9 defended the closes.
 
-### Direction for `quant/`: one implementation per formula
+### What is `reasoning` for: a debugging artifact, or something checked?
+
+**Recorded 11 September (fourteenth session), from an outside reading, with
+one claim corrected against the code.** The router emits `reasoning`, free
+prose, beside a structured decision. On "Compare my two biggest holdings to
+my policy" it said the request "requires identifying which two holdings are
+largest" and then the run did not, and nothing anywhere compares the two.
+That instance pointed at a real gap (the rank selection, above). The
+dangerous instance is the opposite: prose describing behaviour that did not
+happen, beside an answer that looks fine.
+
+**The corrected claim**: `reasoning` does not reach an answer. Grepped this
+session - it is read in exactly one place a person sees, `cli.py`'s routing
+block, and no formatter touches it. So today it is a developer artifact in
+a developer loop, which is the safe shape, not an explanation rendered to
+the reader. It was carried into the decision dict only in the tenth sitting
+(82d1d8e) and the CLI line printed for the first time then.
+
+The decision it wants, before Level 4 and not now: either `reasoning` stays
+a debugging artifact that no answer may carry, stated as a rule so that a
+formatter cannot start printing it, or something checks it against what
+ran. Level 4 puts more model prose beside structured findings, not less -
+a thesis, an uncertainty, a reason - so the rule for the router's prose is
+the rule for the research node's prose, and 4.3's fields (reasons,
+uncertainty, marked as judgement) are where it is answered. Logged.
+
 
 **One tested implementation of each formula, reachable from anywhere, never
 restated in a document.** D7 already names `quant/risk_metrics.py` canonical for
