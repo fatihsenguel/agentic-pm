@@ -73,7 +73,12 @@ def test_no_group_by_renders_all_three_views():
     assert "By asset class" in text
     assert "By sector" in text
     assert "By position" in text
-    assert "so all three are" in text   # the sentence wraps after "are"
+    # This asserted "so all three are", a fragment of a sentence claiming the
+    # question named no breakdown. The claim was never true of anything -
+    # `group_by` is the model's - and the coverage line replaced it; what the
+    # answer covers is now counted from the block
+    # (tests/test_answers_state_their_coverage.py).
+    assert "**Covered:** 5 asset classes, 5 sector lines, 9 positions." in text
 
 
 

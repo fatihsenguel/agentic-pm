@@ -2248,6 +2248,14 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
     printed. With no `group_by` all three are printed. The position view is
     Part 7's IPS-4.1 table, largest first, so "what is my biggest position"
     is its first line.
+
+    The closing line states what was rendered and counts it from the block.
+    It used to claim "the question named no breakdown, so all three are
+    shown" whenever `group_by` was null, which is not a fact about anything:
+    `group_by` is the model's, null says nothing about what was asked, and the
+    sentence was false for every question that named a breakdown the model did
+    not set (KNOWN_GAPS, "Four wrong-faced answers behind 11/12"). A formatter
+    may state what it did; what the question said is not its to say.
     """
     analysis = sub_results.get("PortfolioAnalysisAgent", {})
     if not analysis.get("success"):
@@ -2340,14 +2348,19 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
             lines.append(f"  - {line['label']:<13}{total_str:>8}{invested_str:>9}"
                          f"{line['market_value']:>15,.2f}")
 
+    covered = []
+    if by_class:
+        covered.append(f"{len(by_class.get('lines') or [])} asset classes")
+    if by_sector:
+        covered.append(f"{len(by_sector.get('lines') or [])} sector lines")
+    if by_position:
+        covered.append(f"{len(by_position.get('lines') or [])} positions")
+
     lines.append("")
-    if group_by is None:
-        lines.append("**Not done.** The question named no breakdown, so all three are")
-        lines.append("shown. Fund holdings are counted at fund level; there is no")
-        lines.append("look-through.")
-    else:
-        lines.append("**Not done.** Fund holdings are counted at fund level; there")
-        lines.append("is no look-through.")
+    lines.append("**Covered:** " + ", ".join(covered) + ".")
+    lines.append("")
+    lines.append("**Not done.** Fund holdings are counted at fund level; there")
+    lines.append("is no look-through.")
     return lines
 
 
