@@ -2219,19 +2219,47 @@ def _format_analysis_response(decision: Dict, sub_results: Dict) -> List[str]:
     parameters = decision.get("parameters") or {}
     measure = parameters.get("measure")
 
+    tickers = parameters.get("tickers") or []
     if measure == "allocation":
-        return _format_allocation_response(sub_results, parameters.get("group_by"))
+        return _format_allocation_response(sub_results, parameters.get("group_by"), tickers)
     if measure == "position_pnl":
-        return _format_pnl_response(sub_results, parameters.get("tickers") or [])
+        return _format_pnl_response(sub_results, tickers)
     if measure == "portfolio_volatility":
-        return _format_portfolio_volatility_response(sub_results)
+        return _format_portfolio_volatility_response(sub_results, tickers)
     raise ValueError(
         f"PortfolioAnalysisAgent ran but the router set measure={measure!r}. "
         "Nothing to select; see ExtractedParameters.measure."
     )
 
 
-def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = None) -> List[str]:
+def _read_and_not_used(tickers: Optional[List[str]], because: str) -> List[str]:
+    """Name what extraction read from the message and this formatter did not
+    consume. Empty when it read nothing, so the line appears only when there
+    is something to say.
+
+    `tickers` is the one field in the decision that is evidence about the
+    question: extraction reads it deterministically, so a filled list means
+    the message named a position. `group_by`, `measure` and `status` are the
+    model's, and a null one says nothing about what was asked - which is why
+    the sentence this rule replaced was a guess wearing a fact's face.
+
+    A formatter with no selection by position therefore knows from data that
+    it dropped something, and says so. It does not say what the question
+    asked for and did not get: no field records a narrowing, so nothing can
+    (KNOWN_GAPS, the group_by/filter entry; decision 35 for the rank). Naming
+    a drop is not honouring it, and this line is not a substitute for
+    `filter`.
+    """
+    if not tickers:
+        return []
+    named = tickers[0] if len(tickers) == 1 else ", ".join(tickers[:-1]) + " and " + tickers[-1]
+    it = "it" if len(tickers) == 1 else "them"
+    return ["", f"**Read and not used:** {named}. Extraction read {it} from the "
+                f"question; {because}."]
+
+
+def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = None,
+                                tickers: Optional[List[str]] = None) -> List[str]:
     """Format the allocation PortfolioAnalysisAgent computed.
 
     Formats only. Every figure is read from the agent's result unchanged; the
@@ -2358,6 +2386,9 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
 
     lines.append("")
     lines.append("**Covered:** " + ", ".join(covered) + ".")
+    lines.extend(_read_and_not_used(
+        tickers,
+        "the allocation views have no selection by position, so every holding is shown"))
     lines.append("")
     lines.append("**Not done.** Fund holdings are counted at fund level; there")
     lines.append("is no look-through.")
@@ -2482,7 +2513,8 @@ def _format_risk_response(sub_results: Dict) -> List[str]:
     return lines
 
 
-def _format_portfolio_volatility_response(sub_results: Dict) -> List[str]:
+def _format_portfolio_volatility_response(sub_results: Dict,
+                                          tickers: Optional[List[str]] = None) -> List[str]:
     """Format the portfolio volatility PortfolioAnalysisAgent computed.
 
     Formats only. Benchmark 1.3 passes on the basis being traceable, so every
@@ -2517,6 +2549,9 @@ def _format_portfolio_volatility_response(sub_results: Dict) -> List[str]:
     lines.append("volatility of the invested assets rather than of the total")
     lines.append("portfolio. It is one window under one regime; it is not an")
     lines.append("average of the per-holding volatilities.")
+    lines.extend(_read_and_not_used(
+        tickers,
+        "this is the portfolio's one volatility figure and has no per-position form here"))
     return lines
 
 
