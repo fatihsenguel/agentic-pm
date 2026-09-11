@@ -366,6 +366,16 @@ Levels 1 to 3: 12/12 on this session's run. Level 4: defined, six cases,
 none with a check, none running; the ledger has four open predictions and
 no scored one, so its score is 0 of 0 and stays so until early 2027.
 
+**What a Level 4 pass means, and what it does not.** Every case in Levels 1
+to 3 has a hand-computed reference behind its verdict. Level 4's cases pass
+on the answer being well-formed, and the only instrument that can say
+whether a judgement was any good is the prediction ledger, which holds my
+predictions rather than the system's and scores nothing until early 2027.
+So for months "4.1 passes" and "the analysis was sound" are the same line
+on the counter. Read n/14 as a count of well-formed answers and never as
+the system being good at research. benchmark.md's Level 4 states the rule
+in full (d3ccd86); it is not restated here.
+
 ---
 
 ## 7. Next steps, in order
