@@ -2072,27 +2072,28 @@ def _format_out_of_scope_response() -> List[str]:
 
 
 def _format_optimization_response(sub_results: Dict) -> List[str]:
-    """Format optimization results."""
+    """Format optimization results, without the allocation itself.
+
+    `optimal_weights` is a weight per instrument, and an answer that names
+    one states a position. Intent `optimization` derives
+    [DataAgent, OptimizationAgent]; `validate_compliance` rejects a plan that
+    puts ComplianceAgent there, so no clause is checked on this path and none
+    can be. DIRECTION.md invariant 2 says such an answer is not shown, so it
+    is not: the metrics the optimiser computed are its own figures and stay,
+    the weights they describe do not, and the answer says so rather than
+    truncating silently (benchmark.md Part 3b).
+
+    `tests/test_no_weight_outside_compliance.py` is the loop that sees this;
+    the golden set prints five routing fields and the runner has no
+    optimization case.
+    """
     lines = ["📊 **PORTFOLIO OPTIMIZATION RESULTS**", ""]
-    
+
     opt = sub_results.get("OptimizationAgent", {})
     if not opt.get("success"):
         lines.append("⚠️ Optimization failed")
         return lines
-    
-    # ✅ TRUST THE CONTRACT: 
-    # We validated in optimization_agent_node that 'optimal_weights' exists 
-    # and contains only floats. No string parsing needed here.
-    weights = opt.get("optimal_weights", {})
-    
-    if weights:
-        lines.append("**Optimal Allocation:**")
-        # Sort by weight value (guaranteed float)
-        for ticker, weight in sorted(weights.items(), key=lambda x: x[1], reverse=True):
-            # Format float to percentage string
-            lines.append(f"  • {ticker}: {weight*100:.1f}%")
-    
-    lines.append("")
+
     lines.append("**Expected Metrics:**")
     
     # ✅ TRUST THE CONTRACT: Metrics are guaranteed floats
@@ -2103,7 +2104,12 @@ def _format_optimization_response(sub_results: Dict) -> List[str]:
     lines.append(f"  • Return: {ret*100:.2f}%")
     lines.append(f"  • Volatility: {vol*100:.2f}%")
     lines.append(f"  • Sharpe Ratio: {sharpe:.2f}")
-    
+
+    lines.append("")
+    lines.append("**Not shown:** the allocation these metrics describe. A weight per "
+                 "instrument states a position, and nothing on this path checks one "
+                 "against the policy.")
+
     return lines
 
 
