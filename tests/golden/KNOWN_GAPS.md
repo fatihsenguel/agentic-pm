@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 11 September 2026, fourteenth session, on branch `selection`, after Order 3 (the synthetic philosophy, the watchlist with its prediction ledger, and Level 4 in benchmark.md, each document held to its config by a test), `macro_data.source` made required, and Order 4's first tool: Part 10 by hand, the clause loader shared between the IPS and the philosophy, the metrics, and the screen, reproducing Part 10. One wrong turn taken back the same session, the figures files, recorded under Directions. The runner and the golden set ran once each, 12/12 and zero diff, and a fourteen-prompt batch is recorded under Hygiene.
+Last updated 11 September 2026, fifteenth session, on branch `selection`, after the compliance gate was settled by taking shape 2 (the two answer surfaces that stated a position are gone, behind a check that fails without them), the answers began stating their own coverage and naming the ticker they read and did not select by, and every open entry here gained a line saying what it blocks. Decision 28, the filings reader, is brought and not taken, under Directions. The runner ran twice, 12/12 both times, and the golden set once, zero diff; the suite went 735 to 747. Six findings swept in: the three entries resolved in their body and unmarked in their heading, the script with a test's name, the shares table with no source column, and the rebalance verdict word being both wider than its schema and partly advice.
 ---
 
 # RESOLVED
@@ -220,8 +220,10 @@ false-pass shape on the case benchmark.md calls its most important.
 
 # OPEN
 
-**70 open entries: 0 block the next commit, 11 block a named Order,
-59 block nothing.** One line under each open heading says which. The tag is
+**75 open entries: 0 block the next commit, 13 block a named Order,
+62 block nothing.** Three of the 75 are resolved in their body and unmarked
+in their heading, so the figure a reader should carry is 72; its own entry is
+under Hygiene. One line under each open heading says which. The tag is
 what an entry blocks now, not how serious it looked when it was written, and
 it moves when the work moves. This pass adds the tags and nothing else: no
 entry below is edited, resolved, or moved.
@@ -2028,6 +2030,26 @@ axis, above).
 **9 September (ninth sitting).** The JNJ half is closed by c0886c2: its two
 rows and one condition, no other holding named.
 
+**11 September (fifteenth session), the "Not done" line.** The quotation
+above is stale twice over and stays as written: the line read "both are
+shown" when this entry was written and "all three are shown" after the
+position view landed, and since 1e2f045 it does not exist. What replaced it
+is a coverage line counted from the block - "Covered: 5 asset classes, 5
+sector lines, 9 positions" - because what a formatter may state is what it
+did, and `group_by` being null is the model not setting a field rather than
+the question naming no breakdown. Beside it, fcbc0d9: an answer names a
+ticker extraction read that the formatter did not select by, the allocation
+views and the portfolio volatility both having no per-position form.
+`tickers` is the only field in the decision that is evidence about the
+question, which is why that half is buildable and the other half is not:
+nothing records a narrowing, so no answer can say what was asked for and
+dropped. That still needs `filter` and decision 35's rank.
+
+One thing this entry got wrong by omission, corrected here rather than
+above: I said this session that no loop asserted the sentence.
+`test_allocation_formatter` asserted `"so all three are"`, a fragment, which
+a grep for the "Not done" label could not see. It moved with the line.
+
 
 ### `ExtractedParameters` fields with no reader - grep, 8 September
 
@@ -3196,6 +3218,84 @@ clarification texts) will always trip it in pairs. Exempting an intent
 whose answer is fixed by design is a CLI change, own commit, when it
 becomes annoying rather than now.
 
+### Three entries are resolved in their body and unmarked in their heading
+
+**Blocks:** nothing.
+
+Found 11 September (fifteenth session), while tagging every open entry.
+`AgentTask.depends_on has no reader` (a7a24bc), `get_agent_prompt,
+build_agent_prompt and build_system_prompt have no caller` (536a357) and
+`_validate_decision's agent check is unreachable` (300af9e) each carry a
+"Resolved 9 September" paragraph and a heading with no marker. So a count of
+the headings reads them as open, which is how the tagging pass came to 70
+open entries when the true figure is 67, and the owner's own count of 40
+marked came out the same way.
+
+Not fixed in that pass on purpose: it was an insertions-only diff and
+resolving is the owner's. Marking the three headings is a one-line edit each
+and its own commit. Worth knowing generally: the heading is what anything
+counting this file can see, and a body that closes an entry the heading does
+not is invisible to every count.
+
+### `tests/test_design_violations.py` is a script with a test's name
+
+**Blocks:** nothing.
+
+Found 11 September (fifteenth session), during the invariant sweep. It
+defines no test functions and runs its scan under a `__main__` guard, so
+pytest imports it at collection and collects nothing from it. Harmless,
+unlike `test_shrinkage.py`, which had a `test_` function that asserted
+nothing and was deleted for it - but the same shape one step further back: a
+`test_` prefix on a diagnostic. `tests/violation_detector.py` is its sibling
+without the misleading name and needs nothing.
+
+Nobody runs either. Renaming it the way `test_imports.py` became
+`check_imports.py` is the fix, own commit after a grep for the name.
+
+### `shares_history` has no `source` column at all
+
+**Blocks:** Order 4, the filings reader.
+
+Found 11 September (fifteenth session), while reading the tables the filings
+reader might use. The handoff and this file both say every table's source
+column is now NOT NULL, and that holds for `daily_prices`, `fx_rates`,
+`financial_statements` and `macro_data`. `shares_history` (947 rows) has no
+such column, so it sits outside the claim rather than in breach of it - and a
+count of rows whose origin is unrecorded would miss it, because there is
+nothing to count.
+
+It matters when the reader publishes shares: the figures block carries
+`shares_outstanding`, the free cash flow yield divides by it times the price,
+and a share count of unknown origin under a figure that names its source is
+the shape D24 exists to prevent. Decide with the reader, not before.
+
+### The rebalance verdict word is wider than its schema, and part of it is advice
+
+**Blocks:** nothing.
+
+Found 11 September (fifteenth session), reading `rebalance_tools.py` for the
+label change (91fd126). Two things in one field.
+
+`decide_rebalance_need` can return `"monitor_closely"`, and the cost step in
+`analyze_rebalance_need`'s caller can set `"below_break_even"`. Neither is in
+`RebalanceProposal.recommendation`'s `Literal["full_rebalance",
+"partial_rebalance", "no_action"]`. The formatter reads
+`rebal["decision"]["recommendation"]` off a plain dict rather than the
+validated model, so nothing rejects either word and both would print. The
+producer being wider than the schema is the mirror of the `3M` case under
+Configuration, where the schema was wider than the config; that one surfaced
+as a raise at the data layer, and this one surfaces as a word in an answer.
+
+And the field is not one kind of thing. One branch sets
+`"partial_rebalance"` when transaction cost exceeds one percent of the
+portfolio, with the comment "Suggest partial to reduce costs" - that is
+advice, not a threshold classification, inside a field the answer now renders
+as a drift verdict. Which is why the label change did not call it a trigger.
+
+Neither is chased: the path is dead, RebalanceAgent erroring on a missing
+target, so nothing prints. Both belong with decision 13, which gives the
+rebalancer a target and makes the whole surface live in one commit.
+
 ### `.gitignore` is corrupted
 
 **Blocks:** nothing.
@@ -3735,6 +3835,93 @@ against the pattern used all day; the decision reached the owner before
 the check did. Next is the filings reader, so the first answer about a
 company runs on filed figures with a source and a filed date on each,
 defended the way Part 9 defended the closes.
+
+### Decision 28, the filings reader: the shape brought, not taken
+
+**Blocks:** Order 4, the filings reader.
+
+**Brought 11 September (fifteenth session), nothing computed and nothing
+fetched.** The reader that makes the entry above actionable: reported figures
+per fiscal year for a company, from a structured free source, in the shape
+the screen already reads.
+
+**What constrains it before anything is designed.** The output contract is
+written and tested: `tests/test_fundamentals.py`'s fixture is the figures
+block, and `quant/fundamentals.METRICS` defines four metric keys over its
+field names. So this is a fetch-and-shape job against a fixed contract. But
+the block is not one kind of fact - `years` is filed figures, `price` is the
+price source Part 9 defended, `valuation_range` is Part 11's pipeline output
+and not a fact at all, and `shares_outstanding` is a filed fact of another
+period shape. The reader owns `years`, `currency` and `source`; an assembler
+joins the rest. A reader returning a valuation range would be returning a
+pipeline's output as a fetched fact.
+
+**The source: EDGAR company-facts** (`data.sec.gov/api/xbrl/companyfacts/`),
+free, no key, a declared User-Agent and a rate limit, both config values
+beside the four fetch intervals. Every fact carries a period end and a
+**filed date**, which is why: D21 counts a fiscal year by when its report was
+filed, and nothing else free carries that per figure. `assets` has no CIK
+column, so ticker to CIK is a mapping to fetch and store.
+
+**26, whether `financial_statements` is the store: no, read rather than
+assumed.** It has `date`, the period end, and no filed date at any grain, so
+D21 is unanswerable from it. A fiscal year is spread over three rows -
+income, balance_sheet, cash_flow - so a year's figures are not one record.
+Its 65 rows are two tickers, written September 2025 by a writer that has
+returned nothing for months, never checked against anything, in Yahoo's
+column shape rather than XBRL's. Recommendation: a new table, and leave it
+alone; 26 then resolves as not the store and not a source, and the six
+xfails stay as the pin on a method nothing should call.
+
+**Fiscal-year labelling when the year does not end in December.** Live in the
+data already: AAPL's annual rows are dated 2025-09-30, and Adobe, the
+watchlist's second candidate, has a late-November year end. Recommendation:
+the filer's own label, verbatim, never computed - "FY2025" then means what
+the 10-K means, and a computed label is a second statement of a fact the
+source states. Nothing cross-company depends on it; PHI-2.1 reads one
+company's five years. **The subtlety to settle inside it, not asserted
+clean:** EDGAR's `fy`/`fp` on a fact are the fiscal year of the filing the
+fact appeared in, not always of the fact's own period - a FY2025 10-K
+restates FY2024 with `fy: 2025` - so the label comes from the fact's end
+matched against the filer's year end, or from `frame`.
+
+**31, what the block carries for a bank.** PHI-3.2 declines to screen banks
+and insurers, so the check must decline, and to decline it must know.
+Recommendation: the SIC code on the block, from EDGAR's submissions endpoint
+- a filed fact, same fetch, and 4.6's bank variant becomes decidable with no
+model in the loop. Rejected: `assets.sector`/`industry` (Yahoo's, and only
+for held assets, while a watchlist candidate is not held); the model reading
+the filing and saying so (a judgement inside a deterministic gate, invariant
+1). **Open inside it, the owner's:** PHI-3.2 is a `statement`, and a
+statement is citable and not computed, so a screen acting on the SIC code is
+acting on one. Either PHI-3.2 becomes a real clause type
+(`excluded_industry`, parameters, its own reference row), which is what the
+loader's growth rule prescribes, or the block carries SIC and the screen
+refuses rather than emits a finding. Leaning to the first; it changes
+`docs/PHILOSOPHY.md` and `philosophy.toml`, so it is not mine.
+
+**Order when taken**, mirroring Part 9: a reference Part by hand first - a
+few rows for one real filer, taken by the owner from the company's own 10-K,
+to the dollar, with filed dates - then the provider method against a stand-in
+for the HTTP layer held to that Part, then the table and its migration
+committed unexecuted with its schema test, then the cache record under the
+price cache's rules, then the assembler. Part 11 is the valuation range, so
+this reference needs its own number.
+
+**Rejected alternatives.** Yahoo via yfinance, the existing table's source:
+no filed date, no restatement history, a shape that already broke silently
+for months, the same reference work and less data. A paid fundamentals API: a
+key and a bill for what EDGAR gives away, and what is being defended is
+defensibility. A figures file per candidate: taken and reversed last session,
+the entry above. The model reading the 10-K and emitting figures: a number in
+a model's hands. Storing the whole company-facts JSON and deriving on read:
+hot potato in the database, and the derivation becomes an uncommitted second
+formula per metric.
+
+**What could not be checked.** Every claim here about EDGAR's field names is
+from memory; no request was made. One `companyfacts` document fetched by hand
+confirms them, and the `fy` question above is the first thing it settles.
+Nothing is built on this until that is done.
 
 ### What is `reasoning` for: a debugging artifact, or something checked?
 
