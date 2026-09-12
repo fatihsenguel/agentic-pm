@@ -220,9 +220,9 @@ false-pass shape on the case benchmark.md calls its most important.
 
 # OPEN
 
-**76 open entries: 0 block the next commit, 14 block a named Order,
-62 block nothing.** Three of the 76 are resolved in their body and unmarked
-in their heading, so the figure a reader should carry is 73; its own entry is
+**77 open entries: 0 block the next commit, 15 block a named Order,
+62 block nothing.** Three of the 77 are resolved in their body and unmarked
+in their heading, so the figure a reader should carry is 74; its own entry is
 under Hygiene. One line under each open heading says which. The tag is
 what an entry blocks now, not how serious it looked when it was written, and
 it moves when the work moves. This pass adds the tags and nothing else: no
@@ -1702,6 +1702,47 @@ message naming both sets, instead of failing on the first live route as site
 
 Four more places name the roster than the eight above, none of which the
 registry reads; see "Roster sites the registry does not read" under Hygiene.
+
+### `config.toml` is tracked and public, so it holds policy and not identity
+
+**Blocks:** Order 4, the filings reader.
+
+**Recorded 12 September (fifteenth session), from the owner, correcting a
+proposal of mine.** I proposed putting the SEC contact - a real email address -
+into `config.toml` as `[edgar] user_agent`, on the reasoning that it sits
+beside the fetch intervals it is used with. That is wrong for a reason the
+file itself cannot show: `config.toml` is tracked and the repository is
+public, so an address in it is on GitHub permanently, and permanently in the
+history after any later removal.
+
+**The distinction, which is written down nowhere else and is the point of this
+entry.** `config.toml` holds **policy**: values that are the same for anybody
+who runs this system - the four fetch intervals, a rate limit, a threshold.
+`.env` holds **identity and secrets**: values that are mine, and it is ignored
+(`.gitignore:22`). A value that would differ per person, or that names a
+person, belongs in `.env` however mechanical it looks. The next session
+reaching for a config value will not know this, because the two files look
+alike from the code that reads them.
+
+**What was done.** `config.toml` carries a comment saying the contact lives in
+`.env` and why. `.env.example` is the template a new checkout copies, and it
+needs `EDGAR_USER_AGENT` with a placeholder; **a permission rule denies this
+session both Bash and the editor on `.env*` files**, so the owner added that
+line by hand and it is not in any diff of mine.
+
+**What was deliberately not done.** No reader. `os.getenv("EDGAR_USER_AGENT")`
+with a raise is three lines, and it would be a config value nothing consumes -
+the shape this file keeps deleting. It lands with the provider method that
+makes the request, which is also the first thing that can be tested for
+refusing to run without it.
+
+**One measurement, for whoever writes that provider.** `data.sec.gov` served
+the companyfacts and submissions documents to a generic User-Agent this
+session. `www.sec.gov` refused the filing-index page with **HTTP 403 and a
+page titled "Your Request Originates from an Undeclared Automated Tool"**. So
+the policy is enforced unevenly across SEC hosts, and a reader that works in
+development against `data.sec.gov` will fail the first time it follows a link
+to `www.sec.gov`.
 
 ### `hawkish_threshold` and `dovish_threshold` are now unreferenced
 

@@ -7,3 +7,7 @@ shares_fetch_interval_days   = 30
 # wenn der Zeitraum schon einmal abgefragt wurde.
 price_fetch_interval_days    = 1
 
+# EDGAR: Intervalle und Ratenlimit gehören hierher, die Kontaktangabe nicht.
+# Diese Datei ist versioniert und das Repository ist öffentlich, also hält sie
+# Policy und keine Identität; die Kontaktangabe steht in .env neben den
+# Schlüsseln. Das Ratenlimit kommt mit dem Leser, der es liest.
