@@ -683,14 +683,14 @@ falsifier rows of section D, each with its `accn`, `fy`, `fp`, `form`, `filed`
 and `frame` as fetched. The 3.79 MB document is not committed. A reference
 that needs a re-fetch to verify is not pinned.
 
-**This Part has no workbook sheet yet, and that is deliberate rather than an
-oversight of the rule above.** The workbook holds the Parts that compute, one
-sheet each; sections A to E of this one transcribe, and their artefact is the
-csv. The sheet this Part wants is section E: the EDGAR column, the owner's
-column from the 10-K, and a formula per row saying whether they agree - the
-shape the `Prices` sheet has for Part 9. It is built when section E is
-filled, because a sheet of one filled column and one empty one compares
-nothing.
+**The workbook's `Filings` sheet** carries the comparison: section E's eight
+FY2025 figures with the owner's reading of the 10-K beside EDGAR's and a
+verdict per row, the FY2008 pair with both accessions and forms, and the MD&A
+cross-check as a formula. It is the shape the `Prices` sheet has for Part 9,
+and it was built when section E was filled rather than when this Part was
+written, because a sheet with one empty column compares nothing. Sections A to
+D transcribe and their artefact is the committed csv; the sheet holds only
+what has two sides to compare.
 
 ### Decisions
 
