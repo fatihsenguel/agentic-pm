@@ -3836,14 +3836,54 @@ the check did. Next is the filings reader, so the first answer about a
 company runs on filed figures with a source and a filed date on each,
 defended the way Part 9 defended the closes.
 
-### Decision 28, the filings reader: the shape brought, not taken
+### Decision 28, the filings reader: taken, and Part 12 written
 
 **Blocks:** Order 4, the filings reader.
 
-**Brought 11 September (fifteenth session), nothing computed and nothing
-fetched.** The reader that makes the entry above actionable: reported figures
-per fiscal year for a company, from a structured free source, in the shape
-the screen already reads.
+**Taken 11 September (fifteenth session), after one document was fetched.**
+The heading of this entry said "brought, not taken" until the artifact
+settled it; the paragraphs below are the shape as brought and stand as
+written. What was taken, and where it lives:
+
+- **The three questions.** 26: `financial_statements` is neither the store
+  nor a source - no filed date at any grain, a year spread over three rows.
+  The fiscal-year label: the filer's own, verbatim. 31: the SIC code on the
+  block, and **PHI-3.2 becomes a real clause type, `excluded_industry`**, the
+  owner's decision - banks and insurers is narrower than Financials, so it is
+  the first consumer of `Asset.industry`, which nothing reads today, and the
+  reference row has to say where that label comes from before anything is
+  built. The clause's own expiry - "until this document has clauses for them"
+  - is recorded with it, the shape 3.2's expiry rule already has.
+- **Eight decisions, D26 to D33**, in expected_values.md Part 12, each
+  measured on the artifact rather than asserted.
+- **Part 12 and its fixture** (8237cdd, d7394b6): Apple, CIK 320193, pulled
+  2026-09-11; 86 rows committed as `tests/golden/edgar_facts_aapl.csv`, the
+  3.79 MB document deliberately not.
+
+**What the artifact settled, against the five things predicted from secondary
+sources - all five confirmed directly, and one more found.** `fy` belongs to
+the filing, not the fact, and one fiscal-2015 figure appears under three of
+them. 567 of 6,062 `fp: FY` facts are quarter-length and 523 arrive on 10-Ks.
+`fp` is the filer's calendar; `frame` covers 38.8% of facts and is a
+cross-check. Tags change: Apple's annual revenue needs three of them to span
+FY2007 to FY2025. Keyed on `fy`, 18 of 18 annual `NetIncomeLoss` keys
+collide; on `(end, accn)`, none. **The one not predicted: instants are
+quarterly**, so a balance-sheet figure is matched by the fiscal year's end
+date and those end dates are derived from the annual duration facts, never
+assumed. That is D28.
+
+**Still open and not the reader's.** Section E of Part 12, the second source
+from Apple's own 10-K, without which the provider method is not trusted -
+Part 9's pattern, and the owner's to fill. What nets against debt, which is
+policy and belongs in PHILOSOPHY.md; three readings computed, B recommended,
+and the premise it was raised on corrected - for Apple the definition moves
+the distance and the sign but not the verdict, since all three clear the 2.0x
+ceiling. The SEC User-Agent contact, a config value beside the fetch
+intervals, required before the provider runs on anything but a one-off.
+**One filer is one witness**: a December year end and a bank come next, the
+bank because `excluded_industry` needs one for its reference row anyway.
+
+The shape as brought follows, unedited.
 
 **What constrains it before anything is designed.** The output contract is
 written and tested: `tests/test_fundamentals.py`'s fixture is the figures
