@@ -683,6 +683,15 @@ falsifier rows of section D, each with its `accn`, `fy`, `fp`, `form`, `filed`
 and `frame` as fetched. The 3.79 MB document is not committed. A reference
 that needs a re-fetch to verify is not pinned.
 
+**This Part has no workbook sheet yet, and that is deliberate rather than an
+oversight of the rule above.** The workbook holds the Parts that compute, one
+sheet each; sections A to E of this one transcribe, and their artefact is the
+csv. The sheet this Part wants is section E: the EDGAR column, the owner's
+column from the 10-K, and a formula per row saying whether they agree - the
+shape the `Prices` sheet has for Part 9. It is built when section E is
+filled, because a sheet of one filled column and one empty one compares
+nothing.
+
 ### Decisions
 
 | # | Decision | Choice |
