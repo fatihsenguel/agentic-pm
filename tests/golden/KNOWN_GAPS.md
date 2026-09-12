@@ -1725,10 +1725,28 @@ reaching for a config value will not know this, because the two files look
 alike from the code that reads them.
 
 **What was done.** `config.toml` carries a comment saying the contact lives in
-`.env` and why. `.env.example` is the template a new checkout copies, and it
-needs `EDGAR_USER_AGENT` with a placeholder; **a permission rule denies this
-session both Bash and the editor on `.env*` files**, so the owner added that
-line by hand and it is not in any diff of mine.
+`.env` and why.
+
+**What is outstanding, and a correction to this entry as first written.** The
+sentence here said the owner had added `EDGAR_USER_AGENT` to `.env.example` by
+hand. **That had not happened**, and had not even been asked for yet; I wrote a
+future action as a completed one, in the file that is the durable record. The
+tracked `.env.example` carries `DATABASE_URL`, `OPENAI_API_KEY` and
+`ANTHROPIC_API_KEY` and nothing else. **A permission rule denies this session
+both Bash and the editor on `.env*` files**, so the placeholder is the owner's
+to add and will not appear in a diff of mine.
+
+The general form, which is the reason to keep this rather than quietly fix it:
+a record that says a thing was done is worth nothing if "done" can mean
+"arranged for". Write what the tree holds, not what the next step is.
+
+**`.env.example` carries the same corruption as `.gitignore`, and that is
+recorded nowhere else.** Line 1 is `@"`, the file ends
+`"@ | Out-File -FilePath .env.example -Encoding UTF8` with no trailing
+newline, and the whole content sits inside a literal PowerShell here-string.
+Same defect class as the `.gitignore` entry under Hygiene, same origin, and
+the same owner-only fix - except that here it is a permission rule rather than
+a standing instruction that makes it so.
 
 **What was deliberately not done.** No reader. `os.getenv("EDGAR_USER_AGENT")`
 with a raise is three lines, and it would be a config value nothing consumes -
