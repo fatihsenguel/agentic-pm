@@ -220,9 +220,9 @@ false-pass shape on the case benchmark.md calls its most important.
 
 # OPEN
 
-**75 open entries: 0 block the next commit, 13 block a named Order,
-62 block nothing.** Three of the 75 are resolved in their body and unmarked
-in their heading, so the figure a reader should carry is 72; its own entry is
+**76 open entries: 0 block the next commit, 14 block a named Order,
+62 block nothing.** Three of the 76 are resolved in their body and unmarked
+in their heading, so the figure a reader should carry is 73; its own entry is
 under Hygiene. One line under each open heading says which. The tag is
 what an entry blocks now, not how serious it looked when it was written, and
 it moves when the work moves. This pass adds the tags and nothing else: no
@@ -3962,6 +3962,92 @@ formula per metric.
 from memory; no request was made. One `companyfacts` document fetched by hand
 confirms them, and the `fy` question above is the first thing it settles.
 Nothing is built on this until that is done.
+
+### Questions the system cannot express, and which kind each is
+
+**Blocks:** Order 5, the conversational layer.
+
+**Started 12 September (fifteenth session), from the owner's question:
+whether strengthening the system means a deliberate session over the schemas
+and the contracts.** The answer that came out of it is the reason this list
+exists, and the list is the input to that session rather than the session
+itself.
+
+**Why it is a list and not six entries.** Every restriction below is already
+recorded somewhere in this file. Reconstructing them as one set took a grep
+and a read across six headings under three sections, and the next person to
+want them will pay that again. Adding a line here when one is found costs
+nothing; rebuilding the set later costs the same grep every time.
+
+**Why the kind matters more than the count.** They are not one problem and
+they do not have one answer. Mixing them is how a schema grows a field with
+no consumer, which this file has deleted five times (`target_return`,
+`rebalance_threshold`, `portfolio_id`, `AgentTask.depends_on`, the task
+list). A line is only actionable once its kind is settled.
+
+- **Expression** - the figure exists and is published, and no field asks for
+  it. These are the real schema gaps and the only ones the tool-boundary pass
+  should touch.
+- **Capability** - nothing computes it. Widening the schema here creates a
+  vocabulary value with no computation: the `3M` lesson, under Configuration,
+  where the schema allowed a period the config could not resolve. Each is
+  built with a reference, one at a time.
+- **Reading** - the sentence is not understood. Widening the bridge with more
+  English or more patterns is what DIRECTION.md calls debt in so many words.
+  These dissolve when a strong model replaces the bridge; until then they are
+  logged and nothing is built.
+
+**Expression.** The selection axis is the object all of these are about, and
+it has been named five ways across four sessions without being designed once:
+`measure`, `group_by`, `status`, `tickers`, and the unbuilt `filter`.
+
+| Question | What is missing | Entry |
+|---|---|---|
+| "my two biggest holdings", "top three" | a rank: an ordering with a cut, over a view already published largest-first | the `group_by`/`filter` entry; pending 35 |
+| "my allocation for JNJ" | a per-position selection in the allocation views; `tickers` is extracted, and since fcbc0d9 the answer says it was not used | the same entry |
+| "how much is my portfolio worth" | a total; it is published inside the allocation block and the whole block comes back | "One-figure questions get the whole block" |
+| "what did I pay for my JPM shares" | a cost; it is inside the position and the whole P&L block comes back | the same entry |
+| "which of my positions are over the limit" | the subject kind of a compliance finding, which is exactly `group_by`'s three values | pending 17 |
+| "11% into a new ETF" | an instrument type on the hypothetical mode, so a fund is not refused as an issuer | pending 12 |
+| volatility between two stated dates | an absolute window; `ExtractedParameters.period` is `^\d+[YMD]$`, relative and anchored to now | "The router cannot express an absolute date range" |
+
+**Capability.** Nothing here is a schema problem and none of it should reach
+the schema before its reference exists.
+
+| Question | What is missing | Entry |
+|---|---|---|
+| "how did my portfolio do last month" | a window return as a measure, with a reference | pending 10; "No window return exists" |
+| "what have I actually realised" | realized gains and closed positions | pending 18 |
+| total return rather than price return | dividends attributable to a portfolio; D4 says price return, forced by the data model | pending 22; Part 6 |
+| "what is X worth" | the valuation pipeline and Part 11 | Order 4 |
+| "how have my predictions done" | prediction scoring and its reference | Order 4; the 4.5 before-face in the prompt batch |
+| "does X clear my philosophy" | the `research` intent and its node; the screen exists as pure modules | pending 29 |
+
+**Reading.** All three are one decision, 16, logged and not taken.
+
+| Question | What is missing | Entry |
+|---|---|---|
+| "my Apple Inc. position" | a name resolved to a symbol; extraction reads symbols only | "The extraction bridge reads symbols, not company names" |
+| "wie lief mein Portfolio im letzten Monat" | German in the four phrase rules that read English | "The four phrase rules in extraction read English" |
+| a typo more than one edit from a holding | `_within_one_edit` is the rule, by design | read from `extraction.py`, not from an entry |
+
+**What this list is not.** It is not an argument that a wider schema is a
+stronger system. `INTENTS` and `TERMINAL` being closed is why 3.4 passes on
+merit rather than by retrieval luck, why the golden set can pin routing at
+all, and why a question outside the vocabulary becomes a refusal instead of a
+plausible answer. Every line above is a case for a *specific* field with a
+reader, not for widening.
+
+**When the pass happens.** Not on a date, and not now: designing the tool
+boundary today means designing against a tool set three capabilities short.
+The trigger is the first benchmark case that fails for want of expression
+rather than capability, and Level 4 supplies the candidates - 4.4 asks what
+has to be true in a year and 4.5 how the predictions have done, and neither
+has a field anywhere today. So it lands with Order 4's last commits, before
+the conversational layer rather than at it. The reason it must be before is
+in the rank entry above: this schema becomes the tools' input validation when
+that layer lands, so a restriction extraction cannot express is a question
+that layer will not be able to ask either.
 
 ### What is `reasoning` for: a debugging artifact, or something checked?
 
