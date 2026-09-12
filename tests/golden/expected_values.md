@@ -699,7 +699,7 @@ nothing.
 | D26 | What identifies a fact? | **`(tag, end, accn)`.** `fy` is the fiscal year of the *filing that reported the fact*, not of the fact, so the same figure recurs under several `fy` values as a comparative and `fy` is provenance, never a key. Measured on this artifact: annual `NetIncomeLoss` keyed on `fy` gives 18 keys of which 18 collide, worst 6; on `end` alone, 18 of 19 collide, because a restatement shares its period; on `(end, accn)`, 60 keys and none collide. Section D, F1 and F3. |
 | D27 | Does `fp == "FY"` mean annual? | **No. The period decides, never the label.** A fact is annual when `end - start` is a year; `fp` is inherited from the parent filing, so a 10-K's quarterly comparatives carry `fp: FY`. On this artifact 567 of 6,062 `fp: FY` facts are quarter-length and 523 of those arrive on 10-Ks. A reader that trusts `fp` mixes quarters into an annual series silently. Section D, F2. |
 | D28 | How is a balance-sheet figure matched to a fiscal year? | **An instant fact is matched by the fiscal year's end date, and those end dates are derived from the annual duration facts, never assumed.** Instants exist at every quarter end: `StockholdersEquity` carries 2024-03-30, 2024-06-29, 2024-09-28 and 2024-12-28. Matching by calendar year returns a quarter. Apple's year ends, derived: 2021-09-25, 2022-09-24, 2023-09-30, 2024-09-28, 2025-09-27. Section D, F5. |
-| D29 | Which vintage of a restated figure? | **The latest filed, and the reference is pinned to a pull date.** D24's "adjusted by nobody" says the system computes no adjustments; it does not say which vintage, and that is underspecified rather than wrong, so this is its companion and D24 is not rewritten. Latest, because a five-year series built from originals mixes pre- and post-restatement figures and stops being a comparison. The cost is that a reference goes stale when a restatement lands — the same problem as prices moving, and the same fix: the pull date above, `filed` and `accn` on every row, and the answer states its as-of. |
+| D29 | Which vintage of a restated figure? | **The latest filed, and the reference is pinned to a pull date.** D24's "adjusted by nobody" says the system computes no adjustments; it does not say which vintage, and that is underspecified rather than wrong, so this is its companion and D24 is not rewritten. Latest, because a five-year series built from originals mixes pre- and post-restatement figures and stops being a comparison. The cost is that a reference goes stale when a restatement lands — the same problem as prices moving, and the same fix: the pull date above, `filed` and `accn` on every row, and the answer states its as-of. **The form is not a filter.** A restated figure arrives on whatever the filer used: FY2008's amendment is a 10-K/A (0001193125-10-012091, `d10ka.htm`, "Amendment No. 1 to Form 10-K"), and section D's F2 row reaches EDGAR on an **8-K** (0001193125-13-170623, items 8.01 and 9.01). A reader that selects on `form == "10-K"` to find annual figures silently drops both, and the second is not an edge case - it is in the committed fixture. Latest filed means latest filed, whatever carried it. |
 | D30 | One metric, one tag? | **No. A field names an ordered list of tags, and a year that resolves from none of them raises.** A tag change truncates history: Apple's annual revenue is `SalesRevenueNet` for FY2007 to FY2017, `Revenues` for FY2016 to FY2018 and `RevenueFromContractWithCustomerExcludingAssessedTax` for FY2017 to FY2025. A reader anchored on `Revenues` alone returns three fiscal years, and PHI-2.1 asks for five. Falling back silently to a shorter series is the repair shape; the raise names the field and the year. Section D, F4. |
 | D31 | What is `frame` for? | **A cross-check, never a key.** It is calendar-aligned and exists only when the window lines up: 9,716 of 25,046 facts on this artifact, 38.8%. Where it exists it disagrees with the filer's own labels by design — one fact for 2013-09-29 to 2013-12-28 carries `fy: 2015`, `fp: Q1` and `frame: CY2013Q4`, three labels for one period. |
 | D32 | Is a tax rate a figure or an assumption? | **Both, and they are different things in different places.** The block carries `EffectiveIncomeTaxRateContinuingOperations` because it is a filed fact and the block reports what the document says. The tax rate that goes into NOPAT is a **stated assumption in config**, not the block's. The evidence for keeping them apart is in Apple's own series: 0.133, 0.162, 0.147, **0.241**, 0.156. FY2024 is a discrete item, not a change in how Apple earns money; fed into NOPAT it swings PHI-2.1's five-year ROIC series for a reason that is not the business, on the metric written to measure the business. Recorded here so it is not re-litigated. D24 stands: the block's figures are as filed. |
@@ -806,33 +806,70 @@ matching by calendar year returns whichever it meets first.
 
 ### E. The second source
 
-**To be filled by the owner, from Apple's own 10-K**, the way Part 9's rows
-came from the listing exchange. The figures above are EDGAR's rendering of
-what Apple filed; a row is trusted when the filer's own document says the same
-thing to the dollar. Until this section is filled the provider method is not
-trusted, and this Part is a description of an API rather than a reference.
+**Filled 2026-09-12 by the owner, against Apple's FY2025 10-K** (accession
+0000320193-25-000079, filed 2025-10-31) and, for the FY2008 row, the original
+10-K and its amendment. The figures in section B are EDGAR's rendering of what
+Apple filed; a row is trusted when the filer's own document says the same thing
+to the dollar.
 
-Suggested minimum, chosen so a wrong answer cannot hide: FY2025 revenue, gross
-profit and operating income from the FY2025 10-K's income statement; FY2025
-equity, cash and the two debt lines from its balance sheet; and the FY2008
-figure from F3, which is the one row where EDGAR holds two answers.
+**The rule, corrected as this section was filled.** A difference on the income
+statement is an error. A difference on the balance sheet is a **restatement**
+and is recorded rather than reconciled away, because section B takes the latest
+filed vintage (D29) and five of the nine rows below reach EDGAR through a later
+filing's comparative column rather than through the FY2025 10-K itself. The
+original wording of this section said "from Apple's own 10-K" without that
+distinction and would have turned a restatement into a failure.
 
 | Field | Fiscal year | Part 12 B | 10-K, by hand | Agrees |
 |---|---|---|---|---|
-| revenue | FY2025 | 416,161 | | |
-| gross_profit | FY2025 | 195,201 | | |
-| operating_income | FY2025 | 133,050 | | |
-| equity | FY2025 | 73,733 | | |
-| cash | FY2025 | 35,934 | | |
-| long_term_debt_current | FY2025 | 12,350 | | |
-| long_term_debt_noncurrent | FY2025 | 78,328 | | |
-| commercial_paper | FY2025 | 7,979 | | |
-| net income (F3) | FY2008 | 6,119 | | |
+| revenue | FY2025 | 416,161 | 416,161 | yes |
+| gross_profit | FY2025 | 195,201 | 195,201 | yes |
+| operating_income | FY2025 | 133,050 | 133,050 | yes |
+| equity | FY2025 | 73,733 | 73,733 | yes |
+| cash | FY2025 | 35,934 | 35,934 | yes |
+| long_term_debt_current | FY2025 | 12,350 | 12,350 | yes |
+| long_term_debt_noncurrent | FY2025 | 78,328 | 78,328 | yes |
+| commercial_paper | FY2025 | 7,979 | 7,979 | yes |
+| net income (F3) | FY2008 | 6,119 | 6,119 as amended, 4,834 as reported | yes |
 
-### F. Open, and blocking the metric rather than the reader
+**Eight of eight to the dollar, and the FY2008 pair confirmed both ways.** The
+cause of the FY2008 restatement is the retrospective adoption of the amended
+revenue-recognition standards for iPhone and Apple TV, announced 2010-01-25.
+
+**Two label mismatches, recorded and not reconciled.** The us-gaap tag names
+are not the document's words: the 10-K says **"Gross margin"** where the tag is
+`GrossProfit`, and **"Term debt"** where the tags are `LongTermDebtCurrent` and
+`LongTermDebtNoncurrent`. The figures agree; the vocabulary does not. This
+matters for an answer that quotes a field name back to a reader, and it is the
+reason section C exists: the tag is the key, the label is not.
+
+**Three cross-checks that came free**, each an independent way for a wrong
+extraction to have failed:
+
+- the FY2024 comparatives on the same balance sheet - 56,950 equity, 29,943
+  cash, 10,912 and 85,750 term debt, 9,967 commercial paper - match section B's
+  FY2024 column, so the five-year table is not just internally consistent;
+- the MD&A states cash plus marketable securities totalled 132.4 billion, and
+  35,934 + 18,763 + 77,723 = 132,420, which ties the two securities lines the
+  balance sheet reports separately;
+- section F's three ratios reproduce from that balance sheet against an implied
+  EBITDA near 146,000, so the arithmetic holds without section B.
+
+**What this check is, and is not.** It is a second automated extraction, not a
+human reading the filing. It catches a wrong tag, a wrong vintage, a wrong
+period and a unit error - the four ways the reader can be wrong that Part 12
+was written to catch. It is **not** the independent check Part 9 got, where the
+owner fetched rows from the listing exchange by hand. Recorded as such, by the
+owner, at the time of filling. The provider method may be written against this;
+a figure that reaches an answer about a real holding wants the stronger check
+first.
+
+### F. What nets against debt, and why it is A
 
 **What nets against debt is policy** and belongs in `docs/PHILOSOPHY.md` under
-PHI-3.1, not in a metrics module. Three readings, all defensible, computed on
+PHI-3.1, not in a metrics module. It is settled below; the clause text in
+PHILOSOPHY.md still has to say so, which is the owner's to write. Three
+readings, all defensible, computed on
 Apple from section B (debt = commercial paper plus both long-term debt lines;
 EBITDA = operating income + D&A).
 
@@ -857,27 +894,38 @@ against 2.23x under C — and the sign, which is the difference between saying a
 company carries net debt and saying it holds net cash. It decides a verdict
 only for a company near the limit, which Apple is not.
 
-The recommendation is **B**, with the alternatives stated:
+**Decided 2026-09-12: A, cash only.** I recommended B on convention and the
+owner chose A on the clause, which is the better argument and is recorded as
+the reason rather than the outcome.
 
-- **A** is the strictest and is defensible, but it penalises a company for
-  holding its cash in Treasury bills rather than a bank account, which is an
-  accounting choice and not a business one — the same objection D32 just made
-  about the tax rate.
-- **C** treats a long-dated securities portfolio as though it were a current
-  asset. It flatters every cash-rich technology company, and a philosophy
-  clause should not lean that way by default.
-- **B** is the conventional reading and matches what PHI-3.1 is for: whether
-  the balance sheet can carry the borrowing out of what the company can reach
-  within a year without a strategic decision.
+- **A**, taken. The current and non-current split on marketable securities is
+  an accounting presentation, not a liquidity fact: Apple's non-current
+  holdings are largely liquid paper, and where a filer draws that line moves
+  for reasons unrelated to the business. A draws a line that means something.
+  It is also conservative in the direction a safety screen should be
+  conservative in - it can only reject more candidates, never fewer - and it
+  is what Part 10 B already computes, so nothing is recomputed.
+- **B**, rejected. It is the conventional reading, which is what I argued
+  from, and convention is not a reason when the line it draws is a
+  presentation choice. Had it been taken it would have cost a field on the
+  block and a recompute of Part 10 D's PHI-3.1 row, Part 10 E's at-the-limit
+  falsifier and the workbook's `Philosophy` sheet.
+- **C**, rejected. It treats a long-dated securities portfolio as a current
+  asset, flatters every cash-rich technology company, and a philosophy clause
+  should not lean that way by default.
 
-**The cost of B, stated because it is not free.** Part 10 B defines
-`net_debt_to_ebitda` as `(debt - cash) / (operating income + D&A)`, which is
-definition A, and Part 10's synthetic block carries a single `debt` and a
-single `cash`. Choosing B adds a field to the block and means recomputing Part
-10 D's PHI-3.1 row and Part 10 E's at-the-limit falsifier by hand, and the
-workbook's `Philosophy` sheet with them. That is the Part 0 rule working as
-intended — a decision changed, so the reference is recomputed and the reason
-recorded — and not the rule against updating a reference to match code.
+**The revisit trigger, recorded so this is not reopened on a hypothetical:**
+the first candidate that **fails PHI-3.1 on A and would pass on B**. That is a
+real case with a real company in it, and it is the only evidence that would
+show A drawing the line in the wrong place. Until then A stands.
+
+**What this changes: nothing in the code or the references.** Part 10 B's
+`net_debt_to_ebitda = (debt - cash) / (operating income + D&A)` is definition
+A already, Part 10 D's PHI-3.1 row and Part 10 E's falsifier stand as
+computed, and the workbook's `Philosophy` sheet is untouched. What D33 adds is
+that the block carries every borrowing tag separately and the subtraction is
+the metric's, so `net_debt` is a function in `quant/fundamentals.py` with its
+own reference row rather than arithmetic on the way into the block.
 
 **Also open, and smaller:** whether `net_debt` is one metric key or whether
 PHI-3.1's key becomes `net_debt_to_ebitda_excluding_securities` and the like.
