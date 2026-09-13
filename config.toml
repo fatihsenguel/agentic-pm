@@ -11,3 +11,4 @@ price_fetch_interval_days    = 1
 # Diese Datei ist versioniert und das Repository ist öffentlich, also hält sie
 # Policy und keine Identität; die Kontaktangabe steht in .env neben den
 # Schlüsseln. Das Ratenlimit kommt mit dem Leser, der es liest.
+filings_fetch_interval_days  = 7
