@@ -1736,6 +1736,12 @@ tracked `.env.example` carries `DATABASE_URL`, `OPENAI_API_KEY` and
 both Bash and the editor on `.env*` files**, so the placeholder is the owner's
 to add and will not appear in a diff of mine.
 
+**Added 13 September (eaa9c23), by the owner.** A first version carried a real
+address in place of the placeholder; the diff was read before staging, the
+line went back to the placeholder, and no address reached the index. That is
+the policy-not-identity rule this entry records, caught on the one file the
+rule was written about.
+
 The general form, which is the reason to keep this rather than quietly fix it:
 a record that says a thing was done is worth nothing if "done" can mean
 "arranged for". Write what the tree holds, not what the next step is.
