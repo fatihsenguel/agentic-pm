@@ -76,3 +76,8 @@ F8,,the neighbour of a field the filer does not present,CostOfRevenue,USD,2025-0
 F8,,the neighbour of a field the filer does not present,Depreciation,USD,2025-01-01,2025-12-31,21136000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2025
 F9,,the 2022 twenty-for-one split reaching the FY2021 count through a 10-Q,CommonStockSharesOutstanding,shares,,2021-12-31,662121000,0001652044-22-000019,2021,FY,10-K,2022-02-02,
 F9,,the 2022 twenty-for-one split reaching the FY2021 count through a 10-Q,CommonStockSharesOutstanding,shares,,2021-12-31,13242000000,0001652044-22-000071,2022,Q2,10-Q,2022-07-27,
+Y,revenue,the fiscal year's own annual report (D21),Revenues,USD,2021-01-01,2021-12-31,257637000000,0001652044-22-000019,2021,FY,10-K,2022-02-02,CY2021
+Y,revenue,the fiscal year's own annual report (D21),RevenueFromContractWithCustomerExcludingAssessedTax,USD,2022-01-01,2022-12-31,282836000000,0001652044-23-000016,2022,FY,10-K,2023-02-03,
+Y,revenue,the fiscal year's own annual report (D21),RevenueFromContractWithCustomerExcludingAssessedTax,USD,2023-01-01,2023-12-31,307394000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,
+Y,revenue,the fiscal year's own annual report (D21),RevenueFromContractWithCustomerExcludingAssessedTax,USD,2024-01-01,2024-12-31,350018000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2024
+Y,revenue,the fiscal year's own annual report (D21),Revenues,USD,2025-01-01,2025-12-31,402836000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2025

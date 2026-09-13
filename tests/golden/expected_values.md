@@ -975,9 +975,10 @@ opposite of Apple. JPMorgan is held in portfolio 3, it is the bank
 an industry label that can be set beside what EDGAR states.
 
 **The facts cited here are committed** as `tests/golden/edgar_facts_googl.csv`
-(77 rows), `tests/golden/edgar_facts_jpm.csv` (48 rows) and
+(82 rows), `tests/golden/edgar_facts_jpm.csv` (53 rows) and
 `tests/golden/edgar_submissions.csv` (two rows), the first two in Part 12's
-columns, with `section` naming this Part's section or falsifier row set. A row
+columns, with `section` naming this Part's section or falsifier row set, or
+`Y` for section F's rows. A row
 whose note begins `absent` records a tag with no fact anywhere in its artifact.
 A stand-in built from the fixture lacks that tag either way, so the row records
 the claim and does not check it; the check is the neighbour rows, tags that are
@@ -1225,3 +1226,28 @@ here.
 7. `shares_outstanding`: which count, and `free_cash_flow_yield` for a filer
    with more than one class.
 8. Whether an industry exclusion is decided before the years are read.
+
+### F. Each fiscal year's own annual report
+
+Added 2026-09-13 for D21, from the same two documents, the rule stated in
+Part 12 A: a year's own report is the earliest-filed 10-K or 10-K/A carrying
+an annual figure that ends on the year's end date, its label is `FY` and that
+report's `fy`, and the year counts from that report's filed date.
+
+| Fiscal year | Alphabet: own report | Filed | JPMorgan: own report | Filed |
+|---|---|---|---|---|
+| FY2021 | 0001652044-22-000019 | 2022-02-02 | 0000019617-22-000272 | 2022-02-22 |
+| FY2022 | 0001652044-23-000016 | 2023-02-03 | 0000019617-23-000231 | 2023-02-21 |
+| FY2023 | 0001652044-24-000022 | 2024-01-31 | 0000019617-24-000225 | 2024-02-16 |
+| FY2024 | 0001652044-25-000014 | 2025-02-05 | 0000019617-25-000270 | 2025-02-14 |
+| FY2025 | 0001652044-26-000018 | 2026-02-05 | 0001628280-26-008131 | 2026-02-13 |
+
+Every own report is a 10-K, every `fy` matches the year it reports, and no
+filing of another form carried an annual figure for any of the ten years
+before it. Every annual figure in either document ends on 31 December, and no
+two year ends are fewer than 350 days apart, so neither filer exercises a
+change of fiscal year. One row per year, the revenue figure as the own report
+filed it, is in each committed csv with section `Y`. JPMorgan's FY2025 report
+is filed under an accession whose prefix is not JPMorgan's CIK: the prefix
+names whoever submitted the filing, and it is not a way to find the filer's
+own reports.
