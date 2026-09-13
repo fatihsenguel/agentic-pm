@@ -1,3 +1,15 @@
 cik,name,entity_type,sic,sic_description,owner_org,fiscal_year_end,pulled
 0001652044,Alphabet Inc.,operating,7370,"Services-Computer Programming, Data Processing, Etc.",06 Technology,1231,2026-09-13
 0000019617,JPMORGAN CHASE & CO,operating,6021,National Commercial Banks,02 Finance,1231,2026-09-13
+0000886982,GOLDMAN SACHS GROUP INC,operating,6211,"Security Brokers, Dealers & Flotation Companies",02 Finance,1231,2026-09-14
+0000086312,"TRAVELERS COMPANIES, INC.",operating,6331,"Fire, Marine & Casualty Insurance",02 Finance,1231,2026-09-14
+0000035527,FIFTH THIRD BANCORP,operating,6022,State Commercial Banks,02 Finance,1231,2026-09-14
+0000036270,M&T BANK CORP,operating,6022,State Commercial Banks,02 Finance,1231,2026-09-14
+0000109380,"ZIONS BANCORPORATION, NATIONAL ASSOCIATION /UT/",operating,6021,National Commercial Banks,02 Finance,1231,2026-09-14
+0001490906,"Capitol Federal Financial, Inc.",operating,6035,"Savings Institution, Federally Chartered",02 Finance,0930,2026-09-14
+0001381668,TFS Financial CORP,operating,6035,"Savings Institution, Federally Chartered",02 Finance,0930,2026-09-14
+0000910073,"FLAGSTAR BANK, NATIONAL ASSOCIATION",operating,6036,"Savings Institutions, Not Federally Chartered",02 Finance,1231,2026-09-14
+0001099219,METLIFE INC,operating,6311,Life Insurance,02 Finance,1231,2026-09-14
+0001137774,PRUDENTIAL FINANCIAL INC,operating,6311,Life Insurance,02 Finance,1231,2026-09-14
+0000062709,"MARSH & MCLENNAN COMPANIES, INC.",operating,6411,"Insurance Agents, Brokers & Service",02 Finance,1231,2026-09-14
+0000354190,Arthur J. Gallagher & Co.,operating,6411,"Insurance Agents, Brokers & Service",02 Finance,1231,2026-09-14

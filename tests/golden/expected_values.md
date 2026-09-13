@@ -984,7 +984,7 @@ an industry label that can be set beside what EDGAR states.
 
 **The facts cited here are committed** as `tests/golden/edgar_facts_googl.csv`
 (82 rows), `tests/golden/edgar_facts_jpm.csv` (53 rows) and
-`tests/golden/edgar_submissions.csv` (two rows), the first two in Part 12's
+`tests/golden/edgar_submissions.csv` (14 rows), the first two in Part 12's
 columns, with `section` naming this Part's section or falsifier row set, or
 `Y` for section F's rows. A row
 whose note begins `absent` records a tag with no fact anywhere in its artifact.
@@ -1101,6 +1101,36 @@ companyfacts, so it is a second fetch. The document carries the current code
 only, with no date and no history, where it does carry a dated history of the
 filer's names, four entries since 1994. A SIC code is therefore as of the pull
 date, and a reference row that cites one cites the pull date.
+
+**Twelve more financial filers, for `excluded_industry`'s code list.** Pulled
+from `data.sec.gov` on 2026-09-14, each HTTP 200, and committed as rows of
+`tests/golden/edgar_submissions.csv`. Chosen to be one or two of each kind
+of company PHI-3.2 is about, so that each code the clause lists has a filer
+behind it rather than a code remembered:
+
+| Filer | CIK | SIC | `sicDescription` |
+|---|---|---|---|
+| Goldman Sachs Group Inc. | 886982 | 6211 | Security Brokers, Dealers & Flotation Companies |
+| Travelers Companies, Inc. | 86312 | 6331 | Fire, Marine & Casualty Insurance |
+| Fifth Third Bancorp | 35527 | 6022 | State Commercial Banks |
+| M&T Bank Corp | 36270 | 6022 | State Commercial Banks |
+| Zions Bancorporation, N.A. | 109380 | 6021 | National Commercial Banks |
+| Capitol Federal Financial, Inc. | 1490906 | 6035 | Savings Institution, Federally Chartered |
+| TFS Financial Corp | 1381668 | 6035 | Savings Institution, Federally Chartered |
+| Flagstar Bank, N.A. | 910073 | 6036 | Savings Institutions, Not Federally Chartered |
+| MetLife Inc. | 1099219 | 6311 | Life Insurance |
+| Prudential Financial Inc. | 1137774 | 6311 | Life Insurance |
+| Marsh & McLennan Companies, Inc. | 62709 | 6411 | Insurance Agents, Brokers & Service |
+| Arthur J. Gallagher & Co. | 354190 | 6411 | Insurance Agents, Brokers & Service |
+
+Every one of the thirteen financial filers here, JPMorgan included, carries
+`ownerOrg` "02 Finance", and Alphabet "06 Technology"; nothing in either
+document says what the field classifies, so it is recorded and not used.
+Goldman Sachs is not a bank by its code: it is a broker-dealer. Flagstar's
+name says national association and its code says a savings institution not
+federally chartered, which is what a code with no date looks like when the
+company it describes has changed. Eight codes over thirteen filers, and no
+code for any kind this Part did not fetch.
 
 **Where the label in the database comes from.** `assets` row 12 reads sector
 "Financials", industry "Banks". It was written by
