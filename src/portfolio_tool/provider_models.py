@@ -43,6 +43,24 @@ class ProviderFxRate:
     rate: Decimal
 
 @dataclass
+class ProviderFiledFact:
+    """One figure as a filer filed it, in one filing (expected_values.md
+    Part 12). `start` is None for an instant. `fy` and `fp` belong to the
+    filing, not the figure (D26), and are provenance, never a key."""
+    tag: str
+    unit: str
+    start: Optional[date]
+    end: date
+    value: Decimal
+    accn: str
+    fy: Optional[int]
+    fp: Optional[str]
+    form: str
+    filed: date
+    frame: Optional[str]
+    source: str
+
+@dataclass
 class ProviderDividendData:
     ex_date: date
     amount: Decimal

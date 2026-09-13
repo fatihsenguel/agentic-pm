@@ -28,6 +28,30 @@ CovarMethod = Literal["sample", "shrinkage", "exponential"]
 
 
 # =============================================================================
+# IDENTITY FROM .env
+# =============================================================================
+
+class SettingMissingError(Exception):
+    """Raised when a value that names the owner is not set in .env."""
+
+
+def edgar_user_agent() -> str:
+    """The contact SEC asks every automated client to declare.
+
+    It names a person, so it lives in .env and never in config.toml, which is
+    tracked and public. No default: a made-up contact is not a declaration,
+    and www.sec.gov refuses an undeclared client with HTTP 403.
+    """
+    value = os.environ.get("EDGAR_USER_AGENT", "").strip()
+    if not value:
+        raise SettingMissingError(
+            "EDGAR_USER_AGENT is not set. Add it to .env as a name and an email "
+            "address; .env.example carries the key."
+        )
+    return value
+
+
+# =============================================================================
 # DATABASE LOCATION
 # =============================================================================
 
