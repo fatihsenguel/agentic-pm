@@ -604,9 +604,12 @@ PHI-4.1 read another way: the most I would pay is 180.00 x (1 - 0.25) =
 discount, a fraction like every other observed value; the price form is the
 formatter's to print from the same figures.
 
-**Statements, cited and not computed:** PHI-1.1, PHI-1.2, PHI-2.3, PHI-3.2,
-PHI-4.3, PHI-5.1, PHI-5.2, PHI-6.1, PHI-6.2, PHI-6.3, PHI-7.1, PHI-7.2. A
-full check lists them, so the philosophy is visibly all of it.
+**Statements, cited and not computed:** PHI-1.1, PHI-1.2, PHI-2.3, PHI-4.3,
+PHI-5.1, PHI-5.2, PHI-6.1, PHI-6.2, PHI-6.3, PHI-7.1, PHI-7.2. A full check
+lists them, so the philosophy is visibly all of it. PHI-3.2 was a statement
+when this section was computed; from 2026-09-14 it is `excluded_industry`
+(section F), the five findings above are unchanged, and a block carrying a
+SIC code adds a sixth.
 
 **The candidate does not clear the philosophy** on these figures: two of
 five numeric clauses fail. That is a fact about the synthetic figures, chosen
@@ -632,14 +635,75 @@ and the block has no FY2020, so the check stops naming
 `return_on_invested_capital` for `FY2020`. It does not read FY2021 to
 FY2025 and it does not read four years.
 
+### F. PHI-3.2, the industry exclusion
+
+Added 2026-09-14, before the clause type or its screen exists. PHI-3.2
+becomes `excluded_industry`: a company whose SIC code is one of the clause's
+codes is not screened by the philosophy. Nothing here is arithmetic, so the
+workbook's `Philosophy` sheet does not change.
+
+| # | Decision | Choice |
+|---|---|---|
+| D34 | When is an industry exclusion decided? | **Before any figure is read.** D25 stops the whole check at the first missing figure, and a bank's filed figures lack most of what the other clauses read (Part 13 C), so a check that reads figures first refuses a bank under PHI-1.2: a true refusal citing the wrong clause. |
+| D35 | What decides it, and what does the check report? | **The SIC code as EDGAR states it**, on the block, as of its pull date: EDGAR carries the current code only (Part 13 C). A listed code gives one finding, status **excluded**, carrying the code, and the check reports nothing else about the company. An unlisted code gives one finding, status **pass**, carrying the code, in philosophy order, and the check goes on. A block with no code stops the check naming PHI-3.2: a company is never assumed not to be a bank. |
+
+**The codes**, each with the filers it was measured on in Part 13 C, decided
+2026-09-14:
+
+| SIC | Kind | Measured on | Listed |
+|---|---|---|---|
+| 6021 | national commercial banks | JPMorgan, Zions | yes |
+| 6022 | state commercial banks | Fifth Third, M&T | yes |
+| 6035 | savings institutions, federally chartered | Capitol Federal, TFS | yes |
+| 6036 | savings institutions, not federally chartered | Flagstar | yes |
+| 6211 | security brokers and dealers | Goldman Sachs | yes |
+| 6311 | life insurers | MetLife, Prudential | yes |
+| 6331 | fire, marine and casualty insurers | Travelers | yes |
+| 6411 | insurance agents and brokers | Marsh & McLennan, Gallagher | **no** |
+
+Broker-dealers count: their balance sheet is their business the way a
+bank's is. Insurance brokers do not: they sell insurance and do not carry
+it, so the clause's reason does not reach them. A bank or an insurer filing
+under a code this list does not carry is screened as if it were neither;
+that is the list's known limit, closed one measured code at a time, never by
+a code range recited from memory.
+
+**Rows**, as of 2026-09-10 like the rest of this Part:
+
+**A bank is excluded before its figures are read (D34).** JPMorgan, SIC
+6021, with a block carrying only the five fields Part 13 C resolves for it:
+one finding, PHI-3.2 **excluded**, code 6021. No finding on any other clause,
+and no stop, although gross profit, operating income, cash and debt are not
+in its figures. A check that reads figures first fails this row by stopping
+on PHI-2.1.
+
+**A broker-dealer is excluded.** Goldman Sachs, SIC 6211, the same way: one
+finding, PHI-3.2 **excluded**, code 6211.
+
+**An insurance broker is not.** Section A's block with SIC 6411: section D's
+five findings, and PHI-3.2 **pass** carrying 6411 between PHI-3.1 and
+PHI-4.1.
+
+**Alphabet passes and the rest stands.** Section A's block with SIC 7370,
+Alphabet's code in Part 13 C: six findings in philosophy order, PHI-2.1,
+PHI-2.2 and PHI-3.1 as in section D, PHI-3.2 **pass** carrying 7370, then
+PHI-4.1 and PHI-4.2 as in section D; eleven statements.
+
+**No code, no check.** Section A's block with no SIC code: the check stops
+naming PHI-3.2 and reports no finding.
+
 ### Expected answers, in the Part 3b shape
 
 - **4.1 (does X clear my philosophy)** - the five findings above with their
-  deciding years and distances, each citing its clause; the twelve
-  statements named as not computed; every figure with its fiscal year and
-  its source; no recommendation.
+  deciding years and distances, and section F's PHI-3.2 finding with the
+  company's SIC code, each citing its clause; the eleven statements named as
+  not computed; every figure with its fiscal year and its source; no
+  recommendation.
 - **4.6 (a missing figure)** - "the check stopped: FY2024 gross margin is
   not in the figures", no finding on any clause, nothing invented.
+- **4.6 (a bank)** - "JPMorgan is excluded under PHI-3.2: SIC 6021, National
+  Commercial Banks, as EDGAR stated it on 2026-09-13"; no other finding, no
+  figure read, no verdict on the company.
 
 ---
 
