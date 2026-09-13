@@ -1,21 +1,23 @@
 # AGENTIC_FINANCE — Session Handoff
 
-**Session date:** begun 11 September 2026, ended 12 September (fifteenth session). Regenerated at its end.
-**Branch:** `selection`, at `04129ea`. **`baseline-v1` is at 20160b0**, and `origin/baseline-v1` and `origin/selection` are both there — confirmed by a fetch this session, which also showed that the fourteenth session's last three commits were never pushed. Local `selection` is twenty commits ahead of the baseline and has no upstream configured. `origin`'s push URL is `no_push`; the owner pushes from elsewhere.
+**Session date:** begun 11 September 2026, ended 13 September (fifteenth session). Regenerated at its end.
+**Branch:** `selection`, at the commit that lands this file (the one after `e318ed8`). **`baseline-v1` is at 20160b0**, and `origin/baseline-v1` and `origin/selection` are both there — confirmed by a fetch this session, which also showed that the fourteenth session's last three commits were never pushed. Local `selection` is thirty commits ahead of the baseline, **none of the fifteenth session is pushed, by the owner's choice**, and it has no upstream configured. `origin`'s push URL is `no_push`; the owner pushes from elsewhere.
 
-**This file was regenerated twice this session.** The first regeneration (e3bfdf6) was written when the session looked finished and five commits landed after it. This is the second and it is the one to read; nothing was patched in between, deliberately, because patching a regenerated handoff two sessions running is how that rule stops meaning anything.
+**This file was regenerated three times this session**, each time because the session continued past what looked like its end: at e3bfdf6, at 8af72f4, and now. Each was a regeneration and none a patch. This is the one to read.
 
-**State:** Green on every loop. pytest **747 passed, 6 xfailed** in about three seconds, up from 735. The runner ran twice, **12/12** both times; the golden set once, **zero diff on all sixteen lines**. Commit count: `git rev-list --count baseline-v1..HEAD` — 20.
+**State:** Green on every loop. pytest **747 passed, 6 xfailed** in about three seconds, up from 735. The runner ran twice, **12/12** both times; the golden set once, **zero diff on all sixteen lines**. Commit count: `git rev-list --count baseline-v1..HEAD` — 30.
 
 Written for whoever picks this up cold, myself included.
 
 **Regenerate this document at the end of each session rather than patching it.**
 **Check every claim here against the code before acting on it, including
-this file.** This session three of my own claims were wrong and all three
+this file.** This session four of my own claims were wrong and all four
 were cheap to check: I said no test asserted the answer's false "Not done"
 sentence, and one did by a fragment; I said a string had left the tree when a
-copy was still in `risk_manager_agent.py`; and I let Part 12 land without the
-workbook sheet its own document's rule asks for, then had to say why.
+copy was still in `risk_manager_agent.py`; I let Part 12 land without the
+workbook sheet its own document's rule asks for; and I wrote into KNOWN_GAPS
+that the owner had added a line to `.env.example` before anyone had. A record
+says what the tree holds, not what the next step is.
 
 **And an invariant is verified, not read.** DIRECTION.md said "compliance is
 a gate" for as long as the document has existed and it was false on a live
@@ -28,11 +30,11 @@ seven are still sentences no loop can see; §8 has the sweep.
 
 | File | What it is |
 |---|---|
-| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1, 2 and 3 are built. **Order 4 is in progress**: the philosophy check exists as pure modules held to Part 10, the compliance gate is settled, and **the filings reader's decision is taken with Part 12 written** — what remains of it is §7, and it is blocked on the owner. Its last section says when to stop and think. |
+| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1, 2 and 3 are built. **Order 4 is in progress**: the philosophy check exists as pure modules held to Part 10, the compliance gate is settled, and **the filings reader's decision is taken, Part 12 is written and its second source filled** — the provider method is unblocked (§7). Its last section says when to stop and think. |
 | `docs/benchmark.md` | **The definition of done.** Levels 1 to 3: 12 cases, 12 pass. **Level 4**: six research cases, none running, the prediction ledger as their eval set, 3.2's expiry rule, and what a passing case does and does not mean. Unchanged this session. |
 | `tests/benchmark/run_cases.py` | **The scoreboard.** Twelve cases; the Level 4 checks are written first when the node decision starts, blocked probes and all, and the headline becomes n/14. |
-| `tests/golden/KNOWN_GAPS.md` | Open decisions, resolved decisions, and why obvious fixes are wrong. **Every open entry carries one line saying what it blocks**, with a count at the top of OPEN: 76 open, 0 blocking the next commit, 14 a named Order, 62 nothing, of which three are closed in their body and unmarked in their heading. Read the Order-4 ones and skip the rest; that is what the tags are for. **New and worth reading whole: "Questions the system cannot express, and which kind each is."** |
-| `tests/golden/expected_values.md` | Hand-computed reference for portfolio 3, **Parts 1 to 12**. Part 10 is the philosophy check; Part 11 is reserved for the valuation range and is not computed; **Part 12 is the filings reader**, with decisions D26 to D33 and a committed fixture. Never update it to match code output. |
+| `tests/golden/KNOWN_GAPS.md` | Open decisions, resolved decisions, and why obvious fixes are wrong. **Every open entry carries one line saying what it blocks**, with a count at the top of OPEN: 77 open, 0 blocking the next commit, 15 a named Order, 62 nothing, of which three are closed in their body and unmarked in their heading. Read the Order-4 ones and skip the rest; that is what the tags are for. **New and worth reading whole: "Questions the system cannot express, and which kind each is", and "`config.toml` is tracked and public, so it holds policy and not identity".** |
+| `tests/golden/expected_values.md` | Hand-computed reference for portfolio 3, **Parts 1 to 12**. Part 10 is the philosophy check; Part 11 is reserved for the valuation range and is not computed; **Part 12 is the filings reader**, with decisions D26 to D33, a committed fixture, its second source filled by the owner, and net debt decided as cash only. The workbook has eleven sheets, `Filings` the newest, with cached values. Never update it to match code output. |
 | `docs/IPS.md` | The policy, synthetic. `ips.toml` derived from it and named on portfolio 3's row. Not edited casually. |
 | `docs/PHILOSOPHY.md` | What is worth wanting, synthetic: seventeen `PHI-x.y` clauses, five numeric screens and twelve statements. **PHI-3.2 is decided to become a real clause type, `excluded_industry`, and is not yet written** — §5. |
 | `docs/WATCHLIST.md` | Two synthetic candidates, Alphabet and Adobe, each a thesis, an entry condition and its predictions; the four predictions are the ledger, due early 2027. Nothing reads it. |
@@ -90,6 +92,13 @@ speed. Scope creep is the risk.**
 - **A reported figure and a modelling choice are different things.** D32: the
   block carries the filer's effective tax rate because it is filed; NOPAT's
   tax rate is a stated assumption in config.
+- **Net debt nets cash only** (Part 12 F): the current and non-current split
+  on securities is presentation, not liquidity. Revisit only on a candidate
+  that fails on that and would pass with current securities netted.
+- **`config.toml` holds policy; `.env` holds identity.** A value that names a
+  person belongs in the ignored file however mechanical it looks. The tracked
+  config and the tracked `.env.example` carry keys and placeholders, never an
+  address.
 - **Extraction and derivation before the model.**
 - **References before code.** Parts 7, 8, 9, 10 and now 12, each before its
   code.
@@ -223,9 +232,15 @@ reads it yet; the provider test reads it when the provider exists, the way
   (`claude-haiku-4-5-20251001`). `ANTHROPIC_SONNET` is `claude-sonnet-5`, behind
   `use_stronger_model`, off.
 - **yfinance 1.7.0.** The price method passes `auto_adjust=False`.
-- **EDGAR needs a declared User-Agent with a contact**, a config value beside
-  the four fetch intervals, **not yet set**. A generic one risks throttling
-  under SEC's fair-access policy and is fine only for a one-off.
+- **EDGAR needs a declared User-Agent with a contact.** It is
+  `EDGAR_USER_AGENT` in `.env`, never in `config.toml` (tracked, public).
+  `.env.example` carries the key with a placeholder (eaa9c23). **The real
+  value is not set and nothing reads it yet**; the owner sets it when the
+  reader lands. Measured: `data.sec.gov` served a generic User-Agent,
+  `www.sec.gov` refused one with HTTP 403. A permission rule denies sessions
+  the shell and the editor on `.env*` files.
+- `.env.example`, like `.gitignore`, is wrapped in a stray PowerShell
+  here-string. Nothing breaks; it is the owner's to fix.
 - `openpyxl` in the venv and the `dev` extras. No LibreOffice.
 - `config.toml` is required and carries all four fetch intervals.
 - `config.features.observability_enabled` is **false** here.
@@ -245,7 +260,7 @@ reads it yet; the provider test reads it when the provider exists, the way
 
 ## 4. What the fifteenth session did
 
-`git log --oneline 20160b0..HEAD`. Seventeen commits, of which four touched `src/`.
+`git log --oneline 20160b0..HEAD`. Twenty-seven commits of this session's own, of which four touched `src/`; the other three since 20160b0 are the fourteenth session's documentation commits.
 
 **The compliance gate, decided and built (33b31d5, b618ba0, 710e877).**
 Invariant 2 was false on a live path: `optimization` printed a weight per
@@ -278,6 +293,24 @@ FY2025, five falsifier row sets, and an 86-row committed fixture.
 schemas: sixteen questions the system cannot express, sorted into expression,
 capability and reading, because they have three different answers.
 
+**Part 12 finished (82077c0, c5e46dd, c929cfa, 515732b).** Section E filled
+by the owner against Apple's FY2025 10-K: eight of eight to the dollar, the
+FY2008 pair confirmed both ways, two label mismatches recorded, three free
+cross-checks, and the owner's own caveat that this was a second automated
+extraction rather than Part 9's human check. Net debt decided as A, cash only,
+with a revisit trigger. D29 gained that the form is not a filter, after a form
+type was checked against EDGAR's submissions index. The workbook's `Filings`
+sheet written, the ten older sheets compared cell for cell (9,751 cells, zero
+differences), then opened and saved in Excel by the owner and compared again
+(11 sheets, 9,933 cells, zero differences; 3,048 cached values restored).
+
+**Policy and identity (3100b56, b8584e8, eaa9c23, e318ed8).** I proposed the
+SEC contact in `config.toml`; the owner moved it to `.env`, because the config
+is tracked and public. Recorded as its own entry. I then wrote that the owner
+had added the `.env.example` placeholder before anyone had, and corrected it.
+When the owner did add it, the first version carried a real address; the diff
+was read before staging and nothing reached the index.
+
 **Invariant sweep**, reported and not committed: no second invariant false.
 
 ---
@@ -298,8 +331,11 @@ capability and reading, because they have three different answers.
   insurers, narrower than Financials, the first consumer of `Asset.industry`,
   with the clause's own expiry recorded. **Decided, not written.**
 - The tax rate is a filed figure in the block and a stated assumption in
-  config; latest filed wins, pinned to a pull date; debt reaches the block as
-  filed tags, separately.
+  config; latest filed wins, pinned to a pull date, whatever form carried it;
+  debt reaches the block as filed tags, separately.
+- **Net debt is A, cash only.** Revisit on the first candidate that fails on A
+  and would pass with current securities netted.
+- **`config.toml` holds policy, `.env` holds identity.**
 
 **Pending — decide before writing code.** Old numbers kept so KNOWN_GAPS
 references resolve.
@@ -324,13 +360,15 @@ references resolve.
 36. What `reasoning` is for.
 38. The CLI's identical-answer check.
 39. Three KNOWN_GAPS entries resolved in their body and unmarked in their heading.
-40. **Part 12 section E, the second source** — §7, and nothing moves without it.
-41. **What nets against debt**, policy, for PHILOSOPHY.md. B recommended;
-    the cost of B is recomputing Part 10's PHI-3.1 row, its at-the-limit
-    falsifier and the workbook's `Philosophy` sheet.
+40. ~~Part 12 section E~~ filled (82077c0), with the caveat that it was a
+    second automated extraction; a figure reaching an answer about a real
+    holding wants a human reading first.
+41. ~~What nets against debt~~ decided, A (82077c0). **Still the owner's:**
+    writing it into PHI-3.1's clause text, which today does not say what nets.
 42. **Writing `excluded_industry`** into PHILOSOPHY.md and `philosophy.toml`,
     which needs a bank in the reference first.
-43. **The SEC User-Agent contact**, a config value the owner sets.
+43. **The real `EDGAR_USER_AGENT` in `.env`**, set by the owner when the
+    reader lands; the placeholder is in `.env.example` (eaa9c23).
 44. **A second filer** — a December year end, then a bank. One filer is one
     witness.
 45. **The tool-boundary pass**, tagged Order 5, with its trigger written down.
@@ -356,34 +394,33 @@ good at research. benchmark.md's Level 4 states the rule in full (d3ccd86).
 
 ## 7. Next steps, in order
 
-**Everything below the first item is blocked on the owner.**
+**Nothing below is blocked on the owner.** The two orders are both
+defensible; the second filer first is recommended, because D26 to D33 rest on
+one witness and the provider should implement rules two filers agree on.
 
-**1. Part 12 section E, the second source.** Nine rows from Apple's own
-FY2025 10-K plus the FY2008 figure, into the table already laid out with the
-EDGAR column filled. Until it is filled, Part 12 describes an API rather than
-defending it, and **the provider method should not be written** — that is
-Part 9's pattern, where the listing exchange's rows came before the flag.
+**1. A second filer** (44): a December year end, checked against D26 to D33
+— which the second filer confirms, which it cannot exercise, which it
+contradicts. Then a bank, because `excluded_industry` (42) needs one for its
+reference row, with the SIC code and where the industry label comes from.
+Extend Part 12 or write Part 13; extract a fixture, never commit the document.
 
-**2. What nets against debt** (pending 41), and **the SEC contact** (43).
-
-**3. Then the reader, in Part 9's order:** the provider method against a
-stand-in for the HTTP layer, held to Part 12; the table and its migration,
-committed unexecuted with its schema test; the cache record under the price
+**2. The reader, in Part 9's order:** the provider method against a stand-in
+for the HTTP layer, held to Part 12 and its fixture; the reader of
+`EDGAR_USER_AGENT` with a raise on a missing key, landing with its first
+consumer and not before; the table and its migration, committed unexecuted
+with its schema test, applied by the owner; the cache record under the price
 cache's rules; the assembler that joins `years` to the price source and
-shares. Part 12's D26 to D33 are the rules it implements.
+shares. Mind the measured unevenness: `www.sec.gov` refuses what
+`data.sec.gov` serves.
 
-**4. A second filer** (44): a December year end, then a bank — the bank
-because `excluded_industry` (42) needs one for its reference row before the
-clause can be written into PHILOSOPHY.md.
-
-**5. Decision 29, the node**, after the reader: runner checks for 4.1 and 4.6
+**3. Decision 29, the node**, after the reader: runner checks for 4.1 and 4.6
 first, seen BLOCKED; the intent and agent in the registries with their plan
 test; the node over a synthetic state held to Part 10 D; the formatter with
 its test; the golden line and the prompt, golden twice with the prediction
 written first. **The gate is designed with it, not retrofitted under it** —
 that was the whole reason 34 came first.
 
-**6. Then the valuation pipeline** with Part 11 by hand, and prediction
+**4. Then the valuation pipeline** with Part 11 by hand, and prediction
 scoring with its Part.
 
 ### Later, with reasons
@@ -446,6 +483,21 @@ the wrong commit; splicing the function back from HEAD, after asserting the
 two versions differed only in trailing whitespace, was the fix.
 
 **A test that fails on a signature has not been seen failing for its reason.**
+
+**A record says what the tree holds, not what the next step is.** I wrote
+that the owner had added a line to `.env.example` when it had only been
+arranged. The durable record is exactly where "done" must not mean "planned".
+
+**Read the diff of a file you did not write before you stage it.** The owner's
+first `.env.example` line carried a real address into a tracked file in a
+public repository, twenty minutes after deciding that was the thing to avoid.
+Reading the diff caught it; `git add` would not have.
+
+**A form type in ground truth is checked against the index, not inferred from
+a neighbour.** The owner suspected the FY2008 amendment was an 8-K from its
+adjacent accession; EDGAR's submissions index said 10-K/A. The check was right
+and the inference was wrong, and the question it raised — 8-Ks do carry
+restated facts — was worth a decision anyway.
 
 **A restriction is not a defect until its kind is named.** The schema stops
 questions being asked, and three different things look identical from the
