@@ -181,7 +181,7 @@ so both are falsifiers for "something else broke", not confirmations.
 
 ### Branches and tags
 
-`selection` at `04129ea` is the working branch. **`baseline-v1` sits at
+`selection` is the working branch, thirty commits ahead of the baseline and unpushed. **`baseline-v1` sits at
 20160b0**, with `origin/baseline-v1` and `origin/selection` there too.
 `compliance` is at `cc7f740`, in sync with its remote and **fully merged into
 `baseline-v1`** — zero ahead, 191 behind; `vocabulary` likewise.
