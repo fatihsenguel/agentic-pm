@@ -90,3 +90,5 @@ Y,revenue,the fiscal year's own annual report (D21),RevenueFromContractWithCusto
 Y,revenue,the fiscal year's own annual report (D21),RevenueFromContractWithCustomerExcludingAssessedTax,USD,2022-09-25,2023-09-30,383285000000,0000320193-23-000106,2023,FY,10-K,2023-11-03,
 Y,revenue,the fiscal year's own annual report (D21),RevenueFromContractWithCustomerExcludingAssessedTax,USD,2023-10-01,2024-09-28,391035000000,0000320193-24-000123,2024,FY,10-K,2024-11-01,
 Y,revenue,the fiscal year's own annual report (D21),RevenueFromContractWithCustomerExcludingAssessedTax,USD,2024-09-29,2025-09-27,416161000000,0000320193-25-000079,2025,FY,10-K,2025-10-31,CY2025
+F11,,a filing reporting three fiscal years with one own year,NetIncomeLoss,USD,2006-10-01,2007-09-29,3496000000,0001193125-09-214859,2009,FY,10-K,2009-10-27,
+F11,,a filing reporting three fiscal years with one own year,NetIncomeLoss,USD,2008-09-28,2009-09-26,5704000000,0001193125-09-214859,2009,FY,10-K,2009-10-27,

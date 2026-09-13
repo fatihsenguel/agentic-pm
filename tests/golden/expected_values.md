@@ -678,12 +678,13 @@ arithmetic one. One filer is one witness, and that is the caveat this Part
 carries until a December year end and a bank are added.
 
 **The facts cited here are committed** as `tests/golden/edgar_facts_aapl.csv`,
-91 rows, extracted from that artifact: the 70 of section B and the 16
-falsifier rows of section D, each with its `accn`, `fy`, `fp`, `form`, `filed`
-and `frame` as fetched, and the five of section A's own annual reports, from
-the second pull. Section B's rows carry `A` in the csv's `section` column, a
-mislabel from when the file was written. The 3.79 MB document is not committed. A reference
-that needs a re-fetch to verify is not pinned.
+93 rows, extracted from that artifact: the 70 of section B and the 16 falsifier
+rows of section D, each with its `accn`, `fy`, `fp`, `form`, `filed` and
+`frame` as fetched, and the five of section A's own annual reports and Part
+13's two F11 rows, from the second pull. Section B's rows carry `A` in the
+csv's `section` column, a mislabel from when the file was written. The 3.79 MB
+document is not committed. A reference that needs a re-fetch to verify is not
+pinned.
 
 **The workbook's `Filings` sheet** carries the comparison: section E's eight
 FY2025 figures with the owner's reading of the 10-K beside EDGAR's and a
@@ -724,19 +725,25 @@ September 2026 and is not filed, so it is not a year — exactly the case Part
 
 The 53-week year is why D27's duration test is a range and not an equality.
 
-**Each year's own annual report**, added 2026-09-13 for D21. A year counts
-from the day its own report was filed, not from the `filed` date on the
-vintage section B cites: FY2021's revenue row cites the FY2023 10-K, filed
-2023-11-03, and a year dated by that would not have been a year until two
-years after it was reported. The own report is the earliest-filed 10-K or
-10-K/A carrying an annual figure that ends on the year's end date; the label
-is `FY` and that report's `fy`, and every one of the five matches the year it
-reports. All five are 10-Ks, and no filing of another form carried an annual
-figure for any of the five years before them. Read from a second pull of the
-same document on 2026-09-13, HTTP 200, 3.79 MB, 503 `us-gaap` tags and 25,135
-facts, 89 more than on 2026-09-11; every one of section B's 70 rows is still
-the latest vintage in it. One row per year, the revenue figure as that report
-filed it, is in the committed csv with section `Y`.
+**Each year's own annual report**, added 2026-09-13 for D21. A year counts from
+the day its own report was filed, not from the `filed` date on the vintage
+section B cites: FY2021's revenue row cites the FY2023 10-K, filed 2023-11-03,
+and a year dated by that would not have been a year until two years after it
+was reported. A filing's own year is the latest year end it carries an annual
+figure for; a year's own report is the earliest-filed 10-K or 10-K/A whose own
+year it is; the label is `FY` and that report's `fy`, and every one of the five
+matches the year it reports. A year no filing reports as its own is left out,
+not dated from a later report: the first rule written here, the earliest-filed
+10-K carrying the year at all, was corrected the same day, because it dates
+Apple's FY2007 and FY2008 from the FY2009 10-K and labels both FY2009. Over the
+whole document the corrected rule leaves out exactly those two, whose own
+reports predate the structured data, and keeps 17 years with no label twice.
+Part 13, F11. All five are 10-Ks, and no filing of another form carried an
+annual figure for any of the five years before them. Read from a second pull of
+the same document on 2026-09-13, HTTP 200, 3.79 MB, 503 `us-gaap` tags and
+25,135 facts, 89 more than on 2026-09-11; every one of section B's 70 rows is
+still the latest vintage in it. One row per year, the revenue figure as that
+report filed it, is in the committed csv with section `Y`.
 
 ### B. The figures block the reader must return
 
@@ -1207,6 +1214,17 @@ filing only where it differs" passes Alphabet and fails JPMorgan. Net income is
 not a field in Part 12 B, so no figure there moves; what F10 contradicts is
 D29's rule.
 
+**F11 — a year no filing reports as its own (D21).** Apple's first filing in
+the structured data is the FY2009 10-K (0001193125-09-214859, filed
+2009-10-27), and it carries `NetIncomeLoss` for three fiscal years: 3,496
+million for the year ending 2007-09-29, 4,834 for 2008-09-27 (section D's F3
+row) and 5,704 for 2009-09-26. The earliest 10-K carrying 2008-09-27 is that
+filing, so a reader that takes it as FY2008's own report dates FY2008 from
+October 2009 and labels it FY2009, beside the real FY2009. Its own year is
+2009-09-26, the latest end it carries; FY2007 and FY2008 have no own report and
+are not years. The committed csv carries the 2007 and 2009 rows with section
+`F11`; F3 already carries 2008.
+
 ### E. What this Part leaves open
 
 Questions the rows above raise and D26 to D33 do not answer. None is decided
@@ -1231,9 +1249,13 @@ here.
 ### F. Each fiscal year's own annual report
 
 Added 2026-09-13 for D21, from the same two documents, the rule stated in
-Part 12 A: a year's own report is the earliest-filed 10-K or 10-K/A carrying
-an annual figure that ends on the year's end date, its label is `FY` and that
-report's `fy`, and the year counts from that report's filed date.
+Part 12 A: a filing's own year is the latest year end it carries an annual
+figure for, a year's own report is the earliest-filed 10-K or 10-K/A whose own
+year it is, its label is `FY` and that report's `fy`, and the year counts from
+that report's filed date. Over the whole documents the rule leaves out
+Alphabet's 2013 and 2014 year ends, first carried by its FY2015 10-K, and
+JPMorgan's 2007 and 2008, first carried by its FY2009 10-K, and keeps 11 and
+17 years with no label twice.
 
 | Fiscal year | Alphabet: own report | Filed | JPMorgan: own report | Filed |
 |---|---|---|---|---|
