@@ -1,0 +1,49 @@
+section,field,note,tag,unit,start,end,val,accn,fy,fp,form,filed,frame
+C,revenue,,Revenues,USD,2021-01-01,2021-12-31,121649000000,0000019617-24-000225,2023,FY,10-K,2024-02-16,CY2021
+C,revenue,,Revenues,USD,2022-01-01,2022-12-31,128695000000,0000019617-25-000270,2024,FY,10-K,2025-02-14,CY2022
+C,revenue,,Revenues,USD,2023-01-01,2023-12-31,158104000000,0001628280-26-008131,2025,FY,10-K,2026-02-13,CY2023
+C,revenue,,Revenues,USD,2024-01-01,2024-12-31,177556000000,0001628280-26-008131,2025,FY,10-K,2026-02-13,CY2024
+C,revenue,,Revenues,USD,2025-01-01,2025-12-31,182447000000,0001628280-26-008131,2025,FY,10-K,2026-02-13,CY2025
+C,effective_tax_rate,,EffectiveIncomeTaxRateContinuingOperations,pure,2021-01-01,2021-12-31,0.189,0000019617-24-000225,2023,FY,10-K,2024-02-16,CY2021
+C,effective_tax_rate,,EffectiveIncomeTaxRateContinuingOperations,pure,2022-01-01,2022-12-31,0.184,0000019617-25-000270,2024,FY,10-K,2025-02-14,CY2022
+C,effective_tax_rate,,EffectiveIncomeTaxRateContinuingOperations,pure,2023-01-01,2023-12-31,0.196,0001628280-26-008131,2025,FY,10-K,2026-02-13,CY2023
+C,effective_tax_rate,,EffectiveIncomeTaxRateContinuingOperations,pure,2024-01-01,2024-12-31,0.221,0001628280-26-008131,2025,FY,10-K,2026-02-13,CY2024
+C,effective_tax_rate,,EffectiveIncomeTaxRateContinuingOperations,pure,2025-01-01,2025-12-31,0.214,0001628280-26-008131,2025,FY,10-K,2026-02-13,CY2025
+C,depreciation_amortisation,,DepreciationAmortizationAndAccretionNet,USD,2021-01-01,2021-12-31,7932000000,0000019617-24-000225,2023,FY,10-K,2024-02-16,CY2021
+C,depreciation_amortisation,,DepreciationAmortizationAndAccretionNet,USD,2022-01-01,2022-12-31,7051000000,0000019617-25-000270,2024,FY,10-K,2025-02-14,CY2022
+C,depreciation_amortisation,,DepreciationAmortizationAndAccretionNet,USD,2023-01-01,2023-12-31,7512000000,0001628280-26-008131,2025,FY,10-K,2026-02-13,CY2023
+C,depreciation_amortisation,,DepreciationAmortizationAndAccretionNet,USD,2024-01-01,2024-12-31,7938000000,0001628280-26-008131,2025,FY,10-K,2026-02-13,CY2024
+C,depreciation_amortisation,,DepreciationAmortizationAndAccretionNet,USD,2025-01-01,2025-12-31,8821000000,0001628280-26-008131,2025,FY,10-K,2026-02-13,CY2025
+C,operating_cash_flow,,NetCashProvidedByUsedInOperatingActivities,USD,2021-01-01,2021-12-31,78084000000,0000019617-24-000225,2023,FY,10-K,2024-02-16,CY2021
+C,operating_cash_flow,,NetCashProvidedByUsedInOperatingActivities,USD,2022-01-01,2022-12-31,107119000000,0000019617-25-000270,2024,FY,10-K,2025-02-14,CY2022
+C,operating_cash_flow,,NetCashProvidedByUsedInOperatingActivities,USD,2023-01-01,2023-12-31,12974000000,0001628280-26-008131,2025,FY,10-K,2026-02-13,CY2023
+C,operating_cash_flow,,NetCashProvidedByUsedInOperatingActivities,USD,2024-01-01,2024-12-31,-42012000000,0001628280-26-008131,2025,FY,10-K,2026-02-13,CY2024
+C,operating_cash_flow,,NetCashProvidedByUsedInOperatingActivities,USD,2025-01-01,2025-12-31,-147782000000,0001628280-26-008131,2025,FY,10-K,2026-02-13,CY2025
+C,equity,,StockholdersEquity,USD,,2021-12-31,294127000000,0000019617-24-000225,2023,FY,10-K,2024-02-16,CY2021Q4I
+C,equity,,StockholdersEquity,USD,,2022-12-31,292332000000,0000019617-25-000270,2024,FY,10-K,2025-02-14,CY2022Q4I
+C,equity,,StockholdersEquity,USD,,2023-12-31,327878000000,0001628280-26-008131,2025,FY,10-K,2026-02-13,CY2023Q4I
+C,equity,,StockholdersEquity,USD,,2024-12-31,344758000000,0001628280-26-008131,2025,FY,10-K,2026-02-13,CY2024Q4I
+C,equity,,StockholdersEquity,USD,,2025-12-31,362438000000,0001628280-26-054343,2026,Q2,10-Q,2026-08-06,CY2025Q4I
+C,,absent: no fact of this tag anywhere in the artifact,GrossProfit,,,,,,,,,,
+C,,absent: no fact of this tag anywhere in the artifact,OperatingIncomeLoss,,,,,,,,,,
+C,,absent: no fact of this tag anywhere in the artifact,PaymentsToAcquirePropertyPlantAndEquipment,,,,,,,,,,
+C,,absent: no fact of this tag anywhere in the artifact,MarketableSecuritiesCurrent,,,,,,,,,,
+C,,absent: no fact of this tag anywhere in the artifact,MarketableSecuritiesNoncurrent,,,,,,,,,,
+C,,absent: no fact of this tag anywhere in the artifact,LongTermDebtCurrent,,,,,,,,,,
+C,,absent: no fact of this tag anywhere in the artifact,LongTermDebtNoncurrent,,,,,,,,,,
+C,,the neighbour of a field the filer does not present,IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest,USD,2025-01-01,2025-12-31,72595000000,0001628280-26-008131,2025,FY,10-K,2026-02-13,CY2025
+C,,the neighbour of a field the filer does not present,CashAndDueFromBanks,USD,,2025-12-31,21742000000,0001628280-26-054343,2026,Q2,10-Q,2026-08-06,CY2025Q4I
+C,,the last fact of a tag the filer stopped using,CashAndCashEquivalentsAtCarryingValue,USD,,2018-12-31,278793000000,0000019617-19-000054,2018,FY,10-K,2019-02-26,CY2018Q4I
+C,,the last fact of a tag the filer stopped using,CommercialPaper,USD,,2017-09-30,24248000000,0000019617-17-000552,2017,Q3,10-Q,2017-11-01,CY2017Q3I
+C,,the last fact of a tag the filer stopped using,LongTermDebt,USD,,2014-06-30,269929000000,0000019617-14-000409,2014,Q2,10-Q,2014-08-04,CY2014Q2I
+C,,"not a field: the cover-page share count, present for a single-class filer",EntityCommonStockSharesOutstanding,shares,,2026-01-31,2697032375,0001628280-26-008131,2025,FY,10-K,2026-02-13,CY2025Q4I
+F10,,"net income on a proxy statement, rounded, filed after every 10-K",NetIncomeLoss,USD,2021-01-01,2021-12-31,48334000000,0000019617-24-000225,2023,FY,10-K,2024-02-16,
+F10,,"net income on a proxy statement, rounded, filed after every 10-K",NetIncomeLoss,USD,2021-01-01,2021-12-31,48300000000,0000019617-26-000096,,,DEF 14A,2026-04-06,CY2021
+F10,,"net income on a proxy statement, rounded, filed after every 10-K",NetIncomeLoss,USD,2022-01-01,2022-12-31,37676000000,0000019617-25-000270,2024,FY,10-K,2025-02-14,
+F10,,"net income on a proxy statement, rounded, filed after every 10-K",NetIncomeLoss,USD,2022-01-01,2022-12-31,37700000000,0000019617-26-000096,,,DEF 14A,2026-04-06,CY2022
+F10,,"net income on a proxy statement, rounded, filed after every 10-K",NetIncomeLoss,USD,2023-01-01,2023-12-31,49552000000,0001628280-26-008131,2025,FY,10-K,2026-02-13,
+F10,,"net income on a proxy statement, rounded, filed after every 10-K",NetIncomeLoss,USD,2023-01-01,2023-12-31,49600000000,0000019617-26-000096,,,DEF 14A,2026-04-06,CY2023
+F10,,"net income on a proxy statement, rounded, filed after every 10-K",NetIncomeLoss,USD,2024-01-01,2024-12-31,58471000000,0001628280-26-008131,2025,FY,10-K,2026-02-13,
+F10,,"net income on a proxy statement, rounded, filed after every 10-K",NetIncomeLoss,USD,2024-01-01,2024-12-31,58500000000,0000019617-26-000096,,,DEF 14A,2026-04-06,CY2024
+F10,,"net income on a proxy statement, rounded, filed after every 10-K",NetIncomeLoss,USD,2025-01-01,2025-12-31,57048000000,0001628280-26-008131,2025,FY,10-K,2026-02-13,
+F10,,"net income on a proxy statement, rounded, filed after every 10-K",NetIncomeLoss,USD,2025-01-01,2025-12-31,57000000000,0000019617-26-000096,,,DEF 14A,2026-04-06,CY2025

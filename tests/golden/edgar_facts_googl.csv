@@ -1,0 +1,78 @@
+section,field,note,tag,unit,start,end,val,accn,fy,fp,form,filed,frame
+B,revenue,,RevenueFromContractWithCustomerExcludingAssessedTax,USD,2021-01-01,2021-12-31,257637000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2021
+B,revenue,,RevenueFromContractWithCustomerExcludingAssessedTax,USD,2022-01-01,2022-12-31,282836000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2022
+B,revenue,,RevenueFromContractWithCustomerExcludingAssessedTax,USD,2023-01-01,2023-12-31,307394000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023
+B,revenue,,RevenueFromContractWithCustomerExcludingAssessedTax,USD,2024-01-01,2024-12-31,350018000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2024
+B,revenue,,Revenues,USD,2025-01-01,2025-12-31,402836000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2025
+B,operating_income,,OperatingIncomeLoss,USD,2021-01-01,2021-12-31,78714000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2021
+B,operating_income,,OperatingIncomeLoss,USD,2022-01-01,2022-12-31,74842000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2022
+B,operating_income,,OperatingIncomeLoss,USD,2023-01-01,2023-12-31,84293000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2023
+B,operating_income,,OperatingIncomeLoss,USD,2024-01-01,2024-12-31,112390000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024
+B,operating_income,,OperatingIncomeLoss,USD,2025-01-01,2025-12-31,129039000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2025
+B,effective_tax_rate,,EffectiveIncomeTaxRateContinuingOperations,pure,2021-01-01,2021-12-31,0.162,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2021
+B,effective_tax_rate,,EffectiveIncomeTaxRateContinuingOperations,pure,2022-01-01,2022-12-31,0.159,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2022
+B,effective_tax_rate,,EffectiveIncomeTaxRateContinuingOperations,pure,2023-01-01,2023-12-31,0.139,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2023
+B,effective_tax_rate,,EffectiveIncomeTaxRateContinuingOperations,pure,2024-01-01,2024-12-31,0.164,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024
+B,effective_tax_rate,,EffectiveIncomeTaxRateContinuingOperations,pure,2025-01-01,2025-12-31,0.168,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2025
+B,operating_cash_flow,,NetCashProvidedByUsedInOperatingActivities,USD,2021-01-01,2021-12-31,91652000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2021
+B,operating_cash_flow,,NetCashProvidedByUsedInOperatingActivities,USD,2022-01-01,2022-12-31,91495000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2022
+B,operating_cash_flow,,NetCashProvidedByUsedInOperatingActivities,USD,2023-01-01,2023-12-31,101746000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2023
+B,operating_cash_flow,,NetCashProvidedByUsedInOperatingActivities,USD,2024-01-01,2024-12-31,125299000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024
+B,operating_cash_flow,,NetCashProvidedByUsedInOperatingActivities,USD,2025-01-01,2025-12-31,164713000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2025
+B,capex,,PaymentsToAcquirePropertyPlantAndEquipment,USD,2021-01-01,2021-12-31,24640000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2021
+B,capex,,PaymentsToAcquirePropertyPlantAndEquipment,USD,2022-01-01,2022-12-31,31485000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2022
+B,capex,,PaymentsToAcquirePropertyPlantAndEquipment,USD,2023-01-01,2023-12-31,32251000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2023
+B,capex,,PaymentsToAcquirePropertyPlantAndEquipment,USD,2024-01-01,2024-12-31,52535000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024
+B,capex,,PaymentsToAcquirePropertyPlantAndEquipment,USD,2025-01-01,2025-12-31,91447000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2025
+B,equity,,StockholdersEquity,USD,,2021-12-31,251635000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2021Q4I
+B,equity,,StockholdersEquity,USD,,2022-12-31,256144000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2022Q4I
+B,equity,,StockholdersEquity,USD,,2023-12-31,283379000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2023Q4I
+B,equity,,StockholdersEquity,USD,,2024-12-31,325084000000,0001652044-26-000071,2026,Q2,10-Q,2026-07-23,CY2024Q4I
+B,equity,,StockholdersEquity,USD,,2025-12-31,415265000000,0001652044-26-000071,2026,Q2,10-Q,2026-07-23,CY2025Q4I
+B,cash,,CashAndCashEquivalentsAtCarryingValue,USD,,2021-12-31,20945000000,0001652044-23-000016,2022,FY,10-K,2023-02-03,CY2021Q4I
+B,cash,,CashAndCashEquivalentsAtCarryingValue,USD,,2022-12-31,21879000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2022Q4I
+B,cash,,CashAndCashEquivalentsAtCarryingValue,USD,,2023-12-31,24048000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
+B,cash,,CashAndCashEquivalentsAtCarryingValue,USD,,2024-12-31,23466000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024Q4I
+B,cash,,CashAndCashEquivalentsAtCarryingValue,USD,,2025-12-31,30708000000,0001652044-26-000071,2026,Q2,10-Q,2026-07-23,CY2025Q4I
+B,marketable_securities_current,,MarketableSecuritiesCurrent,USD,,2021-12-31,118704000000,0001652044-23-000016,2022,FY,10-K,2023-02-03,CY2021Q4I
+B,marketable_securities_current,,MarketableSecuritiesCurrent,USD,,2022-12-31,91883000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2022Q4I
+B,marketable_securities_current,,MarketableSecuritiesCurrent,USD,,2023-12-31,86868000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
+B,marketable_securities_current,,MarketableSecuritiesCurrent,USD,,2024-12-31,72191000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024Q4I
+B,marketable_securities_current,,MarketableSecuritiesCurrent,USD,,2025-12-31,96135000000,0001652044-26-000071,2026,Q2,10-Q,2026-07-23,CY2025Q4I
+B,marketable_securities_noncurrent,,MarketableSecuritiesNoncurrent,USD,,2021-12-31,1400000000,0001652044-23-000016,2022,FY,10-K,2023-02-03,CY2021Q4I
+B,marketable_securities_noncurrent,,MarketableSecuritiesNoncurrent,USD,,2022-12-31,803000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2022Q4I
+B,marketable_securities_noncurrent,,MarketableSecuritiesNoncurrent,USD,,2023-12-31,1400000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
+B,marketable_securities_noncurrent,,MarketableSecuritiesNoncurrent,USD,,2024-12-31,266000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024Q4I
+B,commercial_paper,,CommercialPaper,USD,,2021-12-31,0,0001652044-23-000016,2022,FY,10-K,2023-02-03,CY2021Q4I
+B,commercial_paper,,CommercialPaper,USD,,2022-12-31,0,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2022Q4I
+B,commercial_paper,,CommercialPaper,USD,,2023-12-31,0,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
+B,commercial_paper,,CommercialPaper,USD,,2024-12-31,2300000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024Q4I
+B,commercial_paper,,CommercialPaper,USD,,2025-12-31,0,0001652044-26-000071,2026,Q2,10-Q,2026-07-23,CY2025Q4I
+B,long_term_debt_current,,LongTermDebtCurrent,USD,,2021-12-31,0,0001652044-22-000019,2021,FY,10-K,2022-02-02,CY2021Q4I
+B,long_term_debt_current,,LongTermDebtCurrent,USD,,2022-12-31,0,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2022Q4I
+B,long_term_debt_current,,LongTermDebtCurrent,USD,,2023-12-31,1000000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
+B,long_term_debt_current,,LongTermDebtCurrent,USD,,2024-12-31,999000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024Q4I
+B,long_term_debt_current,,LongTermDebtCurrent,USD,,2025-12-31,1996000000,0001652044-26-000071,2026,Q2,10-Q,2026-07-23,CY2025Q4I
+B,long_term_debt_noncurrent,,LongTermDebtNoncurrent,USD,,2023-12-31,11870000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
+B,long_term_debt_noncurrent,,LongTermDebtNoncurrent,USD,,2024-12-31,10883000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024Q4I
+B,long_term_debt_noncurrent,,LongTermDebtNoncurrent,USD,,2025-12-31,46547000000,0001652044-26-000071,2026,Q2,10-Q,2026-07-23,CY2025Q4I
+B,,absent: no fact of this tag anywhere in the artifact,GrossProfit,,,,,,,,,,
+B,,absent: no fact of this tag anywhere in the artifact,DepreciationDepletionAndAmortization,,,,,,,,,,
+B,,absent: no fact of this tag anywhere in the artifact,DepreciationAmortizationAndAccretionNet,,,,,,,,,,
+B,,absent: no cover-page share count of any class in the artifact,EntityCommonStockSharesOutstanding,,,,,,,,,,
+B,,"not a field: the one share count in the artifact, one value per period and accession",CommonStockSharesOutstanding,shares,,2025-12-31,12088000000,0001652044-26-000071,2026,Q2,10-Q,2026-07-23,CY2025Q4I
+B,,"not a field: D33, a different measure from the carrying tags",LongTermDebt,USD,,2025-12-31,49085000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2025Q4I
+B,,"not a field: D33, a lease liability the block names no field for",FinanceLeaseLiability,USD,,2025-12-31,2500000000,0001652044-26-000071,2026,Q2,10-Q,2026-07-23,CY2025Q4I
+A,,D28: an instant at a quarter end beside the fiscal year end,StockholdersEquity,USD,,2025-06-30,362916000000,0001652044-26-000071,2026,Q2,10-Q,2026-07-23,CY2025Q2I
+F6,,"a three-month and a six-month fact under one tag, end and accession",OperatingIncomeLoss,USD,2025-01-01,2025-06-30,61877000000,0001652044-25-000062,2025,Q2,10-Q,2025-07-24,
+F6,,"a three-month and a six-month fact under one tag, end and accession",OperatingIncomeLoss,USD,2025-04-01,2025-06-30,31271000000,0001652044-25-000062,2025,Q2,10-Q,2025-07-24,
+F7,,"non-current finance leases moved out of the debt line in the FY2024 10-K, for FY2023 only",LongTermDebtAndCapitalLeaseObligations,USD,,2021-12-31,14817000000,0001652044-23-000016,2022,FY,10-K,2023-02-03,CY2021Q4I
+F7,,"non-current finance leases moved out of the debt line in the FY2024 10-K, for FY2023 only",LongTermDebtAndCapitalLeaseObligations,USD,,2022-12-31,14701000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2022Q4I
+F7,,"non-current finance leases moved out of the debt line in the FY2024 10-K, for FY2023 only",LongTermDebtAndCapitalLeaseObligations,USD,,2023-12-31,13253000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,
+F7,,"non-current finance leases moved out of the debt line in the FY2024 10-K, for FY2023 only",LongTermDebtAndCapitalLeaseObligations,USD,,2023-12-31,11870000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
+F7,,"non-current finance leases moved out of the debt line in the FY2024 10-K, for FY2023 only",LongTermDebtNoncurrent,USD,,2023-12-31,11870000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
+F7,,"non-current finance leases moved out of the debt line in the FY2024 10-K, for FY2023 only",FinanceLeaseLiabilityNoncurrent,USD,,2023-12-31,1383000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
+F8,,the neighbour of a field the filer does not present,CostOfRevenue,USD,2025-01-01,2025-12-31,162535000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2025
+F8,,the neighbour of a field the filer does not present,Depreciation,USD,2025-01-01,2025-12-31,21136000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2025
+F9,,the 2022 twenty-for-one split reaching the FY2021 count through a 10-Q,CommonStockSharesOutstanding,shares,,2021-12-31,662121000,0001652044-22-000019,2021,FY,10-K,2022-02-02,
+F9,,the 2022 twenty-for-one split reaching the FY2021 count through a 10-Q,CommonStockSharesOutstanding,shares,,2021-12-31,13242000000,0001652044-22-000071,2022,Q2,10-Q,2022-07-27,
