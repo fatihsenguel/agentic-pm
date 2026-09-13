@@ -14,14 +14,16 @@ prefix, the type table, the checks on each type's parameters. The loading
 is clauses.py, shared with the IPS. It computes nothing; the screen does
 that (screening.py), over the metrics quant/fundamentals.py computes.
 
-The type vocabulary is closed, three types: a statement; a metric_band,
-one named figure held to a floor, a ceiling or both over a stated number of
+The type vocabulary is closed, four types: a statement; a metric_band, one
+named figure held to a floor, a ceiling or both over a stated number of
 latest fiscal years; a margin_of_safety, the price against the low end of
-the valuation range less a discount. And every `metric` key is one
-quant/fundamentals.METRICS computes: a key nothing computes fails to load,
-so a philosophy that loads is one every numeric clause of which can be
-screened. The vocabulary grows one clause at a time, reference first, the
-way the IPS's does (ips.py's docstring has the order).
+the valuation range less a discount; an excluded_industry, the SIC codes of
+companies the philosophy does not screen at all (expected_values.md Part 10
+F). And every `metric` key is one quant/fundamentals.METRICS computes: a key
+nothing computes fails to load, so a philosophy that loads is one every
+numeric clause of which can be screened. The vocabulary grows one clause at
+a time, reference first, the way the IPS's does (ips.py's docstring has the
+order).
 """
 
 import re
@@ -47,9 +49,14 @@ CLAUSE_TYPES: Mapping[str, tuple] = MappingProxyType({
     STATEMENT: ((), ()),
     "metric_band": (("metric", "years"), ("min", "max")),
     "margin_of_safety": (("discount",), ()),
+    "excluded_industry": (("sic_codes",), ()),
 })
 
 _BOUNDS = ("min", "max")
+
+# A SIC code as EDGAR's submissions document carries it (expected_values.md
+# Part 13 C): a string of four digits, compared as written.
+_SIC_CODE = re.compile(r"^\d{4}$")
 
 
 class PhilosophyError(ClauseError):
@@ -81,6 +88,21 @@ def _validate_params(where: str, clause_type: str, params: Mapping[str, Any]) ->
                                       "limits are in the metric's own unit.")
         if "min" in params and "max" in params and params["min"] >= params["max"]:
             raise PhilosophyError(f"{where}: min {params['min']} is not below max {params['max']}.")
+
+    elif clause_type == "excluded_industry":
+        codes = params["sic_codes"]
+        if not isinstance(codes, list):
+            raise PhilosophyError(f"{where}: sic_codes = {codes!r} is not a list of codes.")
+        if not codes:
+            raise PhilosophyError(f"{where}: sic_codes needs at least one code; a clause that "
+                                  "excludes nothing is a statement.")
+        for code in codes:
+            if not isinstance(code, str) or not _SIC_CODE.match(code):
+                raise PhilosophyError(f"{where}: {code!r} is not a SIC code as EDGAR states one, "
+                                      "a string of four digits.")
+        repeated = sorted({c for c in codes if codes.count(c) > 1})
+        if repeated:
+            raise PhilosophyError(f"{where}: {', '.join(repeated)} listed twice.")
 
     elif clause_type == "margin_of_safety":
         discount = params["discount"]
