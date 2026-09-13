@@ -161,3 +161,93 @@ text = "Gross margin between 50% and 56%."
         ("min", "FY2023", "pass"),   # lowest year 0.55 against 0.50
         ("max", "FY2025", "fail"),   # highest year 0.58 against 0.56
     ]
+
+
+# --- Part 10 F: PHI-3.2, the industry exclusion -----------------------------------
+#
+# The committed philosophy.toml carries PHI-3.2 as a statement until the
+# commit that follows the screen's arm, so these checks load it with PHI-3.2
+# as Part 10 F writes it: excluded_industry over the seven listed codes.
+
+SIC_CODES = ["6021", "6022", "6035", "6036", "6211", "6311", "6331"]
+
+# Part 13 C's five resolved JPMorgan fields, USD millions except the tax
+# rate, dated by Part 13 F's own reports. Nothing any other clause reads.
+JPMORGAN_YEARS = {
+    "FY2021": {"ends": "2021-12-31", "filed": "2022-02-22", "revenue": 121_649.0,
+               "effective_tax_rate": 0.189, "depreciation_amortisation": 7_932.0,
+               "operating_cash_flow": 78_084.0, "equity": 294_127.0},
+    "FY2022": {"ends": "2022-12-31", "filed": "2023-02-21", "revenue": 128_695.0,
+               "effective_tax_rate": 0.184, "depreciation_amortisation": 7_051.0,
+               "operating_cash_flow": 107_119.0, "equity": 292_332.0},
+    "FY2023": {"ends": "2023-12-31", "filed": "2024-02-16", "revenue": 158_104.0,
+               "effective_tax_rate": 0.196, "depreciation_amortisation": 7_512.0,
+               "operating_cash_flow": 12_974.0, "equity": 327_878.0},
+    "FY2024": {"ends": "2024-12-31", "filed": "2025-02-14", "revenue": 177_556.0,
+               "effective_tax_rate": 0.221, "depreciation_amortisation": 7_938.0,
+               "operating_cash_flow": -42_012.0, "equity": 344_758.0},
+    "FY2025": {"ends": "2025-12-31", "filed": "2026-02-13", "revenue": 182_447.0,
+               "effective_tax_rate": 0.214, "depreciation_amortisation": 8_821.0,
+               "operating_cash_flow": -147_782.0, "equity": 362_438.0},
+}
+
+
+@pytest.fixture(scope="module")
+def excluding(tmp_path_factory):
+    from pathlib import Path
+    text = (Path(__file__).parent.parent / "philosophy.toml").read_text(encoding="utf-8")
+    before = 'id = "PHI-3.2"\ntype = "statement"\n'
+    assert text.count(before) == 1
+    codes = ", ".join(f'"{c}"' for c in SIC_CODES)
+    text = text.replace(before, f'id = "PHI-3.2"\ntype = "excluded_industry"\nsic_codes = [{codes}]\n')
+    path = tmp_path_factory.mktemp("philosophy") / "philosophy.toml"
+    path.write_text(text, encoding="utf-8")
+    return load_philosophy(str(path))
+
+
+def _exclusion(finding, status, sic, subject):
+    assert (finding.clause, finding.type, finding.status, finding.sic, finding.subject) == \
+        ("PHI-3.2", "excluded_industry", status, sic, subject)
+    assert finding.observed is None and finding.limit is None and finding.distance is None
+
+
+def test_a_bank_is_excluded_before_its_figures_are_read(screening, excluding):
+    """D34: JPMorgan's figures lack operating income, cash and debt, so a
+    check that read them first would stop on PHI-2.1. It reports one finding."""
+    block = figures(ticker="JPM", sic="6021", years={k: dict(v) for k, v in JPMORGAN_YEARS.items()})
+    out = screening.screen(excluding, block, AS_OF)
+    assert len(out) == 1
+    _exclusion(out[0], "excluded", "6021", "JPM")
+
+
+def test_a_broker_dealer_is_excluded(screening, excluding):
+    """Goldman Sachs, 6211. The block carries no years at all: nothing about
+    the company is read beyond its code."""
+    out = screening.screen(excluding, figures(ticker="GS", sic="6211", years={}), AS_OF)
+    assert len(out) == 1
+    _exclusion(out[0], "excluded", "6211", "GS")
+
+
+def test_an_insurance_broker_is_screened(screening, excluding):
+    out = screening.screen(excluding, figures(sic="6411"), AS_OF)
+    assert [f.clause for f in out] == ["PHI-2.1", "PHI-2.2", "PHI-3.1", "PHI-3.2", "PHI-4.1", "PHI-4.2"]
+    _exclusion(_by_clause(out)["PHI-3.2"], "pass", "6411", "GOOGL")
+
+
+def test_alphabet_passes_and_the_rest_stands(screening, excluding, findings):
+    """Section A's block with Alphabet's code, 7370: section D's five
+    findings unchanged, PHI-3.2 between PHI-3.1 and PHI-4.1, eleven statements."""
+    out = screening.screen(excluding, figures(sic="7370"), AS_OF)
+    assert [f.clause for f in out] == ["PHI-2.1", "PHI-2.2", "PHI-3.1", "PHI-3.2", "PHI-4.1", "PHI-4.2"]
+    _exclusion(_by_clause(out)["PHI-3.2"], "pass", "7370", "GOOGL")
+    assert [f for f in out if f.clause != "PHI-3.2"] == findings
+    assert len(excluding.statements) == 11
+
+
+@pytest.mark.parametrize("sic", [None, "", 6021, "602"])
+def test_no_code_no_check(screening, excluding, sic):
+    """D35: a block with no SIC code as EDGAR states one stops the check
+    naming PHI-3.2. A company is never assumed not to be a bank."""
+    block = figures() if sic is None else figures(sic=sic)
+    with pytest.raises(screening.ScreeningError, match="PHI-3.2.*SIC"):
+        screening.screen(excluding, block, AS_OF)
