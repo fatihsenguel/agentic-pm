@@ -678,9 +678,11 @@ arithmetic one. One filer is one witness, and that is the caveat this Part
 carries until a December year end and a bank are added.
 
 **The facts cited here are committed** as `tests/golden/edgar_facts_aapl.csv`,
-86 rows, extracted from that artifact: the 70 of section B and the 16
+91 rows, extracted from that artifact: the 70 of section B and the 16
 falsifier rows of section D, each with its `accn`, `fy`, `fp`, `form`, `filed`
-and `frame` as fetched. The 3.79 MB document is not committed. A reference
+and `frame` as fetched, and the five of section A's own annual reports, from
+the second pull. Section B's rows carry `A` in the csv's `section` column, a
+mislabel from when the file was written. The 3.79 MB document is not committed. A reference
 that needs a re-fetch to verify is not pinned.
 
 **The workbook's `Filings` sheet** carries the comparison: section E's eight
@@ -712,15 +714,29 @@ As of the pull date, the five most recent fiscal years Apple has filed are
 September 2026 and is not filed, so it is not a year — exactly the case Part
 10 E's third falsifier states in the synthetic.
 
-| Fiscal year | Ends | Days | Notes |
-|---|---|---|---|
-| FY2021 | 2021-09-25 | 364 | |
-| FY2022 | 2022-09-24 | 364 | |
-| FY2023 | 2023-09-30 | 371 | a 53-week year |
-| FY2024 | 2024-09-28 | 364 | |
-| FY2025 | 2025-09-27 | 364 | |
+| Fiscal year | Ends | Days | Own annual report | Filed | Notes |
+|---|---|---|---|---|---|
+| FY2021 | 2021-09-25 | 364 | 0000320193-21-000105 | 2021-10-29 | |
+| FY2022 | 2022-09-24 | 364 | 0000320193-22-000108 | 2022-10-28 | |
+| FY2023 | 2023-09-30 | 371 | 0000320193-23-000106 | 2023-11-03 | a 53-week year |
+| FY2024 | 2024-09-28 | 364 | 0000320193-24-000123 | 2024-11-01 | |
+| FY2025 | 2025-09-27 | 364 | 0000320193-25-000079 | 2025-10-31 | |
 
 The 53-week year is why D27's duration test is a range and not an equality.
+
+**Each year's own annual report**, added 2026-09-13 for D21. A year counts
+from the day its own report was filed, not from the `filed` date on the
+vintage section B cites: FY2021's revenue row cites the FY2023 10-K, filed
+2023-11-03, and a year dated by that would not have been a year until two
+years after it was reported. The own report is the earliest-filed 10-K or
+10-K/A carrying an annual figure that ends on the year's end date; the label
+is `FY` and that report's `fy`, and every one of the five matches the year it
+reports. All five are 10-Ks, and no filing of another form carried an annual
+figure for any of the five years before them. Read from a second pull of the
+same document on 2026-09-13, HTTP 200, 3.79 MB, 503 `us-gaap` tags and 25,135
+facts, 89 more than on 2026-09-11; every one of section B's 70 rows is still
+the latest vintage in it. One row per year, the revenue figure as that report
+filed it, is in the committed csv with section `Y`.
 
 ### B. The figures block the reader must return
 
