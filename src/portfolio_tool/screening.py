@@ -27,6 +27,16 @@ against a floor, observed - limit against a ceiling), in the metric's own
 unit. The margin of safety reads the price and the valuation range from the
 block on their as-of dates, both carried on the finding; the range is a
 pipeline's output (Order 4) and a typed figure until then.
+
+Part 10 F adds the industry exclusion:
+
+  D34  An excluded_industry clause is decided before any figure is read.
+  D35  The SIC code on the block decides it, as EDGAR states it: a string
+       of four digits. A listed code is one finding, status excluded, and
+       the screen returns it alone. An unlisted code is one finding, status
+       pass, in philosophy order, and the screen goes on. A block with no
+       code stops the check naming the clause: a company is never assumed
+       not to be a bank. Either finding carries the code and no arithmetic.
 """
 
 import datetime as dt
@@ -40,11 +50,15 @@ from portfolio_tool.quant.fundamentals import metrics_by_year, years_filed_by
 
 PASS = "pass"
 FAIL = "fail"
-STATUSES = (PASS, FAIL)
+EXCLUDED = "excluded"
+STATUSES = (PASS, FAIL, EXCLUDED)
+
+EXCLUDED_INDUSTRY = "excluded_industry"
 
 DISCOUNT_METRIC = "discount_to_range_low"
 
 _YEAR_LABEL = re.compile(r"^FY(\d{4})$")
+_SIC_CODE = re.compile(r"^\d{4}$")
 
 
 class ScreeningError(Exception):
@@ -59,22 +73,24 @@ class Finding:
     signed, positive = failure. `years_read` are the fiscal years the clause
     read and `deciding_year` the one whose figure decided it; both empty for
     the margin of safety, which reads a price and a range instead and
-    carries their as-of dates.
+    carries their as-of dates. An excluded_industry finding carries the
+    company's SIC code and no metric, bound or arithmetic.
     """
 
     clause: str
     type: str
     subject: str
-    metric: str
+    metric: Optional[str]
     years_read: Tuple[str, ...]
     deciding_year: Optional[str]
-    observed: float
-    limit: float
-    bound: str
+    observed: Optional[float]
+    limit: Optional[float]
+    bound: Optional[str]
     status: str
-    distance: float
+    distance: Optional[float]
     price_as_of: Optional[str] = None
     range_as_of: Optional[str] = None
+    sic: Optional[str] = None
 
 
 def _finding(clause: Clause, subject: str, metric: str, years: Tuple[str, ...],
@@ -100,18 +116,31 @@ def screen(philosophy: ClauseDocument, block: Mapping, as_of: dt.date) -> List[F
             count (D21) and which price and range are current
 
     Returns:
-        Findings, one per (clause, bound). Statements produce none.
+        Findings, one per (clause, bound), or the one excluded finding alone
+        when an excluded_industry clause lists the company's code (D34, D35).
+        Statements produce none.
     """
     subject = block.get("ticker")
     if not isinstance(subject, str) or not subject.strip():
         raise ScreeningError("The figures block names no ticker; a screen is of one company.")
+
+    # D34: every exclusion first, before a figure is read.
+    exclusions = {}
+    for clause in philosophy.checkable:
+        if clause.type == EXCLUDED_INDUSTRY:
+            finding = _excluded_industry(clause, subject, block)
+            if finding.status == EXCLUDED:
+                return [finding]
+            exclusions[clause.id] = finding
 
     years = years_filed_by(block, as_of)
     metrics = metrics_by_year(block)
 
     findings: List[Finding] = []
     for clause in philosophy.checkable:
-        if clause.type == "metric_band":
+        if clause.type == EXCLUDED_INDUSTRY:
+            findings.append(exclusions[clause.id])
+        elif clause.type == "metric_band":
             findings += _metric_band(clause, subject, years, metrics)
         elif clause.type == "margin_of_safety":
             findings.append(_margin_of_safety(clause, subject, block))
@@ -162,6 +191,22 @@ def _metric_band(clause: Clause, subject: str, years: List[str],
         out.append(_finding(clause, subject, metric, read, deciding, values[deciding],
                             clause.params["max"], "max"))
     return out
+
+
+def _excluded_industry(clause: Clause, subject: str, block: Mapping) -> Finding:
+    sic = block.get("sic")
+    if not isinstance(sic, str) or not _SIC_CODE.match(sic):
+        raise ScreeningError(
+            f"{clause.id}: the figures carry no SIC code as EDGAR states one ({sic!r}), "
+            "so the check cannot tell whether this clause excludes the company, and "
+            "does not assume it does not (D35)."
+        )
+    status = EXCLUDED if sic in clause.params["sic_codes"] else PASS
+    return Finding(
+        clause=clause.id, type=clause.type, subject=subject, metric=None, years_read=(),
+        deciding_year=None, observed=None, limit=None, bound=None, status=status,
+        distance=None, sic=sic,
+    )
 
 
 def _margin_of_safety(clause: Clause, subject: str, block: Mapping) -> Finding:
