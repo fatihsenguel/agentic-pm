@@ -172,6 +172,21 @@ class FiledFact(Base):
     def __repr__(self):
         return f"<FiledFact(cik={self.cik}, tag='{self.tag}', end={self.end}, accn='{self.accn}')>"
 
+class FiledFetchMetadata(Base):
+    """
+    The filings fetch's cache record, one row per company.
+
+    A company-facts document is the company's whole history, so the only fact
+    to keep is when it was last fetched: for the interval rule
+    (filings_fetch_interval_days in config.toml), and as the pull date an
+    answer states. Written only after a fetch has returned, so the time is
+    required, where fx_fetch_metadata's is filled after the row exists; a
+    fetch that fails leaves no record and is retried.
+    """
+    __tablename__ = 'filed_fetch_metadata'
+    cik = Column(Integer, primary_key=True, autoincrement=False)
+    last_fetch_time = Column(DateTime, nullable=False)
+
 class FxFetchMetadata(Base):
     """
     The rate fetch's cache record, one row per (base, quote).
