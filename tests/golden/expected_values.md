@@ -931,3 +931,279 @@ own reference row rather than arithmetic on the way into the block.
 PHI-3.1's key becomes `net_debt_to_ebitda_excluding_securities` and the like.
 D24 says a different formula is a different metric key, which argues for the
 definition living in the key's name rather than in a parameter.
+
+---
+
+## Part 13 — Two more filers: a December year end and a bank
+
+Recorded 2026-09-13 from four fetched documents, before any provider method
+exists. Part 12 took D26 to D33 on one filer and said so. This Part holds each
+of them against two more: which a second and third witness confirm, which they
+cannot exercise, and which they contradict, with the rows that show it. It is
+not a second figures table for the reader to reproduce; Part 12 B stays that.
+
+**Sources**, all from `data.sec.gov`, pulled 2026-09-13, each HTTP 200. Fact
+counts are across every namespace in the document.
+
+| Filer | CIK | Document | Size | Content |
+|---|---|---|---|---|
+| Alphabet Inc. | 1652044 | `api/xbrl/companyfacts/CIK0001652044.json` | 3.16 MB | 543 `us-gaap` tags, 20,907 facts |
+| Alphabet Inc. | 1652044 | `submissions/CIK0001652044.json` | 0.15 MB | the filer's record |
+| JPMorgan Chase & Co. | 19617 | `api/xbrl/companyfacts/CIK0000019617.json` | 7.94 MB | 918 `us-gaap` tags, 53,666 facts |
+| JPMorgan Chase & Co. | 19617 | `submissions/CIK0000019617.json` | 4.61 MB | the filer's record |
+
+**These two on purpose.** Alphabet is W-1 on the watchlist and closes its year
+on 31 December, so a calendar label happens to be right on every row: the
+opposite of Apple. JPMorgan is held in portfolio 3, it is the bank
+`excluded_industry` needs for its reference row, and its `assets` row carries
+an industry label that can be set beside what EDGAR states.
+
+**The facts cited here are committed** as `tests/golden/edgar_facts_googl.csv`
+(77 rows), `tests/golden/edgar_facts_jpm.csv` (48 rows) and
+`tests/golden/edgar_submissions.csv` (two rows), the first two in Part 12's
+columns, with `section` naming this Part's section or falsifier row set. A row
+whose note begins `absent` records a tag with no fact anywhere in its artifact.
+A stand-in built from the fixture lacks that tag either way, so the row records
+the claim and does not check it; the check is the neighbour rows, tags that are
+in the artifact and that a reader might reach for when a field's own tags yield
+nothing. The documents are not committed.
+
+**No workbook sheet.** Every row here is transcribed from one artifact and
+nothing has a second source by hand, so there is nothing for a sheet to
+compare. Part 12 gained its sheet when section E gave it a second column; this
+Part gets one on the same terms.
+
+### A. D26 to D33 against two more witnesses
+
+USD millions.
+
+| # | Alphabet | JPMorgan | Verdict |
+|---|---|---|---|
+| D26 | Annual `NetIncomeLoss` keyed on `fy`: 12 keys, all 12 collide, worst 6. On `(end, accn)`: 41 keys, none collide. | 18 keys, all collide, worst 6. On `(end, accn)`: 59 keys, none. | **Confirms** over annual durations and instants. **Contradicts as worded** over all durations: F6. |
+| D27 | 14 of 3,897 `fp: FY` duration facts are shorter than 120 days, 11 of them on 10-Ks. None is on a tag in Part 12 C. | 12 of 8,739, 9 on 10-Ks. None on a tag in Part 12 C. | **Confirms.** Cannot exercise on the block's tags. The 53-week range cannot be exercised: every annual period is 364 or 365 days. |
+| D28 | Instants at every quarter end: `StockholdersEquity` 362,916 at 2025-06-30, 415,265 at 2025-12-31. Year ends derived from the annual facts: 31 December, FY2020 to FY2025. | The same shape; year ends 31 December. | **Confirms** that instants are quarterly. **Cannot exercise** "derived, never assumed": a reader that assumes 31 December returns the same dates on both. Apple remains the only witness for that half. |
+| D29 | Latest filed cites a 10-Q (filed 2026-07-23) for FY2024 equity and for every FY2025 balance-sheet field. A split reaches FY2021's share count through a 10-Q: F9. | FY2025 equity cites a 10-Q (filed 2026-08-06). | **Confirms** that the form is not a filter among periodic reports. **Contradicts twice**: a proxy statement is the latest filing, F10; and latest filed does not keep a series comparable, F7. |
+| D30 | Revenue resolves from the first tag for FY2021 to FY2024 and the third for FY2025. `gross_profit` and `depreciation_amortisation` raise in every year, `long_term_debt_noncurrent` in FY2021 and FY2022, `marketable_securities_noncurrent` in FY2025. | Nine of fourteen fields raise in every year: section C. | **Confirms the rule**: every raise is true. **Contradicts its premise**, that the tags in one list measure one thing: F7, F8. |
+| D31 | `frame` on 9,205 of 20,907 facts, 44.0%. | 20,402 of 53,666, 38.0%. | **Confirms**, with one more reason: in F10 the frame sits on the proxy copy, the latest, as it sits on the latest copy in Part 12's F1 to F3, so a reader keyed on `frame` returns the proxy's figure. |
+| D32 | `EffectiveIncomeTaxRateContinuingOperations` in all five years, 0.139 to 0.168. | All five, 0.184 to 0.221. | **Confirms** the tag is filed. **Cannot exercise** the reason for keeping NOPAT's rate out of the block: neither series has a year like Apple's FY2024. |
+| D33 | `LongTermDebt` 49,085 at FY2025 against 1,996 + 46,547 = 48,543 from the carrying tags, commercial paper 0. | `CommercialPaper` last filed for 2017-09-30; `LongTermDebtCurrent` and `LongTermDebtNoncurrent` never. | **Confirms** that `LongTermDebt` is a different measure. **Cannot be implemented as written**: "a borrowing tag the block does not name is a raise" needs a stated list of what a borrowing tag is, and Alphabet's `FinanceLeaseLiability`, 2,500 at FY2025, is a case where the answer moves the figure. Cannot be exercised on the bank, and should not be. |
+
+### B. Alphabet, FY2021 to FY2025, read with Part 12 C's tags as written
+
+USD millions except the tax rate. Latest filed per D29. A cell reading
+**raises** is a year that no tag in the field's list yields. Each row's tag,
+`accn` and `filed` are in the committed csv.
+
+| Field | FY2021 | FY2022 | FY2023 | FY2024 | FY2025 |
+|---|---|---|---|---|---|
+| revenue | 257,637 | 282,836 | 307,394 | 350,018 | 402,836 |
+| gross_profit | **raises** | **raises** | **raises** | **raises** | **raises** |
+| operating_income | 78,714 | 74,842 | 84,293 | 112,390 | 129,039 |
+| effective_tax_rate | 0.162 | 0.159 | 0.139 | 0.164 | 0.168 |
+| depreciation_amortisation | **raises** | **raises** | **raises** | **raises** | **raises** |
+| operating_cash_flow | 91,652 | 91,495 | 101,746 | 125,299 | 164,713 |
+| capex | 24,640 | 31,485 | 32,251 | 52,535 | 91,447 |
+| equity | 251,635 | 256,144 | 283,379 | 325,084 | 415,265 |
+| cash | 20,945 | 21,879 | 24,048 | 23,466 | 30,708 |
+| marketable_securities_current | 118,704 | 91,883 | 86,868 | 72,191 | 96,135 |
+| marketable_securities_noncurrent | 1,400 | 803 | 1,400 | 266 | **raises** |
+| commercial_paper | 0 | 0 | 0 | 2,300 | 0 |
+| long_term_debt_current | 0 | 0 | 1,000 | 999 | 1,996 |
+| long_term_debt_noncurrent | **raises** | **raises** | 11,870 | 10,883 | 46,547 |
+
+**Revenue changes tag in the other direction.** Alphabet tags
+`RevenueFromContractWithCustomerExcludingAssessedTax` through FY2024 and
+`Revenues` on the FY2025 10-K; where both exist, in FY2021, FY2023 and FY2024,
+they agree to the dollar. Part 12 C calls its order newest-tag-first. For
+Alphabet the newest tag is last in the list. No value moves; the sentence
+describes Apple's history, not a property of the order.
+
+**What the raises are.** Three kinds, which D30 treats alike:
+
+- **A subtotal the filer does not present.** No `GrossProfit` fact exists in
+  the artifact in any year; `CostOfRevenue` does, 162,535 at FY2025. A gross
+  profit for Alphabet is revenue less cost of revenue: arithmetic on the way
+  into the block, the shape D33 refuses for debt, or a different formula for
+  `gross_margin`, which D24 says is a different metric key. The only
+  depreciation or amortisation expense tag with annual facts in FY2021 to
+  FY2025 is `Depreciation`, 21,136 at FY2025, which names no amortisation;
+  putting it in the list would change what EBITDA means for this filer alone.
+  F8.
+- **A wider measure under an older tag.** `long_term_debt_noncurrent` for
+  FY2021 and FY2022. F7.
+- **A field nothing reads.** Alphabet filed no `MarketableSecuritiesNoncurrent`
+  at 2025-12-31. Under Part 12 F's decision A no metric nets securities, so
+  this raise stops a check over a field no formula uses.
+
+So on the watchlist's own first candidate a reader built to Part 12 stops the
+philosophy check at PHI-1.2, and any one of three clauses would stop it: return
+on invested capital needs FY2021's debt, gross margin needs gross profit, net
+debt to EBITDA needs D&A. That is D25 working, and it is not the answer case
+4.1 is written for.
+
+**Shares outstanding, and whether it is a sum.** Not in this artifact, and the
+arithmetic the question points at moves rather than disappears.
+
+- **No per-class share count is in the artifact.** The cover-page count,
+  `dei:EntityCommonStockSharesOutstanding`, has no fact at all for Alphabet;
+  JPMorgan's artifact, one class, carries it (2,697,032,375 at 2026-01-31).
+  Every instant in Alphabet's artifact is unique on `(tag, end, accn)`, so no
+  class-level values sit under one key waiting to be added.
+- **The one count present is the filer's own.** `CommonStockSharesOutstanding`,
+  one value per period and accession: 12,088,000,000 at 2025-12-31. Reading it
+  is not arithmetic. Whether it equals the classes added up cannot be checked
+  from this artifact; that is a reading of the filing, which is on
+  `www.sec.gov`, the host that refuses a generic User-Agent.
+- **The arithmetic reappears in the metric.** `free_cash_flow_yield` divides by
+  price times shares outstanding, one price against one count. The submissions
+  document lists four tickers under Alphabet's one CIK, and neither document
+  says which ticker is which class or how many shares each has. Part 10 B's
+  formula assumes one class. That is D24's question about the metric key, not
+  the reader's.
+- **The count moves with a split**, F9. Latest filed returns the split-adjusted
+  count, the convention D19 fixed for closes.
+- **Also not decided**: the year-end count or the cover-page count, each
+  against a price of a later date. Part 12 carries no shares field.
+
+### C. JPMorgan: the SIC code, the label, and a block that mostly raises
+
+**What EDGAR states.** In the submissions document: `sic` "6021",
+`sicDescription` "National Commercial Banks", `ownerOrg` "02 Finance",
+`entityType` "operating", `fiscalYearEnd` "1231". Alphabet's, for contrast:
+"7370", "Services-Computer Programming, Data Processing, Etc.", "06
+Technology". The SIC code is in the submissions document and not in
+companyfacts, so it is a second fetch. The document carries the current code
+only, with no date and no history, where it does carry a dated history of the
+filer's names, four entries since 1994. A SIC code is therefore as of the pull
+date, and a reference row that cites one cites the pull date.
+
+**Where the label in the database comes from.** `assets` row 12 reads sector
+"Financials", industry "Banks". It was written by
+`src/portfolio_tool/scripts/seed_portfolio.py`, line 90, typed by hand with the
+rest of the synthetic seed. `DataManager.force_update_asset_info` overwrites it
+with the price provider's label, reached from `scripts/update_all_assets.py`
+and from `tools/data_tools.py`, which nothing in the agent package imports;
+`DataManager._get_or_create_asset` writes the provider's label when a row is
+first created, including from `data_agent.py`. `assets` has no source column,
+so a row cannot say which writer last set it, and only a held or queried
+company has a row. Read from the code, not run.
+
+So the label has no filed source and no date, and its vocabulary is a price
+vendor's or the seed's. The SIC code has a filed source and a pull date, and
+exists for every filer, held or not. Decision 28 put the SIC code on the block;
+this is the measurement under it.
+
+**The block.** Part 12 C's tags against JPMorgan. USD millions except the tax
+rate.
+
+| Field | FY2021 | FY2022 | FY2023 | FY2024 | FY2025 | Resolved from |
+|---|---|---|---|---|---|---|
+| revenue | 121,649 | 128,695 | 158,104 | 177,556 | 182,447 | `Revenues`, the third tag; equal in every year to `RevenuesNetOfInterestExpense` |
+| effective_tax_rate | 0.189 | 0.184 | 0.196 | 0.221 | 0.214 | `EffectiveIncomeTaxRateContinuingOperations` |
+| depreciation_amortisation | 7,932 | 7,051 | 7,512 | 7,938 | 8,821 | `DepreciationAmortizationAndAccretionNet`, the second tag |
+| operating_cash_flow | 78,084 | 107,119 | 12,974 | -42,012 | -147,782 | `NetCashProvidedByUsedInOperatingActivities` |
+| equity | 294,127 | 292,332 | 327,878 | 344,758 | 362,438 | `StockholdersEquity` |
+
+**Raises in every year**, no fact of the tag anywhere in the artifact:
+`gross_profit`, `operating_income`, `capex`, `marketable_securities_current`,
+`marketable_securities_noncurrent`, `long_term_debt_current`,
+`long_term_debt_noncurrent`. **Raises in every year**, the tag last used long
+before the window: `cash` (`CashAndCashEquivalentsAtCarryingValue`, last at
+2018-12-31) and `commercial_paper` (last at 2017-09-30).
+
+**Whether that is D30 working, or D30 needing a bank rule: working.** Every
+raise is true: JPMorgan files no gross profit, no operating income and no
+capital expenditure under those tags, and has not used the cash or commercial
+paper tags since 2018 and 2017. A bank rule inside D30 would have to put
+something in those cells, pre-tax income (72,595 at FY2025) for operating
+income or `CashAndDueFromBanks` (21,742) for cash, which is a figure nobody
+filed under that name and the reader answering PHI-3.2's question by itself.
+The five fields that do resolve are the warning: revenue net of interest
+expense, a tax rate, D&A with accretion, an operating cash flow of minus
+147,782 and equity all reach the block with nothing wrong in their provenance,
+and none means for a bank what the metrics assume.
+
+**What it shows instead is an order.** D25 stops the whole check at the first
+missing figure and names it. A bank read figures-first reaches the answer as
+PHI-1.2, gross margin not in the figures: a true refusal citing the wrong
+clause, where case 4.6 asks for PHI-3.2. The exclusion is decidable from the
+submissions document before any year is read, and nothing in D26 to D33 says
+which comes first.
+
+### D. Falsifier rows
+
+Numbered on from Part 12's. Each is in the committed csv with its full
+provenance.
+
+**F6 — two facts under one `(tag, end, accn)` (D26).** `OperatingIncomeLoss` on
+Alphabet's 10-Q 0001652044-25-000062, both ending 2025-06-30: 61,877 million
+from 2025-01-01 and 31,271 million from 2025-04-01. A 10-Q carries the quarter
+and the year to date. Over every duration fact, `(tag, end, accn)` collides on
+2,048 keys on Alphabet and 6,098 on JPMorgan; with `start` added, on none. Over
+annual durations and instants it collides on neither, with or without the unit.
+So D26 holds for the rows the reader keeps, and only because D27's period test
+runs first; as the identity of a fact it needs `start`. Part 12 measured D26 on
+annual `NetIncomeLoss`, where the difference cannot show.
+
+**F7 — a re-presentation that reaches back one year (D29, D30).** Alphabet's
+non-current debt at 2023-12-31 is **13,253 million** under
+`LongTermDebtAndCapitalLeaseObligations` on the FY2023 10-K, and **11,870** on
+the FY2024 10-K under that tag and under `LongTermDebtNoncurrent`. The
+difference, 1,383, is `FinanceLeaseLiabilityNoncurrent` at the same date on the
+same filing. FY2021 (14,817) and FY2022 (14,701) exist only under the older tag
+and were never re-presented, because a balance sheet carries one comparative
+year. For D30: the older tag is not the newer one renamed but a wider measure,
+so listing it under `long_term_debt_noncurrent` would join lease-inclusive and
+lease-exclusive years into one series without a raise. A list is safe only for
+tags that measure the same thing, which Part 12 did not need to say because
+Apple's revenue tags do. For D29: "a five-year series built from originals
+mixes pre- and post-restatement figures" is true and not sufficient; a series
+built from latest filed mixes them too, as far back as no comparative column
+reached.
+
+**F8 — the neighbour of a field the filer does not present (D30).** Alphabet at
+FY2025: `CostOfRevenue` 162,535 and `Depreciation` 21,136 are in the artifact;
+`GrossProfit`, `DepreciationDepletionAndAmortization` and
+`DepreciationAmortizationAndAccretionNet` are not, in any year. A reader that
+falls back to the neighbour returns a gross profit nobody filed or an EBITDA
+with no amortisation in it, and passes a test that only asks for a number.
+
+**F9 — a split reaching back through a 10-Q (D29).** Alphabet's
+`CommonStockSharesOutstanding` at 2021-12-31: **662,121,000** on the FY2021
+10-K, filed 2022-02-02, and **13,242,000,000** on the 10-Q filed 2022-07-27,
+after the split `StockholdersEquityNoteStockSplitConversionRatio1` records as
+20 at 2022-07-15. A reader that keeps the original, or selects on 10-K, returns
+a count twenty times too small against any price quoted after the split.
+
+**F10 — a proxy statement is the latest filing (D29, D31).** JPMorgan's
+`NetIncomeLoss` for each of FY2021 to FY2025 is on its 2026 proxy statement
+(DEF 14A, 0000019617-26-000096, filed 2026-04-06), rounded to the hundred
+million: **48,300** against the 10-K's 48,334; 37,700 against 37,676; 49,600
+against 49,552; 58,500 against 58,471; **57,000** against 57,048. The proxy
+rows carry no `fy` and no `fp`, and they carry the `frame` the 10-K copies do
+not. Latest filed, whatever form carried it, returns the proxy's figure for all
+five years; a reader keyed on `frame` does the same; a check that reads a
+changed figure as a restatement, PHI-5.2's shape, finds five. Alphabet's proxy
+carries the same tag for the same years equal to the dollar, so "take the later
+filing only where it differs" passes Alphabet and fails JPMorgan. Net income is
+not a field in Part 12 B, so no figure there moves; what F10 contradicts is
+D29's rule.
+
+### E. What this Part leaves open
+
+Questions the rows above raise and D26 to D33 do not answer. None is decided
+here.
+
+1. D26's wording, which F6 shows needs `start`, or says which rows it keys.
+2. Which forms count as filing a figure, since D29 excludes none and F10 shows
+   one that has to be.
+3. When a tag belongs in a field's list (F7, F8).
+4. `gross_margin` and `net_debt_to_ebitda` for a filer that presents no gross
+   profit and no combined D&A: D24's question about the metric keys. Until it
+   is answered W-1 cannot be screened on PHI-2.2 or PHI-3.1.
+5. What a borrowing tag is for D33's raise, and whether a finance lease is one.
+6. The two `marketable_securities` fields in Part 12 B, which no metric reads
+   under Part 12 F's decision A.
+7. `shares_outstanding`: which count, and `free_cash_flow_yield` for a filer
+   with more than one class.
+8. Whether an industry exclusion is decided before the years are read.
