@@ -34,6 +34,15 @@ discount = 0.25
 text = "I pay at most the low end of my valuation range less a 25% discount."
 '''
 
+EXCLUSION = '''
+[[clause]]
+id = "PHI-3.2"
+type = "excluded_industry"
+topics = ["banks", "insurers"]
+sic_codes = ["6021", "6022", "6035", "6036", "6211", "6311", "6331"]
+text = "A company whose SIC code is one of the codes this clause lists is not screened."
+'''
+
 
 @pytest.fixture(scope="module")
 def philosophy():
@@ -56,6 +65,14 @@ def test_inline_good_loads(philosophy, tmp_path):
 def test_margin_of_safety_loads(philosophy, tmp_path):
     doc = philosophy.load_philosophy(_write(tmp_path, SAFETY))
     assert dict(doc["PHI-4.1"].params) == {"discount": 0.25}
+
+
+def test_excluded_industry_loads(philosophy, tmp_path):
+    """expected_values.md Part 10 F: the codes as EDGAR sends them, strings
+    of four digits, in the order written."""
+    doc = philosophy.load_philosophy(_write(tmp_path, EXCLUSION))
+    assert dict(doc["PHI-3.2"].params) == {
+        "sic_codes": ["6021", "6022", "6035", "6036", "6211", "6311", "6331"]}
 
 
 def test_a_relative_path_is_anchored_to_the_project_root(philosophy, tmp_path, monkeypatch):
@@ -81,7 +98,8 @@ def test_the_error_is_a_clause_error(philosophy):
 
 
 def test_the_type_vocabulary(philosophy):
-    assert set(philosophy.CLAUSE_TYPES) == {"statement", "metric_band", "margin_of_safety"}
+    assert set(philosophy.CLAUSE_TYPES) == {"statement", "metric_band", "margin_of_safety",
+                                            "excluded_industry"}
 
 
 @pytest.mark.parametrize("body, message", [
@@ -104,6 +122,15 @@ def test_the_type_vocabulary(philosophy):
     (SAFETY.replace("discount = 0.25", "discount = 0"), "fraction in \\(0, 1\\)"),
     (SAFETY.replace("discount = 0.25\n", ""), "needs \\['discount'\\]"),
     (SAFETY.replace("discount = 0.25", "discount = 0.25\nyears = 1"), "does not take"),
+    (EXCLUSION.replace('sic_codes = ["6021", "6022", "6035", "6036", "6211", "6311", "6331"]\n', ""),
+     "needs \\['sic_codes'\\]"),
+    (EXCLUSION.replace('["6021", "6022", "6035", "6036", "6211", "6311", "6331"]', "[]"), "at least one"),
+    (EXCLUSION.replace('["6021", "6022", "6035", "6036", "6211", "6311", "6331"]', '"6021"'), "a list"),
+    (EXCLUSION.replace('"6021", "6022"', '6021, "6022"'), "four digits"),
+    (EXCLUSION.replace('"6021", "6022"', '"602", "6022"'), "four digits"),
+    (EXCLUSION.replace('"6021", "6022"', '"60A1", "6022"'), "four digits"),
+    (EXCLUSION.replace('"6021", "6022"', '"6021", "6021"'), "twice"),
+    (EXCLUSION.replace('"6331"]', '"6331"]\nyears = 1'), "does not take"),
     (GOOD + GOOD, "appears twice"),
     (GOOD.replace('"PHI-2.1"', '"P-2.1"'), "does not match PHI-<section>"),
     (GOOD.replace('"PHI-2.1"', '"IPS-2.1"'), "does not match PHI-<section>"),
