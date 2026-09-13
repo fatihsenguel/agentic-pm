@@ -4,7 +4,7 @@ import os
 
 import enum
 
-from sqlalchemy import create_engine, Column, Integer, String, Float, Date, DateTime, ForeignKey, UniqueConstraint, BigInteger, Enum, Boolean, JSON, Index
+from sqlalchemy import create_engine, Column, Integer, String, Float, Date, DateTime, ForeignKey, UniqueConstraint, BigInteger, Enum, Boolean, JSON, Index, Text, text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker, Session
 import datetime
@@ -126,6 +126,51 @@ class FxRate(Base):
 
     def __repr__(self):
         return f"<FxRate({self.base}/{self.quote} {self.date}: {self.rate})>"
+
+class FiledFact(Base):
+    """
+    One figure as a filer filed it, in one filing (expected_values.md Parts 12
+    and 13): the EDGAR provider's record as stored.
+
+    `value` is text holding exactly the digits EDGAR sent; SQLite has no exact
+    decimal type and a float returns 0.241 as 0.24099999... The reader turns
+    it into a Decimal. `start` is empty for an instant; `fy`, `fp` and `frame`
+    are the filing's labels, provenance and never a key (D26, D31), and empty
+    where EDGAR leaves them empty. Everything else is required and nothing is
+    defaulted: a figure with no filing, no date or no source is a claim nobody
+    made.
+
+    The company is its EDGAR number, not an assets row: a watchlist company
+    is not held. The key is D26's (tag, start, end, accn) per company, as two
+    partial unique indexes, because SQLite never counts two empty `start`
+    values as equal inside a unique constraint and a plain one would store an
+    instant twice. A restatement is a second row under a new accession;
+    nothing is overwritten.
+    """
+    __tablename__ = 'filed_facts'
+    id = Column(Integer, primary_key=True)
+    cik = Column(Integer, nullable=False)
+    tag = Column(String(200), nullable=False)
+    unit = Column(String(20), nullable=False)
+    start = Column(Date, nullable=True)
+    end = Column(Date, nullable=False)
+    value = Column(Text, nullable=False)
+    accn = Column(String(20), nullable=False)
+    fy = Column(Integer, nullable=True)
+    fp = Column(String(2), nullable=True)
+    form = Column(String(10), nullable=False)
+    filed = Column(Date, nullable=False)
+    frame = Column(String(20), nullable=True)
+    source = Column(String(50), nullable=False)
+    __table_args__ = (
+        Index('_filed_fact_instant_uc', 'cik', 'tag', 'end', 'accn',
+              unique=True, sqlite_where=text('start IS NULL')),
+        Index('_filed_fact_duration_uc', 'cik', 'tag', 'start', 'end', 'accn',
+              unique=True, sqlite_where=text('start IS NOT NULL')),
+    )
+
+    def __repr__(self):
+        return f"<FiledFact(cik={self.cik}, tag='{self.tag}', end={self.end}, accn='{self.accn}')>"
 
 class FxFetchMetadata(Base):
     """
