@@ -10,7 +10,9 @@
 #
 # Types: statement (citable, not computed), metric_band (one named figure
 # held to min and/or max over `years` fiscal years), margin_of_safety (price
-# at most the low end of the valuation range less `discount`). Every `metric`
+# at most the low end of the valuation range less `discount`),
+# excluded_industry (a company whose SIC code, a string of four digits as
+# EDGAR states it, is in `sic_codes` is not screened at all). Every `metric`
 # key names one figure a pipeline will compute with a hand-computed
 # reference first (DIRECTION.md Order 4); until then these are words in a
 # file and nothing reads them. A key nothing computes will fail to load.
@@ -68,9 +70,10 @@ text = """Net debt of at most 2.0 times EBITDA in the latest fiscal year."""
 
 [[clause]]
 id = "PHI-3.2"
-type = "statement"
+type = "excluded_industry"
 topics = ["balance sheet", "banks", "insurers", "financials"]
-text = """Banks and insurers are not screened by this section; their balance sheet is their business. I do not own them until this document has clauses for them."""
+sic_codes = ["6021", "6022", "6035", "6036", "6211", "6311", "6331"]
+text = """A company whose SIC code, as EDGAR states it, is one of the codes this clause lists is not screened by this document: the balance sheet of a bank or an insurer is its business, and the figures the other clauses read do not describe it. The codes are 6021 and 6022, commercial banks; 6035 and 6036, savings institutions; 6211, security brokers and dealers; 6311, life insurers; and 6331, fire, marine and casualty insurers. The check reports the company as excluded under this clause and reports nothing else about it. I do not own them until this document has clauses for them."""
 
 [[clause]]
 id = "PHI-4.1"
