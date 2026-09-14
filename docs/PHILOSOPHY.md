@@ -50,9 +50,14 @@ write that paragraph the company is not a candidate, whatever its figures.
 
 **PHI-3.1** Net debt of at most 2.0 times EBITDA in the latest fiscal year.
 
-**PHI-3.2** Banks and insurers are not screened by this section; their
-balance sheet is their business. I do not own them until this document has
-clauses for them.
+**PHI-3.2** A company whose SIC code, as EDGAR states it, is one of the codes
+this clause lists is not screened by this document: the balance sheet of a
+bank or an insurer is its business, and the figures the other clauses read
+do not describe it. The codes are 6021 and 6022, commercial banks; 6035 and
+6036, savings institutions; 6211, security brokers and dealers; 6311, life
+insurers; and 6331, fire, marine and casualty insurers. The check reports the
+company as excluded under this clause and reports nothing else about it. I do
+not own them until this document has clauses for them.
 
 ## 4. Price against value
 
