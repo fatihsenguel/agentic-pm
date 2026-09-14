@@ -1,7 +1,7 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** begun 13 September 2026, ended 14 September (sixteenth session). Regenerated at its end.
-**Branch:** `selection`, at the commit that lands this file (the one after `f4713d0`). **`baseline-v1` is at 20160b0.** No fetch was made this session; at the fifteenth session's fetch `origin/baseline-v1` and `origin/selection` were both at 20160b0, and a remote-tracking ref that old is not evidence of what the remote holds now. Local `selection` is 65 commits ahead of the baseline with this file, 34 of them this session's, and **none is pushed**. It has no upstream configured, and `origin`'s push URL is `no_push`: the owner pushes, from elsewhere or by naming the URL.
+**Branch:** `selection`, at the commit that lands this file (the one after `f4713d0`). **`baseline-v1` is at 20160b0.** Local `selection` is 65 commits ahead of the baseline with this file, 34 of them this session's. **Pushed by the owner on 14 September**: `origin/selection` went from 20160b0 to d9b5954, this file's commit, confirmed by a fetch; commits after d9b5954 are not pushed. It has no upstream configured, and `origin`'s push URL is `no_push`: the owner pushes, from elsewhere or by naming the URL.
 
 **State:** pytest **918 passed, 6 xfailed**, up from 747. The golden set and the runner were **not run**: nothing in routing, prompts or answer text changed, and both last ran clean in the fifteenth session. One CLI run of three prompts on 13 September, after `config.py` and `database_setup.py` changed, each answer as expected. Commit count: `git rev-list --count baseline-v1..HEAD` — 65.
 
@@ -163,7 +163,7 @@ which is correct until the research node exists.
 
 ### Branches and tags
 
-`selection` is the working branch, 65 ahead of the baseline, unpushed.
+`selection` is the working branch, 65 ahead of the baseline, pushed at d9b5954.
 `baseline-v1` sits at 20160b0. `compliance` and `vocabulary` are fully merged
 into `baseline-v1`. `wip/phase7-snapshot` holds rejected Compliance/IPS code.
 `wip/rag-early` and tag `rag-early-parked` hold the deleted RAG code.
