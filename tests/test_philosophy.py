@@ -23,15 +23,18 @@ DOCUMENT = ROOT / "docs" / "PHILOSOPHY.md"
 DOC_CLAUSE = re.compile(r"\*\*(PHI-\d+\.\d+)\*\*\s+(.*?)(?:\n\s*\n|\Z)", re.S)
 
 # docs/PHILOSOPHY.md sections 2 to 4, in each metric's own unit: shares as
-# fractions, a ratio as a ratio.
+# fractions, a ratio as a ratio. PHI-3.2's SIC codes as the clause lists
+# them, strings as EDGAR states them.
 CHECKABLE = {
     "PHI-2.1": ("metric_band", {"metric": "return_on_invested_capital", "min": 0.12, "years": 5}),
     "PHI-2.2": ("metric_band", {"metric": "gross_margin", "min": 0.35, "years": 3}),
     "PHI-3.1": ("metric_band", {"metric": "net_debt_to_ebitda", "max": 2.0, "years": 1}),
+    "PHI-3.2": ("excluded_industry",
+                {"sic_codes": ["6021", "6022", "6035", "6036", "6211", "6311", "6331"]}),
     "PHI-4.1": ("margin_of_safety", {"discount": 0.25}),
     "PHI-4.2": ("metric_band", {"metric": "free_cash_flow_yield", "min": 0.04, "years": 1}),
 }
-STATEMENTS = {"PHI-1.1", "PHI-1.2", "PHI-2.3", "PHI-3.2", "PHI-4.3",
+STATEMENTS = {"PHI-1.1", "PHI-1.2", "PHI-2.3", "PHI-4.3",
               "PHI-5.1", "PHI-5.2", "PHI-6.1", "PHI-6.2", "PHI-6.3",
               "PHI-7.1", "PHI-7.2"}
 

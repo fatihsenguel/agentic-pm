@@ -1,5 +1,5 @@
 """
-The screen held to tests/golden/expected_values.md Part 10 D and E.
+The screen held to tests/golden/expected_values.md Part 10 D, E and F.
 
 Every expected figure here is copied from Part 10, computed by hand before
 the screen existed. If a test fails, the screen or the reference is wrong
@@ -7,7 +7,8 @@ and that gets resolved deliberately. Do NOT update these figures to match
 code output.
 
 The fixture is the figures block of test_fundamentals.py, typed from Part
-10 A, and the committed philosophy. The screen reads the metrics
+10 A, with Alphabet's SIC code 7370 from Part 13 C, and the committed
+philosophy. The screen reads the metrics
 quant/fundamentals.py computes and subtracts once per finding.
 """
 
@@ -32,7 +33,13 @@ def philosophy():
 
 @pytest.fixture(scope="module")
 def findings(screening, philosophy):
-    return screening.screen(philosophy, figures(), AS_OF)
+    return screening.screen(philosophy, alphabet(), AS_OF)
+
+
+def alphabet(**overrides):
+    """Part 10 A's block with Alphabet's SIC code (Part 10 F): without a code
+    the check stops on PHI-3.2 before any other clause."""
+    return figures(sic="7370", **overrides)
 
 
 def _by_clause(findings):
@@ -41,9 +48,9 @@ def _by_clause(findings):
 
 # --- Part 10 D --------------------------------------------------------------
 
-def test_one_finding_per_numeric_clause_in_policy_order(findings, philosophy):
+def test_one_finding_per_checkable_clause_in_policy_order(findings, philosophy):
     assert [f.clause for f in findings] == [c.id for c in philosophy.checkable]
-    assert len(findings) == 5
+    assert len(findings) == 6
     assert all(f.subject == "GOOGL" for f in findings)
 
 
@@ -73,8 +80,9 @@ def test_findings_to_the_reference(findings, clause, metric, years, deciding, ob
 
 def test_distances_reconcile(findings):
     """Signed so that positive is a failure: limit - observed against a
-    floor, observed - limit against a ceiling; status agrees with the sign."""
-    for f in findings:
+    floor, observed - limit against a ceiling; status agrees with the sign.
+    PHI-3.2's finding carries no arithmetic and is not one of these."""
+    for f in (g for g in findings if g.distance is not None):
         signed = (f.limit - f.observed) if f.bound == "min" else (f.observed - f.limit)
         assert f.distance == pytest.approx(signed, abs=1e-12), f.clause
         assert (f.status == "fail") == (signed > 0), f.clause
@@ -89,7 +97,7 @@ def test_the_margin_of_safety_carries_both_as_of_dates(findings):
 
 def test_statements_produce_nothing(findings, philosophy):
     assert not {f.clause for f in findings} & {c.id for c in philosophy.statements}
-    assert len(philosophy.statements) == 12
+    assert len(philosophy.statements) == 11
 
 
 # --- Part 10 E --------------------------------------------------------------
@@ -97,7 +105,7 @@ def test_statements_produce_nothing(findings, philosophy):
 def test_exactly_at_the_limit_passes(screening, philosophy):
     """D23: 2.0 times EBITDA against a ceiling of 2.0, and a floor met
     exactly (free cash flow 27,360 on 684,000 is 0.04)."""
-    block = figures()
+    block = alphabet()
     block["years"]["FY2025"].update({"debt": 120_000.0, "cash": 16_000.0, "operating_cash_flow": 49_360.0})
     by = _by_clause(screening.screen(philosophy, block, AS_OF))
     assert by["PHI-3.1"].observed == 2.0 and by["PHI-3.1"].status == "pass" and by["PHI-3.1"].distance == 0.0
@@ -107,7 +115,7 @@ def test_exactly_at_the_limit_passes(screening, philosophy):
 def test_a_missing_figure_stops_the_whole_check(screening, philosophy):
     """D25: FY2024's gross profit absent. The check stops on PHI-2.2 naming
     gross_margin and FY2024, and reports no finding on any clause."""
-    block = figures()
+    block = alphabet()
     del block["years"]["FY2024"]["gross_profit"]
     with pytest.raises(screening.ScreeningError, match="PHI-2.2.*gross_margin.*FY2024"):
         screening.screen(philosophy, block, AS_OF)
@@ -117,20 +125,20 @@ def test_a_year_not_yet_filed_is_not_a_year(screening, philosophy):
     """D21: as of 2025-06-30 PHI-2.1 reads FY2020 to FY2024, and the block
     has no FY2020. It does not read FY2021 to FY2025 and not four years."""
     with pytest.raises(screening.ScreeningError, match="PHI-2.1.*return_on_invested_capital.*FY2020"):
-        screening.screen(philosophy, figures(), dt.date(2025, 6, 30))
+        screening.screen(philosophy, alphabet(), dt.date(2025, 6, 30))
 
 
 # --- the screen's own raises --------------------------------------------------
 
 def test_no_price_raises_on_the_margin_of_safety(screening, philosophy):
-    block = figures()
+    block = alphabet()
     del block["price"]
     with pytest.raises(screening.ScreeningError, match="PHI-4.1.*price"):
         screening.screen(philosophy, block, AS_OF)
 
 
 def test_no_range_raises_on_the_margin_of_safety(screening, philosophy):
-    block = figures()
+    block = alphabet()
     del block["valuation_range"]
     with pytest.raises(screening.ScreeningError, match="PHI-4.1.*valuation_range"):
         screening.screen(philosophy, block, AS_OF)
@@ -164,10 +172,6 @@ text = "Gross margin between 50% and 56%."
 
 
 # --- Part 10 F: PHI-3.2, the industry exclusion -----------------------------------
-#
-# The committed philosophy.toml carries PHI-3.2 as a statement until the
-# commit that follows the screen's arm, so these checks load it with PHI-3.2
-# as Part 10 F writes it: excluded_industry over the seven listed codes.
 
 SIC_CODES = ["6021", "6022", "6035", "6036", "6211", "6311", "6331"]
 
@@ -192,17 +196,10 @@ JPMORGAN_YEARS = {
 }
 
 
-@pytest.fixture(scope="module")
-def excluding(tmp_path_factory):
-    from pathlib import Path
-    text = (Path(__file__).parent.parent / "philosophy.toml").read_text(encoding="utf-8")
-    before = 'id = "PHI-3.2"\ntype = "statement"\n'
-    assert text.count(before) == 1
-    codes = ", ".join(f'"{c}"' for c in SIC_CODES)
-    text = text.replace(before, f'id = "PHI-3.2"\ntype = "excluded_industry"\nsic_codes = [{codes}]\n')
-    path = tmp_path_factory.mktemp("philosophy") / "philosophy.toml"
-    path.write_text(text, encoding="utf-8")
-    return load_philosophy(str(path))
+def test_the_committed_philosophy_lists_part_10_fs_codes(philosophy):
+    clause = philosophy["PHI-3.2"]
+    assert clause.type == "excluded_industry"
+    assert clause.params["sic_codes"] == SIC_CODES
 
 
 def _exclusion(finding, status, sic, subject):
@@ -211,43 +208,43 @@ def _exclusion(finding, status, sic, subject):
     assert finding.observed is None and finding.limit is None and finding.distance is None
 
 
-def test_a_bank_is_excluded_before_its_figures_are_read(screening, excluding):
+def test_a_bank_is_excluded_before_its_figures_are_read(screening, philosophy):
     """D34: JPMorgan's figures lack operating income, cash and debt, so a
     check that read them first would stop on PHI-2.1. It reports one finding."""
     block = figures(ticker="JPM", sic="6021", years={k: dict(v) for k, v in JPMORGAN_YEARS.items()})
-    out = screening.screen(excluding, block, AS_OF)
+    out = screening.screen(philosophy, block, AS_OF)
     assert len(out) == 1
     _exclusion(out[0], "excluded", "6021", "JPM")
 
 
-def test_a_broker_dealer_is_excluded(screening, excluding):
+def test_a_broker_dealer_is_excluded(screening, philosophy):
     """Goldman Sachs, 6211. The block carries no years at all: nothing about
     the company is read beyond its code."""
-    out = screening.screen(excluding, figures(ticker="GS", sic="6211", years={}), AS_OF)
+    out = screening.screen(philosophy, figures(ticker="GS", sic="6211", years={}), AS_OF)
     assert len(out) == 1
     _exclusion(out[0], "excluded", "6211", "GS")
 
 
-def test_an_insurance_broker_is_screened(screening, excluding):
-    out = screening.screen(excluding, figures(sic="6411"), AS_OF)
+def test_an_insurance_broker_is_screened(screening, philosophy):
+    out = screening.screen(philosophy, figures(sic="6411"), AS_OF)
     assert [f.clause for f in out] == ["PHI-2.1", "PHI-2.2", "PHI-3.1", "PHI-3.2", "PHI-4.1", "PHI-4.2"]
     _exclusion(_by_clause(out)["PHI-3.2"], "pass", "6411", "GOOGL")
 
 
-def test_alphabet_passes_and_the_rest_stands(screening, excluding, findings):
+def test_alphabet_passes_and_the_rest_stands(screening, philosophy, findings):
     """Section A's block with Alphabet's code, 7370: section D's five
     findings unchanged, PHI-3.2 between PHI-3.1 and PHI-4.1, eleven statements."""
-    out = screening.screen(excluding, figures(sic="7370"), AS_OF)
+    out = screening.screen(philosophy, figures(sic="7370"), AS_OF)
     assert [f.clause for f in out] == ["PHI-2.1", "PHI-2.2", "PHI-3.1", "PHI-3.2", "PHI-4.1", "PHI-4.2"]
     _exclusion(_by_clause(out)["PHI-3.2"], "pass", "7370", "GOOGL")
-    assert [f for f in out if f.clause != "PHI-3.2"] == findings
-    assert len(excluding.statements) == 11
+    assert out == findings
+    assert len(philosophy.statements) == 11
 
 
 @pytest.mark.parametrize("sic", [None, "", 6021, "602"])
-def test_no_code_no_check(screening, excluding, sic):
+def test_no_code_no_check(screening, philosophy, sic):
     """D35: a block with no SIC code as EDGAR states one stops the check
     naming PHI-3.2. A company is never assumed not to be a bank."""
     block = figures() if sic is None else figures(sic=sic)
     with pytest.raises(screening.ScreeningError, match="PHI-3.2.*SIC"):
-        screening.screen(excluding, block, AS_OF)
+        screening.screen(philosophy, block, AS_OF)
