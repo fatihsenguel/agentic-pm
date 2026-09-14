@@ -739,7 +739,9 @@ the calendar is wrong on every row; an ASC 606 revenue retagging inside the
 window a five-year screen needs; and a balance sheet whose securities dwarf its
 cash, which is what makes PHI-3.1's definition a policy question rather than an
 arithmetic one. One filer is one witness, and that is the caveat this Part
-carries until a December year end and a bank are added.
+carries until a December year end and a bank are added. Part 13 adds both,
+Alphabet and JPMorgan, and holds each of D26 to D33 against them; the
+decisions revised on what they showed say so in their rows.
 
 **The facts cited here are committed** as `tests/golden/edgar_facts_aapl.csv`,
 93 rows, extracted from that artifact: the 70 of section B and the 16 falsifier
