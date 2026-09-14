@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 14 September 2026, sixteenth session, on branch `selection`, after the filings reader was built as far as its reference allows - Part 13 on two more filers and thirteen financial filers' SIC codes, D26, D27, D29 and D30 revised on what they showed, the provider, `filed_facts` and its cache record, the field list and the assembler, two migrations applied by hand - and PHI-3.2 became `excluded_industry`: Part 10 F, the loader type, the screen arm, and the clause with its codes in PHILOSOPHY.md and philosophy.toml. The golden set and the runner were not run: nothing in routing, prompts or answer text changed. One CLI run of three prompts after `config.py` and `database_setup.py` changed, each answer as expected. The suite went 747 to 918. Five entries added and four corrected in place with a dated note: decision 28's stale paragraph, the statements row count, the reader of `EDGAR_USER_AGENT`, and the bank variant of 4.6.
+Last updated 14 September 2026, sixteenth session, on branch `selection`, after the filings reader was built as far as its reference allows - Part 13 on two more filers and thirteen financial filers' SIC codes, D26, D27, D29 and D30 revised on what they showed, the provider, `filed_facts` and its cache record, the field list and the assembler, two migrations applied by hand - and PHI-3.2 became `excluded_industry`: Part 10 F, the loader type, the screen arm, and the clause with its codes in PHILOSOPHY.md and philosophy.toml. The golden set and the runner were not run: nothing in routing, prompts or answer text changed. One CLI run of three prompts after `config.py` and `database_setup.py` changed, each answer as expected. The suite went 747 to 918. Five entries added and four corrected in place with a dated note: decision 28's stale paragraph, the statements row count, the reader of `EDGAR_USER_AGENT`, and the bank variant of 4.6. After the handoff, a read of the whole code for a capability inventory added two entries - a VaR question answered with per-holding volatility, and two run-by-hand scripts that cannot run - and a dated note on the rebalance entry: two defects waiting behind the missing target.
 ---
 
 # RESOLVED
@@ -220,10 +220,10 @@ false-pass shape on the case benchmark.md calls its most important.
 
 # OPEN
 
-**82 open entries: 0 block the next commit, 16 block a named Order,
-66 block nothing.** Three of the 82 are resolved in their body and unmarked
-in their heading, so the figure a reader should carry is 79; its own entry is
-under Hygiene. The sixteenth session added five and retagged none: the six
+**84 open entries: 0 block the next commit, 16 block a named Order,
+68 block nothing.** Three of the 84 are resolved in their body and unmarked
+in their heading, so the figure a reader should carry is 81; its own entry is
+under Hygiene. The sixteenth session added seven and retagged none: the six
 entries tagged with the filings reader still block it, because the reader
 cannot yet run against EDGAR or feed the screen. One line under each open heading says which. The tag is
 what an entry blocks now, not how serious it looked when it was written, and
@@ -1058,6 +1058,23 @@ deliberately carries no entry from RebalanceAgent to the optimiser; the
 derived plan for `rebalancing` is `[DataAgent, RebalanceAgent]` and the
 golden line keeps its pinned `errors: 1`. The target is still the IPS's to
 state (pending decision 8).
+
+**14 September (sixteenth session), from a read of the code, not a run: two
+more defects wait behind the missing target.** Both are unreachable today,
+because the node raises before either line runs, and both would give a wrong
+answer with a plausible face the day decision 13 supplies a target.
+`rebalance_agent_node` passes `get_current_positions(holdings)` as
+`current_weights`, and that function returns `{ticker: quantity}`
+(`nodes.py`, search `def get_current_positions`), so drift would be a target
+weight subtracted from a share count. And `_format_rebalance_response` reads
+`decision["max_drift"]`, while the tool's `to_dict` puts only
+`should_rebalance` and `recommendation` under `decision` and carries
+`max_drift` as a formatted string under `drift_analysis`
+(`tools/rebalance_tools.py`, search `"drift_analysis"`), so the answer would
+print a max drift of 0.0% whatever the drift. `test_synthesizer_formatters.py`
+passes because it feeds the formatter `{"decision": {"max_drift": 0.07}}`, a
+shape the tool never produces. Both belong to the commit that gives
+rebalancing its target, test first, and not before.
 
 
 ### `wip/phase7-snapshot` was read and rejected - DECIDED 7 September (fourth sitting)
@@ -3280,6 +3297,42 @@ pattern: the philosophy's lookup is `clauses_on` on the loaded
 philosophy, the same mechanism, and it belongs to the screen's intent
 when that intent exists (Order 4, the node decision). Until then this
 is a known wrong face.
+
+### A VaR or drawdown question is answered with per-holding volatility
+
+**Blocks:** nothing.
+
+**Found 14 September (sixteenth session), from a read of the code, not a
+run.** The intent vocabulary describes `risk_analysis` as "User wants risk
+metrics (VaR, volatility, drawdown)" (`schemas.py`, `INTENTS`), and the router
+prompt tells the model to route VaR, drawdown, concentration and a general
+"what is my risk" to `risk_analysis` with `measure` null. With no measure the
+plan is `[DataAgent]` alone, and `_format_risk_response` prints the
+annualised volatility of each holding and says the portfolio's own volatility
+is a different number. So "what is my VaR?" is answered with per-holding
+volatilities, and the answer neither computes VaR nor says that it did not.
+VaR, CVaR, drawdown, Sharpe and Sortino exist in `quant/risk_metrics.py`
+(`RiskMetricsCalculator`) and nothing in the graph calls them. Not fixed by a
+prompt rule: the honest shapes are an answer that names what it did not
+compute, the way the per-holding answer already names portfolio volatility,
+or a measure with a reference Part for each metric, and which is a decision.
+The golden line "What is the risk of my portfolio?" pins the route, not the
+answer.
+
+### Two run-by-hand scripts cannot run
+
+**Blocks:** nothing.
+
+**Found 14 September (sixteenth session), read, not run.**
+`src/portfolio_tool/scripts/run_metrics_update.py` imports
+`portfolio_tool.analytics.calculator`, and `analytics/` holds only
+`metrics.py`, so it fails at import. `scripts/update_all_assets.py` calls
+`manager.get_or_create_asset(...)` on a `DataManager`, which has only the
+private `_get_or_create_asset`, so it fails the first time an asset is
+missing. Nothing imports either script and no test runs them; the working
+run-by-hand script is `seed_portfolio.py`. Same family as the two scripts that
+called the deleted `add_holding` (resolved in the eleventh session). Either
+repaired when a script is next wanted, or deleted, which is a decision.
 
 ### Two formatter headers still carry an emoji
 
