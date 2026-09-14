@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 11 September 2026, fifteenth session, on branch `selection`, after the compliance gate was settled by taking shape 2 (the two answer surfaces that stated a position are gone, behind a check that fails without them), the answers began stating their own coverage and naming the ticker they read and did not select by, and every open entry here gained a line saying what it blocks. Decision 28, the filings reader, is brought and not taken, under Directions. The runner ran twice, 12/12 both times, and the golden set once, zero diff; the suite went 735 to 747. Six findings swept in: the three entries resolved in their body and unmarked in their heading, the script with a test's name, the shares table with no source column, and the rebalance verdict word being both wider than its schema and partly advice.
+Last updated 14 September 2026, sixteenth session, on branch `selection`, after the filings reader was built as far as its reference allows - Part 13 on two more filers and thirteen financial filers' SIC codes, D26, D27, D29 and D30 revised on what they showed, the provider, `filed_facts` and its cache record, the field list and the assembler, two migrations applied by hand - and PHI-3.2 became `excluded_industry`: Part 10 F, the loader type, the screen arm, and the clause with its codes in PHILOSOPHY.md and philosophy.toml. The golden set and the runner were not run: nothing in routing, prompts or answer text changed. One CLI run of three prompts after `config.py` and `database_setup.py` changed, each answer as expected. The suite went 747 to 918. Five entries added and four corrected in place with a dated note: decision 28's stale paragraph, the statements row count, the reader of `EDGAR_USER_AGENT`, and the bank variant of 4.6.
 ---
 
 # RESOLVED
@@ -220,10 +220,12 @@ false-pass shape on the case benchmark.md calls its most important.
 
 # OPEN
 
-**77 open entries: 0 block the next commit, 15 block a named Order,
-62 block nothing.** Three of the 77 are resolved in their body and unmarked
-in their heading, so the figure a reader should carry is 74; its own entry is
-under Hygiene. One line under each open heading says which. The tag is
+**82 open entries: 0 block the next commit, 16 block a named Order,
+66 block nothing.** Three of the 82 are resolved in their body and unmarked
+in their heading, so the figure a reader should carry is 79; its own entry is
+under Hygiene. The sixteenth session added five and retagged none: the six
+entries tagged with the filings reader still block it, because the reader
+cannot yet run against EDGAR or feed the screen. One line under each open heading says which. The tag is
 what an entry blocks now, not how serious it looked when it was written, and
 it moves when the work moves. This pass adds the tags and nothing else: no
 entry below is edited, resolved, or moved.
@@ -428,6 +430,36 @@ round trip it checked is covered with assertions by
 `test_holdings_from_ledger.py`; the suite lost its last two live model
 calls and its two return-value warnings. The demo helper it alone called,
 `get_or_create_demo_portfolio`, went with `add_holding` (be14e4b).
+
+### A wrong version checked in place can run the previous one's bytecode
+
+**Blocks:** nothing.
+
+**Found 14 September (sixteenth session).** A check is seen failing for its
+reason by editing a module into a deliberately wrong version, running the
+suite, and restoring it. Python reuses a module's compiled bytecode when the
+source's modification time, to the second, and its size both match. Two wrong
+versions of `filed_figures.py` were the same size as the file before them
+and written within the same second, so the run after each executed the
+previous version, and one wrong version reported three failures that
+belonged to another. Rerun with `PYTHONDONTWRITEBYTECODE=1` and the module's
+cached file deleted first, the same wrong version failed nothing: an
+amendment filed after the original 10-K could re-date a fiscal year and no
+test saw it. `test_an_amendment_does_not_redate_the_year` was added on
+Apple's real pair. The rule: turn bytecode caching off and delete the cached
+file before every run against an edited copy, or the result belongs to
+whichever version was compiled last.
+
+### `daily_prices` is not a fixed count
+
+**Blocks:** nothing.
+
+**Found 13 September (sixteenth session).** The handoff pinned 6,939 rows
+and the session was started by confirming it. A CLI run the same day fetched
+two new trading days for the nine holdings and the table held 6,957. It grows
+whenever a query runs after new closes, the way `macro_data` does, so a
+session start confirms the Alembic head and the tables, not this count. What
+holds the closes that matter is Part 9's check over the committed series.
 
 ---
 
@@ -1759,6 +1791,13 @@ with a raise is three lines, and it would be a config value nothing consumes -
 the shape this file keeps deleting. It lands with the provider method that
 makes the request, which is also the first thing that can be tested for
 refusing to run without it.
+
+**13 September (sixteenth session): the reader landed with its consumer.**
+`config.edgar_user_agent()` raises, naming the key and `.env`, when it is
+missing or blank, and `EdgarProvider` calls it before any request (cce793a).
+The real value is still not set, so nothing has fetched from EDGAR through
+the provider. Every document fetched this session was fetched by hand from
+`data.sec.gov` with a generic User-Agent, which that host served.
 
 **One measurement, for whoever writes that provider.** `data.sec.gov` served
 the companyfacts and submissions documents to a generic User-Agent this
@@ -3110,6 +3149,12 @@ returns rows and the marker has to come off. Not fixed: off the
 benchmark's path, and whether these Yahoo-fed statements are the
 judgement half's source at all is Order 4's decision.
 
+**13 September (sixteenth session): "the 102 stored rows" is wrong.** The
+table holds 65 rows over two tickers, counted from the database, the figure
+the handoff carries. Where 102 came from is not recorded. Decision 28 settled
+the other question: the table is neither the filings reader's store nor a
+source.
+
 ### Four leftover tickers hold adjusted rows that nothing reads - RESOLVED 10 September (thirteenth session)
 
 Recorded 10 September (twelfth session). AMZN (6,549 rows), PLTR (1,328),
@@ -3874,6 +3919,13 @@ a philosophy is bound to, since it is the investor's and not the
 portfolio's, so `ips_path`'s shape does not transfer, a question for
 Order 6 and not a column invented now.
 
+**14 September (sixteenth session): the second of the three is answered.**
+PHI-3.2 is `excluded_industry` (Part 10 F, 9089145 to 380900c): the SIC code
+on the block decides a bank or an insurer before any figure is read, so
+4.6's bank variant is decidable with no model in the loop. What is not built
+is the fetch that puts a real company's code on the block; the filings
+reader's entry under Directions has it.
+
 ### The judgement half's figures come from a reader, never a file
 
 **Blocks:** Order 4, the filings reader.
@@ -3947,6 +3999,17 @@ ceiling. The SEC User-Agent contact, a config value beside the fetch
 intervals, required before the provider runs on anything but a one-off.
 **One filer is one witness**: a December year end and a bank come next, the
 bank because `excluded_industry` needs one for its reference row anyway.
+
+**13 September (sixteenth session): that paragraph is stale on all three
+counts, and stands as written.** Section E was filled on 12 September
+(82077c0), with the owner's caveat that it was a second automated extraction.
+Net debt was decided as A, cash only, not B (Part 12 F). The contact is
+`EDGAR_USER_AGENT` in `.env` and never a config value (the `config.toml`
+entry under Configuration). And the first bullet's "the first consumer of
+`Asset.industry`" is the alternative this same decision rejected under 31:
+the clause reads the SIC code on the block, and `Asset.industry` is a label
+typed by hand into the seed for held assets, with no source column (Part 13
+C). The December year end and the bank are Part 13.
 
 The shape as brought follows, unedited.
 
@@ -4027,6 +4090,107 @@ formula per metric.
 from memory; no request was made. One `companyfacts` document fetched by hand
 confirms them, and the `fy` question above is the first thing it settles.
 Nothing is built on this until that is done.
+
+### Order 4, the filings reader: Parts 12 and 13, and what is built
+
+**Blocks:** Order 4, the research node.
+
+**Built 13 and 14 September (sixteenth session), 5228857 to 98b8ff6.** The
+reference first, then each layer test first, each test seen failing against
+a wrong version before its code.
+
+- **The reference.** Part 13 holds D26 to D33 against Alphabet and
+  JPMorgan (A to E), each fiscal year's own annual report for all three
+  filers (Part 12 A and Part 13 F), and falsifiers F6 to F11. D26 gained
+  `start` in its key, D27 its window of 350 to 380 days, D29 its list of the
+  forms that file a figure, and D30 moved its raise from the reader to the
+  check. Fixtures: `edgar_facts_googl.csv`, `edgar_facts_jpm.csv`, rows added
+  to `edgar_facts_aapl.csv`, and `edgar_submissions.csv`. Part 12 now records
+  that the Apple fixture labels section B's rows `A`.
+- **The code.** `providers/edgar.py`, company facts filtered by D27 and D29,
+  every vintage, with `config.edgar_user_agent()`; `filed_facts`, D26's key as
+  two partial unique indexes (migration 302903e3d966); `filed_fetch_metadata`
+  and `filings.update_filed_facts`, every fact stored, fetched again after
+  `filings_fetch_interval_days` (migration 97d3708851e5); `filed_figures.FIELDS`
+  held to Part 12 C; `filed_figures.filed_years`, the `years` half of the block
+  as of a date, and `filed_years_for` over the stored rows. Both migrations
+  applied by the owner, the output pasted.
+
+**The wrong turn, recorded.** The first rule for a year's own report, the
+earliest 10-K carrying the year at all, held on FY2021 to FY2025 and was
+committed into Part 12 A and Part 13 F before it was measured over whole
+documents. There it dated each filer's first two years from a later report
+and gave Apple's FY2007 and FY2008 the label FY2009. Corrected the same day
+(4afc845, F11): a filing's own year is the latest year end it carries. The
+general form: a rule taken from five years is measured over every year the
+source holds before it goes into a reference.
+
+**What the reader cannot do yet, each a reason the research node cannot use
+it.**
+
+- **Run against EDGAR.** The real `EDGAR_USER_AGENT` is not set.
+- **Put a SIC code on the block.** Nothing reads the submissions document, so
+  PHI-3.2 is screened on typed blocks only.
+- **Feed the screen.** `quant/fundamentals.py` reads one `tax_rate` and one
+  `debt`; the block carries `effective_tax_rate` (D32) and three borrowing
+  fields (D33). Two decisions of the owner's come first, where NOPAT's stated
+  tax rate lives and what it is, and `net_debt` with its own reference row.
+  And `fundamentals._number` accepts ints and floats while the assembler
+  returns Decimals, so the bridge also decides where a filed figure stops
+  being exact.
+- **Screen W-1.** Alphabet files no gross profit and no combined D&A, and its
+  FY2021 and FY2022 non-current debt only under a wider tag (Part 13 B), so
+  PHI-2.1, PHI-2.2 and PHI-3.1 stop. Part 13 E's questions 3 to 8 are these.
+- **Find a company by ticker.** The assembler takes a CIK; where the
+  watchlist's tickers get theirs is decided with the node.
+- **Report shares.** No field carries them (Part 13 E7, and the
+  `shares_history` entry).
+- **Limit its rate.** One company is one request and nothing loops over
+  companies; the limit lands with the first caller that does.
+
+### PHI-3.2's code list fails open, and a code carries no date
+
+**Blocks:** nothing.
+
+**Decided 14 September (sixteenth session), Part 10 F.** PHI-3.2 excludes
+the seven SIC codes the clause lists: 6021 and 6022, commercial banks; 6035
+and 6036, savings institutions; 6211, security brokers and dealers; 6311,
+life insurers; 6331, fire, marine and casualty insurers. Each was measured
+on at least one filer (Part 13 C). 6411, insurance agents and brokers, is
+not listed: they sell insurance and do not carry it.
+
+**The limit.** A bank or an insurer filing under a code the list does not
+carry is screened as if it were neither, with a plausible face. It is closed
+one measured code at a time. Ranges of codes were rejected because what a
+range covers is published on `www.sec.gov`, which refuses a generic
+User-Agent; revisit when the real contact is set. `ownerOrg`, "02 Finance"
+on all thirteen financial filers, is recorded and not used: nothing says what
+it classifies.
+
+**A code has no date.** The submissions document carries the current code
+and no history. Flagstar Bank's name says national association and its code
+says a savings institution not federally chartered, so a reference row that
+cites a code cites its pull date.
+
+**The clause's expiry.** PHI-3.2 as `excluded_industry` lasts until the
+philosophy has clauses for banks and insurers. At that commit it is
+rewritten with its own cases and not deleted, the rule benchmark.md already
+states for 3.2.
+
+### A fact on a form outside D29's list is dropped without a word
+
+**Blocks:** nothing.
+
+**Recorded 13 September (sixteenth session).** D29 counts a figure filed on
+a 10-K, 10-Q or 8-K or an amendment of one of them; the provider drops every
+other form without saying so. On the three documents that is right: Apple's
+carries no other form, Alphabet's and JPMorgan's carry proxy statements,
+prospectuses and registration statements, and of those only the proxy carried
+a us-gaap figure (F10). A filer that reports a year on a
+form not in the list, one none of the three documents contains, has that
+year's figures dropped, and since a year's own report must be a 10-K or
+10-K/A the check stops on the year as not filed: a refusal rather than a
+wrong figure. The list grows one measured form at a time.
 
 ### Questions the system cannot express, and which kind each is
 
