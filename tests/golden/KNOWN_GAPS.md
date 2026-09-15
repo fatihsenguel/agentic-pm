@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 15 September (seventeenth session), on branch `consolidate`, cut from `selection` at the trunk's tip 00a7f92. A clearing session: no capability, no reference part, no intent. The four loops ran first and were clean where the handoff had assumed them clean: golden twice, runner 12/12. The macro path answers for the first time since the first baseline (the node read `slope_raw`; the snapshot writes `slope`), and the golden macro line moved from `errors: 1` to `errors: 0` as predicted. Seventeen deletions of code no question reaches: the rag package, three LangChain tool modules, two scripts that could not run, RiskManagerAgent, and the unreachable quant code behind tag `quant-inventory-parked` (VaR and its family, shrinkage and exponential covariance, risk parity, the frontier, min-vol, the two target optimisers, the analytics package), plus two design-violation scripts. The risk answer says it computes no VaR, shortfall or drawdown. Every open entry carries a `Trigger:` line and 23 untriggered ones were closed, promoted or kept on the owner's batch answers; four decisions were numbered, 51 to 54. Entries added this session: the backtest's in-sample window, the three reference-verified modules nothing reaches, the registry text that names what is not computed, what the deletions left behind, and the macro answer's shape now that it prints.
+Last updated 16 September (eighteenth session), on branch `bridge`, cut from `baseline-v1` at b0f1499. Order 4 step 1, the bridge between the reader's block and the metrics: decisions 46 and 47 taken, two reference rows by hand in Part 12 G (net debt from the three borrowing fields, NOPAT at the stated rate) with the workbook's Filings sheet section D, then the bridge in two commits by field, net_debt and nopat as named functions, Decimals exact to the first ratio, the stated rate a parameter of PHI-2.1 in the document first. The first live EDGAR fetch: Apple's company facts, 15,132 rows stored, 70 of 70 Part 12 B cells reproduced. The pending list triaged from 32 (not 41, as counted) to 16 and then 14; the .gitignore and .env.example entries closed on the trunk's rewrites. Entries added this session: the pull date is UTC, and Apple's FY2014 operating cash flow does not resolve.
 ---
 
 # RESOLVED
@@ -4271,7 +4271,7 @@ Nothing is built on this until that is done.
 
 ### Order 4, the filings reader: Parts 12 and 13, and what is built
 
-**Trigger:** pending decisions 46 to 49, then 29, which absorbed 50 on 15 September (eighteenth session).
+**Trigger:** pending decisions 48 and 49, then 29, which absorbed 50 on 15 September (eighteenth session); 46 and 47 were taken the same session and the bridge is built.
 
 **Built 13 and 14 September (sixteenth session), 5228857 to 98b8ff6.** The
 reference first, then each layer test first, each test seen failing against
@@ -4306,16 +4306,30 @@ source holds before it goes into a reference.
 **What the reader cannot do yet, each a reason the research node cannot use
 it.**
 
-- **Run against EDGAR.** The real `EDGAR_USER_AGENT` is not set.
+- **Run against EDGAR.** The real `EDGAR_USER_AGENT` is not set. **Done
+  16 September (eighteenth session):** the contact set, one fetch of
+  Apple's company facts through `update_filed_facts` stored 15,132 rows and
+  one metadata row; `filed_years_for` as of 2026-09-16 assembled FY2009 to
+  FY2025, FY2007 and FY2008 left out as F11 says, and all 70 cells of Part
+  12 B over FY2021 to FY2025 came back equal to the dollar, the year ends
+  and filed dates equal to Part 12 A, nothing unresolved in the window.
+  The scratch script is not committed; the check is the reference.
 - **Put a SIC code on the block.** Nothing reads the submissions document, so
-  PHI-3.2 is screened on typed blocks only.
+  PHI-3.2 is screened on typed blocks only. Decision 49's shape is in the
+  handoff: four commits, moved whole to the next session.
 - **Feed the screen.** `quant/fundamentals.py` reads one `tax_rate` and one
   `debt`; the block carries `effective_tax_rate` (D32) and three borrowing
   fields (D33). Two decisions of the owner's come first, where NOPAT's stated
   tax rate lives and what it is, and `net_debt` with its own reference row.
   And `fundamentals._number` accepts ints and floats while the assembler
   returns Decimals, so the bridge also decides where a filed figure stops
-  being exact.
+  being exact. **Done 15 and 16 September (eighteenth session), 9d176e2
+  and a16dbdd**, by field: `net_debt` over the three fields, then the
+  stated rate as PHI-2.1's parameter passed beside the block; every figure
+  read as a Decimal, the ratio the first float; a year carrying a key the
+  reader's fields do not name raises. Reference rows Part 12 G. The
+  `years` half of the block is now in the metrics' shape; the ticker, the
+  code, the price, the shares and the range are still the node's.
 - **Screen W-1.** Alphabet files no gross profit and no combined D&A, and its
   FY2021 and FY2022 non-current debt only under a wider tag (Part 13 B), so
   PHI-2.1, PHI-2.2 and PHI-3.1 stop. Part 13 E's questions 3 to 8 are these.
@@ -4328,7 +4342,7 @@ it.**
 
 ### PHI-3.2's code list fails open, and a code carries no date
 
-**Trigger:** the first live fetch through the provider, the contact being set (decision 43 closed 15 September, eighteenth session), so the published SIC list can be fetched; or a bank or insurer filing under a code the list lacks.
+**Trigger:** the first fetch of `www.sec.gov` with the contact, so the published SIC list can be read; or a bank or insurer filing under a code the list lacks. The first live fetch through the provider happened 16 September (eighteenth session) and went to `data.sec.gov`, which is not the host that carries the list; the list is still unread.
 
 **Decided 14 September (sixteenth session), Part 10 F.** PHI-3.2 excludes
 the seven SIC codes the clause lists: 6021 and 6022, commercial banks; 6035
@@ -4369,6 +4383,37 @@ form not in the list, one none of the three documents contains, has that
 year's figures dropped, and since a year's own report must be a 10-K or
 10-K/A the check stops on the year as not filed: a refusal rather than a
 wrong figure. The list grows one measured form at a time.
+
+### The pull date the filings record keeps is UTC
+
+**Trigger:** pending decision 29, the node: the first answer that states a pull date.
+
+**Recorded 16 September (eighteenth session), from the first live fetch.**
+`update_filed_facts` writes `filed_fetch_metadata.last_fetch_time` from
+`datetime.utcnow()`, and the module says that time is the pull date an
+answer states. The fetch ran on 16 September by the machine's clock and the
+row reads 2026-09-15 22:17. An answer built on it would state yesterday.
+Part 12's rows cite pull dates as calendar days on the owner's clock, so a
+reference row and an answer about the same pull could name different days.
+Not chased: which clock a pull date is on is decided where an answer first
+prints one, and `fx_fetch_metadata` and the price cache would want the same
+answer.
+
+### Apple's FY2014 operating cash flow does not resolve under Part 12 C's tag
+
+**Trigger:** a revision of Part 12 C's field list, or a screen whose window reaches FY2014.
+
+**Recorded 16 September (eighteenth session), from the first live fetch.**
+Over seventeen assembled years, every unresolved cell is a field the filer
+had not yet tagged under Part 12 C's names (FY2009 to FY2017: the two
+securities fields, capex, commercial paper, the two debt lines), with one
+exception: `operating_cash_flow` for FY2014, under
+`NetCashProvidedByUsedInOperatingActivities`, while FY2013 and FY2015
+resolve. Whether Apple filed that year's figure under another tag is not
+looked up: the reference stops at FY2021 and a five-year screen as of today
+reads nothing older. D30 working as written, and the first cell where a
+reader anchored on one tag would want a second inside one filer's own
+history rather than across filers.
 
 ### Questions the system cannot express, and which kind each is
 
