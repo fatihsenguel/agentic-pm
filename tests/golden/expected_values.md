@@ -1414,6 +1414,9 @@ here.
    profit and no combined D&A: D24's question about the metric keys. Until it
    is answered W-1 cannot be screened on PHI-2.2 or PHI-3.1.
 5. What a borrowing tag is for D33's raise, and whether a finance lease is one.
+   Decided 2026-09-15 (decision 47, D33): a borrowing is one of the three
+   named fields, a finance lease is not one, and the raise is a known limit,
+   not a rule the code can keep (Part 12 G).
 6. The two `marketable_securities` fields in Part 12 B, which no metric reads
    under Part 12 F's decision A.
 7. `shares_outstanding`: which count, and `free_cash_flow_yield` for a filer
