@@ -556,6 +556,19 @@ valuation range and a price, each with its as-of date.
 A blank cell is a figure the reference does not need, not a figure the
 company did not report; section E is the missing-figure case.
 
+*The block's shape, 2026-09-15, decisions 46 and 47.* The table keeps its
+columns and every figure below stands; two of the columns are no longer
+figures of the block. **Tax rate** is not a per-year figure but the rate the
+philosophy states on PHI-2.1, 0.20, one number for every year; the block
+carries no `tax_rate`, and a reader's block carries `effective_tax_rate`
+beside it, unread (D32, Part 12 G). **Debt** is the sum of the block's three
+borrowing fields: in the synthetic block `long_term_debt_noncurrent` carries
+the figure shown and `commercial_paper` and `long_term_debt_current` are 0,
+filed zeros, not blanks (D33, Part 12 G); section E's at-the-limit row puts
+its 120,000 in the same field. Sections C, D and E are unchanged by this
+and the workbook's `Philosophy` sheet keeps its two columns, since the
+arithmetic they feed is the same.
+
 Shares outstanding 4,000 million. Price 171.00 as of 2026-09-10. Valuation
 range 180.00 to 240.00 per share as of 2026-09-10, typed here; Part 11 will
 compute one from stated assumptions.
