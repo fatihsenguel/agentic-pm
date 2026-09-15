@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 14 September 2026, sixteenth session, on branch `selection`, after the filings reader was built as far as its reference allows - Part 13 on two more filers and thirteen financial filers' SIC codes, D26, D27, D29 and D30 revised on what they showed, the provider, `filed_facts` and its cache record, the field list and the assembler, two migrations applied by hand - and PHI-3.2 became `excluded_industry`: Part 10 F, the loader type, the screen arm, and the clause with its codes in PHILOSOPHY.md and philosophy.toml. The golden set and the runner were not run: nothing in routing, prompts or answer text changed. One CLI run of three prompts after `config.py` and `database_setup.py` changed, each answer as expected. The suite went 747 to 918. Five entries added and four corrected in place with a dated note: decision 28's stale paragraph, the statements row count, the reader of `EDGAR_USER_AGENT`, and the bank variant of 4.6. After the handoff, a read of the whole code for a capability inventory added two entries - a VaR question answered with per-holding volatility, and two run-by-hand scripts that cannot run - and a dated note on the rebalance entry: two defects waiting behind the missing target.
+Last updated 15 September (seventeenth session), on branch `consolidate`, cut from `selection` at the trunk's tip 00a7f92. A clearing session: no capability, no reference part, no intent. The four loops ran first and were clean where the handoff had assumed them clean: golden twice, runner 12/12. The macro path answers for the first time since the first baseline (the node read `slope_raw`; the snapshot writes `slope`), and the golden macro line moved from `errors: 1` to `errors: 0` as predicted. Seventeen deletions of code no question reaches: the rag package, three LangChain tool modules, two scripts that could not run, RiskManagerAgent, and the unreachable quant code behind tag `quant-inventory-parked` (VaR and its family, shrinkage and exponential covariance, risk parity, the frontier, min-vol, the two target optimisers, the analytics package), plus two design-violation scripts. The risk answer says it computes no VaR, shortfall or drawdown. Every open entry carries a `Trigger:` line and 23 untriggered ones were closed, promoted or kept on the owner's batch answers; four decisions were numbered, 51 to 54. Entries added this session: the backtest's in-sample window, the three reference-verified modules nothing reaches, the registry text that names what is not computed, what the deletions left behind, and the macro answer's shape now that it prints.
 ---
 
 # RESOLVED
@@ -24,6 +24,8 @@ Two failure modes were found, one of which is worse than a crash:
 
 Removed in commits 7bbf6f6 (dead module-level tools) and ccfa1e1 (MacroAgent
 capability). `src/portfolio_tool/rag/` itself is still on disk pending deletion.
+
+**15 September (seventeenth session).** The package is deleted (76fa6f5); the branch and the tag keep it.
 
 Code is preserved three ways: byte-identical on branch `wip/rag-early`, pinned
 by tag `rag-early-parked`, and a fuller version with `vector_store.py`,
@@ -226,12 +228,15 @@ or the pending decision it belongs to.** A session reads the entries whose
 trigger has fired or whose decision is on the handoff's pending list, and no
 other. A finding is logged only with a trigger or a decision number. The
 `Blocks:` tag of the fifteenth session is folded into it: an Order it blocked
-is the trigger. 83 open headings at the pass: 54 carry a trigger; 29 read
-"none", of which 6 are resolved in their body (3 this session, 3 since
-9 September and unmarked) and 23 go to the owner as a batch, each to be
-closed, promoted to a decision, or kept with a trigger. The pass changes the
-one line under each heading and nothing else: no entry below is edited,
-resolved, or moved.
+is the trigger. At the pass, 83 open headings: 54 carried a trigger and 29
+read "none". The owner answered the 29 the same session: 6 were resolved in
+their body and are marked; of the other 23, 14 are closed (6 as rules whose
+wording moves to CLAUDE.md, 3 as history, 3 as built, decided or taken, 1 as
+cosmetic, 1 as no longer true), 2 were already deleted or were deleted in the
+sweep, 4 are promoted to decisions 53 and 54, and 3 are kept with a trigger.
+Five entries were added with triggers. **65 open entries carry a live
+trigger**; a heading with a marker keeps its `Trigger:` line reading "none"
+so a count of the lines is a count of the entries.
 
 ## Verification instruments do not cover what they appear to cover
 
@@ -434,9 +439,9 @@ round trip it checked is covered with assertions by
 calls and its two return-value warnings. The demo helper it alone called,
 `get_or_create_demo_portfolio`, went with `add_holding` (be14e4b).
 
-### A wrong version checked in place can run the previous one's bytecode
+### A wrong version checked in place can run the previous one's bytecode - CLOSED 15 September (seventeenth session), a rule
 
-**Trigger:** none stated; a rule, not a defect.
+**Trigger:** none: closed as a rule; the wording is CLAUDE.md's.
 
 **Found 14 September (sixteenth session).** A check is seen failing for its
 reason by editing a module into a deliberately wrong version, running the
@@ -453,9 +458,9 @@ Apple's real pair. The rule: turn bytecode caching off and delete the cached
 file before every run against an edited copy, or the result belongs to
 whichever version was compiled last.
 
-### `daily_prices` is not a fixed count
+### `daily_prices` is not a fixed count - CLOSED 15 September (seventeenth session)
 
-**Trigger:** none stated; a rule, not a defect.
+**Trigger:** none: the handoff no longer pins the count.
 
 **Found 13 September (sixteenth session).** The handoff pinned 6,939 rows
 and the session was started by confirming it. A CLI run the same day fetched
@@ -710,7 +715,7 @@ question). The fallback is still confidence 0.0 with the German apology.
 
 ### CostCalculator reports costs for the wrong model
 
-**Trigger:** none stated.
+**Trigger:** pending decision 53: raise on an unknown model, or delete the cost tracker.
 
 `observability/tracer.py:406` — `PRICING` is a 2024 table with no Anthropic 4.x
 entries, and `estimate_cost` does `PRICING.get(model, PRICING["gpt-4-turbo"])`.
@@ -1201,9 +1206,9 @@ compliance modes are derived too: the weight from the message (f099101),
 the lookup from its phrasing (55dd80c), otherwise the portfolio check.
 
 
-### RiskManagerAgent is not a risk agent - it is an unused second orchestrator
+### RiskManagerAgent is not a risk agent - it is an unused second orchestrator - RESOLVED 15 September (seventeenth session)
 
-**Trigger:** none: resolved 15 September (04d98f1), heading marked in the sweep.
+**Trigger:** none: deleted (04d98f1).
 
 `src/agents/risk_manager_agent.py` exists but has no graph node, no routing entry,
 and no mention in `router_prompts.py`. The router classifies
@@ -1251,6 +1256,8 @@ concentration figures 2.1 needs are the compliance findings.
 `average_price`. Those fields live on `Asset`, reachable only via SQLAlchemy
 directly. `scripts/update_all_assets.py:105` sets `asset_class` but not `sector`.
 Close the gap as Phase 1 work; until then seed via a script, not ad hoc row edits.
+
+**15 September (seventeenth session).** `scripts/update_all_assets.py` is deleted (4911f5e); the seed is the only writer of the two columns.
 
 ### No portfolio-level volatility exists — RESOLVED 7 September
 
@@ -1556,6 +1563,8 @@ reading `shared["macro_regime"]` for `regime` and `equity_adjustment`,
 `nodes.py:1176-1224` formats macro output in the synthesizer, and
 `risk_manager_agent.py:374` delegates regime analysis to it.
 
+**15 September (seventeenth session).** It answers now (db567c8), which makes it the one intent outside the benchmark roster whose answer is live. Delete or keep is decision 51, with the optimisation, rebalancing and backtest intents.
+
 ### The macro `equity_adjustment` surface is a market-timing recommendation
 
 **Trigger:** pending decision 51.
@@ -1590,6 +1599,8 @@ RebalanceAgent change, and MacroAgent is already recorded as tolerated);
 retire the MULTI-STEP line and example 4. `generate_taa_signal_tool`,
 `MacroSignal.equity_adjustment` and `prompts.py` stay as dead code, recorded
 here.
+
+**15 September (seventeenth session).** The macro path answers since db567c8, and what it prints beside the regime is `Risk Stance`, from `_determine_risk_stance`, the function that also sets `equity_adjustment`. A stance word may be the same market-timing call in one word; whether it goes is decision 51, and the macro answer's shape has its own entry under Hygiene.
 
 ---
 
@@ -1771,9 +1782,9 @@ message naming both sets, instead of failing on the first live route as site
 Four more places name the roster than the eight above, none of which the
 registry reads; see "Roster sites the registry does not read" under Hygiene.
 
-### `config.toml` is tracked and public, so it holds policy and not identity
+### `config.toml` is tracked and public, so it holds policy and not identity - CLOSED 15 September (seventeenth session), a rule
 
-**Trigger:** none stated; a rule, not a defect.
+**Trigger:** none: closed as a rule; the wording is CLAUDE.md's.
 
 **Recorded 12 September (fifteenth session), from the owner, correcting a
 proposal of mine.** I proposed putting the SEC contact - a real email address -
@@ -1891,9 +1902,9 @@ one statement. `UNKNOWN` was deleted first on its own (795f5e8), the way
 vocabulary decision, being the last intent whose plan was the model's.
 
 
-### Router parameters are restated by hand in two more places
+### Router parameters are restated by hand in two more places - RESOLVED 9 September (ninth sitting)
 
-**Trigger:** none stated.
+**Trigger:** none: `route_sync` and `detect_intent_simple` were deleted in a60d0ad; the `_decision_to_dict` half was fixed on 7 September.
 
 `nodes.py` `_decision_to_dict` listed `parameters` key by key, and would have
 validated `measure` in the schema and then dropped it before any node could
@@ -1914,6 +1925,8 @@ PortfolioAnalysisAgent now raises on that rather than defaulting, which is
 loud and correct, but the limit is one holding away and documented nowhere
 but here. The matrix is a summary, not raw data; the hot-potato concern that
 motivated the cap is `price_data_json`, not this.
+
+**15 September (seventeenth session).** The cap is `covariance.py:96` after the shrinkage cut (fd497c5), `if len(self.tickers) <= 10`. Portfolio 3 holds nine, so nothing hits it today; it blocks Order 6 only, the first real portfolio with a tenth holding.
 
 ### The returns convention is not published
 
@@ -1938,9 +1951,11 @@ these cannot call it as written. Either a non-validating core the validated
 function wraps, or accept that objective internals are scoped like the
 backtest engine's inline volatility. Decide before the next optimiser change.
 
+**15 September (seventeenth session).** `risk_parity.py` is deleted (a81fbac). The sites left are `constraints.py`'s volatility constraint and check, and `max_sharpe`'s objective in `mean_variance.py`, all on the optimisation intent (decision 51).
+
 ### `AgentConfig` fields declared but unenforced
 
-**Trigger:** none stated.
+**Trigger:** pending decision 54: BaseAgent's tool loop and the three config fields that describe it.
 
 `log_tool_calls` and `max_tool_calls_per_turn` are read nowhere. The first reads
 as "tool calls are being logged" and they are not; the second reads as a loop
@@ -2004,9 +2019,9 @@ and a rule; a reply to a span or a two-weights clarification is a new
 message until a case asks for more.
 
 
-### Patches that delete whitespace-only lines need `--ignore-whitespace`
+### Patches that delete whitespace-only lines need `--ignore-whitespace` - CLOSED 15 September (seventeenth session), a rule
 
-**Trigger:** none stated; a rule, not a defect.
+**Trigger:** none: closed as a rule; the wording is CLAUDE.md's.
 
 `git apply --unidiff-zero` matches removed lines exactly. A patch removing
 indented blank lines failed on 7 September on the owner's machine and applied
@@ -2046,9 +2061,9 @@ the CLI's line prints. The golden runner does not print it, so no line
 moved.
 
 
-### `AgentTask.depends_on` has no reader
+### `AgentTask.depends_on` has no reader - RESOLVED 9 September (ninth sitting)
 
-**Trigger:** none: resolved 9 September (a7a24bc), heading unmarked (pending decision 39).
+**Trigger:** none: resolved (a7a24bc).
 
 Recorded 8 September (seventh sitting). Declared on the schema, filled by
 the model if it chooses, read nowhere. The dependency validator holds the
@@ -2232,7 +2247,7 @@ and no writer, and stays.
 
 ### BaseAgent's tool-calling loop has no live caller - confirmed, 8 September
 
-**Trigger:** none stated.
+**Trigger:** pending decision 54.
 
 Grep run 8 September (seventh sitting, after the merge): `.process(` is
 called on an agent nowhere in `src/`; the only caller is
@@ -2251,9 +2266,9 @@ instantiated (its own entry). The conclusion stands: nothing the graph runs
 reaches the loop.
 
 
-### Roster sites the registry does not read
+### Roster sites the registry does not read - CLOSED 15 September (seventeenth session), cosmetic
 
-**Trigger:** none stated.
+**Trigger:** none: the one site left is the tracer's colour map.
 
 Recorded 7 September (fourth sitting), while building the registry. Each
 names agents by hand, none is read by anything live, and none was in the
@@ -2290,9 +2305,9 @@ from the builder and from `route()` (1320913); `prompts.py` deleted
 (536a357). The tracer's `COLORS` map is the one site left.
 
 
-### `get_agent_prompt`, `build_agent_prompt` and `build_system_prompt` have no caller
+### `get_agent_prompt`, `build_agent_prompt` and `build_system_prompt` have no caller - RESOLVED 9 September (ninth sitting)
 
-**Trigger:** none: resolved 9 September (536a357), heading unmarked (pending decision 39).
+**Trigger:** none: resolved (536a357).
 
 Recorded 7 September (fourth sitting). `prompts.py`: `get_agent_prompt` is
 read only by `build_agent_prompt`, which nothing calls. `build_system_prompt`
@@ -2308,9 +2323,9 @@ deletion is safe and is its own commit, after a grep for every name the
 and the export deleted; nothing outside the package `__init__` named any
 of it.
 
-### `_validate_decision`'s agent check is unreachable
+### `_validate_decision`'s agent check is unreachable - RESOLVED 9 September (ninth sitting)
 
-**Trigger:** none: resolved 9 September (300af9e), heading unmarked (pending decision 39).
+**Trigger:** none: resolved (300af9e).
 
 Recorded 7 September (fourth sitting). `smart_router.py` `_validate_decision`
 builds `valid_agents` from `AgentName` and errors on a task naming anything
@@ -2323,9 +2338,9 @@ nobody will notice going wrong. Delete with the next `smart_router.py` change.
 the length warning deleted, with the `AgentName` import that served only
 the first.
 
-### A workbook edit rode into a KNOWN_GAPS commit
+### A workbook edit rode into a KNOWN_GAPS commit - CLOSED 15 September (seventeenth session), a rule
 
-**Trigger:** none stated; history, and the rule is in the standing rules.
+**Trigger:** none: closed as a rule; the wording is CLAUDE.md's.
 
 Recorded 8 September. Commit `22508c9` ("Record that the router refuses
 in-scope questions naming a held ticker...") reports two files changed,
@@ -2646,9 +2661,9 @@ routing defect. The two defects of that shape found since - JNJ dropped from
 `tickers`, "last month" repaired to `1Y` - go to extraction, not to the
 prompt.
 
-### The prompt shrink moved two lines: the plan text was doing the mode's work
+### The prompt shrink moved two lines: the plan text was doing the mode's work - CLOSED 15 September (seventeenth session), history
 
-**Trigger:** none stated; history.
+**Trigger:** none: history, kept as the record of the shrink.
 
 Recorded 8 September (eighth sitting). The shrink (9364d24) predicted all fifteen golden lines hold.
 Two moved, identically on both runs, and the runner fell to 10/12: "Is AAPL
@@ -2788,7 +2803,7 @@ Directions.
 
 ### The lookup sentence quotes the whole question
 
-**Trigger:** none stated.
+**Trigger:** the next change to the compliance formatter.
 
 Recorded 9 September, from the CLI session. Since f099101 the topic the
 compliance node receives is the user's whole message, and the lookup
@@ -2821,9 +2836,9 @@ selection axis: a total and a cost are selections on the allocation and
 P&L renderings, read from a parameter, never new measures. Not built
 until a case asks.
 
-### CLI session, 9 September: twenty-seven prompts
+### CLI session, 9 September: twenty-seven prompts - CLOSED 15 September (seventeenth session), history
 
-**Trigger:** none stated; history.
+**Trigger:** none: history; each miss has its own entry.
 
 Run after the eighth sitting's sweep, against portfolio 3, with the nine
 recorded CLI prompts, three typo pairs, three name-and-language prompts,
@@ -2860,7 +2875,7 @@ exercised live by `test_strict_nodes.py` over the database copy, through
 
 ### `max_conversation_history` is read by nothing
 
-**Trigger:** none stated.
+**Trigger:** pending decision 54.
 
 Recorded 9 September (ninth sitting), seen while deleting
 `conversation_history` from the router path (1320913). `AgentConfig`
@@ -2966,9 +2981,9 @@ the seed test stop converting. `fees` is NOT NULL with no default
 their day by the migration, so no reseed; how that had to be done is
 under "The migration and the reseed are run by hand".
 
-### The workbook was written while Excel held it open
+### The workbook was written while Excel held it open - CLOSED 15 September (seventeenth session), a rule
 
-**Trigger:** none stated; a rule, not a defect.
+**Trigger:** none: closed as a rule; the wording is CLAUDE.md's.
 
 Recorded 10 September (tenth sitting), a process failure, not one of the
 code. Before writing the `Ledger` sheet's section C, `lsof` reported Excel
@@ -2978,9 +2993,9 @@ rule: check with `lsof` before any openpyxl write, and if the workbook is
 open, close it first, every time. openpyxl writes formulas without cached
 values, so a sheet written that way is recalculated by Excel on opening.
 
-### The migration and the reseed are run by hand
+### The migration and the reseed are run by hand - CLOSED 15 September (seventeenth session), a rule
 
-**Trigger:** none stated; a rule, not a defect.
+**Trigger:** none: closed as a rule; the wording is CLAUDE.md's.
 
 Recorded 10 September (tenth sitting). `alembic upgrade head` and
 `seed_portfolio.py --reset` are run from the shell by hand, never from a
@@ -3251,7 +3266,7 @@ database is refused by conftest first.
 
 ### The CLI reads `exit` as a question
 
-**Trigger:** none stated.
+**Trigger:** the next CLI change: a one-line fix that costs a model call each time and is not worth a commit of its own.
 
 Recorded 10 September (twelfth session), from the owner's run. The quit
 command is `:q`; `exit` went to the router, which refused it as an order
@@ -3300,6 +3315,8 @@ is an observation and not a cause. Measure before explaining.
 expected failures, about three seconds; 4.6 on one run after the paid
 loops, unmeasured.
 
+**15 September (seventeenth session).** Twenty-six at 918, then 922 passed. The first run of the session took 34.06 seconds and the next 3.67 with no change between them: the sixteenth session's 1:42 shape again, still not measured with `--durations`.
+
 ### A question about the philosophy runs the IPS check
 
 **Trigger:** pending decision 29, the research node.
@@ -3317,9 +3334,9 @@ philosophy, the same mechanism, and it belongs to the screen's intent
 when that intent exists (Order 4, the node decision). Until then this
 is a known wrong face.
 
-### A VaR or drawdown question is answered with per-holding volatility
+### A VaR or drawdown question is answered with per-holding volatility - RESOLVED 15 September (seventeenth session)
 
-**Trigger:** none: resolved 15 September (8d87455), heading marked in the sweep.
+**Trigger:** none: the answer names the three figures it does not compute (8d87455); the registry text that still advertises them has its own entry.
 
 **Found 14 September (sixteenth session), from a read of the code, not a
 run.** The intent vocabulary describes `risk_analysis` as "User wants risk
@@ -3338,9 +3355,9 @@ or a measure with a reference Part for each metric, and which is a decision.
 The golden line "What is the risk of my portfolio?" pins the route, not the
 answer.
 
-### Two run-by-hand scripts cannot run
+### Two run-by-hand scripts cannot run - RESOLVED 15 September (seventeenth session)
 
-**Trigger:** none: resolved 15 September (9bbc217, 4911f5e), heading marked in the sweep.
+**Trigger:** none: both deleted (9bbc217, 4911f5e).
 
 **Found 14 September (sixteenth session), read, not run.**
 `src/portfolio_tool/scripts/run_metrics_update.py` imports
@@ -3362,9 +3379,9 @@ The compliance report's header and the out-of-scope refusal's header
 each print one. Removing them changes the answers' text, so it is a
 change the runner sees, own commit, and not a drive-by inside another.
 
-### Prompt batch, 11 September: fourteen prompts
+### Prompt batch, 11 September: fourteen prompts - CLOSED 15 September (seventeenth session), history
 
-**Trigger:** none stated; history.
+**Trigger:** none: history; each miss has its own entry.
 
 Run after the golden set and the runner, both clean, before the first
 routing change of Order 4. Nine answered as designed: JNJ's two rows,
@@ -3400,9 +3417,9 @@ clarification texts) will always trip it in pairs. Exempting an intent
 whose answer is fixed by design is a CLI change, own commit, when it
 becomes annoying rather than now.
 
-### Three entries are resolved in their body and unmarked in their heading
+### Three entries are resolved in their body and unmarked in their heading - RESOLVED 15 September (seventeenth session)
 
-**Trigger:** pending decision 39.
+**Trigger:** none: the three headings are marked; decision 39 is closed.
 
 Found 11 September (fifteenth session), while tagging every open entry.
 `AgentTask.depends_on has no reader` (a7a24bc), `get_agent_prompt,
@@ -3419,9 +3436,9 @@ and its own commit. Worth knowing generally: the heading is what anything
 counting this file can see, and a body that closes an entry the heading does
 not is invisible to every count.
 
-### `tests/test_design_violations.py` is a script with a test's name
+### `tests/test_design_violations.py` is a script with a test's name - RESOLVED 15 September (seventeenth session)
 
-**Trigger:** none stated.
+**Trigger:** none: deleted with `violation_detector.py` (729340e); nobody ran either and pytest collected nothing from it.
 
 Found 11 September (fifteenth session), during the invariant sweep. It
 defines no test functions and runs its scan under a `__main__` guard, so
@@ -3480,7 +3497,7 @@ rebalancer a target and makes the whole surface live in one commit.
 
 ### `.gitignore` is corrupted
 
-**Trigger:** none stated; the owner's to do.
+**Trigger:** the owner's hand.
 
 A PowerShell here-string was written into it literally. Line 1 is `@"`, there is a
 `` *`$py.class `` line with a PowerShell escape, and mid-file sits
@@ -3555,6 +3572,82 @@ because `run_golden.py` still does not print `tickers`.
 Kept because the wrong attribution sat here for three days while the actual
 line was greppable. An observed symptom in a router output is not evidence
 about the router until the code between the LLM and the state has been read.
+
+### The backtest tests the weights on the window they were estimated on
+
+**Trigger:** pending decision 51.
+
+**Recorded 15 September (seventeenth session), from the owner's reading, confirmed against the
+code.** `backtest_agent_node` takes `optimal_weights`, which the optimiser
+computed over DataAgent's covariance and returns for the requested period,
+and `price_data_json`, the same frame, and `BacktestEngine.run` runs over that
+frame from its first index to its last. The weights are estimated on the
+window and tested on it. Every figure the backtest reports, return, Sharpe,
+drawdown, describes the fit and not a strategy, and the answer does not say
+so. Against Level 4's standard, that an answer states what it is, this is a
+methodology defect and not a bug in the arithmetic. Not fixed: the intent is
+outside the benchmark roster (decision 51), and a walk-forward split is a
+capability with its own reference Part.
+
+### Three reference-verified modules nothing reaches
+
+**Trigger:** pending decision 29, the research node.
+
+**Recorded 15 September (seventeenth session).** `philosophy.py`, `screening.py` and
+`providers/edgar.py`, with `filed_figures.py` and `filings.py` beside them,
+are held to Parts 10, 12 and 13 by pytest and reached by no intent and no
+agent: the graph cannot ask about a company. That is the next Order 4 commit,
+decision 29, and was not this session's work. Until it lands, "Does X clear
+my philosophy?" is refused as out of scope, correctly.
+
+### The registry text names what the system does not compute
+
+**Trigger:** the next prompt change, with its own golden prediction.
+
+**Recorded 15 September (seventeenth session).** Three strings rendered into the router prompt describe
+capabilities that do not exist. `INTENTS["risk_analysis"]` in `schemas.py`
+reads "User wants risk metrics (VaR, volatility, drawdown)", and rule 3 in
+`router_prompts.py` routes VaR and drawdown to `risk_analysis` with no
+measure; nothing computes either since f2f0396, and the risk answer says so
+(8d87455). `AGENTS["OptimizationAgent"]` reads "Runs portfolio optimization
+(Mean-Variance, Risk Parity, etc.)" and risk parity is deleted (a81fbac).
+Each is registry text the prompt renders, so correcting it is a prompt change
+under the golden rule, prediction first and two runs, and was not folded into
+a deletion commit. The model keeps being told VaR is a thing it can ask for.
+
+### What the seventeenth session's deletions left behind
+
+**Trigger:** pending decision 54 for the task loop's remains; the next change to each file for the rest.
+
+**Recorded 15 September (seventeenth session), from the greps before each deletion.** Each lost its
+last caller or reader this session and was not on the list:
+`TaskType.CALCULATE_RISK` and `protocols.OptimizationMethod`, enums of the
+dead task loop; `SupervisorAgent` in `base_agent.py`, with no subclass;
+`RiskManagerConfig`, read only by `test_all_configs.py`;
+`DataManager.force_update_asset_info`, no caller; `make_positive_definite` in
+`covariance.py`, no caller; `PortfolioConstraints.min_return` and
+`group_constraints`, no setter; `validators.validate_optimization_request`,
+imported by `smart_router.py` and never called, with `validate_return_target`
+behind it; `optimize_portfolio_tool`'s `method` parameter, one accepted value
+and one caller that passes it; `docs/workflow.md`'s example plan naming
+RiskManagerAgent; `_format_risk_response`'s docstring saying portfolio
+volatility "does not exist yet (D7)", false since 7 September; and
+`expected_values.md` Part 13 C naming `update_all_assets.py` and
+`tools/data_tools.py` as the paths to `force_update_asset_info`, a
+description of code in a reference file, which the owner decides whether to
+annotate.
+
+### The macro answer, now that it prints
+
+**Trigger:** pending decision 51.
+
+**Recorded 15 September (seventeenth session), from the CLI after db567c8.** "What's the market
+regime?" answers `neutral` with VIX and the slope. Three things in the text.
+No as-of date: the snapshot carries VIX's date, 2026-09-14, and the answer
+states no date for any figure, which Part 3b requires of market data. VIX
+prints as `17.100000381469727`, the stored float32 unrounded. And "Risk
+Stance: neutral" prints beside the regime, the line the equity-adjustment
+entry above discusses. None is chased: the intent is decision 51's.
 
 ---
 
@@ -3875,9 +3968,11 @@ row of them against anything; the statements method has in fact
 returned nothing for months (entry under Hygiene). Untrusted until a
 reference exists, the way the stored closes turned out to deserve.
 
-### Order 3: the philosophy, the watchlist and the ledger, and Level 4
+**15 September (seventeenth session).** The three query tools in `tools/data_tools.py` went with the module (0707ac6), so fundamentals, quarterly earnings and financial statements now have no reader at all outside the data layer. Whether the tables stay is decision 52.
 
-**Trigger:** none stated; built.
+### Order 3: the philosophy, the watchlist and the ledger, and Level 4 - BUILT 11 September (fourteenth session)
+
+**Trigger:** none: built.
 
 **Built 11 September (fourteenth session), 94ac112 to 5814279 and
 722456a to 67210aa.** Three decisions, each a shape brought and taken
@@ -3998,9 +4093,9 @@ on the block decides a bank or an insurer before any figure is read, so
 is the fetch that puts a real company's code on the block; the filings
 reader's entry under Directions has it.
 
-### The judgement half's figures come from a reader, never a file
+### The judgement half's figures come from a reader, never a file - DECIDED 11 September (fourteenth session)
 
-**Trigger:** none stated; a lesson, and the reader is built.
+**Trigger:** none: decided; DIRECTION.md invariant 5 holds the rule.
 
 **Recorded 11 September (fourteenth session), a wrong turn taken back
 the same session (19de4a5, reversed by f865bac).** With the screen built
@@ -4025,9 +4120,9 @@ the check did. Next is the filings reader, so the first answer about a
 company runs on filed figures with a source and a filed date on each,
 defended the way Part 9 defended the closes.
 
-### Decision 28, the filings reader: taken, and Part 12 written
+### Decision 28, the filings reader: taken, and Part 12 written - TAKEN 11 September (fifteenth session)
 
-**Trigger:** none stated; taken.
+**Trigger:** none: taken.
 
 **Taken 11 September (fifteenth session), after one document was fetched.**
 The heading of this entry said "brought, not taken" until the artifact
