@@ -27,7 +27,6 @@ Backtesting:
     - Performance reports
 
 Tools (Agent Interface):
-    - macro_tools: VIX, yields, regime
     - rebalance_tools: Drift, trades
     - analytics_tools: Metrics
 

@@ -5,12 +5,6 @@ This module provides tools that agents can use to interact with the system.
 Tools are the interface between AI agents and the business logic.
 
 Available Tools:
-    - macro_tools: Macro environment analysis
-        - fetch_macro_data_tool
-        - get_macro_snapshot_tool
-        - assess_regime_tool
-        - generate_taa_signal_tool
-        
     - rebalance_tools: Portfolio rebalancing (DETERMINISTIC - no LLM)
         - analyze_rebalance
         - calculate_drift
@@ -34,16 +28,6 @@ Design Principle - Hot Potato:
     Tools aggregate data before returning. Agents receive summaries,
     not raw data arrays.
 """
-
-# Macro Tools
-from .macro_tools import (
-    get_macro_tools,
-    fetch_macro_data,
-    get_macro_snapshot,
-    get_market_regime,
-    get_vix_analysis,
-    get_yield_curve_analysis
-)
 
 # Rebalance Tools (Pure Math - Deterministic)
 from .rebalance_tools import (
