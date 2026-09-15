@@ -3,7 +3,7 @@ Q: What is the current market regime? | pid=None
   plan:   ['MacroAgent']
   period: None
   agents_run: ['MacroAgent']
-  errors: 1
+  errors: 0
 
 Q: Get me the last 1 year of prices for SPY and TLT | pid=None
   intent: data_fetch
