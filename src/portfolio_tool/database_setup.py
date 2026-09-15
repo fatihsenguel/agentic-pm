@@ -187,6 +187,31 @@ class FiledFetchMetadata(Base):
     cik = Column(Integer, primary_key=True, autoincrement=False)
     last_fetch_time = Column(DateTime, nullable=False)
 
+class Filer(Base):
+    """
+    One filer as EDGAR's submissions document states it (expected_values.md
+    Part 13 C): its name, its SIC code and the code's description, with the
+    date they were pulled.
+
+    The document carries the current code only, no date and no history, so
+    the row is the code as of `pulled_at`; a later pull that finds another
+    code overwrites the row and moves the date (decision 49). `sic` and
+    `sic_description` are empty where EDGAR leaves them empty; the screen
+    stops on a block whose code is empty (D35). `name` and `pulled_at` are
+    required and defaulted nowhere: the row is written only after a fetch
+    has returned. `entityType`, `ownerOrg` and `fiscalYearEnd` are not
+    stored; nothing consumes them.
+    """
+    __tablename__ = 'filers'
+    cik = Column(Integer, primary_key=True, autoincrement=False)
+    name = Column(String(200), nullable=False)
+    sic = Column(String(4), nullable=True)
+    sic_description = Column(String(200), nullable=True)
+    pulled_at = Column(DateTime, nullable=False)
+
+    def __repr__(self):
+        return f"<Filer(cik={self.cik}, sic='{self.sic}', pulled_at={self.pulled_at})>"
+
 class FxFetchMetadata(Base):
     """
     The rate fetch's cache record, one row per (base, quote).
