@@ -24,7 +24,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Type definitions
-CovarMethod = Literal["sample", "shrinkage", "exponential"]
+CovarMethod = Literal["sample"]
 
 
 # =============================================================================
@@ -106,7 +106,6 @@ class DataConfig:
     
     # Covariance estimation
     default_covariance_method: CovarMethod = "sample"
-    shrinkage_max_intensity: float = 0.5
     
     # Constants
     trading_days_per_year: int = 252

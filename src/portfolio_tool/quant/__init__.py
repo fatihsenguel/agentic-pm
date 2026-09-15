@@ -3,7 +3,7 @@ Quant Module for Portfolio Analytics.
 
 This module provides quantitative finance calculations for:
 - Return calculations (simple, log, excess)
-- Covariance estimation (sample, shrinkage, exponential)
+- Covariance estimation (sample)
 - Volatility, per series and per portfolio
 
 Design Principles:
@@ -24,8 +24,6 @@ from .returns import (
 from .covariance import (
     CovarianceEstimator,
     calculate_sample_covariance,
-    calculate_shrinkage_covariance,
-    calculate_exponential_covariance,
 )
 
 from .risk_metrics import (
@@ -44,8 +42,6 @@ __all__ = [
     # Covariance
     "CovarianceEstimator",
     "calculate_sample_covariance",
-    "calculate_shrinkage_covariance",
-    "calculate_exponential_covariance",
     # Volatility
     "calculate_volatility",
     "portfolio_volatility",

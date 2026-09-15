@@ -1,18 +1,12 @@
 """
 Covariance Matrix Estimation for Portfolio Optimization.
 
-This module provides various methods for estimating covariance matrices:
-- Sample covariance (standard)
-- Shrinkage estimators (Ledoit-Wolf)
-- Exponentially weighted covariance
-
-Why different methods?
-- Sample covariance is unstable with limited data or many assets
-- Shrinkage reduces estimation error by pulling towards a structured target
-- Exponential weighting gives more weight to recent observations
+Sample covariance over a returns frame, annualised, with the quality
+metrics the result carries. One method: expected_values.md Part 4 is
+computed on the sample covariance and nothing configures another.
 
 Design Principles:
-- All estimators return the same CovarianceResult format
+- The estimator returns the CovarianceResult format
 - Include quality metrics (condition number) for stability assessment
 - Warnings for edge cases (high correlation, insufficient data)
 """
@@ -20,7 +14,7 @@ Design Principles:
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -33,8 +27,6 @@ TRADING_DAYS_PER_YEAR = 252
 class CovarianceMethod(str, Enum):
     """Available covariance estimation methods."""
     SAMPLE = "sample"
-    SHRINKAGE = "shrinkage"
-    EXPONENTIAL = "exponential"
 
 
 @dataclass
@@ -58,9 +50,6 @@ class CovarianceResult:
     method: CovarianceMethod = CovarianceMethod.SAMPLE
     estimation_period: Optional[str] = None
     num_observations: int = 0
-    
-    # Shrinkage-specific
-    shrinkage_intensity: Optional[float] = None  # 0 = no shrinkage, 1 = full shrinkage
     
     # Quality metrics
     condition_number: Optional[float] = None  # High = unstable
@@ -95,9 +84,6 @@ class CovarianceResult:
             result["condition_number"] = round(self.condition_number, 2)
             if self.condition_number > 100:
                 result["stability_warning"] = "High condition number - matrix may be unstable"
-        
-        if self.shrinkage_intensity is not None:
-            result["shrinkage_intensity"] = f"{self.shrinkage_intensity:.2%}"
         
         result["is_positive_definite"] = self.is_positive_definite
         
@@ -159,7 +145,7 @@ class CovarianceEstimator:
     Unified interface for covariance matrix estimation.
     
     Usage:
-        estimator = CovarianceEstimator(method="shrinkage")
+        estimator = CovarianceEstimator()
         result = estimator.estimate(returns_df)
     """
     
@@ -235,11 +221,7 @@ class CovarianceEstimator:
         # Estimate covariance based on method
         try:
             if self.method == CovarianceMethod.SAMPLE:
-                cov_matrix, shrinkage = self._sample_covariance(returns_clean)
-            elif self.method == CovarianceMethod.SHRINKAGE:
-                cov_matrix, shrinkage = self._shrinkage_covariance(returns_clean)
-            elif self.method == CovarianceMethod.EXPONENTIAL:
-                cov_matrix, shrinkage = self._exponential_covariance(returns_clean)
+                cov_matrix = self._sample_covariance(returns_clean)
             else:
                 return CovarianceResult(
                     success=False,
@@ -305,93 +287,14 @@ class CovarianceEstimator:
             method=self.method,
             estimation_period=f"{start} to {end}",
             num_observations=n_clean,
-            shrinkage_intensity=shrinkage,
             condition_number=float(cond_number),
             is_positive_definite=is_pd,
             warnings=warnings
         )
     
-    def _sample_covariance(
-        self, returns: pd.DataFrame
-    ) -> Tuple[pd.DataFrame, Optional[float]]:
+    def _sample_covariance(self, returns: pd.DataFrame) -> pd.DataFrame:
         """Calculate sample covariance matrix."""
-        cov_matrix = returns.cov()
-        return cov_matrix, None
-    
-    def _shrinkage_covariance(
-        self, returns: pd.DataFrame
-    ) -> Tuple[pd.DataFrame, float]:
-        """
-        Calculate Ledoit-Wolf shrinkage covariance matrix.
-        
-        Shrinks sample covariance towards a structured target (diagonal).
-        The shrinkage intensity is estimated optimally.
-        
-        Reference:
-        Ledoit & Wolf (2004) "A Well-Conditioned Estimator for Large-Dimensional
-        Covariance Matrices"
-        """
-        X = returns.values
-        n, p = X.shape
-        
-        # Center the data
-        X = X - X.mean(axis=0)
-        
-        # Sample covariance
-        sample_cov = (X.T @ X) / n
-        
-        # Target: scaled identity (average variance on diagonal)
-        mu = np.trace(sample_cov) / p
-        target = mu * np.eye(p)
-        
-        # Calculate optimal shrinkage intensity
-        # Based on Ledoit-Wolf formula
-        
-        # Sum of squared sample correlations
-        delta = sample_cov - target
-        delta_sq_sum = np.sum(delta ** 2)
-        
-        # Estimate of the expected squared error
-        X_squared = X ** 2
-        gamma_hat = np.sum(
-            (X_squared.T @ X_squared) / n - 2 * (X.T @ X) * sample_cov / n + sample_cov ** 2
-        ) / n
-        
-        # Kappa (scaling factor)
-        kappa = (gamma_hat - delta_sq_sum / n) / ((n - 1) * delta_sq_sum / n / n)
-        
-        # Bound shrinkage between 0 and 1
-        shrinkage = max(0, min(1, kappa))
-        
-        # Shrunk covariance
-        shrunk_cov = shrinkage * target + (1 - shrinkage) * sample_cov
-        
-        cov_df = pd.DataFrame(shrunk_cov, index=returns.columns, columns=returns.columns)
-        
-        return cov_df, float(shrinkage)
-    
-    def _exponential_covariance(
-        self, returns: pd.DataFrame,
-        span: int = 60,
-        min_periods: int = 20
-    ) -> Tuple[pd.DataFrame, Optional[float]]:
-        """
-        Calculate exponentially weighted covariance matrix.
-        
-        Gives more weight to recent observations.
-        
-        Args:
-            span: Decay in terms of center of mass (higher = slower decay)
-            min_periods: Minimum observations required
-        """
-        # Use pandas ewm for exponential weighting
-        ewm = returns.ewm(span=span, min_periods=min_periods)
-        cov_matrix = ewm.cov().iloc[-len(returns.columns):]
-        
-        # Reset index to just have tickers
-        cov_matrix = cov_matrix.droplevel(0)
-        
-        return cov_matrix, None
+        return returns.cov()
     
     def _is_positive_definite(self, matrix: np.ndarray) -> bool:
         """Check if matrix is positive definite."""
@@ -420,64 +323,6 @@ def calculate_sample_covariance(
     """
     estimator = CovarianceEstimator(
         method=CovarianceMethod.SAMPLE,
-        annualize=annualize,
-        trading_days=trading_days
-    )
-    return estimator.estimate(returns)
-
-
-def calculate_shrinkage_covariance(
-    returns: pd.DataFrame,
-    annualize: bool = True,
-    trading_days: int = TRADING_DAYS_PER_YEAR
-) -> CovarianceResult:
-    """
-    Convenience function for Ledoit-Wolf shrinkage covariance estimation.
-    
-    Recommended for:
-    - Limited historical data (< 5 years)
-    - Many assets (> 10)
-    - Suspected multicollinearity
-    
-    Args:
-        returns: Returns DataFrame
-        annualize: Whether to annualize
-        trading_days: Trading days per year
-        
-    Returns:
-        CovarianceResult
-    """
-    estimator = CovarianceEstimator(
-        method=CovarianceMethod.SHRINKAGE,
-        annualize=annualize,
-        trading_days=trading_days
-    )
-    return estimator.estimate(returns)
-
-
-def calculate_exponential_covariance(
-    returns: pd.DataFrame,
-    annualize: bool = True,
-    trading_days: int = TRADING_DAYS_PER_YEAR
-) -> CovarianceResult:
-    """
-    Convenience function for exponentially weighted covariance estimation.
-    
-    Recommended for:
-    - When recent data is more relevant
-    - Detecting regime changes
-    - TAA applications
-    
-    Args:
-        returns: Returns DataFrame
-        annualize: Whether to annualize
-        trading_days: Trading days per year
-        
-    Returns:
-        CovarianceResult
-    """
-    estimator = CovarianceEstimator(
-        method=CovarianceMethod.EXPONENTIAL,
         annualize=annualize,
         trading_days=trading_days
     )

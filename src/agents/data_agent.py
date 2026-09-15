@@ -114,7 +114,7 @@ Your role is to fetch and process market data for portfolio optimization and ris
 CAPABILITIES:
 - Fetch historical prices for any ticker
 - Calculate returns (simple, log, excess)
-- Estimate covariance matrices (sample, shrinkage, exponential)
+- Estimate covariance matrices
 - Provide risk-free rate data
 
 GUIDELINES:
@@ -735,7 +735,7 @@ Always include in your responses:
         Args:
             tickers: Comma-separated ticker symbols
             period: Time period for estimation
-            method: "sample", "shrinkage", or "exponential"
+            method: "sample"
             
         Returns:
             Dictionary with covariance matrix and quality metrics
