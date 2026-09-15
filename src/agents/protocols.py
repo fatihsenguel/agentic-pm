@@ -310,9 +310,6 @@ class PortfolioResult:
     # Backtest specific (optional)
     backtest_metrics: Optional[BacktestMetrics] = None
     
-    # Efficient frontier points (for visualization)
-    efficient_frontier: Optional[List[Dict[str, float]]] = None
-    
     # Audit trail - CRITICAL for transparency
     optimization_method: Optional[str] = None  # "mean_variance", "risk_parity"
     constraints_applied: List[str] = field(default_factory=list)

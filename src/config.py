@@ -161,7 +161,7 @@ class OptimizationConfig:
     """Configuration for portfolio optimization."""
     
     # Optimization method
-    default_method: str = "max_sharpe"  # ← ADDED! (max_sharpe, min_volatility, efficient_frontier)
+    default_method: str = "max_sharpe"
     
     # Risk-free rate (for Sharpe ratio calculations)
     risk_free_rate: float = 0.05  # ← ADDED! 5%

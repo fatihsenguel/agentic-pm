@@ -2,10 +2,8 @@
 Optimization Agent for Quant Portfolio Manager.
 
 The Optimization Agent is responsible for:
-- Portfolio optimization (Mean-Variance, Risk Parity)
-- Efficient Frontier generation
+- Portfolio optimization (Mean-Variance)
 - Constraint handling and validation
-- Comparing optimization methods
 
 It uses the optimization module and provides tools for the multi-agent system.
 
@@ -45,9 +43,6 @@ class OptimizationAgent(BaseAgent):
     
     Capabilities:
     - Mean-Variance (Markowitz) optimization
-    - Risk Parity / Equal Risk Contribution
-    - Efficient Frontier generation
-    - Method comparison (MV vs RP)
     """
     
     def __init__(self, agent_config: Optional[AgentConfig] = None):
@@ -81,13 +76,11 @@ class OptimizationAgent(BaseAgent):
             "optimize_mean_variance",
             "optimize_max_sharpe",
             "optimize_min_volatility",
-            "generate_efficient_frontier",
         ]
     
     def get_tools(self) -> List[Callable]:
         return [
             self.optimize_portfolio_tool,
-            self.efficient_frontier_tool,
         ]
     
     def get_system_prompt(self) -> str:
@@ -97,7 +90,6 @@ Your role is to optimize portfolio weights using mathematical optimization.
 
 CAPABILITIES:
 - Mean-Variance (Markowitz) Optimization: Maximize Sharpe ratio or minimize volatility
-- Efficient Frontier: Generate return/risk tradeoff curve
 
 AVAILABLE METHODS:
 1. max_sharpe - Maximum Sharpe ratio (best risk-adjusted return)
@@ -302,77 +294,6 @@ Always include:
                         pass
 
             return result_dict
-            
-        except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
-    
-    def efficient_frontier_tool(
-        self,
-        tickers: str,
-        expected_returns: str,
-        covariance_matrix: str,
-        n_points: int = 20,
-        min_weight: float = 0.0,
-        max_weight: float = 0.40
-    ) -> Dict[str, Any]:
-        """
-        Generate efficient frontier.
-        
-        Returns points on the efficient frontier from min-variance to max-return.
-        """
-        try:
-            ticker_list = [t.strip() for t in tickers.split(",")]
-            ret_dict = json.loads(expected_returns) if isinstance(expected_returns, str) else expected_returns
-            cov_dict = json.loads(covariance_matrix) if isinstance(covariance_matrix, str) else covariance_matrix
-            
-            exp_ret = pd.Series(ret_dict)[ticker_list]
-            cov_mat = pd.DataFrame(cov_dict).loc[ticker_list, ticker_list]
-            
-            from portfolio_tool.optimization.constraints import PortfolioConstraints
-            
-            constraints = PortfolioConstraints(
-                min_weight=min_weight,
-                max_weight=max_weight,
-                long_only=True,
-            )
-            
-            # Generate frontier
-            frontier = self.mv_optimizer.efficient_frontier(
-                exp_ret, cov_mat, constraints, n_points=n_points
-            )
-            
-            # Get key portfolios
-            max_sharpe = frontier.get_max_sharpe_portfolio()
-            min_vol = frontier.get_min_volatility_portfolio()
-            
-            return {
-                "success": True,
-                "num_points": len(frontier.points),
-                "frontier_summary": frontier.to_dict(),
-                "max_sharpe_portfolio": {
-                    "weights": max_sharpe.weights,
-                    "return": f"{max_sharpe.expected_return:.2%}",
-                    "volatility": f"{max_sharpe.expected_volatility:.2%}",
-                    "sharpe": f"{max_sharpe.sharpe_ratio:.3f}",
-                },
-                "min_volatility_portfolio": {
-                    "weights": min_vol.weights,
-                    "return": f"{min_vol.expected_return:.2%}",
-                    "volatility": f"{min_vol.expected_volatility:.2%}",
-                    "sharpe": f"{min_vol.sharpe_ratio:.3f}",
-                },
-                "frontier_points": [
-                    {
-                        "return": f"{p.expected_return:.2%}",
-                        "volatility": f"{p.expected_volatility:.2%}",
-                        "sharpe": f"{p.sharpe_ratio:.3f}",
-                    }
-                    for p in frontier.points
-                ]
-            }
             
         except Exception as e:
             return {

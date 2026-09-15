@@ -5,7 +5,6 @@ This module provides portfolio optimization algorithms:
 - Mean-Variance (Markowitz) Optimization
 - Minimum Volatility
 - Maximum Sharpe Ratio
-- Efficient Frontier Generation
 
 Design Principles:
 - All optimizers implement OptimizerInterface

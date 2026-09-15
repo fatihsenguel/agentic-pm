@@ -6,12 +6,11 @@ Implements classic Markowitz optimization:
 - Minimum Volatility portfolio
 - Target Return portfolio
 - Target Volatility portfolio
-- Efficient Frontier generation
 
 Uses scipy.optimize for numerical optimization.
 """
 
-from typing import List, Optional
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -21,8 +20,6 @@ from .base import (
     OptimizerInterface,
     OptimizationResult,
     OptimizationMethod,
-    EfficientFrontier,
-    EfficientFrontierPoint,
 )
 from .constraints import (
     PortfolioConstraints,
@@ -390,78 +387,6 @@ class MeanVarianceOptimizer(OptimizerInterface):
         opt_result.method = OptimizationMethod.TARGET_VOLATILITY
         
         return opt_result
-    
-    def efficient_frontier(
-        self,
-        expected_returns: pd.Series,
-        cov_matrix: pd.DataFrame,
-        constraints: Optional[PortfolioConstraints] = None,
-        n_points: int = 50
-    ) -> EfficientFrontier:
-        """
-        Generate the efficient frontier.
-        
-        Creates n_points portfolios from min-variance to max-return.
-        
-        Args:
-            expected_returns: Expected returns per asset
-            cov_matrix: Covariance matrix
-            constraints: Portfolio constraints
-            n_points: Number of points on the frontier
-            
-        Returns:
-            EfficientFrontier with all points
-        """
-        tickers = list(expected_returns.index)
-        ret = expected_returns.values
-        cov = cov_matrix.values
-        
-        # Find min and max achievable returns
-        min_vol_result = self.min_volatility(expected_returns, cov_matrix, constraints)
-        
-        # Max return is the highest returning single asset (respecting constraints)
-        if constraints and constraints.max_weight < 1.0:
-            # With max weight constraint, max return is more complex
-            # Use max_sharpe as proxy for high-return portfolio
-            max_ret_result = self.max_sharpe(expected_returns, cov_matrix, constraints)
-            max_return = max_ret_result.expected_return * 1.1  # Slight buffer
-        else:
-            max_return = ret.max()
-        
-        min_return = min_vol_result.expected_return
-        
-        # Generate target returns
-        target_returns = np.linspace(min_return, max_return, n_points)
-        
-        points = []
-        
-        for target in target_returns:
-            # Create constraints with target return
-            target_constraints = PortfolioConstraints(
-                min_weight=constraints.min_weight if constraints else 0.0,
-                max_weight=constraints.max_weight if constraints else 1.0,
-                target_return=target,
-                long_only=constraints.long_only if constraints else True,
-                asset_bounds=constraints.asset_bounds if constraints else None,
-            )
-            
-            try:
-                result = self.target_return(
-                    expected_returns, cov_matrix, target_constraints
-                )
-                
-                if result.success:
-                    points.append(EfficientFrontierPoint(
-                        expected_return=result.expected_return,
-                        expected_volatility=result.expected_volatility,
-                        sharpe_ratio=result.sharpe_ratio,
-                        weights=result.weights
-                    ))
-            except Exception:
-                # Skip infeasible points
-                continue
-        
-        return EfficientFrontier(points)
     
     def _clean_weights(self, weights: np.ndarray, threshold: float = 1e-4) -> np.ndarray:
         """Clean up very small weights to zero."""

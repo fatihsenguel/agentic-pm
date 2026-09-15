@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -131,9 +131,6 @@ class OptimizerInterface(ABC):
     
     All optimizers must implement:
     - optimize(): Main optimization method
-    
-    Optional methods:
-    - efficient_frontier(): Generate frontier points
     """
     
     def __init__(
@@ -312,72 +309,3 @@ class OptimizerInterface(ABC):
             error_message=error_message,
             active_constraints=active_constraints or [],
         )
-
-
-@dataclass
-class EfficientFrontierPoint:
-    """A single point on the efficient frontier."""
-    expected_return: float
-    expected_volatility: float
-    sharpe_ratio: float
-    weights: Dict[str, float]
-
-
-class EfficientFrontier:
-    """
-    Efficient Frontier representation.
-    
-    Contains multiple portfolio points from min-variance to max-return.
-    """
-    
-    def __init__(self, points: List[EfficientFrontierPoint]):
-        """Initialize with list of frontier points."""
-        self.points = sorted(points, key=lambda p: p.expected_volatility)
-    
-    @property
-    def returns(self) -> List[float]:
-        """Get list of returns."""
-        return [p.expected_return for p in self.points]
-    
-    @property
-    def volatilities(self) -> List[float]:
-        """Get list of volatilities."""
-        return [p.expected_volatility for p in self.points]
-    
-    @property
-    def sharpe_ratios(self) -> List[float]:
-        """Get list of Sharpe ratios."""
-        return [p.sharpe_ratio for p in self.points]
-    
-    def get_max_sharpe_portfolio(self) -> EfficientFrontierPoint:
-        """Get portfolio with maximum Sharpe ratio."""
-        return max(self.points, key=lambda p: p.sharpe_ratio)
-    
-    def get_min_volatility_portfolio(self) -> EfficientFrontierPoint:
-        """Get minimum volatility portfolio."""
-        return min(self.points, key=lambda p: p.expected_volatility)
-    
-    def get_portfolio_at_volatility(self, target_vol: float) -> Optional[EfficientFrontierPoint]:
-        """Get portfolio closest to target volatility."""
-        if not self.points:
-            return None
-        return min(self.points, key=lambda p: abs(p.expected_volatility - target_vol))
-    
-    def to_dataframe(self) -> pd.DataFrame:
-        """Convert to DataFrame for plotting."""
-        return pd.DataFrame({
-            "return": self.returns,
-            "volatility": self.volatilities,
-            "sharpe": self.sharpe_ratios,
-        })
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary."""
-        return {
-            "num_points": len(self.points),
-            "min_volatility": min(self.volatilities) if self.volatilities else None,
-            "max_volatility": max(self.volatilities) if self.volatilities else None,
-            "min_return": min(self.returns) if self.returns else None,
-            "max_return": max(self.returns) if self.returns else None,
-            "max_sharpe": max(self.sharpe_ratios) if self.sharpe_ratios else None,
-        }
