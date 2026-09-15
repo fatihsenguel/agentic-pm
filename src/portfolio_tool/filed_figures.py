@@ -12,10 +12,12 @@ D28), each field's latest vintage as of a date (D29), and the fields no tag
 yields, named and not filled (D30). A `duration` field is read from an annual
 fact ending on the year's end date, an `instant` field from a fact at that
 date. It builds the `years` half only: the price, the shares and the
-valuation range are not filed facts. Its output is not yet the screen's
-input: quant/fundamentals.py sums the three borrowing fields itself (D33,
-Part 12 G) and still reads one `tax_rate` per year, which D32 keeps out of
-the block.
+valuation range are not filed facts. Its `years` are in the shape the
+metrics read (Part 12 G): quant/fundamentals.py sums the three borrowing
+fields itself (D33) and taxes NOPAT at the philosophy's stated rate (D32),
+so `effective_tax_rate` is carried as filed and not read. The rest of the
+screen's block, the ticker, the SIC code, the price, the shares and the
+range, is the node's to assemble (decision 29).
 """
 
 import datetime as dt

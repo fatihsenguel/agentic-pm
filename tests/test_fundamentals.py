@@ -31,28 +31,33 @@ import pytest
 
 AS_OF = dt.date(2026, 9, 10)
 
+# Part 10 A's note of 2026-09-15 (D32, decision 46): the rate NOPAT is taxed
+# at is the philosophy's PHI-2.1 parameter, one number for every year, not
+# a figure of the block.
+ASSUMPTIONS = {"tax_rate": 0.20}
+
 YEARS = {
     "FY2021": {"ends": "2021-12-31", "filed": "2022-02-04",
-               "operating_income": 20_000.0, "tax_rate": 0.20,
+               "operating_income": 20_000.0,
                "equity": 120_000.0, "commercial_paper": 0.0, "long_term_debt_current": 0.0,
                "long_term_debt_noncurrent": 20_000.0, "cash": 40_000.0},
     "FY2022": {"ends": "2022-12-31", "filed": "2023-02-03",
-               "operating_income": 13_500.0, "tax_rate": 0.20,
+               "operating_income": 13_500.0,
                "equity": 128_000.0, "commercial_paper": 0.0, "long_term_debt_current": 0.0,
                "long_term_debt_noncurrent": 22_000.0, "cash": 42_000.0},
     "FY2023": {"ends": "2023-12-31", "filed": "2024-02-02",
                "revenue": 100_000.0, "gross_profit": 55_000.0,
-               "operating_income": 24_000.0, "tax_rate": 0.20,
+               "operating_income": 24_000.0,
                "equity": 140_000.0, "commercial_paper": 0.0, "long_term_debt_current": 0.0,
                "long_term_debt_noncurrent": 20_000.0, "cash": 40_000.0},
     "FY2024": {"ends": "2024-12-31", "filed": "2025-02-05",
                "revenue": 112_000.0, "gross_profit": 63_840.0,
-               "operating_income": 30_000.0, "tax_rate": 0.20,
+               "operating_income": 30_000.0,
                "equity": 150_000.0, "commercial_paper": 0.0, "long_term_debt_current": 0.0,
                "long_term_debt_noncurrent": 18_000.0, "cash": 43_000.0},
     "FY2025": {"ends": "2025-12-31", "filed": "2026-02-04",
                "revenue": 125_000.0, "gross_profit": 72_500.0,
-               "operating_income": 36_000.0, "tax_rate": 0.20,
+               "operating_income": 36_000.0,
                "depreciation_amortisation": 16_000.0,
                "operating_cash_flow": 52_780.0, "capex": 22_000.0,
                "equity": 170_000.0, "commercial_paper": 0.0, "long_term_debt_current": 0.0,
@@ -82,7 +87,7 @@ def fundamentals():
 
 @pytest.fixture(scope="module")
 def metrics(fundamentals):
-    return fundamentals.metrics_by_year(figures())
+    return fundamentals.metrics_by_year(figures(), ASSUMPTIONS)
 
 
 # --- Part 10 C -------------------------------------------------------------
@@ -156,14 +161,14 @@ def test_years_come_back_in_fiscal_order_whatever_the_file_order(fundamentals):
 def test_exactly_two_times_ebitda(fundamentals):
     block = figures()
     block["years"]["FY2025"].update({"long_term_debt_noncurrent": 120_000.0, "cash": 16_000.0})
-    assert fundamentals.metrics_by_year(block)["FY2025"]["net_debt_to_ebitda"] == 2.0
+    assert fundamentals.metrics_by_year(block, ASSUMPTIONS)["FY2025"]["net_debt_to_ebitda"] == 2.0
 
 
 # --- raises -----------------------------------------------------------------
 
 def test_no_years_raises(fundamentals):
     with pytest.raises(fundamentals.FundamentalsError, match="no fiscal years"):
-        fundamentals.metrics_by_year(figures(years={}))
+        fundamentals.metrics_by_year(figures(years={}), ASSUMPTIONS)
 
 
 @pytest.mark.parametrize("key", ["ends", "filed"])
@@ -178,46 +183,52 @@ def test_zero_ebitda_raises_rather_than_dividing(fundamentals):
     block = figures()
     block["years"]["FY2025"].update({"operating_income": 16_000.0, "depreciation_amortisation": -16_000.0})
     with pytest.raises(fundamentals.FundamentalsError, match="FY2025.*EBITDA"):
-        fundamentals.metrics_by_year(block)
+        fundamentals.metrics_by_year(block, ASSUMPTIONS)
 
 
 def test_zero_invested_capital_raises_rather_than_dividing(fundamentals):
     block = figures()
     block["years"]["FY2021"].update({"cash": 140_000.0})
     with pytest.raises(fundamentals.FundamentalsError, match="FY2021.*invested capital"):
-        fundamentals.metrics_by_year(block)
+        fundamentals.metrics_by_year(block, ASSUMPTIONS)
 
 
 def test_a_figure_that_is_not_a_number_raises(fundamentals):
     block = figures()
     block["years"]["FY2025"]["revenue"] = "125,000"
     with pytest.raises(fundamentals.FundamentalsError, match="FY2025.*revenue"):
-        fundamentals.metrics_by_year(block)
+        fundamentals.metrics_by_year(block, ASSUMPTIONS)
 
 
 # --- Part 12 G: net debt on the filed figures ---------------------------------
 
 # Part 12 B's figures in whole dollars, the unit the block carries
 # (edgar_facts_aapl.csv); the dates are Part 12 A's. Only the fields the
-# net debt row and its cross-check read.
+# two rows and their cross-checks read; the filed rate is here because the
+# NOPAT row is the proof it is not read.
 APPLE_YEARS = {
     "FY2021": {"ends": "2021-09-25", "filed": "2021-10-29",
+               "effective_tax_rate": Decimal("0.133"), "equity": Decimal("63090000000"),
                "operating_income": Decimal("108949000000"), "depreciation_amortisation": Decimal("11284000000"),
                "cash": Decimal("34940000000"), "commercial_paper": Decimal("6000000000"),
                "long_term_debt_current": Decimal("9613000000"), "long_term_debt_noncurrent": Decimal("109106000000")},
     "FY2022": {"ends": "2022-09-24", "filed": "2022-10-28",
+               "effective_tax_rate": Decimal("0.162"), "equity": Decimal("50672000000"),
                "operating_income": Decimal("119437000000"), "depreciation_amortisation": Decimal("11104000000"),
                "cash": Decimal("23646000000"), "commercial_paper": Decimal("9982000000"),
                "long_term_debt_current": Decimal("11128000000"), "long_term_debt_noncurrent": Decimal("98959000000")},
     "FY2023": {"ends": "2023-09-30", "filed": "2023-11-03",
+               "effective_tax_rate": Decimal("0.147"), "equity": Decimal("62146000000"),
                "operating_income": Decimal("114301000000"), "depreciation_amortisation": Decimal("11519000000"),
                "cash": Decimal("29965000000"), "commercial_paper": Decimal("5985000000"),
                "long_term_debt_current": Decimal("9822000000"), "long_term_debt_noncurrent": Decimal("95281000000")},
     "FY2024": {"ends": "2024-09-28", "filed": "2024-11-01",
+               "effective_tax_rate": Decimal("0.241"), "equity": Decimal("56950000000"),
                "operating_income": Decimal("123216000000"), "depreciation_amortisation": Decimal("11445000000"),
                "cash": Decimal("29943000000"), "commercial_paper": Decimal("9967000000"),
                "long_term_debt_current": Decimal("10912000000"), "long_term_debt_noncurrent": Decimal("85750000000")},
     "FY2025": {"ends": "2025-09-27", "filed": "2025-10-31",
+               "effective_tax_rate": Decimal("0.156"), "equity": Decimal("73733000000"),
                "operating_income": Decimal("133050000000"), "depreciation_amortisation": Decimal("11698000000"),
                "cash": Decimal("35934000000"), "commercial_paper": Decimal("7979000000"),
                "long_term_debt_current": Decimal("12350000000"), "long_term_debt_noncurrent": Decimal("78328000000")},
@@ -249,7 +260,7 @@ def test_net_debt_is_the_three_borrowing_fields_less_cash_exactly(fundamentals, 
 def test_net_debt_to_ebitda_on_the_filed_figures(fundamentals, year, ratio):
     """Part 12 G's cross-check, four places; the ratio is where a filed
     figure stops being exact, and it is a float."""
-    value = fundamentals.metrics_by_year(apple())[year]["net_debt_to_ebitda"]
+    value = fundamentals.metrics_by_year(apple(), ASSUMPTIONS)[year]["net_debt_to_ebitda"]
     assert isinstance(value, float)
     assert round(value, 4) == ratio
 
@@ -261,7 +272,7 @@ def test_a_year_missing_a_borrowing_field_has_no_net_debt(fundamentals, field):
     block = apple()
     del block["years"]["FY2025"][field]
     assert fundamentals.net_debt("FY2025", block["years"]["FY2025"]) is None
-    assert "net_debt_to_ebitda" not in fundamentals.metrics_by_year(block)["FY2025"]
+    assert "net_debt_to_ebitda" not in fundamentals.metrics_by_year(block, ASSUMPTIONS)["FY2025"]
 
 
 def test_invested_capital_reads_the_same_three_fields(fundamentals):
@@ -271,6 +282,72 @@ def test_invested_capital_reads_the_same_three_fields(fundamentals):
     block["years"]["FY2025"].update({"commercial_paper": 1_000.0, "long_term_debt_current": 5_000.0,
                                      "long_term_debt_noncurrent": 10_000.0})
     # 170,000 + 16,000 - 42,000 = 144,000 as before; NOPAT 28,800; ROIC 0.2000
-    assert fundamentals.metrics_by_year(block)["FY2025"]["return_on_invested_capital"] == pytest.approx(0.2000, abs=1e-12)
+    assert fundamentals.metrics_by_year(block, ASSUMPTIONS)["FY2025"]["return_on_invested_capital"] == pytest.approx(0.2000, abs=1e-12)
     del block["years"]["FY2025"]["commercial_paper"]
-    assert "return_on_invested_capital" not in fundamentals.metrics_by_year(block)["FY2025"]
+    assert "return_on_invested_capital" not in fundamentals.metrics_by_year(block, ASSUMPTIONS)["FY2025"]
+
+
+# --- Part 12 G: NOPAT at the stated rate --------------------------------------
+
+@pytest.mark.parametrize("year, nopat", [
+    ("FY2021", "87159200000"), ("FY2022", "95549600000"), ("FY2023", "91440800000"),
+    ("FY2024", "98572800000"), ("FY2025", "106440000000"),
+])
+def test_nopat_is_operating_income_at_the_stated_rate_exactly(fundamentals, year, nopat):
+    """Part 12 G: the stated rate is a decimal fraction, so the product is
+    exact and a Decimal; the block's effective_tax_rate beside it is not
+    read. A bridge reading the filed rate returns Part 12 G's contrast
+    column instead, a different figure in every year."""
+    value = fundamentals.nopat(year, APPLE_YEARS[year], ASSUMPTIONS)
+    assert isinstance(value, Decimal)
+    assert value == Decimal(nopat)
+
+
+def test_the_filed_rate_is_not_the_stated_rate(fundamentals):
+    """FY2024, where Part 12 G's two columns are furthest apart: 98,572.8
+    at the stated rate against 93,520.9 at the filed 0.241."""
+    stated = fundamentals.nopat("FY2024", APPLE_YEARS["FY2024"], ASSUMPTIONS)
+    assert stated == Decimal("98572800000")
+    assert round(Decimal("123216000000") * (1 - Decimal("0.241")) / 1_000_000, 1) == Decimal("93520.9")
+    assert stated != Decimal("93520900000")
+
+
+def test_return_on_invested_capital_on_the_filed_figures(fundamentals):
+    """Part 12 G's NOPAT over Part 12 B's equity plus the three borrowing
+    fields less cash, FY2025: 106,440 / (73,733 + 98,657 - 35,934) =
+    106,440 / 136,456."""
+    value = fundamentals.metrics_by_year(apple(), ASSUMPTIONS)["FY2025"]["return_on_invested_capital"]
+    assert isinstance(value, float)
+    assert value == pytest.approx(106_440 / 136_456, abs=1e-12)
+
+
+def test_without_the_stated_rate_no_year_has_a_return_on_capital(fundamentals):
+    """The rate is an input of the metric like a figure of the year: absent,
+    the metric is absent, never computed at a rate nobody stated. Whether
+    that matters is the screen's (a clause naming the metric carries the
+    rate, or does not load)."""
+    metrics = fundamentals.metrics_by_year(apple(), {})
+    assert all("return_on_invested_capital" not in year for year in metrics.values())
+    assert metrics["FY2025"]["net_debt_to_ebitda"] == pytest.approx(0.4333, abs=5e-5)
+
+
+def test_the_assumptions_a_metric_needs_are_named(fundamentals):
+    assert fundamentals.ASSUMPTIONS == {"return_on_invested_capital": ("tax_rate",)}
+
+
+@pytest.mark.parametrize("rate", ["0.20", True, None, 1.0, -0.1])
+def test_a_stated_rate_that_is_not_a_fraction_raises(fundamentals, rate):
+    with pytest.raises(fundamentals.FundamentalsError, match="tax_rate"):
+        fundamentals.metrics_by_year(apple(), {"tax_rate": rate})
+
+
+@pytest.mark.parametrize("key", ["tax_rate", "debt"])
+def test_a_figure_key_the_block_does_not_carry_raises(fundamentals, key):
+    """The block's figures are the reader's fields (Part 12 C). A year
+    carrying a key no field names is a typed block in an old shape, and it
+    raises rather than being read around: a fixture still carrying the
+    one debt figure or a per-year rate would otherwise pass silently."""
+    block = apple()
+    block["years"]["FY2025"][key] = Decimal("1")
+    with pytest.raises(fundamentals.FundamentalsError, match=f"FY2025.*{key}"):
+        fundamentals.metrics_by_year(block, ASSUMPTIONS)

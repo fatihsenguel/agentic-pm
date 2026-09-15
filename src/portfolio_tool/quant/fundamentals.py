@@ -37,13 +37,34 @@ is what a clause's limit is compared against.
        lease is not one, and a year in which any of the three did not
        resolve has no net debt and no invested capital: a missing
        borrowing field is never read as 0.
+  D32  The rate NOPAT is taxed at is a stated assumption, the philosophy's,
+       passed in beside the block; the block's effective_tax_rate is a
+       filed figure and is not read. ASSUMPTIONS names, per metric, what
+       the caller states; a metric whose assumption is not stated is
+       absent for every year, never computed at a rate nobody stated.
+
+The block's figures are the reader's fields (filed_figures.FIELDS, Part 12
+C) and nothing else: a year carrying a key no field names is a typed block
+in an old shape and raises, rather than being read around.
 """
 
 import datetime as dt
 from decimal import Decimal
 from typing import Callable, Dict, List, Mapping, Optional, Tuple
 
+from portfolio_tool.filed_figures import FIELDS
+
 Figures = Mapping[str, object]
+Assumptions = Mapping[str, object]
+
+# The figure vocabulary: what a year of the block may carry besides its dates.
+FIGURE_FIELDS = frozenset(field.name for field in FIELDS)
+
+# Per metric key, the assumptions the caller states (D32). Nothing else is
+# an assumption; a key here is read by exactly one formula below.
+ASSUMPTIONS: Mapping[str, Tuple[str, ...]] = {
+    "return_on_invested_capital": ("tax_rate",),
+}
 
 # D33, Part 12 C: the block's borrowing fields, and the definition of debt in
 # Part 10 B's formulas. Their sum is arithmetic here, never on the way in.
@@ -101,26 +122,50 @@ def net_debt(year: str, figures: Mapping) -> Optional[Decimal]:
     return borrowings - cash
 
 
+def _stated_rate(assumptions: Assumptions) -> Optional[Decimal]:
+    """The tax rate the caller states, a fraction in [0, 1), as a Decimal;
+    None when none is stated. A stated rate that is not a fraction raises."""
+    if "tax_rate" not in assumptions:
+        return None
+    rate = assumptions["tax_rate"]
+    if isinstance(rate, bool) or not isinstance(rate, (int, float, Decimal)):
+        raise FundamentalsError(f"tax_rate = {rate!r} is not a number; a stated rate is a "
+                                "fraction in [0, 1), 20% written 0.20.")
+    if not 0 <= rate < 1:
+        raise FundamentalsError(f"tax_rate = {rate!r} is not a fraction in [0, 1); 20% is "
+                                "written 0.20.")
+    return _number("the stated assumptions", "tax_rate", rate)
+
+
+def nopat(year: str, figures: Mapping, assumptions: Assumptions) -> Optional[Decimal]:
+    """Operating income less tax at the stated rate, exact (D32, Part 12 G).
+    None when the year has no operating income or no rate is stated."""
+    operating_income, rate = _figure(year, figures, "operating_income"), _stated_rate(assumptions)
+    if operating_income is None or rate is None:
+        return None
+    return operating_income * (1 - rate)
+
+
 # --- the formulas, Part 10 B ---------------------------------------------------
 
-def _return_on_invested_capital(year: str, f: Mapping, block: Figures) -> Optional[float]:
-    inputs = [_figure(year, f, k) for k in ("operating_income", "tax_rate", "equity", "cash")]
-    borrowings = _borrowings(year, f)
-    if any(v is None for v in inputs) or borrowings is None:
+def _return_on_invested_capital(year: str, f: Mapping, block: Figures,
+                                assumptions: Assumptions) -> Optional[float]:
+    inputs = [_figure(year, f, k) for k in ("equity", "cash")]
+    borrowings, after_tax = _borrowings(year, f), nopat(year, f, assumptions)
+    if any(v is None for v in inputs) or borrowings is None or after_tax is None:
         return None
-    operating_income, tax_rate, equity, cash = inputs
-    nopat = operating_income * (1 - tax_rate)
-    return _divide(year, nopat, equity + borrowings - cash, "invested capital (equity + debt - cash)")
+    equity, cash = inputs
+    return _divide(year, after_tax, equity + borrowings - cash, "invested capital (equity + debt - cash)")
 
 
-def _gross_margin(year: str, f: Mapping, block: Figures) -> Optional[float]:
+def _gross_margin(year: str, f: Mapping, block: Figures, assumptions: Assumptions) -> Optional[float]:
     revenue, gross_profit = _figure(year, f, "revenue"), _figure(year, f, "gross_profit")
     if revenue is None or gross_profit is None:
         return None
     return _divide(year, gross_profit, revenue, "revenue")
 
 
-def _net_debt_to_ebitda(year: str, f: Mapping, block: Figures) -> Optional[float]:
+def _net_debt_to_ebitda(year: str, f: Mapping, block: Figures, assumptions: Assumptions) -> Optional[float]:
     inputs = [_figure(year, f, k) for k in ("operating_income", "depreciation_amortisation")]
     debt = net_debt(year, f)
     if any(v is None for v in inputs) or debt is None:
@@ -129,7 +174,7 @@ def _net_debt_to_ebitda(year: str, f: Mapping, block: Figures) -> Optional[float
     return _divide(year, debt, operating_income + da, "EBITDA (operating income + D&A)")
 
 
-def _free_cash_flow_yield(year: str, f: Mapping, block: Figures) -> Optional[float]:
+def _free_cash_flow_yield(year: str, f: Mapping, block: Figures, assumptions: Assumptions) -> Optional[float]:
     """The year's free cash flow at the as-of price: the one metric that
     needs the price and the shares, which sit on the block, not the year."""
     ocf, capex = _figure(year, f, "operating_cash_flow"), _figure(year, f, "capex")
@@ -143,7 +188,7 @@ def _free_cash_flow_yield(year: str, f: Mapping, block: Figures) -> Optional[flo
 
 # The metric vocabulary: the keys a philosophy clause may name. A key here
 # is a formula above and nothing else; the loader refuses any other key.
-METRICS: Mapping[str, Callable[[str, Mapping, Figures], Optional[float]]] = {
+METRICS: Mapping[str, Callable[[str, Mapping, Figures, Assumptions], Optional[float]]] = {
     "return_on_invested_capital": _return_on_invested_capital,
     "gross_margin": _gross_margin,
     "net_debt_to_ebitda": _net_debt_to_ebitda,
@@ -184,17 +229,28 @@ def years_filed_by(block: Figures, as_of: dt.date) -> List[str]:
     return [label for _, label in sorted(dated)]
 
 
-def metrics_by_year(block: Figures) -> Dict[str, Dict[str, float]]:
-    """Every metric each fiscal year's figures allow, by year, by metric key.
-    A metric whose inputs the year lacks is absent for that year."""
+def metrics_by_year(block: Figures, assumptions: Assumptions) -> Dict[str, Dict[str, float]]:
+    """Every metric each fiscal year's figures and the stated assumptions
+    allow, by year, by metric key. A metric whose inputs the year lacks, or
+    whose assumption is not stated, is absent for that year."""
+    unknown = sorted(set(assumptions) - {k for keys in ASSUMPTIONS.values() for k in keys})
+    if unknown:
+        raise FundamentalsError(f"{unknown} are not assumptions any metric reads; the "
+                                f"assumptions are {sorted(k for keys in ASSUMPTIONS.values() for k in keys)}.")
+    _stated_rate(assumptions)
     out: Dict[str, Dict[str, float]] = {}
     for label, figures in _years(block).items():
         for key in figures:
-            if key not in _DATES:
-                _number(label, key, figures[key])
+            if key in _DATES:
+                continue
+            if key not in FIGURE_FIELDS:
+                raise FundamentalsError(
+                    f"{label}: {key} is not a figure the block carries; the figures are "
+                    f"the reader's fields ({', '.join(f.name for f in FIELDS)}).")
+            _number(label, key, figures[key])
         computed = {}
         for name, formula in METRICS.items():
-            value = formula(label, figures, block)
+            value = formula(label, figures, block, assumptions)
             if value is not None:
                 computed[name] = value
         out[label] = computed

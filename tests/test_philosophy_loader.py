@@ -22,7 +22,19 @@ topics = ["quality", "return on capital"]
 metric = "return_on_invested_capital"
 min = 0.12
 years = 5
+tax_rate = 0.20
 text = "Return on invested capital of at least 12% in each of the last five fiscal years."
+'''
+
+MARGIN = '''
+[[clause]]
+id = "PHI-2.2"
+type = "metric_band"
+topics = ["quality", "gross margin"]
+metric = "gross_margin"
+min = 0.35
+years = 3
+text = "Gross margin of at least 35% in each of the last three fiscal years."
 '''
 
 SAFETY = '''
@@ -59,7 +71,8 @@ def _write(tmp_path, body):
 def test_inline_good_loads(philosophy, tmp_path):
     doc = philosophy.load_philosophy(_write(tmp_path, GOOD))
     clause = doc["PHI-2.1"]
-    assert dict(clause.params) == {"metric": "return_on_invested_capital", "min": 0.12, "years": 5}
+    assert dict(clause.params) == {"metric": "return_on_invested_capital", "min": 0.12, "years": 5,
+                                   "tax_rate": 0.20}
 
 
 def test_margin_of_safety_loads(philosophy, tmp_path):
@@ -117,6 +130,13 @@ def test_the_type_vocabulary(philosophy):
     (GOOD.replace("min = 0.12", "min = 0.20\nmax = 0.10"), "not below max"),
     (GOOD.replace("min = 0.12", 'min = "12%"'), "not a number"),
     (GOOD.replace("min = 0.12", "min = 0.12\ndiscount = 0.2"), "does not take"),
+    # D32, decision 46: the rate NOPAT is taxed at is the clause's, and only
+    # a clause whose metric needs it carries one
+    (GOOD.replace("tax_rate = 0.20\n", ""), "return_on_invested_capital needs \\['tax_rate'\\]"),
+    (GOOD.replace("tax_rate = 0.20", "tax_rate = 20"), "fraction in \\[0, 1\\)"),
+    (GOOD.replace("tax_rate = 0.20", "tax_rate = 1"), "fraction in \\[0, 1\\)"),
+    (GOOD.replace("tax_rate = 0.20", 'tax_rate = "20%"'), "fraction in \\[0, 1\\)"),
+    (MARGIN.replace("years = 3", "years = 3\ntax_rate = 0.20"), "gross_margin does not take \\['tax_rate'\\]"),
     (GOOD.replace("metric_band", "statement"), "statement carries"),
     (SAFETY.replace("discount = 0.25", "discount = 25"), "fraction in \\(0, 1\\)"),
     (SAFETY.replace("discount = 0.25", "discount = 0"), "fraction in \\(0, 1\\)"),

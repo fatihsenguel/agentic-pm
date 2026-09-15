@@ -37,7 +37,9 @@ skipped silently to let the rest of the screen report a verdict.
 ## 2. Business quality
 
 **PHI-2.1** Return on invested capital of at least 12% in each of the last
-five fiscal years.
+five fiscal years. The return is operating income taxed at a stated rate of
+20%, my number, not at the rate the company reported in the year, so that a
+one-off tax item does not move a measure of the business.
 
 **PHI-2.2** Gross margin of at least 35% in each of the last three fiscal
 years.

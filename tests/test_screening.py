@@ -171,6 +171,36 @@ text = "Gross margin between 50% and 56%."
     ]
 
 
+def test_two_clauses_stating_two_rates_raise(screening, tmp_path):
+    """D32: a document states one rate. Two metric_band clauses on the same
+    metric with different rates would compute two ROIC series; the screen
+    refuses rather than picking one."""
+    p = tmp_path / "p.toml"
+    p.write_text('''
+[[clause]]
+id = "PHI-2.1"
+type = "metric_band"
+topics = ["quality"]
+metric = "return_on_invested_capital"
+min = 0.12
+years = 5
+tax_rate = 0.20
+text = "Return on invested capital of at least 12% in each of the last five fiscal years."
+
+[[clause]]
+id = "PHI-2.4"
+type = "metric_band"
+topics = ["quality", "recent"]
+metric = "return_on_invested_capital"
+min = 0.15
+years = 1
+tax_rate = 0.21
+text = "Return on invested capital of at least 15% in the latest fiscal year."
+''', encoding="utf-8")
+    with pytest.raises(screening.ScreeningError, match="tax_rate.*PHI-2.1.*PHI-2.4"):
+        screening.screen(load_philosophy(str(p)), figures(), AS_OF)
+
+
 # --- Part 10 F: PHI-3.2, the industry exclusion -----------------------------------
 
 SIC_CODES = ["6021", "6022", "6035", "6036", "6211", "6311", "6331"]

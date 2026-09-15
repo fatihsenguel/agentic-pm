@@ -34,7 +34,7 @@ from portfolio_tool.clauses import (
     STATEMENT, Clause, ClauseDocument, ClauseError, DocumentSpec, load_clauses,
     normalise_topic, resolve_path,
 )
-from portfolio_tool.quant.fundamentals import METRICS
+from portfolio_tool.quant.fundamentals import ASSUMPTIONS, METRICS
 
 __all__ = ["Philosophy", "PhilosophyError", "Clause", "CLAUSE_TYPES", "STATEMENT",
            "CLAUSE_ID", "load_philosophy", "normalise_topic", "resolve_path"]
@@ -47,12 +47,13 @@ CLAUSE_ID = re.compile(r"^PHI-\d+\.\d+$")
 # A metric_band needs at least one bound, checked below.
 CLAUSE_TYPES: Mapping[str, tuple] = MappingProxyType({
     STATEMENT: ((), ()),
-    "metric_band": (("metric", "years"), ("min", "max")),
+    "metric_band": (("metric", "years"), ("min", "max", "tax_rate")),
     "margin_of_safety": (("discount",), ()),
     "excluded_industry": (("sic_codes",), ()),
 })
 
 _BOUNDS = ("min", "max")
+_ASSUMPTION_KEYS = tuple(sorted({k for keys in ASSUMPTIONS.values() for k in keys}))
 
 # A SIC code as EDGAR's submissions document carries it (expected_values.md
 # Part 13 C): a string of four digits, compared as written.
@@ -88,6 +89,21 @@ def _validate_params(where: str, clause_type: str, params: Mapping[str, Any]) ->
                                       "limits are in the metric's own unit.")
         if "min" in params and "max" in params and params["min"] >= params["max"]:
             raise PhilosophyError(f"{where}: min {params['min']} is not below max {params['max']}.")
+        # D32: the assumptions a metric reads are the clause's to state, and
+        # only a clause whose metric reads one carries it.
+        needed = ASSUMPTIONS.get(metric, ())
+        absent = [k for k in needed if k not in params]
+        if absent:
+            raise PhilosophyError(f"{where}: {metric} needs {absent}; the rate NOPAT is taxed "
+                                  "at is stated in the clause, never read from the company.")
+        unread = sorted(k for k in _ASSUMPTION_KEYS if k in params and k not in needed)
+        if unread:
+            raise PhilosophyError(f"{where}: {metric} does not take {unread}.")
+        if "tax_rate" in params:
+            rate = params["tax_rate"]
+            if not _is_number(rate) or not 0 <= rate < 1:
+                raise PhilosophyError(f"{where}: tax_rate = {rate!r} is not a fraction in "
+                                      "[0, 1); a 20% rate is 0.20.")
 
     elif clause_type == "excluded_industry":
         codes = params["sic_codes"]

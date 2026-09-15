@@ -45,7 +45,7 @@ from dataclasses import dataclass
 from typing import List, Mapping, Optional, Tuple
 
 from portfolio_tool.clauses import Clause, ClauseDocument
-from portfolio_tool.quant.fundamentals import metrics_by_year, years_filed_by
+from portfolio_tool.quant.fundamentals import ASSUMPTIONS, metrics_by_year, years_filed_by
 
 
 PASS = "pass"
@@ -134,7 +134,7 @@ def screen(philosophy: ClauseDocument, block: Mapping, as_of: dt.date) -> List[F
             exclusions[clause.id] = finding
 
     years = years_filed_by(block, as_of)
-    metrics = metrics_by_year(block)
+    metrics = metrics_by_year(block, _assumptions(philosophy))
 
     findings: List[Finding] = []
     for clause in philosophy.checkable:
@@ -150,6 +150,25 @@ def screen(philosophy: ClauseDocument, block: Mapping, as_of: dt.date) -> List[F
             # clause silently unscreened.
             raise ScreeningError(f"{clause.id}: no screen for type {clause.type!r}.")
     return findings
+
+
+def _assumptions(philosophy: ClauseDocument) -> Mapping[str, object]:
+    """The assumptions the metrics read, from the clauses that state them
+    (D32): a document states one value per assumption, and two clauses
+    stating two are a document stating none."""
+    stated, by = {}, {}
+    for clause in philosophy.checkable:
+        if clause.type != "metric_band":
+            continue
+        for key in ASSUMPTIONS.get(clause.params["metric"], ()):
+            value = clause.params[key]
+            if key in stated and stated[key] != value:
+                raise ScreeningError(
+                    f"{key} is stated twice: {by[key]} says {stated[key]} and {clause.id} says "
+                    f"{value}. A philosophy states one rate, and the screen does not pick.")
+            stated.setdefault(key, value)
+            by.setdefault(key, clause.id)
+    return stated
 
 
 def _earliest_needed(latest: str, n: int) -> str:
