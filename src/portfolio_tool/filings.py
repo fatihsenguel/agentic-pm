@@ -18,6 +18,16 @@ raises and nothing from that fetch is stored: one filing's figure never
 changes, so a difference is a defect upstream, not a vintage. A restatement
 arrives under a new accession and is a new row. A provider that fails
 leaves no rows and no record, so the next call asks again.
+
+The filer (filers): the name and the SIC code from the submissions
+document, under the same interval. The document carries the current code
+only, no date and no history, so the row is the document as of its pull:
+a fetch past the interval rewrites the row as the document now states it
+and moves `pulled_at`, whether or not the code changed. A code the document
+does not state is stored empty, the fact EDGAR states; the screen stops on
+it (D35). `pulled_at` is on the clock `last_fetch_time` is on, so a block
+built from both records carries one clock; which clock a pull date is on
+is decided where an answer first prints one (KNOWN_GAPS, the UTC entry).
 """
 
 import datetime as dt
@@ -27,7 +37,7 @@ from typing import Dict, Optional, Tuple
 from sqlalchemy.orm import Session
 
 from portfolio_tool.data_manager import load_config
-from portfolio_tool.database_setup import FiledFact, FiledFetchMetadata
+from portfolio_tool.database_setup import FiledFact, FiledFetchMetadata, Filer
 
 
 INTERVAL_KEY = "filings_fetch_interval_days"
@@ -95,3 +105,26 @@ def update_filed_facts(session: Session, provider, cik: int) -> int:
     session.add_all(new_rows)
     session.commit()
     return len(new_rows)
+
+
+def update_filer(session: Session, provider, cik: int) -> Filer:
+    """Fetch `cik`'s submissions document unless fetched within the interval,
+    and store the filer as it states it. Returns the stored row."""
+    interval = _interval_days()
+    now = dt.datetime.utcnow()
+
+    row = session.get(Filer, cik)
+    if row is not None and (now - row.pulled_at).days < interval:
+        return row
+
+    stated = provider.filer(cik)
+
+    if row is None:
+        row = Filer(cik=cik)
+        session.add(row)
+    row.name = stated.name
+    row.sic = stated.sic
+    row.sic_description = stated.sic_description
+    row.pulled_at = now
+    session.commit()
+    return row
