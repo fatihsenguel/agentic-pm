@@ -1503,9 +1503,7 @@ Nothing to build now. This exists so that when the analyst arrives, the question
 
 ## Scope conflicts with benchmark.md
 
-### The macro path has not produced an answer since at least 3 September
-
-**Blocks:** nothing.
+### The macro path has not produced an answer since at least 3 September - RESOLVED 15 September (seventeenth session)
 
 Recorded 7 September (third sitting). Every live macro run ends in
 `MacroAgent error: Yield curve data missing from snapshot`: `fetch_macro_data_tool`
@@ -1517,6 +1515,24 @@ routing outcome. Not a routing defect and not chased: MacroAgent is tolerated,
 not targeted (next entry). Recorded because it means the macro formatter's
 success branch has not run in a month, which is why a CLI check of it could
 not see anything.
+
+**Resolved 15 September (seventeenth session), db567c8 and 2ac821d. The
+cause was a key, and the paragraph above names it the wrong way round.** "A
+yield curve block without `slope_raw`" reads as though the block should have
+carried that key. Nothing has ever written it: `macro_agent_node` read
+`yield_curve["slope_raw"]`, `MacroAgent.get_macro_snapshot_tool` writes
+`slope`, and `git log -S` finds `slope_raw` only in the node files, from
+34be53f on. The node's raise was correct for the key it asked for, and the
+key was wrong. A third name, `slope_10y_3m`, is written by
+`DataManager.get_yield_curve_status`, which the node does not call; reading
+that one fails the same way. `tests/test_macro_node.py` runs the node over
+the real snapshot tool with a stand-in data manager, and was seen failing on
+`slope_raw` and on `slope_10y_3m` before passing on `slope`. The
+formatter test in `test_synthesizer_formatters.py` could not have seen it: it
+feeds a hand-built snapshot, so it holds the formatter to a shape and not the
+node to the tool. Golden set twice, identical, the macro line moved from
+`errors: 1` to `errors: 0` and nothing else, as predicted; `expected.txt`
+moved in its own commit. The CLI answers "neutral" with VIX and the slope.
 
 ### MacroAgent is live but outside the target architecture
 
