@@ -32,7 +32,6 @@ from agents.protocols import (
     PortfolioResult,
     PortfolioConstraints as ProtocolConstraints,
     RiskDecomposition,
-    OptimizationMethod as ProtocolOptMethod,
 )
 from config import config
 
@@ -92,8 +91,6 @@ CAPABILITIES:
 
 AVAILABLE METHODS:
 1. max_sharpe - Maximum Sharpe ratio (best risk-adjusted return)
-4. target_volatility - Max return at specified volatility
-5. target_return - Min volatility at specified return
 
 GUIDELINES:
 1. Always validate that constraints are feasible

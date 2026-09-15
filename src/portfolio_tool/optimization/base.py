@@ -21,8 +21,6 @@ class OptimizationMethod(str, Enum):
     """Available optimization methods."""
     MEAN_VARIANCE = "mean_variance"
     MAX_SHARPE = "max_sharpe"
-    TARGET_VOLATILITY = "target_volatility"
-    TARGET_RETURN = "target_return"
 
 
 @dataclass

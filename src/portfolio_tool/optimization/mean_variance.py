@@ -3,8 +3,6 @@ Mean-Variance (Markowitz) Portfolio Optimization.
 
 Implements classic Markowitz optimization:
 - Maximum Sharpe Ratio portfolio
-- Target Return portfolio
-- Target Volatility portfolio
 
 Uses scipy.optimize for numerical optimization.
 """
@@ -32,10 +30,7 @@ class MeanVarianceOptimizer(OptimizerInterface):
     """
     Mean-Variance (Markowitz) Portfolio Optimizer.
     
-    Supports multiple optimization objectives:
-    - max_sharpe: Maximize Sharpe ratio
-    - target_return: Minimize volatility for target return
-    - target_volatility: Maximize return for target volatility
+    One objective: max_sharpe, the maximum Sharpe ratio portfolio.
     
     Example:
         optimizer = MeanVarianceOptimizer(risk_free_rate=0.05)
@@ -80,17 +75,13 @@ class MeanVarianceOptimizer(OptimizerInterface):
             expected_returns: Expected returns per asset
             cov_matrix: Covariance matrix
             constraints: Portfolio constraints
-            objective: "max_sharpe", "target_return", "target_volatility"
+            objective: "max_sharpe"
             
         Returns:
             OptimizationResult
         """
         if objective == "max_sharpe":
             return self.max_sharpe(expected_returns, cov_matrix, constraints)
-        elif objective == "target_return":
-            return self.target_return(expected_returns, cov_matrix, constraints)
-        elif objective == "target_volatility":
-            return self.target_volatility(expected_returns, cov_matrix, constraints)
         else:
             raise ValueError(f"Unknown objective: {objective}")
     
@@ -177,137 +168,6 @@ class MeanVarianceOptimizer(OptimizerInterface):
             warnings=warnings,
             active_constraints=active
         )
-    
-    def target_return(
-        self,
-        expected_returns: pd.Series,
-        cov_matrix: pd.DataFrame,
-        constraints: Optional[PortfolioConstraints] = None
-    ) -> OptimizationResult:
-        """
-        Find minimum volatility portfolio for a target return.
-        
-        Requires constraints.target_return to be set.
-        """
-        if constraints is None or constraints.target_return is None:
-            raise ValueError("target_return constraint must be set")
-        
-        warnings = self._validate_inputs(expected_returns, cov_matrix)
-        
-        tickers = list(expected_returns.index)
-        n_assets = len(tickers)
-        
-        ret = expected_returns.values
-        cov = cov_matrix.values
-        
-        # Check if target is achievable
-        if constraints.target_return > ret.max():
-            warnings.append(
-                f"Target return {constraints.target_return:.2%} exceeds max possible "
-                f"{ret.max():.2%}"
-            )
-        
-        def portfolio_variance(weights):
-            return np.dot(weights, np.dot(cov, weights))
-        
-        w0 = np.array([1.0 / n_assets] * n_assets)
-        bounds = create_weight_bounds(tickers, constraints)
-        scipy_constraints = create_scipy_constraints(tickers, cov, ret, constraints)
-        
-        result = optimize.minimize(
-            portfolio_variance,
-            w0,
-            method='SLSQP',
-            bounds=bounds,
-            constraints=scipy_constraints,
-            options={'maxiter': self.max_iterations, 'ftol': self.tolerance}
-        )
-        
-        if not result.success:
-            warnings.append(f"Optimizer warning: {result.message}")
-        
-        weights = self._clean_weights(result.x)
-        active = constraints.get_active_constraints_description() if constraints else []
-        
-        opt_result = self._create_result(
-            weights=weights,
-            expected_returns=ret,
-            cov_matrix=cov,
-            tickers=tickers,
-            success=result.success,
-            converged=result.success,
-            iterations=result.nit,
-            warnings=warnings,
-            active_constraints=active
-        )
-        
-        opt_result.method = OptimizationMethod.TARGET_RETURN
-        
-        return opt_result
-    
-    def target_volatility(
-        self,
-        expected_returns: pd.Series,
-        cov_matrix: pd.DataFrame,
-        constraints: Optional[PortfolioConstraints] = None
-    ) -> OptimizationResult:
-        """
-        Find maximum return portfolio for a target volatility.
-        
-        Requires constraints.target_volatility or max_volatility to be set.
-        """
-        if constraints is None:
-            raise ValueError("Constraints with target/max volatility must be set")
-        
-        if constraints.target_volatility is None and constraints.max_volatility is None:
-            raise ValueError("Either target_volatility or max_volatility must be set")
-        
-        warnings = self._validate_inputs(expected_returns, cov_matrix)
-        
-        tickers = list(expected_returns.index)
-        n_assets = len(tickers)
-        
-        ret = expected_returns.values
-        cov = cov_matrix.values
-        
-        # Objective: Negative return (we minimize, so maximize return)
-        def neg_return(weights):
-            return -np.dot(weights, ret)
-        
-        w0 = np.array([1.0 / n_assets] * n_assets)
-        bounds = create_weight_bounds(tickers, constraints)
-        scipy_constraints = create_scipy_constraints(tickers, cov, ret, constraints)
-        
-        result = optimize.minimize(
-            neg_return,
-            w0,
-            method='SLSQP',
-            bounds=bounds,
-            constraints=scipy_constraints,
-            options={'maxiter': self.max_iterations, 'ftol': self.tolerance}
-        )
-        
-        if not result.success:
-            warnings.append(f"Optimizer warning: {result.message}")
-        
-        weights = self._clean_weights(result.x)
-        active = constraints.get_active_constraints_description() if constraints else []
-        
-        opt_result = self._create_result(
-            weights=weights,
-            expected_returns=ret,
-            cov_matrix=cov,
-            tickers=tickers,
-            success=result.success,
-            converged=result.success,
-            iterations=result.nit,
-            warnings=warnings,
-            active_constraints=active
-        )
-        
-        opt_result.method = OptimizationMethod.TARGET_VOLATILITY
-        
-        return opt_result
     
     def _clean_weights(self, weights: np.ndarray, threshold: float = 1e-4) -> np.ndarray:
         """Clean up very small weights to zero."""

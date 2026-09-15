@@ -52,12 +52,9 @@ class PortfolioConstraints:
     
     # Risk constraints
     max_volatility: Optional[float] = None   # Maximum portfolio volatility
-    target_volatility: Optional[float] = None  # Target volatility (with tolerance)
-    volatility_tolerance: float = 0.005  # Tolerance for target vol (0.5%)
     
     # Return constraints
     min_return: Optional[float] = None   # Minimum expected return
-    target_return: Optional[float] = None  # Target return
     
     # Long-only constraint
     long_only: bool = True  # If False, allows shorting
@@ -99,9 +96,7 @@ class PortfolioConstraints:
             "min_weight": self.min_weight,
             "max_weight": self.max_weight,
             "max_volatility": self.max_volatility,
-            "target_volatility": self.target_volatility,
             "min_return": self.min_return,
-            "target_return": self.target_return,
             "long_only": self.long_only,
             "asset_bounds": self.asset_bounds,
         }
@@ -116,8 +111,6 @@ class PortfolioConstraints:
             active.append(f"Max weight per asset: {self.max_weight:.1%}")
         if self.max_volatility:
             active.append(f"Max portfolio volatility: {self.max_volatility:.1%}")
-        if self.target_volatility:
-            active.append(f"Target volatility: {self.target_volatility:.1%}")
         if self.min_return:
             active.append(f"Min return: {self.min_return:.1%}")
         if self.long_only:
@@ -191,24 +184,7 @@ def create_scipy_constraints(
             'fun': vol_constraint
         })
     
-    # Constraint 3: Target volatility (equality with tolerance)
-    if constraints.target_volatility is not None:
-        target = constraints.target_volatility
-        tol = constraints.volatility_tolerance
-        
-        # Implement as two inequalities: target - tol <= vol <= target + tol
-        def vol_lower(w, cov=cov_matrix, target=target, tol=tol):
-            port_vol = np.sqrt(np.dot(w, np.dot(cov, w)))
-            return port_vol - (target - tol)  # vol >= target - tol
-        
-        def vol_upper(w, cov=cov_matrix, target=target, tol=tol):
-            port_vol = np.sqrt(np.dot(w, np.dot(cov, w)))
-            return (target + tol) - port_vol  # vol <= target + tol
-        
-        scipy_constraints.append({'type': 'ineq', 'fun': vol_lower})
-        scipy_constraints.append({'type': 'ineq', 'fun': vol_upper})
-    
-    # Constraint 4: Minimum return (inequality)
+    # Constraint 3: Minimum return (inequality)
     if constraints.min_return is not None:
         def return_constraint(w, ret=expected_returns, min_ret=constraints.min_return):
             port_return = np.dot(w, ret)
@@ -219,17 +195,7 @@ def create_scipy_constraints(
             'fun': return_constraint
         })
     
-    # Constraint 5: Target return (equality)
-    if constraints.target_return is not None:
-        def target_return_constraint(w, ret=expected_returns, target=constraints.target_return):
-            return np.dot(w, ret) - target
-        
-        scipy_constraints.append({
-            'type': 'eq',
-            'fun': target_return_constraint
-        })
-    
-    # Constraint 6: Group constraints
+    # Constraint 4: Group constraints
     if constraints.group_constraints:
         for group_name, group_spec in constraints.group_constraints.items():
             assets = group_spec.get('assets', [])
@@ -299,13 +265,6 @@ def check_constraints_satisfied(
         if port_vol > constraints.max_volatility + tolerance:
             violations.append(
                 f"Volatility {port_vol:.2%} > max {constraints.max_volatility:.2%}"
-            )
-    
-    if constraints.target_volatility is not None:
-        tol = constraints.volatility_tolerance
-        if abs(port_vol - constraints.target_volatility) > tol + tolerance:
-            violations.append(
-                f"Volatility {port_vol:.2%} not at target {constraints.target_volatility:.2%}"
             )
     
     # Check return constraint
