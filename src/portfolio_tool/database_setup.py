@@ -318,7 +318,7 @@ class PipelineRunStatus(enum.Enum):
 
 class PipelineRun(Base):
     """
-    Erfasst eine einzelne Ausführung eines Orchestrierungs-Skripts (z.B. update_all_assets.py).
+    Erfasst eine einzelne Ausführung eines Orchestrierungs-Skripts.
     Dies ist der "Eltern-Eintrag" für alle Logs, die während dieses Laufs entstehen.
     """
     __tablename__ = 'pipeline_runs'

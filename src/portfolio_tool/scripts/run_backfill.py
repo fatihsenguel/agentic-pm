@@ -24,7 +24,7 @@ from portfolio_tool.services.quota_manager import DatabaseQuotaManager
 # Konfiguration für den Backfill-Run
 PROVIDER_NAME = "yfinance"
 YFINANCE_DAILY_LIMIT = 2000      # Sicherheitsnetz
-PER_MINUTE_LIMIT = 60            # wie im update_all_assets-Skript
+PER_MINUTE_LIMIT = 60
 
 
 def main_backfill():
