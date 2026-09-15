@@ -1,8 +1,7 @@
-@"
 # Python
 __pycache__/
 *.py[cod]
-*`$py.class
+*$py.class
 *.so
 .venv/
 venv/
@@ -15,7 +14,8 @@ build/
 *.db-journal
 *.db-wal
 *.db-shm
-data/portfolio.db*.db
+data/*.db
+data/*.db.backup
 *.sqlite3
 
 # Environment
@@ -28,6 +28,7 @@ data/portfolio.db*.db
 
 # Outputs
 outputs/
+data/chroma/
 
 # OS
 .DS_Store
@@ -35,10 +36,3 @@ Thumbs.db
 
 # Logs
 *.log
-"@ | Out-File -FilePath .gitignore -Encoding UTF8data/portfolio.db
-data/*.db
-data/*.db.backup
-data/chroma/
-*.egg-info/
-data/chroma/
-*.egg-info/
