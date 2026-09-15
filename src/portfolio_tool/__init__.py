@@ -28,7 +28,6 @@ Backtesting:
 
 Tools (Agent Interface):
     - rebalance_tools: Drift, trades
-    - analytics_tools: Metrics
 
 Design Principles:
     1. Separation of Concerns - Each module has ONE responsibility

@@ -10,10 +10,6 @@ Available Tools:
         - calculate_drift
         - generate_trades
         - calculate_rebalance_costs
-        
-    - analytics_tools: Performance metrics
-        - calculate_performance_metrics
-        - calculate_risk_metrics
 
 Design Principle - Agent-Ready Responses:
     All tools return structured dictionaries:
@@ -46,18 +42,6 @@ from .rebalance_tools import (
     Portfolio,
     Trade,
     RebalanceResult,
-)
-
-# Analytics Tools
-from .analytics_tools import (
-    ALL_ANALYTICS_TOOLS,
-    RISK_TOOLS,
-    PERFORMANCE_TOOLS,
-    calculate_returns,
-    calculate_volatility,
-    calculate_sharpe_ratio,
-    calculate_max_drawdown,
-    get_price_statistics,
 )
 
 __all__ = [n for n in dir() if not n.startswith("_")]
