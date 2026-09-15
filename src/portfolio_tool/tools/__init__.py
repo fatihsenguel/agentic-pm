@@ -5,11 +5,6 @@ This module provides tools that agents can use to interact with the system.
 Tools are the interface between AI agents and the business logic.
 
 Available Tools:
-    - data_tools: Market data operations
-        - calculate_covariance_tool
-        - calculate_returns_tool
-        - get_risk_free_rate_tool
-        
     - macro_tools: Macro environment analysis
         - fetch_macro_data_tool
         - get_macro_snapshot_tool
@@ -39,21 +34,6 @@ Design Principle - Hot Potato:
     Tools aggregate data before returning. Agents receive summaries,
     not raw data arrays.
 """
-
-# Data Tools
-from .data_tools import (
-    ALL_DATA_TOOLS,
-    FETCH_TOOLS,
-    READ_TOOLS,
-    fetch_stock_prices,
-    fetch_financial_statements,
-    fetch_fundamentals,
-    fetch_earnings_history,
-    get_asset_info,
-    list_tracked_assets,
-    get_latest_price,
-    query_financial_data,
-)
 
 # Macro Tools
 from .macro_tools import (
