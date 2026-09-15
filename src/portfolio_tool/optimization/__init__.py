@@ -3,7 +3,6 @@ Portfolio Optimization Module.
 
 This module provides portfolio optimization algorithms:
 - Mean-Variance (Markowitz) Optimization
-- Risk Parity / Equal Risk Contribution
 - Minimum Volatility
 - Maximum Sharpe Ratio
 - Efficient Frontier Generation
@@ -32,10 +31,6 @@ from .mean_variance import (
     MeanVarianceOptimizer,
 )
 
-from .risk_parity import (
-    RiskParityOptimizer,
-)
-
 
 __all__ = [
     # Base
@@ -49,5 +44,4 @@ __all__ = [
     "create_weight_bounds",
     # Optimizers
     "MeanVarianceOptimizer",
-    "RiskParityOptimizer",
 ]

@@ -22,7 +22,6 @@ class OptimizationMethod(str, Enum):
     MEAN_VARIANCE = "mean_variance"
     MAX_SHARPE = "max_sharpe"
     MIN_VOLATILITY = "min_volatility"
-    RISK_PARITY = "risk_parity"
     TARGET_VOLATILITY = "target_volatility"
     TARGET_RETURN = "target_return"
 

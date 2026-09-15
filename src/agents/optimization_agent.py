@@ -62,7 +62,6 @@ class OptimizationAgent(BaseAgent):
         
         # Lazy-load optimizers
         self._mv_optimizer = None
-        self._rp_optimizer = None
     
     @property
     def mv_optimizer(self):
@@ -77,32 +76,17 @@ class OptimizationAgent(BaseAgent):
         return self._mv_optimizer
     
     @property
-    def rp_optimizer(self):
-        """Lazy-load Risk Parity optimizer."""
-        if self._rp_optimizer is None:
-            from portfolio_tool.optimization.risk_parity import RiskParityOptimizer
-            self._rp_optimizer = RiskParityOptimizer(
-                risk_free_rate=config.optimization.risk_free_rate,
-                max_iterations=config.optimization.max_iterations,
-                tolerance=config.optimization.tolerance
-            )
-        return self._rp_optimizer
-    
-    @property
     def capabilities(self) -> List[str]:
         return [
             "optimize_mean_variance",
-            "optimize_risk_parity",
             "optimize_max_sharpe",
             "optimize_min_volatility",
             "generate_efficient_frontier",
-            "compare_methods",
         ]
     
     def get_tools(self) -> List[Callable]:
         return [
             self.optimize_portfolio_tool,
-            self.compare_methods_tool,
             self.efficient_frontier_tool,
         ]
     
@@ -113,14 +97,11 @@ Your role is to optimize portfolio weights using mathematical optimization.
 
 CAPABILITIES:
 - Mean-Variance (Markowitz) Optimization: Maximize Sharpe ratio or minimize volatility
-- Risk Parity: Equal risk contribution from each asset
 - Efficient Frontier: Generate return/risk tradeoff curve
-- Method Comparison: Compare Mean-Variance vs Risk Parity
 
 AVAILABLE METHODS:
 1. max_sharpe - Maximum Sharpe ratio (best risk-adjusted return)
 2. min_volatility - Minimum volatility portfolio
-3. risk_parity - Equal risk contribution
 4. target_volatility - Max return at specified volatility
 5. target_return - Min volatility at specified return
 
@@ -196,11 +177,7 @@ Always include:
         method = task.optimization_method
         
         # Run optimization
-        if method == ProtocolOptMethod.RISK_PARITY:
-            opt_result = self.rp_optimizer.optimize(
-                expected_returns, cov_matrix, opt_constraints
-            )
-        elif method == ProtocolOptMethod.MIN_VARIANCE:
+        if method == ProtocolOptMethod.MIN_VARIANCE:
             opt_result = self.mv_optimizer.min_volatility(
                 expected_returns, cov_matrix, opt_constraints
             )
@@ -282,9 +259,7 @@ Always include:
             )
             
             # Run optimization
-            if method == "risk_parity":
-                result = self.rp_optimizer.optimize(exp_ret, cov_mat, constraints)
-            elif method == "min_volatility":
+            if method == "min_volatility":
                 result = self.mv_optimizer.min_volatility(exp_ret, cov_mat, constraints)
             else:  # max_sharpe
                 result = self.mv_optimizer.max_sharpe(exp_ret, cov_mat, constraints)
@@ -327,61 +302,6 @@ Always include:
                         pass
 
             return result_dict
-            
-        except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
-    
-    def compare_methods_tool(
-        self,
-        tickers: str,
-        expected_returns: str,
-        covariance_matrix: str,
-        max_volatility: Optional[float] = None,
-        min_weight: float = 0.0,
-        max_weight: float = 0.40
-    ) -> Dict[str, Any]:
-        """
-        Compare Mean-Variance vs Risk Parity optimization.
-        
-        Returns results from both methods for comparison.
-        """
-        try:
-            # Parse inputs
-            ticker_list = [t.strip() for t in tickers.split(",")]
-            ret_dict = json.loads(expected_returns) if isinstance(expected_returns, str) else expected_returns
-            cov_dict = json.loads(covariance_matrix) if isinstance(covariance_matrix, str) else covariance_matrix
-            
-            exp_ret = pd.Series(ret_dict)[ticker_list]
-            cov_mat = pd.DataFrame(cov_dict).loc[ticker_list, ticker_list]
-            
-            from portfolio_tool.optimization.constraints import PortfolioConstraints
-            
-            constraints = PortfolioConstraints(
-                min_weight=min_weight,
-                max_weight=max_weight,
-                max_volatility=max_volatility,
-                long_only=True,
-            )
-            
-            # Run both optimizations
-            mv_result = self.mv_optimizer.max_sharpe(exp_ret, cov_mat, constraints)
-            rp_result = self.rp_optimizer.optimize(exp_ret, cov_mat, constraints)
-            
-            return {
-                "success": True,
-                "mean_variance": mv_result.to_dict(),
-                "risk_parity": rp_result.to_dict(),
-                "comparison": {
-                    "return_difference": f"{mv_result.expected_return - rp_result.expected_return:+.2%}",
-                    "volatility_difference": f"{mv_result.expected_volatility - rp_result.expected_volatility:+.2%}",
-                    "sharpe_difference": f"{mv_result.sharpe_ratio - rp_result.sharpe_ratio:+.3f}",
-                    "mv_higher_return": mv_result.expected_return > rp_result.expected_return,
-                    "rp_lower_volatility": rp_result.expected_volatility < mv_result.expected_volatility,
-                }
-            }
             
         except Exception as e:
             return {
