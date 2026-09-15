@@ -61,6 +61,20 @@ class ProviderFiledFact:
     source: str
 
 @dataclass
+class ProviderFiler:
+    """One filer as EDGAR's submissions document states it on the pull date
+    (expected_values.md Part 13 C): its number, its name, its SIC code and
+    the code's description. The code has no date and no history in the
+    document, so it is as of the pull. `sic` is None where the document
+    states no code, or one that is not four digits; `sic_description` is
+    None where it states none. The screen stops on a block whose code is
+    None (D35); nothing is repaired here."""
+    cik: int
+    name: str
+    sic: Optional[str]
+    sic_description: Optional[str]
+
+@dataclass
 class ProviderDividendData:
     ex_date: date
     amount: Decimal

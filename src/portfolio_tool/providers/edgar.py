@@ -20,22 +20,31 @@ Only `us-gaap` facts are returned: the block's fields are all there, and the
 one `dei` figure anyone has asked about, the cover-page share count, waits
 on a decision (Part 13 E7).
 
+`filer` fetches the submissions document, which carries what company facts
+do not: the filer's name and its SIC code as EDGAR states it, current only,
+with no date and no history (Part 13 C). It returns those and nothing else
+in the document; `entityType`, `ownerOrg` and `fiscalYearEnd` have no
+consumer. A code that is missing or not four digits comes back as None, the
+form the screen stops on (D35), rather than guessed at.
+
 Not the price vendor's interface: `DataProviderInterface` has no method this
 source can fill.
 """
 
 import datetime as dt
 import json
+import re
 from decimal import Decimal
 from typing import List, Optional
 
 import requests
 
 import config
-from portfolio_tool.provider_models import ProviderFiledFact
+from portfolio_tool.provider_models import ProviderFiledFact, ProviderFiler
 
 
 COMPANY_FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
+SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
 
 # D27: annual periods measured on three filers are 363 to 370 days; the
 # nearest durations that are not a year are 273 and 925.
@@ -45,6 +54,9 @@ ANNUAL_DAYS = (350, 380)
 FILING_FORMS = frozenset({"10-K", "10-K/A", "10-Q", "10-Q/A", "8-K", "8-K/A"})
 
 TAXONOMY = "us-gaap"
+
+# A SIC code is four digits; the screen reads no other form (D35).
+SIC_CODE = re.compile(r"^\d{4}$")
 TIMEOUT_SECONDS = 30
 
 
@@ -73,16 +85,17 @@ class EdgarProvider:
         self.user_agent = config.edgar_user_agent()
         self.session = session if session is not None else requests.Session()
 
+    def _get(self, url: str) -> bytes:
+        response = self.session.get(
+            url, headers={"User-Agent": self.user_agent}, timeout=TIMEOUT_SECONDS,
+        )
+        response.raise_for_status()
+        return response.content
+
     def annual_facts(self, cik: int) -> List[ProviderFiledFact]:
         """Every us-gaap fact for `cik` that is annual or an instant and was
         filed on a form in FILING_FORMS, every vintage of each."""
-        response = self.session.get(
-            COMPANY_FACTS_URL.format(cik=cik),
-            headers={"User-Agent": self.user_agent},
-            timeout=TIMEOUT_SECONDS,
-        )
-        response.raise_for_status()
-        document = json.loads(response.content, parse_float=Decimal)
+        document = json.loads(self._get(COMPANY_FACTS_URL.format(cik=cik)), parse_float=Decimal)
 
         if document.get("cik") != cik:
             raise EdgarError(
@@ -113,3 +126,33 @@ class EdgarProvider:
                         source=self.name,
                     ))
         return facts
+
+    def filer(self, cik: int) -> ProviderFiler:
+        """The filer's number, name, SIC code and its description from the
+        submissions document, as EDGAR states them today."""
+        document = json.loads(self._get(SUBMISSIONS_URL.format(cik=cik)))
+
+        # The document's `cik` is compared as a number. The company-facts
+        # document carries an integer; what form this document carries, and
+        # whether it is zero-padded, is EDGAR's to say and the first live
+        # fetch's to record, not this module's to assume.
+        stated = document.get("cik")
+        try:
+            stated_cik = int(str(stated))
+        except (TypeError, ValueError):
+            raise EdgarError(f"Asked for CIK {cik}, and the document states {stated!r} as its CIK.")
+        if stated_cik != cik:
+            raise EdgarError(f"Asked for CIK {cik}, and the document is for CIK {stated_cik}.")
+
+        name = document.get("name")
+        if not isinstance(name, str) or not name:
+            raise EdgarError(f"The submissions document for CIK {cik} states no name.")
+
+        sic = document.get("sic")
+        if not isinstance(sic, str) or not SIC_CODE.match(sic):
+            sic = None
+        description = document.get("sicDescription")
+        if not isinstance(description, str) or not description:
+            description = None
+
+        return ProviderFiler(cik=cik, name=name, sic=sic, sic_description=description)
