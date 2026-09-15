@@ -48,8 +48,7 @@ IntentType = Enum(
 # the roster derives from this: AgentName below, the AVAILABLE AGENTS block and
 # its count in router_prompts.py, and the nodes, routing map and loop edges in
 # graph.py, which binds each name to its node function and raises at import
-# if the binding and this dict disagree. RiskManagerAgent is absent on
-# purpose: it is an unwired supervisor, not an agent the graph runs.
+# if the binding and this dict disagree.
 AGENTS: Dict[str, str] = {
     "DataAgent": "Fetches market prices, calculates covariance matrices, returns, volatility",
     "MacroAgent": "Analyzes VIX, yield curve, market regime (risk-on/risk-off)",

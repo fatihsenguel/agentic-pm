@@ -36,7 +36,6 @@ agents_to_test = [
     "optimization_agent",
     "rebalance_agent",
     "backtest_agent",
-    "risk_manager_agent",
     "smart_router"
 ]
 

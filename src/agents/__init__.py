@@ -9,19 +9,6 @@
 """
 Agents Module for Quant Portfolio Manager.
 
-Multi-Agent Architecture:
-    ┌─────────────────────────────────────────┐
-    │         RiskManagerAgent                │
-    │           (Supervisor)                  │
-    └─────────────┬───────────────────────────┘
-                  │
-    ┌─────────────┼─────────────┬─────────────┐
-    ▼             ▼             ▼             ▼
-┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
-│  Data   │ │  Macro  │ │Rebalance│ │Backtest │
-│  Agent  │ │  Agent  │ │  Agent  │ │  Agent  │
-└─────────┘ └─────────┘ └─────────┘ └─────────┘
-
 Usage:
     from agents import create_data_agent, create_macro_agent
     
@@ -120,12 +107,6 @@ from .backtest_agent import (
     create_backtest_agent,
 )
 
-# Risk Manager Agent - SUPERVISOR (coordinates all other agents)
-from .risk_manager_agent import (
-    RiskManagerAgent,
-    create_risk_manager,
-)
-
 # =============================================================================
 # VERSION & EXPORTS
 # =============================================================================
@@ -192,8 +173,4 @@ __all__ = [
     # Backtest Agent
     "BacktestAgent",
     "create_backtest_agent",
-    
-    # Risk Manager (Supervisor)
-    "RiskManagerAgent",
-    "create_risk_manager",
 ]
