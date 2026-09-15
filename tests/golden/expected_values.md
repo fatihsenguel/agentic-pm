@@ -772,7 +772,7 @@ what has two sides to compare.
 | D30 | One metric, one tag? | **No. A field names an ordered list of tags, and a year that resolves from none of them has no figure for that field, named as such.** A tag change truncates history: Apple's annual revenue is `SalesRevenueNet` for FY2007 to FY2017, `Revenues` for FY2016 to FY2018 and `RevenueFromContractWithCustomerExcludingAssessedTax` for FY2017 to FY2025. A reader anchored on `Revenues` alone returns three fiscal years, and PHI-2.1 asks for five. Falling back silently to a shorter series is the repair shape; the raise names the field and the year. Section D, F4. **Where the raise happens**, revised 2026-09-13: not in the reader. The figures block leaves the field out of that year and lists it as unresolved, with the tags tried, and the check stops where a clause needs it (D25, PHI-1.2), naming the field, the year and the tags. A raise in the reader leaves no block at all for a filer missing a field no failing clause reads: Alphabet files no gross profit (Part 13 B), and every other figure PHI-2.1 needs would never reach the screen. Nothing is filled either way; the cells Part 13 B and C mark **raises** are these. |
 | D31 | What is `frame` for? | **A cross-check, never a key.** It is calendar-aligned and exists only when the window lines up: 9,716 of 25,046 facts on this artifact, 38.8%. Where it exists it disagrees with the filer's own labels by design — one fact for 2013-09-29 to 2013-12-28 carries `fy: 2015`, `fp: Q1` and `frame: CY2013Q4`, three labels for one period. |
 | D32 | Is a tax rate a figure or an assumption? | **Both, and they are different things in different places.** The block carries `EffectiveIncomeTaxRateContinuingOperations` because it is a filed fact and the block reports what the document says. The tax rate that goes into NOPAT is a **stated assumption in config**, not the block's. The evidence for keeping them apart is in Apple's own series: 0.133, 0.162, 0.147, **0.241**, 0.156. FY2024 is a discrete item, not a change in how Apple earns money; fed into NOPAT it swings PHI-2.1's five-year ROIC series for a reason that is not the business, on the metric written to measure the business. Recorded here so it is not re-litigated. D24 stands: the block's figures are as filed. |
-| D33 | How does debt reach the block? | **Every borrowing tag as filed, separately; the sum is a metric.** No arithmetic on the way into the block. `net_debt` therefore lives in `quant/fundamentals.py` with its own reference row, and **what nets against debt is policy and belongs in `docs/PHILOSOPHY.md`** — open, section F. Apple's borrowings are `CommercialPaper`, `LongTermDebtCurrent` and `LongTermDebtNoncurrent`. Not `LongTermDebt`, which is a different measure: it agrees with the sum of the two carrying tags in FY2022, FY2023 and FY2024 and disagrees by 19 and 22 million in FY2021 and FY2025. A borrowing tag the block does not name is a raise, not an omission. |
+| D33 | How does debt reach the block? | **Every borrowing tag as filed, separately; the sum is a metric.** No arithmetic on the way into the block. `net_debt` therefore lives in `quant/fundamentals.py` with its own reference row, and **what nets against debt is policy and belongs in `docs/PHILOSOPHY.md`** — open, section F. Apple's borrowings are `CommercialPaper`, `LongTermDebtCurrent` and `LongTermDebtNoncurrent`. Not `LongTermDebt`, which is a different measure: it agrees with the sum of the two carrying tags in FY2022, FY2023 and FY2024 and disagrees by 19 and 22 million in FY2021 and FY2025. A borrowing tag the block does not name is a raise, not an omission. **Decided 2026-09-15 (decision 47):** `net_debt` is a named function in `quant/fundamentals.py` with its own reference row, section G, and not a key a clause may name; a borrowing is one of the three named fields and a finance lease is not one (Part 13 E5); the last sentence is a known limit, not a rule the code can keep: nothing raises on a tag it does not know, and the list grows one measured tag at a time, the way PHI-3.2's codes do. The revisit trigger for leases is the first candidate whose PHI-3.1 verdict moves when finance leases are counted. |
 
 ### A. The fiscal years
 
@@ -1020,7 +1020,44 @@ own reference row rather than arithmetic on the way into the block.
 **Also open, and smaller:** whether `net_debt` is one metric key or whether
 PHI-3.1's key becomes `net_debt_to_ebitda_excluding_securities` and the like.
 D24 says a different formula is a different metric key, which argues for the
-definition living in the key's name rather than in a parameter.
+definition living in the key's name rather than in a parameter. Decided
+2026-09-15 with decision 47: the key stays `net_debt_to_ebitda`, its formula
+is Part 10 B's, and a formula that netted securities would be a new key.
+
+### G. The bridge's rows: net debt and NOPAT on the filed figures
+
+Computed 2026-09-15 by hand, decisions 46 and 47, before the bridge between
+the reader's block and the metrics exists (Order 4, step 1). Part 10 holds
+the metrics to synthetic figures with one `debt` and one `tax_rate` per year;
+the block the reader returns carries three borrowing fields and an
+`effective_tax_rate` the metrics may not use (D32, D33). These rows are the
+same arithmetic on Apple's filed figures from section B, in the shape the
+block carries, so the bridge has something independent to be wrong against
+that Part 10 cannot see. Plain decimal arithmetic, none of the repository's
+code. USD millions, as section B; the block holds the figures in whole
+dollars as filed (`edgar_facts_aapl.csv`), so every sum and difference here
+is exact and a reader that rounds on the way in fails these rows.
+
+**Net debt (D33, definition A of section F).** Borrowings are the three
+named fields added; net debt is borrowings less cash. A year in which any
+of the three does not resolve has no net debt, and the check stops there
+when a clause needs it (D25, D30): a missing borrowing field is never read
+as 0.
+
+| FY | commercial_paper | long_term_debt_current | long_term_debt_noncurrent | Borrowings | cash | net_debt |
+|---|---|---|---|---|---|---|
+| FY2021 | 6,000 | 9,613 | 109,106 | 124,719 | 34,940 | **89,779** |
+| FY2022 | 9,982 | 11,128 | 98,959 | 120,069 | 23,646 | **96,423** |
+| FY2023 | 5,985 | 9,822 | 95,281 | 111,088 | 29,965 | **81,123** |
+| FY2024 | 9,967 | 10,912 | 85,750 | 106,629 | 29,943 | **76,686** |
+| FY2025 | 7,979 | 12,350 | 78,328 | 98,657 | 35,934 | **62,723** |
+
+Cross-check against section F, computed three days earlier from the same
+figures: net debt over EBITDA (operating income + D&A) is 89,779 / 120,233
+= 0.7467, 96,423 / 130,541 = 0.7386, 81,123 / 125,820 = 0.6448, 76,686 /
+134,661 = 0.5695 and 62,723 / 144,748 = 0.4333, which round to section F's
+definition A row, 0.75, 0.74, 0.64, 0.57 and 0.43. A `net_debt_to_ebitda`
+that reads the three fields reproduces both.
 
 ---
 
