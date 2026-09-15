@@ -45,7 +45,6 @@ class DataAgent(BaseAgent):
     - fetch_prices: Get historical prices for assets (via DataManager)
     - calculate_returns: Compute returns from prices
     - calculate_covariance: Estimate covariance matrix
-    - get_risk_metrics: Compute risk metrics for assets/portfolios
     - get_risk_free_rate: Fetch current risk-free rate (from macro data)
     
     ARCHITECTURE:
@@ -91,7 +90,6 @@ class DataAgent(BaseAgent):
             "fetch_prices",
             "calculate_returns",
             "calculate_covariance",
-            "get_risk_metrics",
             "get_risk_free_rate",
             "get_correlation_matrix",
             "calculate_rolling_volatility",
@@ -103,7 +101,6 @@ class DataAgent(BaseAgent):
             self.fetch_prices_tool,
             self.calculate_returns_tool,
             self.calculate_covariance_tool,
-            self.get_risk_metrics_tool,
             self.get_risk_free_rate_tool,
             self.calculate_rolling_volatility_tool,
         ]
@@ -118,7 +115,6 @@ CAPABILITIES:
 - Fetch historical prices for any ticker
 - Calculate returns (simple, log, excess)
 - Estimate covariance matrices (sample, shrinkage, exponential)
-- Compute risk metrics (volatility, VaR, Sharpe, etc.)
 - Provide risk-free rate data
 
 GUIDELINES:
@@ -161,8 +157,6 @@ Always include in your responses:
         # Based on task type, execute appropriate tools
         if task.task_type.value == "fetch_data":
             result = await self._handle_fetch_data(task)
-        elif task.task_type.value == "calculate_risk":
-            result = await self._handle_calculate_risk(task)
         else:
             # For optimization tasks, prepare all required data
             result = await self._prepare_optimization_data(task)
@@ -192,27 +186,6 @@ Always include in your responses:
             success=True,
             reasoning="Successfully fetched price data",
             data_period=prices_result.get("period"),
-        )
-    
-    async def _handle_calculate_risk(self, task: PortfolioTask) -> PortfolioResult:
-        """Handle a risk calculation request."""
-        if task.current_weights:
-            metrics = self.get_risk_metrics_tool(
-                tickers=",".join(task.universe),
-                weights=json.dumps(task.current_weights),
-                period=task.historical_period
-            )
-        else:
-            metrics = self.get_risk_metrics_tool(
-                tickers=",".join(task.universe),
-                period=task.historical_period
-            )
-        
-        return self.create_result(
-            task_id=task.task_id,
-            success=metrics.get("success", False),
-            expected_volatility=metrics.get("volatility"),
-            reasoning="Risk metrics calculated",
         )
     
     async def _prepare_optimization_data(self, task: PortfolioTask) -> PortfolioResult:
@@ -822,90 +795,6 @@ Always include in your responses:
                 "num_observations": len(returns),
                 "estimation_period": f"{returns.index[0].strftime('%Y-%m-%d')} to {returns.index[-1].strftime('%Y-%m-%d')}",
                 "note": "Using fallback calculation (quant module not available)"
-            }
-        
-        except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
-    
-    def get_risk_metrics_tool(
-        self,
-        tickers: str,
-        period: str = "5Y",
-        weights: Optional[str] = None
-    ) -> Dict[str, Any]:
-        """
-        Calculate comprehensive risk metrics.
-        
-        Args:
-            tickers: Comma-separated ticker symbols
-            period: Time period
-            weights: JSON string of portfolio weights (optional)
-            
-        Returns:
-            Dictionary with risk metrics
-        """
-        ticker_list = [t.strip().upper() for t in tickers.split(",")]
-        cache_key = f"{','.join(sorted(ticker_list))}_{period}"
-        
-        if cache_key not in self._prices_df_cache:
-            fetch_result = self.fetch_prices_tool(tickers, period)
-            if not fetch_result.get("success"):
-                return fetch_result
-        
-        prices = self._prices_df_cache[cache_key]
-        returns = prices.pct_change().dropna()
-        
-        try:
-            from portfolio_tool.quant.risk_metrics import RiskMetricsCalculator
-            
-            # Get risk-free rate from macro data
-            rf_result = self.get_risk_free_rate_tool()
-            risk_free_rate = rf_result.get("rate", 0.05)
-            
-            calc = RiskMetricsCalculator(risk_free_rate=risk_free_rate)
-            
-            if weights:
-                # Portfolio metrics
-                weight_dict = json.loads(weights)
-                w = np.array([weight_dict.get(t, 0) for t in ticker_list])
-                portfolio_returns = (returns * w).sum(axis=1)
-                result = calc.calculate_all(portfolio_returns)
-                return {
-                    "success": True,
-                    "type": "portfolio",
-                    "weights": weight_dict,
-                    "risk_free_rate": risk_free_rate,
-                    **result.to_dict()
-                }
-            else:
-                # Individual asset metrics
-                results = {}
-                for ticker in ticker_list:
-                    if ticker in returns.columns:
-                        asset_result = calc.calculate_all(returns[ticker])
-                        results[ticker] = asset_result.to_dict()
-                
-                return {
-                    "success": True,
-                    "type": "individual",
-                    "risk_free_rate": risk_free_rate,
-                    "metrics": results
-                }
-                
-        except ImportError:
-            # Fallback
-            vol = returns.std() * np.sqrt(config.data.trading_days_per_year)
-            
-            return {
-                "success": True,
-                "volatilities": {
-                    ticker: f"{vol[ticker]:.2%}"
-                    for ticker in ticker_list if ticker in vol.index
-                },
-                "note": "Limited metrics - quant module not available"
             }
         
         except Exception as e:
