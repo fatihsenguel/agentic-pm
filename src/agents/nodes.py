@@ -714,7 +714,7 @@ async def macro_agent_node(state: AgentState) -> Dict[str, Any]:
             if vix_level is None:
                 raise DataCalculationError("VIX data missing from snapshot")
 
-            slope = yc_data.get("slope_raw")
+            slope = yc_data.get("slope")
             if slope is None:
                 raise DataCalculationError("Yield curve data missing from snapshot")
 
