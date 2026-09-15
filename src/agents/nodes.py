@@ -2490,6 +2490,11 @@ def _format_risk_response(sub_results: Dict) -> List[str]:
     user names no timeframe and the window is then resolved from config two
     files away, so the requested value is absent exactly when the reader most
     needs to be told what was measured.
+
+    The router sends VaR and drawdown questions to this path, and none is
+    computed, so the answer says so on every run: the formatter cannot read
+    the question, and a volatility under a VaR question is a wrong answer
+    unless it says what it is not.
     """
     data = sub_results.get("DataAgent", {})
     if not data.get("success"):
@@ -2520,6 +2525,8 @@ def _format_risk_response(sub_results: Dict) -> List[str]:
     lines.append("is a different number - weights against the covariance matrix -")
     lines.append("and is answered when the question asks for it. No as-of date is")
     lines.append("attached to the per-holding figures (benchmark 3.3).")
+    lines.append("Value at risk, expected shortfall and drawdown are not computed by")
+    lines.append("this system; none of the figures above is one of them.")
     return lines
 
 
