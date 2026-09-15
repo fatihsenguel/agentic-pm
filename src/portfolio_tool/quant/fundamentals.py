@@ -23,46 +23,94 @@ it is then absent for that year, never zero. Whether the absence matters is
 the screen's question (D25), not this module's. What does raise here is
 arithmetic that would otherwise produce a plausible number: a division by
 zero, a figure that is not a number, a year with no dates.
+
+Where a filed figure stops being exact (Part 12 G). The reader's block
+carries every figure as a Decimal in the unit it was filed in, and a typed
+block carries what was typed; every figure is read as a Decimal, a float
+by its written digits, so a sum, a difference and a product with a stated
+rate are exact and `net_debt` is a Decimal. A metric is a ratio, and the
+ratio is the first place exactness ends: it is returned as a float, which
+is what a clause's limit is compared against.
+
+  D33  Debt reaches the block as every borrowing tag, separately; the sum
+       is this module's. A borrowing is one of BORROWING_FIELDS, a finance
+       lease is not one, and a year in which any of the three did not
+       resolve has no net debt and no invested capital: a missing
+       borrowing field is never read as 0.
 """
 
 import datetime as dt
-from typing import Callable, Dict, List, Mapping, Optional
+from decimal import Decimal
+from typing import Callable, Dict, List, Mapping, Optional, Tuple
 
 Figures = Mapping[str, object]
+
+# D33, Part 12 C: the block's borrowing fields, and the definition of debt in
+# Part 10 B's formulas. Their sum is arithmetic here, never on the way in.
+BORROWING_FIELDS: Tuple[str, ...] = (
+    "commercial_paper", "long_term_debt_current", "long_term_debt_noncurrent")
 
 
 class FundamentalsError(Exception):
     """Raised when the figures block cannot honestly yield a metric."""
 
 
-def _number(year: str, key: str, value) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
+def _number(year: str, key: str, value) -> Decimal:
+    """A figure as a Decimal: a filed Decimal as it is, an int exactly, a
+    typed float by its written digits. A bool or a string is not a figure."""
+    if isinstance(value, bool):
         raise FundamentalsError(f"{year}: {key} = {value!r} is not a number.")
-    return float(value)
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, int):
+        return Decimal(value)
+    if isinstance(value, float):
+        return Decimal(str(value))
+    raise FundamentalsError(f"{year}: {key} = {value!r} is not a number.")
 
 
-def _figure(year: str, figures: Mapping, key: str) -> Optional[float]:
+def _figure(year: str, figures: Mapping, key: str) -> Optional[Decimal]:
     if key not in figures:
         return None
     return _number(year, key, figures[key])
 
 
-def _divide(year: str, numerator: float, denominator: float, what: str) -> float:
+def _divide(year: str, numerator: Decimal, denominator: Decimal, what: str) -> float:
+    """The ratio, and the end of exactness: a float."""
     if denominator == 0:
         raise FundamentalsError(f"{year}: {what} is 0; the ratio is undefined and is not "
                                 "reported as anything else.")
-    return numerator / denominator
+    return float(numerator / denominator)
+
+
+# --- the figures that are sums, Part 12 G --------------------------------------
+
+def _borrowings(year: str, f: Mapping) -> Optional[Decimal]:
+    parts = [_figure(year, f, k) for k in BORROWING_FIELDS]
+    if any(v is None for v in parts):
+        return None
+    return sum(parts, Decimal(0))
+
+
+def net_debt(year: str, figures: Mapping) -> Optional[Decimal]:
+    """Borrowings less cash, exact (D33, Part 12 F definition A, Part 12 G).
+    None when a borrowing field or cash is not in the year's figures."""
+    borrowings, cash = _borrowings(year, figures), _figure(year, figures, "cash")
+    if borrowings is None or cash is None:
+        return None
+    return borrowings - cash
 
 
 # --- the formulas, Part 10 B ---------------------------------------------------
 
 def _return_on_invested_capital(year: str, f: Mapping, block: Figures) -> Optional[float]:
-    inputs = [_figure(year, f, k) for k in ("operating_income", "tax_rate", "equity", "debt", "cash")]
-    if any(v is None for v in inputs):
+    inputs = [_figure(year, f, k) for k in ("operating_income", "tax_rate", "equity", "cash")]
+    borrowings = _borrowings(year, f)
+    if any(v is None for v in inputs) or borrowings is None:
         return None
-    operating_income, tax_rate, equity, debt, cash = inputs
+    operating_income, tax_rate, equity, cash = inputs
     nopat = operating_income * (1 - tax_rate)
-    return _divide(year, nopat, equity + debt - cash, "invested capital (equity + debt - cash)")
+    return _divide(year, nopat, equity + borrowings - cash, "invested capital (equity + debt - cash)")
 
 
 def _gross_margin(year: str, f: Mapping, block: Figures) -> Optional[float]:
@@ -73,11 +121,12 @@ def _gross_margin(year: str, f: Mapping, block: Figures) -> Optional[float]:
 
 
 def _net_debt_to_ebitda(year: str, f: Mapping, block: Figures) -> Optional[float]:
-    inputs = [_figure(year, f, k) for k in ("debt", "cash", "operating_income", "depreciation_amortisation")]
-    if any(v is None for v in inputs):
+    inputs = [_figure(year, f, k) for k in ("operating_income", "depreciation_amortisation")]
+    debt = net_debt(year, f)
+    if any(v is None for v in inputs) or debt is None:
         return None
-    debt, cash, operating_income, da = inputs
-    return _divide(year, debt - cash, operating_income + da, "EBITDA (operating income + D&A)")
+    operating_income, da = inputs
+    return _divide(year, debt, operating_income + da, "EBITDA (operating income + D&A)")
 
 
 def _free_cash_flow_yield(year: str, f: Mapping, block: Figures) -> Optional[float]:

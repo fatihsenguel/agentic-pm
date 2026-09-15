@@ -106,7 +106,7 @@ def test_exactly_at_the_limit_passes(screening, philosophy):
     """D23: 2.0 times EBITDA against a ceiling of 2.0, and a floor met
     exactly (free cash flow 27,360 on 684,000 is 0.04)."""
     block = alphabet()
-    block["years"]["FY2025"].update({"debt": 120_000.0, "cash": 16_000.0, "operating_cash_flow": 49_360.0})
+    block["years"]["FY2025"].update({"long_term_debt_noncurrent": 120_000.0, "cash": 16_000.0, "operating_cash_flow": 49_360.0})
     by = _by_clause(screening.screen(philosophy, block, AS_OF))
     assert by["PHI-3.1"].observed == 2.0 and by["PHI-3.1"].status == "pass" and by["PHI-3.1"].distance == 0.0
     assert by["PHI-4.2"].observed == pytest.approx(0.04, abs=1e-12) and by["PHI-4.2"].status == "pass"

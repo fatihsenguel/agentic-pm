@@ -13,8 +13,9 @@ yields, named and not filled (D30). A `duration` field is read from an annual
 fact ending on the year's end date, an `instant` field from a fact at that
 date. It builds the `years` half only: the price, the shares and the
 valuation range are not filed facts. Its output is not yet the screen's
-input: quant/fundamentals.py reads one `tax_rate` and one `debt`, which D32
-and D33 keep out of the block.
+input: quant/fundamentals.py sums the three borrowing fields itself (D33,
+Part 12 G) and still reads one `tax_rate` per year, which D32 keeps out of
+the block.
 """
 
 import datetime as dt

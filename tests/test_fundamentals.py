@@ -9,13 +9,22 @@ deliberately. Do NOT update these figures to match code output.
 The fixture is the figures block in the shape the screen will read - one
 company, its fiscal years with their end and filed dates and reported
 figures, the shares, the price and the range with their as-of dates -
-typed from Part 10 A by hand.
+typed from Part 10 A by hand, in the shape the reader's block carries
+(Part 10 A's note of 2026-09-15): the one debt figure sits in
+long_term_debt_noncurrent and the other two borrowing fields are filed
+zeros.
+
+Part 12 G holds the bridge to the reader's block on Apple's filed figures,
+in whole dollars as the block carries them: net debt from the three
+borrowing fields, exact, and the ratio as the first place a filed figure
+stops being exact.
 
 The module is imported inside a fixture so that, before it exists, this
 file is a list of errors and not an interrupted suite.
 """
 
 import datetime as dt
+from decimal import Decimal
 
 import pytest
 
@@ -25,24 +34,29 @@ AS_OF = dt.date(2026, 9, 10)
 YEARS = {
     "FY2021": {"ends": "2021-12-31", "filed": "2022-02-04",
                "operating_income": 20_000.0, "tax_rate": 0.20,
-               "equity": 120_000.0, "debt": 20_000.0, "cash": 40_000.0},
+               "equity": 120_000.0, "commercial_paper": 0.0, "long_term_debt_current": 0.0,
+               "long_term_debt_noncurrent": 20_000.0, "cash": 40_000.0},
     "FY2022": {"ends": "2022-12-31", "filed": "2023-02-03",
                "operating_income": 13_500.0, "tax_rate": 0.20,
-               "equity": 128_000.0, "debt": 22_000.0, "cash": 42_000.0},
+               "equity": 128_000.0, "commercial_paper": 0.0, "long_term_debt_current": 0.0,
+               "long_term_debt_noncurrent": 22_000.0, "cash": 42_000.0},
     "FY2023": {"ends": "2023-12-31", "filed": "2024-02-02",
                "revenue": 100_000.0, "gross_profit": 55_000.0,
                "operating_income": 24_000.0, "tax_rate": 0.20,
-               "equity": 140_000.0, "debt": 20_000.0, "cash": 40_000.0},
+               "equity": 140_000.0, "commercial_paper": 0.0, "long_term_debt_current": 0.0,
+               "long_term_debt_noncurrent": 20_000.0, "cash": 40_000.0},
     "FY2024": {"ends": "2024-12-31", "filed": "2025-02-05",
                "revenue": 112_000.0, "gross_profit": 63_840.0,
                "operating_income": 30_000.0, "tax_rate": 0.20,
-               "equity": 150_000.0, "debt": 18_000.0, "cash": 43_000.0},
+               "equity": 150_000.0, "commercial_paper": 0.0, "long_term_debt_current": 0.0,
+               "long_term_debt_noncurrent": 18_000.0, "cash": 43_000.0},
     "FY2025": {"ends": "2025-12-31", "filed": "2026-02-04",
                "revenue": 125_000.0, "gross_profit": 72_500.0,
                "operating_income": 36_000.0, "tax_rate": 0.20,
                "depreciation_amortisation": 16_000.0,
                "operating_cash_flow": 52_780.0, "capex": 22_000.0,
-               "equity": 170_000.0, "debt": 16_000.0, "cash": 42_000.0},
+               "equity": 170_000.0, "commercial_paper": 0.0, "long_term_debt_current": 0.0,
+               "long_term_debt_noncurrent": 16_000.0, "cash": 42_000.0},
 }
 
 
@@ -141,7 +155,7 @@ def test_years_come_back_in_fiscal_order_whatever_the_file_order(fundamentals):
 
 def test_exactly_two_times_ebitda(fundamentals):
     block = figures()
-    block["years"]["FY2025"].update({"debt": 120_000.0, "cash": 16_000.0})
+    block["years"]["FY2025"].update({"long_term_debt_noncurrent": 120_000.0, "cash": 16_000.0})
     assert fundamentals.metrics_by_year(block)["FY2025"]["net_debt_to_ebitda"] == 2.0
 
 
@@ -179,3 +193,84 @@ def test_a_figure_that_is_not_a_number_raises(fundamentals):
     block["years"]["FY2025"]["revenue"] = "125,000"
     with pytest.raises(fundamentals.FundamentalsError, match="FY2025.*revenue"):
         fundamentals.metrics_by_year(block)
+
+
+# --- Part 12 G: net debt on the filed figures ---------------------------------
+
+# Part 12 B's figures in whole dollars, the unit the block carries
+# (edgar_facts_aapl.csv); the dates are Part 12 A's. Only the fields the
+# net debt row and its cross-check read.
+APPLE_YEARS = {
+    "FY2021": {"ends": "2021-09-25", "filed": "2021-10-29",
+               "operating_income": Decimal("108949000000"), "depreciation_amortisation": Decimal("11284000000"),
+               "cash": Decimal("34940000000"), "commercial_paper": Decimal("6000000000"),
+               "long_term_debt_current": Decimal("9613000000"), "long_term_debt_noncurrent": Decimal("109106000000")},
+    "FY2022": {"ends": "2022-09-24", "filed": "2022-10-28",
+               "operating_income": Decimal("119437000000"), "depreciation_amortisation": Decimal("11104000000"),
+               "cash": Decimal("23646000000"), "commercial_paper": Decimal("9982000000"),
+               "long_term_debt_current": Decimal("11128000000"), "long_term_debt_noncurrent": Decimal("98959000000")},
+    "FY2023": {"ends": "2023-09-30", "filed": "2023-11-03",
+               "operating_income": Decimal("114301000000"), "depreciation_amortisation": Decimal("11519000000"),
+               "cash": Decimal("29965000000"), "commercial_paper": Decimal("5985000000"),
+               "long_term_debt_current": Decimal("9822000000"), "long_term_debt_noncurrent": Decimal("95281000000")},
+    "FY2024": {"ends": "2024-09-28", "filed": "2024-11-01",
+               "operating_income": Decimal("123216000000"), "depreciation_amortisation": Decimal("11445000000"),
+               "cash": Decimal("29943000000"), "commercial_paper": Decimal("9967000000"),
+               "long_term_debt_current": Decimal("10912000000"), "long_term_debt_noncurrent": Decimal("85750000000")},
+    "FY2025": {"ends": "2025-09-27", "filed": "2025-10-31",
+               "operating_income": Decimal("133050000000"), "depreciation_amortisation": Decimal("11698000000"),
+               "cash": Decimal("35934000000"), "commercial_paper": Decimal("7979000000"),
+               "long_term_debt_current": Decimal("12350000000"), "long_term_debt_noncurrent": Decimal("78328000000")},
+}
+
+
+def apple(**overrides):
+    block = {"ticker": "AAPL", "currency": "USD", "source": "expected_values.md Part 12 B",
+             "years": {label: dict(year) for label, year in APPLE_YEARS.items()}}
+    block.update(overrides)
+    return block
+
+
+@pytest.mark.parametrize("year, net_debt", [
+    ("FY2021", "89779000000"), ("FY2022", "96423000000"), ("FY2023", "81123000000"),
+    ("FY2024", "76686000000"), ("FY2025", "62723000000"),
+])
+def test_net_debt_is_the_three_borrowing_fields_less_cash_exactly(fundamentals, year, net_debt):
+    """Part 12 G: a sum and a difference of filed Decimals is a Decimal and
+    is exact; nothing on the way is a float."""
+    value = fundamentals.net_debt(year, APPLE_YEARS[year])
+    assert isinstance(value, Decimal)
+    assert value == Decimal(net_debt)
+
+
+@pytest.mark.parametrize("year, ratio", [
+    ("FY2021", 0.7467), ("FY2022", 0.7386), ("FY2023", 0.6448), ("FY2024", 0.5695), ("FY2025", 0.4333),
+])
+def test_net_debt_to_ebitda_on_the_filed_figures(fundamentals, year, ratio):
+    """Part 12 G's cross-check, four places; the ratio is where a filed
+    figure stops being exact, and it is a float."""
+    value = fundamentals.metrics_by_year(apple())[year]["net_debt_to_ebitda"]
+    assert isinstance(value, float)
+    assert round(value, 4) == ratio
+
+
+@pytest.mark.parametrize("field", ["commercial_paper", "long_term_debt_current", "long_term_debt_noncurrent"])
+def test_a_year_missing_a_borrowing_field_has_no_net_debt(fundamentals, field):
+    """D33 with D30: a borrowing field no tag yielded is not 0. The year has
+    no net debt and no ratio; the screen stops there if a clause needs it."""
+    block = apple()
+    del block["years"]["FY2025"][field]
+    assert fundamentals.net_debt("FY2025", block["years"]["FY2025"]) is None
+    assert "net_debt_to_ebitda" not in fundamentals.metrics_by_year(block)["FY2025"]
+
+
+def test_invested_capital_reads_the_same_three_fields(fundamentals):
+    """Part 10 B's invested capital is equity + debt - cash with debt the sum
+    of the three fields: Part 10 C's FY2025 figure from the moved fixture."""
+    block = figures()
+    block["years"]["FY2025"].update({"commercial_paper": 1_000.0, "long_term_debt_current": 5_000.0,
+                                     "long_term_debt_noncurrent": 10_000.0})
+    # 170,000 + 16,000 - 42,000 = 144,000 as before; NOPAT 28,800; ROIC 0.2000
+    assert fundamentals.metrics_by_year(block)["FY2025"]["return_on_invested_capital"] == pytest.approx(0.2000, abs=1e-12)
+    del block["years"]["FY2025"]["commercial_paper"]
+    assert "return_on_invested_capital" not in fundamentals.metrics_by_year(block)["FY2025"]
