@@ -715,7 +715,7 @@ question). The fallback is still confidence 0.0 with the German apology.
 
 ### CostCalculator reports costs for the wrong model
 
-**Trigger:** pending decision 53: raise on an unknown model, or delete the cost tracker.
+**Trigger:** the commit that deletes the cost tracker. Decision 53 closed 15 September (eighteenth session): delete behind a tag, by the rule for code no question reaches.
 
 `observability/tracer.py:406` — `PRICING` is a 2024 table with no Anthropic 4.x
 entries, and `estimate_cost` does `PRICING.get(model, PRICING["gpt-4-turbo"])`.
@@ -1976,7 +1976,7 @@ ae6f220 — model identity lives in `agents/config.py`.
 
 ### Two router few-shot examples are benchmark prompts verbatim
 
-**Trigger:** pending decision 11.
+**Trigger:** pending decision 45, the tool-boundary pass, which retires the prompt and its few-shots; decision 11 merged into it 15 September (eighteenth session).
 
 "What is my current allocation by asset class?" and "What is my volatility
 over the past twelve months?" appear in `router_prompts.py` word for word as
@@ -2400,7 +2400,7 @@ RebalanceAgent change. No reader.
 
 ### The first `out_of_scope` definition moved "Should I rebalance?" to clarification
 
-**Trigger:** pending decision 11: the verbatim golden query in the prompt goes with the two few-shots.
+**Trigger:** pending decision 45, which retires the prompt; decision 11 merged into it 15 September (eighteenth session). The verbatim golden query in the prompt goes with the two few-shots.
 
 Recorded 7 September (third sitting). The first wording listed in-scope
 mechanics as "drift, rebalancing trades to a target" and closed with "if a
@@ -2690,7 +2690,7 @@ only the lines that mention it.
 
 ### "Optimization failed: None": the node formats an absent error key
 
-**Trigger:** pending decision 14, and pending decision 51 before it.
+**Trigger:** pending decision 51; decision 14 merged into it 15 September (eighteenth session).
 
 Recorded 8 September (eighth sitting), from the CLI. "Backtest SPY and TLT over 5 years" with no
 portfolio ran the derived plan `[DataAgent, OptimizationAgent,
@@ -3377,7 +3377,7 @@ repaired when a script is next wanted, or deleted, which is a decision.
 
 ### Two formatter headers still carry an emoji
 
-**Trigger:** pending decision 32.
+**Trigger:** the commit that strips the headers, under the handoff's next steps. Decision 32 left the pending list 15 September (eighteenth session) as work, not a decision.
 
 Recorded 11 September (fourteenth session), seen in the prompt batch.
 The compliance report's header and the out-of-scope refusal's header
@@ -3405,7 +3405,7 @@ case 4.5. Every answer priced as of 2026-09-09 and said so.
 
 ### The CLI's identical-answer check fires on two correct refusals
 
-**Trigger:** pending decision 38.
+**Trigger:** the first pair of correct refusals a session reads as one wrong face. Decision 38 closed 15 September (eighteenth session): the check stays; it found the JNJ wrong face on 9 September, and closed does not mean removed.
 
 Recorded 11 September (fourteenth session), from the owner's CLI session.
 "Does Alphabet pass my quality criteria?" and "Is it a good time to buy
@@ -4271,7 +4271,7 @@ Nothing is built on this until that is done.
 
 ### Order 4, the filings reader: Parts 12 and 13, and what is built
 
-**Trigger:** pending decisions 46 to 50, then 29.
+**Trigger:** pending decisions 46 to 49, then 29, which absorbed 50 on 15 September (eighteenth session).
 
 **Built 13 and 14 September (sixteenth session), 5228857 to 98b8ff6.** The
 reference first, then each layer test first, each test seen failing against
@@ -4328,7 +4328,7 @@ it.**
 
 ### PHI-3.2's code list fails open, and a code carries no date
 
-**Trigger:** pending decision 43, the real contact, so the published SIC list can be fetched; or a bank or insurer filing under a code the list lacks.
+**Trigger:** the first live fetch through the provider, the contact being set (decision 43 closed 15 September, eighteenth session), so the published SIC list can be fetched; or a bank or insurer filing under a code the list lacks.
 
 **Decided 14 September (sixteenth session), Part 10 F.** PHI-3.2 excludes
 the seven SIC codes the clause lists: 6021 and 6022, commercial banks; 6035
@@ -4458,7 +4458,7 @@ that layer will not be able to ask either.
 
 ### What is `reasoning` for: a debugging artifact, or something checked?
 
-**Trigger:** pending decision 36.
+**Trigger:** pending decision 45, the tool-boundary pass; decision 36, the router's field, merged into it 15 September (eighteenth session).
 
 **Recorded 11 September (fourteenth session), from an outside reading, with
 one claim corrected against the code.** The router emits `reasoning`, free

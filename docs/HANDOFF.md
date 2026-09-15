@@ -290,37 +290,44 @@ batch answer.
   owner sets then.
 
 **Pending — decide before writing code.** Old numbers kept so KNOWN_GAPS
-references resolve. Closed this session: 39.
-6. The rebalance tools' fixed euro sign.
-9. Records and rules for the span and two-weights clarifications.
+references resolve. Closed the seventeenth session: 39.
+
+**Triaged 15 September (eighteenth session).** The list held **32** numbers,
+not the 41 that CLAUDE.md and the session's instruction counted; the cap is
+25. Seven closed, eight merged, one moved to §7 as work, seventeen remain.
+Closed, with the outcome: **15**, no golden line for 2.3, the runner is its
+check and the plan is derived, not classified; **18**, realized gains, D12
+states the arithmetic and no case consumes it, reopens with a case; **23**,
+the answer naming its price source, a constant while there is one source,
+D20 names a second when it exists; **38**, the identical-answer check stays
+as it is, its false positive on two refusals recorded, and closed does not
+mean removed, since it found the JNJ wrong face on 9 September; **43**, the
+contact is set in `.env`; **53**, CostCalculator is deleted behind a tag by
+the rule for code no question reaches, in a later session; **55**, done in
+be6c436. Merged: 6 and 14 into 51; 9, 11 and 36 into 45; 30 and 50 into
+29; 35 into 17. Moved: 32, the emoji headers, to §7. The KNOWN_GAPS
+triggers citing 11, 14, 32, 36, 38, 43, 50 and 53 were repointed in the
+same commit; no trigger cited the other moved numbers.
+
 10. A window return as a measure with a reference.
-11. Replace the two verbatim benchmark few-shots.
 12. The hypothetical mode's instrument type.
 13. A target-weights clause and `OUT_OF_SCOPE_RESPONSE` moving into the IPS.
-14. "Optimization failed: None".
-15. A golden line for 2.3.
 16. Company names, German phrasings, the softer 3.5.
-17. `group_by` as the subject kind of a compliance finding.
-18. Realized gains and closed positions.
+17. `group_by` as the subject kind of a compliance finding. Absorbs 35, a
+    rank selection in extraction: one selection axis.
 22. Volatility over as-traded closes or a total-return series.
-23. The answer text naming the price source.
-29. **The node for the screen**, after the bridge.
-30. What a philosophy is bound to.
-32. Formatter headers carry an emoji: the entry counts two, and a grep of
-    `nodes.py` this session shows one on each of the policy-lookup,
-    optimization, macro, rebalance and backtest headers beside them. One
-    commit, the runner run against it.
-35. A rank selection in extraction.
-36. What `reasoning` is for.
-38. The CLI's identical-answer check.
+29. **The node for the screen**, after the bridge. Absorbs 30, what a
+    philosophy is bound to, and 50, ticker to CIK: both are read by the node
+    and decided when it is built.
 41. Writing what nets against debt into PHI-3.1's clause text. Mine.
-43. **The real `EDGAR_USER_AGENT` in `.env`.** Mine.
-45. The tool-boundary pass, tagged Order 5.
+45. The tool-boundary pass, tagged Order 5. Absorbs 9, the span and
+    two-weights clarification rules, which are the tools' input validation;
+    11, the two verbatim benchmark few-shots, which go with the prompt; and
+    36, what `reasoning` is for, the router's field.
 46. Where NOPAT's stated tax rate lives, and what it is (D32). Mine.
 47. `net_debt` as a metric key with its own reference row (D33).
 48. Part 13 E's questions 3, 4, 6 and 7.
 49. A SIC code on the block.
-50. Ticker to CIK, with the node.
 51. **The four live intents outside the benchmark roster** — optimization
     (max Sharpe, golden-pinned, runs with no portfolio), rebalancing (raises
     on a missing target; two known defects behind it), backtest (in-sample by
@@ -329,18 +336,17 @@ references resolve. Closed this session: 39.
     lean, deletion where no benchmark case asks; rebalancing first, since
     decision 13 would rebuild it from a reference. Trigger: the full test at
     the end of Order 4, or earlier if one of them produces a wrong face.
+    Absorbs 6, the rebalance tools' fixed euro sign, and 14, "Optimization
+    failed: None": each goes with its intent, or is a defect under D15 if the
+    intent stays.
 52. **The Yahoo-fed tables** — `financial_statements`, `fundamentals`,
     `quarterly_earnings`, with `get_financial_statements` returning nothing
     and its six xfails: delete or keep. Their last readers went with
     `data_tools.py`.
-53. **CostCalculator**: raise on an unknown model, or delete the cost
-    tracker. Lean delete; nothing reads a cost figure.
 54. **BaseAgent's tool loop** (`process`, `get_tools`, `tool_map`,
     `get_system_prompt`, `TaskType`, the protocol enums) and the three
     `AgentConfig` fields that describe it: delete. Lean delete, **its own
     sitting**: it touches every agent class.
-55. Whether `expected_values.md` Part 13 C gets a dated note where it names
-    `update_all_assets.py` and `tools/data_tools.py`, both deleted. Mine.
 
 ---
 
@@ -380,7 +386,13 @@ scoring with its Part.
 
 ### Later, with reasons
 
-- Decisions 51 to 54, each its own sitting; 54 touches every agent class.
+- The formatter headers carrying an emoji, seven in `nodes.py`: compliance
+  and out-of-scope (the KNOWN_GAPS entry), policy lookup, optimization,
+  macro, rebalance and backtest. One commit, the runner run against it. Work,
+  not a decision: moved here from §5's item 32 on 15 September (eighteenth
+  session).
+- Decisions 51, 52 and 54, each its own sitting; 54 touches every agent
+  class. 53 is closed: delete behind a tag, when a session takes it.
 - The registry text naming VaR, drawdown and risk parity: a prompt change,
   prediction first, two golden runs (KNOWN_GAPS).
 - 3.2's rewrite and Part 2's boundary: at the commit that makes 4.3 answerable.
