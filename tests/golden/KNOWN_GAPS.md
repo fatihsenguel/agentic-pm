@@ -1833,6 +1833,11 @@ Same defect class as the `.gitignore` entry under Hygiene, same origin, and
 the same owner-only fix - except that here it is a permission rule rather than
 a standing instruction that makes it so.
 
+**Closed 15 September (eighteenth session).** The owner rewrote `.env.example`
+in b0f1499, the commit after `.gitignore`'s, one line in and four out. The
+permission rule still holds, so the file's content is the commit's to show;
+nothing here was read from it.
+
 **What was deliberately not done.** No reader. `os.getenv("EDGAR_USER_AGENT")`
 with a raise is three lines, and it would be a config value nothing consumes -
 the shape this file keeps deleting. It lands with the provider method that
@@ -3495,9 +3500,9 @@ Neither is chased: the path is dead, RebalanceAgent erroring on a missing
 target, so nothing prints. Both belong with decision 13, which gives the
 rebalancer a target and makes the whole surface live in one commit.
 
-### `.gitignore` is corrupted
+### `.gitignore` is corrupted - CLOSED 15 September (eighteenth session)
 
-**Trigger:** the owner's hand.
+**Trigger:** none: rewritten by the owner in 41b03d5.
 
 A PowerShell here-string was written into it literally. Line 1 is `@"`, there is a
 `` *`$py.class `` line with a PowerShell escape, and mid-file sits
@@ -3507,6 +3512,11 @@ still ignored by later standalone entries, so nothing is leaking.
 **Not actionable in a session, 8 September (sixth sitting):** the standing rules
 now say `.gitignore` is the owner's to edit. "Rewrite it" stands as a
 description of what the file needs and is the owner's to do.
+
+**Closed 15 September (eighteenth session).** The owner rewrote the file in
+41b03d5, the first commit on `baseline-v1` after the seventeenth session's
+handoff: the here-string lines are gone, `.env` is still ignored, now at
+line 22 of the rewritten file, and `data/*.db` still covers the database.
 
 ### `portfolio_tool/__init__.py` opens a database connection at import
 
@@ -3635,7 +3645,8 @@ volatility "does not exist yet (D7)", false since 7 September; and
 `expected_values.md` Part 13 C naming `update_all_assets.py` and
 `tools/data_tools.py` as the paths to `force_update_asset_info`, a
 description of code in a reference file, which the owner decides whether to
-annotate.
+annotate. **15 September (eighteenth session): decision 55, yes**; the note
+is in Part 13 C, dated.
 
 ### The macro answer, now that it prints
 

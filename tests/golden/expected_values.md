@@ -1209,6 +1209,13 @@ first created, including from `data_agent.py`. `assets` has no source column,
 so a row cannot say which writer last set it, and only a held or queried
 company has a row. Read from the code, not run.
 
+*Note, 2026-09-15, decision 55.* `scripts/update_all_assets.py` and
+`tools/data_tools.py` were deleted on 2026-09-15 (4911f5e and 0707ac6), so
+`force_update_asset_info` has no caller and the provider's label reaches an
+existing row through nothing. `_get_or_create_asset` still writes it when a
+row is first created, and the seed still writes row 12 by hand. The paragraph
+above describes the code as read on 2026-09-13 and stands as read.
+
 So the label has no filed source and no date, and its vocabulary is a price
 vendor's or the seed's. The SIC code has a filed source and a pull date, and
 exists for every filer, held or not. Decision 28 put the SIC code on the block;
