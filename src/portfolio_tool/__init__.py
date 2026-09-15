@@ -8,17 +8,13 @@ Data Layer:
     - YFinanceProvider: Market data provider
     - QuotaManager: API rate limiting
 
-Analytics:
-    - MetricsCalculator: Performance and risk metrics
-
 Quantitative:
-    - Covariance estimation (shrinkage methods)
+    - Covariance estimation (sample)
     - Returns calculation
-    - Risk metrics (VaR, CVaR, etc.)
+    - Volatility, per series and per portfolio
 
 Optimization:
     - Mean-variance optimization
-    - Risk parity
     - Constraints handling
 
 Backtesting:
