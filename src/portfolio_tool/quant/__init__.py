@@ -4,7 +4,7 @@ Quant Module for Portfolio Analytics.
 This module provides quantitative finance calculations for:
 - Return calculations (simple, log, excess)
 - Covariance estimation (sample, shrinkage, exponential)
-- Risk metrics (VaR, CVaR, volatility, drawdown)
+- Volatility, per series and per portfolio
 
 Design Principles:
 - All functions are pure and deterministic
@@ -30,12 +30,8 @@ from .covariance import (
 
 from .risk_metrics import (
     calculate_volatility,
-    calculate_var,
-    calculate_cvar,
-    calculate_max_drawdown,
-    calculate_sharpe_ratio,
-    calculate_sortino_ratio,
-    RiskMetricsCalculator,
+    portfolio_volatility,
+    portfolio_volatility_by_ticker,
 )
 
 __all__ = [
@@ -50,12 +46,8 @@ __all__ = [
     "calculate_sample_covariance",
     "calculate_shrinkage_covariance",
     "calculate_exponential_covariance",
-    # Risk Metrics
+    # Volatility
     "calculate_volatility",
-    "calculate_var",
-    "calculate_cvar",
-    "calculate_max_drawdown",
-    "calculate_sharpe_ratio",
-    "calculate_sortino_ratio",
-    "RiskMetricsCalculator",
+    "portfolio_volatility",
+    "portfolio_volatility_by_ticker",
 ]
