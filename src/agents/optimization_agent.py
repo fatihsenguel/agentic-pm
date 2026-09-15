@@ -75,7 +75,6 @@ class OptimizationAgent(BaseAgent):
         return [
             "optimize_mean_variance",
             "optimize_max_sharpe",
-            "optimize_min_volatility",
         ]
     
     def get_tools(self) -> List[Callable]:
@@ -89,11 +88,10 @@ class OptimizationAgent(BaseAgent):
 Your role is to optimize portfolio weights using mathematical optimization.
 
 CAPABILITIES:
-- Mean-Variance (Markowitz) Optimization: Maximize Sharpe ratio or minimize volatility
+- Mean-Variance (Markowitz) Optimization: Maximize Sharpe ratio
 
 AVAILABLE METHODS:
 1. max_sharpe - Maximum Sharpe ratio (best risk-adjusted return)
-2. min_volatility - Minimum volatility portfolio
 4. target_volatility - Max return at specified volatility
 5. target_return - Min volatility at specified return
 
@@ -165,19 +163,11 @@ Always include:
             long_only=task.constraints.long_only,
         )
         
-        # Determine optimization method
-        method = task.optimization_method
         
         # Run optimization
-        if method == ProtocolOptMethod.MIN_VARIANCE:
-            opt_result = self.mv_optimizer.min_volatility(
-                expected_returns, cov_matrix, opt_constraints
-            )
-        else:
-            # Default: max_sharpe
-            opt_result = self.mv_optimizer.max_sharpe(
-                expected_returns, cov_matrix, opt_constraints
-            )
+        opt_result = self.mv_optimizer.max_sharpe(
+            expected_returns, cov_matrix, opt_constraints
+        )
         
         # Convert to PortfolioResult
         result = self._convert_to_portfolio_result(opt_result, task.task_id)
@@ -251,10 +241,7 @@ Always include:
             )
             
             # Run optimization
-            if method == "min_volatility":
-                result = self.mv_optimizer.min_volatility(exp_ret, cov_mat, constraints)
-            else:  # max_sharpe
-                result = self.mv_optimizer.max_sharpe(exp_ret, cov_mat, constraints)
+            result = self.mv_optimizer.max_sharpe(exp_ret, cov_mat, constraints)
             
             # ✅ STRICT FIX: Convert Numpy types to Python Native types
             # nodes.py strictly checks isinstance(x, float). Numpy floats fail this.

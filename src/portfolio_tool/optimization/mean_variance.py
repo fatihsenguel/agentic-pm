@@ -3,7 +3,6 @@ Mean-Variance (Markowitz) Portfolio Optimization.
 
 Implements classic Markowitz optimization:
 - Maximum Sharpe Ratio portfolio
-- Minimum Volatility portfolio
 - Target Return portfolio
 - Target Volatility portfolio
 
@@ -35,7 +34,6 @@ class MeanVarianceOptimizer(OptimizerInterface):
     
     Supports multiple optimization objectives:
     - max_sharpe: Maximize Sharpe ratio
-    - min_volatility: Minimize portfolio volatility
     - target_return: Minimize volatility for target return
     - target_volatility: Maximize return for target volatility
     
@@ -82,15 +80,13 @@ class MeanVarianceOptimizer(OptimizerInterface):
             expected_returns: Expected returns per asset
             cov_matrix: Covariance matrix
             constraints: Portfolio constraints
-            objective: "max_sharpe", "min_volatility", "target_return", "target_volatility"
+            objective: "max_sharpe", "target_return", "target_volatility"
             
         Returns:
             OptimizationResult
         """
         if objective == "max_sharpe":
             return self.max_sharpe(expected_returns, cov_matrix, constraints)
-        elif objective == "min_volatility":
-            return self.min_volatility(expected_returns, cov_matrix, constraints)
         elif objective == "target_return":
             return self.target_return(expected_returns, cov_matrix, constraints)
         elif objective == "target_volatility":
@@ -181,81 +177,6 @@ class MeanVarianceOptimizer(OptimizerInterface):
             warnings=warnings,
             active_constraints=active
         )
-    
-    def min_volatility(
-        self,
-        expected_returns: pd.Series,
-        cov_matrix: pd.DataFrame,
-        constraints: Optional[PortfolioConstraints] = None
-    ) -> OptimizationResult:
-        """
-        Find minimum volatility portfolio.
-        
-        Minimizes: σ_p = sqrt(w' Σ w)
-        """
-        warnings = self._validate_inputs(expected_returns, cov_matrix)
-        
-        tickers = list(expected_returns.index)
-        n_assets = len(tickers)
-        
-        ret = expected_returns.values
-        cov = cov_matrix.values
-        
-        # Objective: Portfolio variance
-        def portfolio_variance(weights):
-            return np.dot(weights, np.dot(cov, weights))
-        
-        # Gradient for faster convergence
-        def variance_gradient(weights):
-            return 2 * np.dot(cov, weights)
-        
-        w0 = np.array([1.0 / n_assets] * n_assets)
-        bounds = create_weight_bounds(tickers, constraints)
-        scipy_constraints = create_scipy_constraints(tickers, cov, ret, constraints)
-        
-        result = optimize.minimize(
-            portfolio_variance,
-            w0,
-            method='SLSQP',
-            jac=variance_gradient,
-            bounds=bounds,
-            constraints=scipy_constraints,
-            options={
-                'maxiter': self.max_iterations,
-                'ftol': self.tolerance,
-                'disp': self.verbose
-            }
-        )
-        
-        if not result.success:
-            warnings.append(f"Optimizer warning: {result.message}")
-        
-        weights = self._clean_weights(result.x)
-        
-        satisfied, violations = check_constraints_satisfied(
-            weights, tickers, cov, ret, constraints
-        )
-        if not satisfied:
-            warnings.extend(violations)
-        
-        active = constraints.get_active_constraints_description() if constraints else []
-        
-        opt_result = self._create_result(
-            weights=weights,
-            expected_returns=ret,
-            cov_matrix=cov,
-            tickers=tickers,
-            success=result.success,
-            converged=result.success,
-            iterations=result.nit,
-            warnings=warnings,
-            active_constraints=active
-        )
-        
-        # Update method to MIN_VOLATILITY
-        opt_result.method = OptimizationMethod.MIN_VOLATILITY
-        
-        return opt_result
     
     def target_return(
         self,
