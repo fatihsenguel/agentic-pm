@@ -27,6 +27,15 @@ in the document; `entityType`, `ownerOrg` and `fiscalYearEnd` have no
 consumer. A code that is missing or not four digits comes back as None, the
 form the screen stops on (D35), rather than guessed at.
 
+`tickers` fetches the SEC's published ticker file, every listed filer's
+tickers against its CIK, and returns one record per pair: the forward map a
+ticker needs to become a CIK before either document above can be asked for
+(decision 29, question 50). The submissions document's own `tickers` list
+maps the other way and verifies a CIK; it cannot resolve one. A ticker
+naming two CIKs, or an entry without a ticker or a readable CIK, raises:
+a map with a hole in it is not the map. The file's company title has no
+consumer and is not returned.
+
 Not the price vendor's interface: `DataProviderInterface` has no method this
 source can fill.
 """
@@ -40,11 +49,14 @@ from typing import List, Optional
 import requests
 
 import config
-from portfolio_tool.provider_models import ProviderFiledFact, ProviderFiler
+from portfolio_tool.provider_models import ProviderFiledFact, ProviderFiler, ProviderTicker
 
 
 COMPANY_FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
 SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
+# The ticker file is served from www.sec.gov, not data.sec.gov, with the same
+# contact. URL and shape from memory until the first live fetch records them.
+TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 
 # D27: annual periods measured on three filers are 363 to 370 days; the
 # nearest durations that are not a year are 273 and 925.
@@ -156,3 +168,43 @@ class EdgarProvider:
             description = None
 
         return ProviderFiler(cik=cik, name=name, sic=sic, sic_description=description)
+
+    def tickers(self) -> List[ProviderTicker]:
+        """Every (ticker, CIK) pair the SEC's ticker file states today, one
+        record per pair, in file order, each pair once."""
+        document = json.loads(self._get(TICKERS_URL))
+
+        # The file is an object keyed by position; the same entries as a
+        # list are read too, and the first live fetch records which is sent.
+        if isinstance(document, dict):
+            entries = list(document.values())
+        elif isinstance(document, list):
+            entries = document
+        else:
+            raise EdgarError(f"The ticker file is a {type(document).__name__}, not a "
+                             "collection of entries.")
+        if not entries:
+            raise EdgarError("The ticker file has no entries; an empty map is not the map.")
+
+        records: List[ProviderTicker] = []
+        cik_by_ticker = {}
+        for entry in entries:
+            if not isinstance(entry, dict):
+                raise EdgarError(f"A ticker file entry is {entry!r}, not an object.")
+            ticker = entry.get("ticker")
+            if not isinstance(ticker, str) or not ticker:
+                raise EdgarError(f"A ticker file entry states no ticker: {entry!r}.")
+            try:
+                cik = int(str(entry.get("cik_str")))
+            except (TypeError, ValueError):
+                raise EdgarError(f"The ticker file entry for {ticker} states "
+                                 f"{entry.get('cik_str')!r} as its CIK.")
+            if ticker in cik_by_ticker:
+                if cik_by_ticker[ticker] != cik:
+                    raise EdgarError(f"The ticker file names {ticker} for CIK "
+                                     f"{cik_by_ticker[ticker]} and for CIK {cik}; one ticker "
+                                     "names one filer.")
+                continue
+            cik_by_ticker[ticker] = cik
+            records.append(ProviderTicker(ticker=ticker, cik=cik))
+        return records

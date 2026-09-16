@@ -75,6 +75,17 @@ class ProviderFiler:
     sic_description: Optional[str]
 
 @dataclass
+class ProviderTicker:
+    """One (ticker, CIK) pair as the SEC's published ticker file states it
+    on the pull date (decision 29, question 50): the forward map from a
+    ticker to the filer it names. One CIK may carry several tickers; one
+    ticker names one CIK, and a file that says otherwise is refused, not
+    read around. The file's company title is not carried: the filers row
+    holds EDGAR's name."""
+    ticker: str
+    cik: int
+
+@dataclass
 class ProviderDividendData:
     ex_date: date
     amount: Decimal
