@@ -212,6 +212,29 @@ class Filer(Base):
     def __repr__(self):
         return f"<Filer(cik={self.cik}, sic='{self.sic}', pulled_at={self.pulled_at})>"
 
+class TickerCik(Base):
+    """
+    One (ticker, CIK) pair as the SEC's published ticker file states it,
+    with the date it was pulled (decision 29, question 50): the forward map
+    from a ticker to the filer it names, which neither EDGAR document
+    carries in that direction.
+
+    The file is one document for every listed filer, so a refresh rewrites
+    the whole table as the file now states it and moves every row's date; a
+    ticker the file no longer carries leaves the table with the refresh.
+    Keyed by ticker, since the provider refuses a file in which one ticker
+    names two filers. Every column is required and defaulted nowhere: a row
+    is written only after a fetch has returned. The file's company title is
+    not stored; the filers row holds EDGAR's name.
+    """
+    __tablename__ = 'ticker_ciks'
+    ticker = Column(String(10), primary_key=True)
+    cik = Column(Integer, nullable=False)
+    pulled_at = Column(DateTime, nullable=False)
+
+    def __repr__(self):
+        return f"<TickerCik(ticker='{self.ticker}', cik={self.cik}, pulled_at={self.pulled_at})>"
+
 class FxFetchMetadata(Base):
     """
     The rate fetch's cache record, one row per (base, quote).
