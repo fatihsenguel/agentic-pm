@@ -881,6 +881,8 @@ FY2022 223,546 (0000320193-24-000123), FY2023 214,137, FY2024 210,352 and
 FY2025 220,960 (0000320193-25-000079). Section H holds the identity between
 the two rows; the csv carries the five rows with their provenance.
 
+### C. The tag each field resolves from
+
 In order; the first that yields a fact for the period wins, and none yielding
 a fact leaves the field out of that year, listed as unresolved with the field,
 the year and the tags, for the check to stop on (D30).
