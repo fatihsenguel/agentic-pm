@@ -718,6 +718,13 @@ naming PHI-3.2 and reports no finding.
   Commercial Banks, as EDGAR stated it on 2026-09-13"; no other finding, no
   figure read, no verdict on the company.
 
+*Note, 2026-09-16, decision 29.* The first live answer, through the node on
+JPM: "JPM is excluded under PHI-3.2: SIC 6021, National Commercial Banks,
+as EDGAR stated it on 2026-09-16 UTC", the clause text, "no figure was read
+and no other clause was checked". The runner's 4.6 passes on it. The date
+is the pull day, UTC, as decided with the node; the row above cites the
+pull day of Part 13 C's own fetch.
+
 ---
 
 ## Part 11 — The valuation range
@@ -1429,6 +1436,10 @@ here.
 7. `shares_outstanding`: which count, and `free_cash_flow_yield` for a filer
    with more than one class.
 8. Whether an industry exclusion is decided before the years are read.
+   Decided 2026-09-14 (D34, Part 10 F): before. *Note, 2026-09-16, decision
+   29.* Built as `screening.exclude`, which the node runs on the filers row
+   before the company facts are fetched, so an excluded company's figures
+   are never asked for; JPMorgan's first live check read no fact.
 
 ### F. Each fiscal year's own annual report
 
