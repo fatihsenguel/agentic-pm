@@ -45,6 +45,23 @@ def test_compliance_intent_is_in_both_prompts():
     assert IntentType.COMPLIANCE.value == "compliance"
 
 
+def test_research_intent_is_in_both_prompts_and_names_the_philosophy():
+    """The philosophy check's intent (decision 29). Its description has to
+    separate the philosophy from the IPS, since a held ticker with the word
+    philosophy went to the portfolio check on the runner's 4.6 before it
+    existed, and to say that no recommendation follows."""
+    line = [l for l in ROUTER_SYSTEM_PROMPT.splitlines() if l.startswith('  "intent": "')][0]
+    assert "|research|" in line
+    assert "|research|" in REPAIR_PROMPT
+    assert "- research:" in ROUTER_SYSTEM_PROMPT
+    assert IntentType.RESEARCH.value == "research"
+    description = INTENTS["research"]
+    assert "philosophy" in description
+    assert "Investment Policy Statement" in description
+    assert "held" in description
+    assert "recommendation" in description
+
+
 def test_the_router_is_never_shown_the_policy_vocabulary():
     """Shown a list, the model maps the user's words onto its nearest member
     ("currency risk" -> instruments -> IPS-2.1, runner 3.4, 8 September).

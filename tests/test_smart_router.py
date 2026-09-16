@@ -310,6 +310,7 @@ class TestDependencies:
         shapes = (
             ("risk_analysis", ["ComplianceAgent"]),
             ("data_fetch", ["DataAgent", "PortfolioAnalysisAgent", "ComplianceAgent"]),
+            ("research", ["ComplianceAgent"]),
         )
         for intent, order in shapes:
             with pytest.raises(ValueError, match="only under intent compliance"):
@@ -329,10 +330,19 @@ class TestDependencies:
             ("backtest", ["DataAgent", "OptimizationAgent", "BacktestAgent"]),
             ("rebalancing", ["DataAgent", "RebalanceAgent"]),
             ("macro_analysis", ["MacroAgent"]),
+            ("research", ["ScreeningAgent"]),
         )
         for intent, order in shapes:
             decision = RouterDecision.model_validate(self._plan(intent, order))
             assert decision.execution_order == order
+
+    def test_research_plans_the_screen_alone(self):
+        """A philosophy check reads no portfolio: DataAgent before it, or the
+        checker after it, is rejected rather than trimmed (decision 29)."""
+        with pytest.raises(ValueError, match=r"is \['ScreeningAgent'\], not"):
+            RouterDecision.model_validate(self._plan("research", ["DataAgent", "ScreeningAgent"]))
+        with pytest.raises(ValueError, match="only under intent compliance"):
+            RouterDecision.model_validate(self._plan("research", ["ScreeningAgent", "ComplianceAgent"]))
 
 
 def test_a_decision_needs_no_task_list():

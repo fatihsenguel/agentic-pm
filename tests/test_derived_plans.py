@@ -16,6 +16,7 @@ from agents.schemas import (
 
 D, A, C = "DataAgent", "PortfolioAnalysisAgent", "ComplianceAgent"
 O, B, R, M = "OptimizationAgent", "BacktestAgent", "RebalanceAgent", "MacroAgent"
+S = "ScreeningAgent"
 
 # intent, parameters, derived plan
 ROWS = [
@@ -31,6 +32,10 @@ ROWS = [
     ("compliance", {}, [D, A, C]),
     ("compliance", {"hypothetical_weight": 0.15}, [C]),
     ("compliance", {"policy_topic": "what does my policy say about cash"}, [C]),
+    # The philosophy check needs no other agent: no portfolio, no price until
+    # Part 11; the ticker is extraction's (decision 29).
+    ("research", {"tickers": ["JPM"]}, [S]),
+    ("research", {}, [S]),
     ("clarification_needed", {}, []),
     ("out_of_scope", {}, []),
 ]

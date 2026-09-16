@@ -27,6 +27,7 @@ INTENTS: Dict[str, str] = {
     'backtest': 'User wants historical simulation',
     'data_fetch': 'User wants raw price data or metrics',
     'risk_analysis': 'User wants risk metrics (VaR, volatility, drawdown)',
+    'research': 'User asks whether one named company clears their investment philosophy, or how it screens against the philosophy\'s criteria (return on capital, margins, balance sheet, price against value). The philosophy is not the Investment Policy Statement: a question naming the philosophy is research even when the company is held, and compliance is only for the IPS and the portfolio. The company is screened clause by clause on its filed figures; no recommendation is made.',
     'compliance': 'User asks about their Investment Policy Statement: whether the portfolio complies with it or breaks a rule, whether a position is too big, what would have to change to be within its limits, whether a proposed weight in one position is allowed, or what the policy says about a topic',
     'clarification_needed': 'Request is in scope but too vague to plan, need to ask user',
     'out_of_scope': 'Request is clear, and what it asks for is something this system does not do: a judgement about whether to own a security (should I buy/sell/hold X, is X a good investment, what should I buy, screening or finding candidates), a price or return forecast, tax assessment, or placing an order. Whether the security is held makes no difference to refusing that judgement - and no difference the other way: a question about a held position\'s own figures is in scope, below. Plan NO agents, leave clarification_question null. Questions about a portfolio the user already holds - its allocation, P&L, risk, drift, whether and how to rebalance it, whether it complies with their policy - are IN scope and keep their normal intent: "Should I rebalance my portfolio?" is rebalancing, not out_of_scope and not clarification_needed, because it asks about mechanics on holdings already chosen, not about whether to own a security. A question about how a ticker the active portfolio holds has performed, gained or lost, or how large it is, is a question about that position even without the word "my": data_fetch with PortfolioAnalysisAgent, measure "position_pnl" or "allocation", tickers [that symbol] - not out_of_scope. If a request could be either an in-scope question or an out-of-scope one (e.g. "analyze X" could mean price data), that is clarification_needed, not out_of_scope: ambiguity wins over refusal.',
@@ -57,6 +58,7 @@ AGENTS: Dict[str, str] = {
     "BacktestAgent": "Runs historical simulations of portfolio strategies",
     "PortfolioAnalysisAgent": "Computes figures about an EXISTING portfolio's holdings: allocation by asset class and by sector, P&L per position since purchase, and the portfolio's own volatility from its weights and the covariance matrix. Needs DataAgent first (holdings, prices, cash, covariance).",
     "ComplianceAgent": "Checks an EXISTING portfolio against the owner's Investment Policy Statement: every clause with a numeric limit, breach or headroom per clause with the distance to the limit, citing clause ids. Needs DataAgent and PortfolioAnalysisAgent first.",
+    "ScreeningAgent": "Screens ONE named company against the owner's investment philosophy on its filed figures from EDGAR: one finding per numeric clause, pass or fail with the distance, citing PHI ids; a bank or insurer is excluded on its SIC code before any figure is read. Needs no other agent.",
 }
 
 
@@ -187,6 +189,7 @@ TERMINAL: Dict[str, Dict[str, Tuple[Optional[str], bool]]] = {
         "hypothetical_weight": ("ComplianceAgent", False),
         "policy_topic": ("ComplianceAgent", False),
     },
+    "research": {"": ("ScreeningAgent", True)},
     "clarification_needed": {"": (None, True)},
     "out_of_scope": {"": (None, True)},
 }

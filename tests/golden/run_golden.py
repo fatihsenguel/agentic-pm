@@ -41,6 +41,11 @@ QUERIES = [
     # rule 7 collision alone.
     ("Is my AAPL position within my policy's limits?", 3),
     ("Is AAPL too concentrated?", 3),
+    # The philosophy check (decision 29), on a held ticker: before the intent
+    # existed this sentence went to the IPS portfolio check (runner 4.6,
+    # 16 September). The line pins that the philosophy and the IPS are two
+    # intents. Runs the node live: the fetches are under their intervals.
+    ("Does JPM clear my philosophy?", 3),
 ]
 
 
