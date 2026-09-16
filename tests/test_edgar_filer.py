@@ -16,12 +16,13 @@ What the method decides:
   - nothing else in the document is returned: `entityType`, `ownerOrg`,
     `fiscalYearEnd` and the filings index have no consumer (decision 49)
 
-What the test assumes about the document's `cik` field, and does not know:
-the stand-in serves it as the csv keeps it, a ten-digit zero-padded string,
-and the check also accepts the bare digits and an integer. Which of these
-EDGAR sends is recorded by the first live fetch through this method, not
-here. The same holds for `sic`: the stand-in serves a string, as Part 13 C
-transcribed it.
+What the test assumes about the document's `cik` field: the stand-in serves
+it as the csv keeps it, a ten-digit zero-padded string, and the check also
+accepts the bare digits and an integer. The first live fetch through this
+method, 16 September 2026, Apple and JPMorgan, found the ten-digit
+zero-padded string, and `sic` a string, as Part 13 C transcribed it; the
+other two forms stay accepted because nothing says EDGAR will not change
+its mind, and the check would still be right.
 
 No network. The stand-in session serves a submissions-shaped document built
 from one csv row, the pattern of test_edgar_provider.py. The module is
@@ -148,7 +149,7 @@ def test_a_missing_or_empty_description_is_none(edgar, agent, description):
     assert record.sic == "6021"
 
 
-# --- the document's cik: the forms the check accepts, the live form unrecorded ----
+# --- the document's cik: the forms the check accepts; EDGAR sends the padded string ---
 
 @pytest.mark.parametrize("cik_field", ["0001652044", "1652044", 1652044])
 def test_the_document_cik_in_each_form_is_the_company(edgar, agent, cik_field):
