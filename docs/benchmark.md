@@ -191,6 +191,14 @@ about a new position. Y is a company the philosophy declines to screen.
 4.6 is Level 3's job inside Level 4: the case where not answering is the
 right answer.
 
+**Status note, 16 September 2026 (twentieth session).** The runner carries
+4.1 and 4.6 and prints n/14. 4.6 passes on JPMorgan through the philosophy
+check node: excluded under PHI-3.2 on its SIC code, nothing else reported.
+4.1 is blocked, by design, on the check stopping at PHI-2.1 for Alphabet's
+FY2021: the metric keys for a filer presenting no gross profit and no
+combined D&A are decision 48, and no figure is filled to move the case.
+4.2 to 4.5 have no check yet. The runner is the status.
+
 **References before code, none computed yet.** Part 10 of
 `expected_values.md`: the synthetic candidate's typed figures over the
 stated years and every philosophy clause's verdict and distance by hand, for
