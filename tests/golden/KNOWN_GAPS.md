@@ -471,6 +471,25 @@ whenever a query runs after new closes, the way `macro_data` does, so a
 session start confirms the Alembic head and the tables, not this count. What
 holds the closes that matter is Part 9's check over the committed series.
 
+### A schema test passed on a table another test had emptied - RESOLVED 16 September (twentieth session)
+
+**Trigger:** none: the test owns its rows (0bd3c45).
+
+**Found 16 September (twentieth session), at the last commit of the sweep.**
+`test_filed_facts_schema.py`'s database half inserted real filed facts
+(Part 12 D F5, Part 13 D F6) into the suite's copy and read the table back
+by tag alone. It had passed on every full run since Apple's rows entered
+the database because `test_filed_facts_fetch.py`, alphabetically before
+it, clears Apple's rows from the copy and commits; run alone the same file
+collided with Apple's real F5 row on the unique index. The first second
+filer stored in the real database, Alphabet's facts from the runner's 4.1,
+made two of its whole-table reads see 190 rows where they expected 2, and
+the full suite went red at a documentation commit. Fixed in the test: the
+fixture removes the two fixture companies' rows inside its own rolled-back
+transaction and the reads filter on `source = 'test'`. The rule this adds
+to the ones above: a test over the suite's database copy owns the rows it
+reads, because the copy is the real database and the real database grows.
+
 ---
 
 ## Silent-wrong bugs found, not yet fixed
