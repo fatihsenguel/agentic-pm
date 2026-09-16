@@ -52,7 +52,7 @@ topics = ["quality", "gross margin", "margins"]
 metric = "gross_margin"
 min = 0.35
 years = 3
-text = """Gross margin of at least 35% in each of the last three fiscal years."""
+text = """Gross margin of at least 35% in each of the last three fiscal years. Gross margin is revenue less the cost of revenue, over revenue, each as the company filed it; a gross profit the company presents is the same figure and is not read."""
 
 [[clause]]
 id = "PHI-2.3"

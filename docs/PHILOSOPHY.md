@@ -42,7 +42,9 @@ five fiscal years. The return is operating income taxed at a stated rate of
 one-off tax item does not move a measure of the business.
 
 **PHI-2.2** Gross margin of at least 35% in each of the last three fiscal
-years.
+years. Gross margin is revenue less the cost of revenue, over revenue, each
+as the company filed it; a gross profit the company presents is the same
+figure and is not read.
 
 **PHI-2.3** I own businesses I can explain in a paragraph: what is sold, to
 whom, why they keep buying, and what would make them stop. If I cannot
