@@ -1,6 +1,8 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 16 September (nineteenth session), on branch `filer`, cut from `baseline-v1` at c75b73b. Decision 49, the SIC code on the block, in four commits test first: `EdgarProvider.filer` held to the fourteen rows of `edgar_submissions.csv`, the `filers` table (migration c8dd6b3dc535, applied by the owner), `filings.update_filer` under `filings_fetch_interval_days`, and `filed_years_for` carrying `sic`, `sic_description` and `sic_as_of` beside the years. Two live submissions fetches: JPMorgan equal to Part 13 C's row, Apple stored as one filers row and read back beside its seventeen years. The published SIC list on www.sec.gov read once with the contact, the fails-open entry updated and nothing acted on. Decision 41 closed: PHI-3.1 states what nets against debt. Entries added this session: the submissions document carries the tickers; the filer fetch downloads the filings index it discards; the code is as of its pull, not the block's as-of.
+Last updated 16 September (twentieth session), on branch `node`, cut from `baseline-v1` at 921d1fe. Decision 29, the node for the philosophy check, in nine commits test first, closing 30 and 50 with it: the runner's checks for 4.1 and 4.6 seen BLOCKED; `EdgarProvider.tickers` over the SEC ticker file, the `ticker_ciks` table (migration e289a03682f2, applied by the owner) and `filings.cik_for` under the interval; `screening.exclude`; `screening_agent_node`, which fetches the ticker file, the submissions document, decides the exclusion on the code alone and only then the company facts; the research formatter; the `research` intent and `ScreeningAgent` bound into the graph; the golden line "Does JPM clear my philosophy?", two runs as predicted, expected.txt updated. Runner 13/14: 4.6 PASS, 4.1 BLOCKED on the stop at PHI-2.1 (decision 48). Live: the ticker file (10,422 pairs), JPMorgan's and Alphabet's submissions, Alphabet's company facts (13,655 rows). Entries closed: the philosophy question routed to the IPS, the three unreached modules, the UTC pull date, the code's as-of beside the block's; the gate entry re-triggered on 4.3.
+
+Previously: 16 September (nineteenth session), on branch `filer`, cut from `baseline-v1` at c75b73b. Decision 49, the SIC code on the block, in four commits test first: `EdgarProvider.filer` held to the fourteen rows of `edgar_submissions.csv`, the `filers` table (migration c8dd6b3dc535, applied by the owner), `filings.update_filer` under `filings_fetch_interval_days`, and `filed_years_for` carrying `sic`, `sic_description` and `sic_as_of` beside the years. Two live submissions fetches: JPMorgan equal to Part 13 C's row, Apple stored as one filers row and read back beside its seventeen years. The published SIC list on www.sec.gov read once with the contact, the fails-open entry updated and nothing acted on. Decision 41 closed: PHI-3.1 states what nets against debt. Entries added this session: the submissions document carries the tickers; the filer fetch downloads the filings index it discards; the code is as of its pull, not the block's as-of.
 ---
 
 # RESOLVED
@@ -479,7 +481,7 @@ answer arrives with a plausible face instead of an error. Same family as bugs 5,
 
 ### The compliance gate is a plan step, and one live path prints weights around it
 
-**Trigger:** pending decision 29, the research node, where the gate is designed.
+**Trigger:** Order 4, the commit that makes 4.3 answerable: the research node exists (16 September) and implies no position, so the gate stays idle by construction until the recommendation case.
 
 **Found 11 September (fourteenth session), from an outside reading of the
 project, and confirmed against the code the same hour.** DIRECTION.md
@@ -558,6 +560,15 @@ see the change at all: no case exercises optimization or rebalancing. The
 golden set was not run - no intent, plan, period or `agents_run` moves, and a
 formatter cannot raise here, so `errors` holds and `expected.txt` does not
 move. pytest is the loop that sees this, 735 to 738.
+
+**16 September (twentieth session): the research node landed and the gate
+stayed idle by construction.** Intent `research` derives `[ScreeningAgent]`
+alone; the validator refuses ComplianceAgent under it as under every
+intent but compliance; the answer's last line says no position is implied
+and the investment policy was not consulted. Nothing was built toward the
+gate and nothing forecloses it: the declared mark, the checker entry point
+taking a proposed weight and the policy to check against are still the
+three absent things, and 4.3 is where checked first means something.
 
 
 
@@ -3322,9 +3333,19 @@ loops, unmeasured.
 
 **15 September (seventeenth session).** Twenty-six at 918, then 922 passed. The first run of the session took 34.06 seconds and the next 3.67 with no change between them: the sixteenth session's 1:42 shape again, still not measured with `--durations`.
 
-### A question about the philosophy runs the IPS check
+### A question about the philosophy runs the IPS check - RESOLVED 16 September (twentieth session)
 
-**Trigger:** pending decision 29, the research node.
+**Trigger:** none: intent `research` exists and the golden line "Does JPM clear my philosophy?" pins the route.
+
+**Resolved by the intent, not by a word in the lookup pattern.** Before the
+intent existed the runner's new 4.6, "Does JPM clear my philosophy?", was
+seen live routed `compliance` with the full portfolio plan, the wrong face
+this entry recorded, now on a held ticker. With `research` in the registry
+the same sentence routes research at 0.95 on two golden runs and the
+philosophy is answered from `philosophy.toml`. The lookup half, "what does
+my philosophy say about debt?", is not built: `research` screens one named
+company, and a philosophy topic lookup would be a discriminator row on it,
+the way `policy_topic` is on compliance, when a case asks for it.
 
 Recorded 11 September (fourteenth session), from the prompt batch below.
 "What does my philosophy say about debt?" routed `compliance` in its
@@ -3599,9 +3620,9 @@ methodology defect and not a bug in the arithmetic. Not fixed: the intent is
 outside the benchmark roster (decision 51), and a walk-forward split is a
 capability with its own reference Part.
 
-### Three reference-verified modules nothing reaches
+### Three reference-verified modules nothing reaches - RESOLVED 16 September (twentieth session)
 
-**Trigger:** pending decision 29, the research node.
+**Trigger:** none: `screening_agent_node` reaches `philosophy.py`, `screening.py`, `providers/edgar.py`, `filings.py` and `filed_figures.py`; the runner's 4.6 passes through them.
 
 **Recorded 15 September (seventeenth session).** `philosophy.py`, `screening.py` and
 `providers/edgar.py`, with `filed_figures.py` and `filings.py` beside them,
@@ -4050,9 +4071,9 @@ verdict. Said out loud here and in benchmark.md so that a future session
 does not read 14/14 as the system being good at research.
 
 
-### Order 4, the philosophy check: Part 10 and three pure modules
+### Order 4, the philosophy check: Part 10 and three pure modules - the node BUILT 16 September (twentieth session)
 
-**Trigger:** pending decision 29, the research node.
+**Trigger:** none: built; the three open questions below are answered in the paragraph at the end.
 
 **Built 11 September (fourteenth session), c0b9d13 to 70c993a.** Taken
 before the valuation pipeline, against DIRECTION.md's listed order,
@@ -4103,6 +4124,27 @@ on the block decides a bank or an insurer before any figure is read, so
 4.6's bank variant is decidable with no model in the loop. What is not built
 is the fetch that puts a real company's code on the block; the filings
 reader's entry under Directions has it.
+
+**16 September (twentieth session): the node, decision 29, nine commits
+(873b805 to 7c984b8).** The first and third questions: the word philosophy
+routes to intent `research`, a registry entry and no few-shot, the
+out_of_scope description byte-identical, two golden runs as predicted; the
+philosophy is bound to the committed file, `nodes.PHILOSOPHY_PATH`, until
+Order 6 (decision 30), a portfolio column, an `.env` name and a config key
+each rejected. What was built differs from the shape above in two names:
+the block is `shared_data["screening"]` as proposed, the intent `research`
+rather than a name per case, since 4.2 and 4.3 are rows under it. The node
+publishes dates and findings and no figure; a stop is published, not
+raised; an excluded company's facts are never fetched (`screening.exclude`
+on the filer row before `update_filed_facts`). Rejected on the way: the
+node calling `screen` on a block with no years and catching the raise as
+control flow; a stub node so the registries could land first (the
+import-time checks make a roster entry without a node fail, so the
+registries were the last commit, with the golden line). Logged and not
+fixed: the reader does not carry the facts' `source`, so the node states
+the provider's name; the runner's 4.1 probe names decision 48 for every
+stop, and once 48 is decided the next stop is PHI-4.1 with no range, which
+is Part 11; a philosophy topic lookup is not an intent row yet.
 
 ### The judgement half's figures come from a reader, never a file - DECIDED 11 September (fourteenth session)
 
@@ -4271,7 +4313,7 @@ Nothing is built on this until that is done.
 
 ### Order 4, the filings reader: Parts 12 and 13, and what is built
 
-**Trigger:** pending decisions 48 and 49, then 29, which absorbed 50 on 15 September (eighteenth session); 46 and 47 were taken the same session and the bridge is built.
+**Trigger:** pending decision 48, Part 13 E's items 3, 4, 6 and 7; 49 was taken 16 September (nineteenth session) and 29 with 50 the same day (twentieth session).
 
 **Built 13 and 14 September (sixteenth session), 5228857 to 98b8ff6.** The
 reference first, then each layer test first, each test seen failing against
@@ -4345,9 +4387,12 @@ it.**
 - **Screen W-1.** Alphabet files no gross profit and no combined D&A, and its
   FY2021 and FY2022 non-current debt only under a wider tag (Part 13 B), so
   PHI-2.1, PHI-2.2 and PHI-3.1 stop. Part 13 E's questions 3 to 8 are these.
-- **Find a company by ticker.** The assembler takes a CIK; where the
-  watchlist's tickers get theirs is decided with the node. The submissions
-  document carries the filer's tickers (the entry below, 16 September).
+- **Find a company by ticker.** Decided 16 September (twentieth session),
+  question 50: the SEC's published ticker file, `EdgarProvider.tickers`,
+  one row per (ticker, CIK) pair in `ticker_ciks` under the filings
+  interval, `filings.cik_for` over it; a ticker the file lacks raises. The
+  watchlist names no CIK and a held company needs no row. The submissions
+  document's own tickers stay the reverse map (the entry below).
 - **Report shares.** No field carries them (Part 13 E7, and the
   `shares_history` entry).
 - **Limit its rate.** One company is one request and nothing loops over
@@ -4422,9 +4467,9 @@ year's figures dropped, and since a year's own report must be a 10-K or
 10-K/A the check stops on the year as not filed: a refusal rather than a
 wrong figure. The list grows one measured form at a time.
 
-### The pull date the filings record keeps is UTC
+### The pull date the filings record keeps is UTC - DECIDED 16 September (twentieth session)
 
-**Trigger:** pending decision 29, the node: the first answer that states a pull date.
+**Trigger:** none: decided with the node; the paragraph at the end says how.
 
 **Recorded 16 September (eighteenth session), from the first live fetch.**
 `update_filed_facts` writes `filed_fetch_metadata.last_fetch_time` from
@@ -4442,6 +4487,20 @@ answer.
 records carries one; `filed_years_for` hands it on as `sic_as_of`
 uninterpreted, a datetime and not a calendar day. Observed on the filer
 fetch: 00:03 UTC against 02:03 on the machine, the same day this time.
+
+**Decided 16 September (twentieth session), for all three records at
+once, `last_fetch_time`, `filers.pulled_at` and `ticker_ciks.pulled_at`:
+UTC.** The node publishes each pull instant as an ISO string with `+00:00`
+written into it, so the clock is data; the formatter prints the calendar
+day it names followed by the word UTC ("as EDGAR stated it on 2026-09-16
+UTC"); the check's own as-of, which decides the years that count, is the
+UTC date of the run, so every date in one answer is on one clock. Rejected:
+the machine's zone, which would make the answer depend on where it runs;
+storing local time, which would move the stored instants. Known cost:
+Part 12's rows cite pull dates as calendar days on the owner's clock, two
+hours ahead, so a reference row and an answer about a pull between 22:00
+and midnight UTC name different days. The first live pulls this session
+fell at 01:33 and 01:38 UTC, 03:33 and 03:38 on the machine, the same day.
 
 ### Apple's FY2014 operating cash flow does not resolve under Part 12 C's tag
 
@@ -4461,7 +4520,19 @@ history rather than across filers.
 
 ### The submissions document carries the tickers, and more Part 13 C did not record
 
-**Trigger:** pending decision 29, the node, where ticker to CIK (50) is decided.
+**Trigger:** the first ticker that resolves through the SEC ticker file to a filer whose submissions document does not list it; or a filer fetch that fails on size or time.
+
+*16 September (twentieth session), question 50 decided.* The forward map is
+the SEC's published ticker file (`EdgarProvider.tickers`, `ticker_ciks`,
+`filings.cik_for`), not this field. The first live fetch found the file an
+object keyed by position, 10,422 entries, each with `cik_str`, `ticker`
+and `title`, the form the method reads first; the list form stays accepted.
+This field remains what it is, the reverse map, and the check the shape
+named for it is not built: the node does not read the resolved filer's
+`tickers` to confirm the asked ticker is among them, because `filer()`
+returns no tickers and nothing stores them. A ticker the file maps to a
+CIK whose document does not list it would be screened under that CIK
+without a word. Not seen on the three filers resolved so far.
 
 **Recorded 16 September (nineteenth session), from the two live filer
 fetches.** Beside the fields Part 13 C recorded (`cik`, `name`, `sic`,
@@ -4492,9 +4563,15 @@ company a week under `filings_fetch_interval_days` costs nothing worth a
 change; a screen over a watchlist would notice. Whether EDGAR publishes a
 lighter document that carries the code was not looked up. Not chased.
 
-### The code on the block is as of its pull, not as of the block's as-of
+### The code on the block is as of its pull, not as of the block's as-of - DECIDED 16 September (twentieth session)
 
-**Trigger:** pending decision 29, the node: the first answer that states the block's as-of beside the code's.
+**Trigger:** none: the answer prints both dates.
+
+*16 September (twentieth session).* The research answer prints the check's
+as-of ("checked as of 2026-09-16") and the code's pull day ("as EDGAR
+stated it on 2026-09-16 UTC") as two dates; the runner's 4.1 and 4.6 each
+assert that both reach the answer. Where they differ the sentence says so
+by saying both.
 
 **Recorded 16 September (nineteenth session).** `filed_years_for(session,
 cik, as_of)` reads figures filed on or before `as_of` and puts beside them
