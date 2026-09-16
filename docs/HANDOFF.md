@@ -1,7 +1,7 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 16 September 2026 (nineteenth session). Regenerated at its end.
-**Branch:** `filer`, cut from `baseline-v1` at c75b73b, the trunk's tip at session start, which was the owner's Excel save of the workbook after the eighteenth session's merge. **`baseline-v1` is the trunk**: each session branch is merged into it with `--ff-only` when the loops are green; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count c75b73b..HEAD` — 9, plus the one that lands this file. **Not merged and not pushed**: the owner merges and pushes; `origin`'s push URL is `no_push`.
+**Branch:** `filer`, cut from `baseline-v1` at c75b73b, the trunk's tip at session start, which was the owner's Excel save of the workbook after the eighteenth session's merge. **`baseline-v1` is the trunk**: each session branch is merged into it with `--ff-only` when the loops are green; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count c75b73b..HEAD` — 9, this file's included; the first version of this file said 9 plus its own, a count written before it was added up, corrected in the commit after it. **Not merged and not pushed**: the owner merges and pushes; `origin`'s push URL is `no_push`.
 
 **State:** pytest **1019 passed, 6 xfailed**, up from 958 by 61 tests: 34 for the provider method, 15 for the filers schema, 8 for the cache rule, 4 for the reader's code keys. **The golden set and the runner were not run**, on the owner's instruction and my agreement: nothing this session touched routing, a prompt or an answer's text, and no graph node imports the provider, the filings module, the reader, the philosophy loader or the screen; a run would pass in both states and distinguish nothing. The CLI ran once at session start on the allocation question and answered as the runner's 1.1 expects. **Migration c8dd6b3dc535 was run by the owner** and its output pasted; the head is c8dd6b3dc535. **Two live submissions fetches and one read of the published SIC list** (§4).
 
@@ -267,8 +267,8 @@ price, the shares and the valuation range are still the node's to assemble.
 
 ## 4. What the nineteenth session did
 
-`git log --oneline c75b73b..HEAD`, 9 commits, plus the one that lands this
-file. Decision 49 and nothing else on the code: no node, no intent, no
+`git log --oneline c75b73b..HEAD`, 9 commits, this file's included.
+Decision 49 and nothing else on the code: no node, no intent, no
 prompt change.
 
 **The loops, first.** pytest 958, the CLI on the allocation question as
