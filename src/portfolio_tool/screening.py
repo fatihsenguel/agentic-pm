@@ -37,6 +37,11 @@ Part 10 F adds the industry exclusion:
        pass, in philosophy order, and the screen goes on. A block with no
        code stops the check naming the clause: a company is never assumed
        not to be a bank. Either finding carries the code and no arithmetic.
+
+`exclude` is that first step on its own, over a block that carries the
+ticker and the code and need carry nothing else, so the node can decide a
+bank after the filer fetch and before the facts fetch (decision 29).
+`screen` calls it first; D34 and D35 are stated once and read twice.
 """
 
 import datetime as dt
@@ -120,18 +125,12 @@ def screen(philosophy: ClauseDocument, block: Mapping, as_of: dt.date) -> List[F
         when an excluded_industry clause lists the company's code (D34, D35).
         Statements produce none.
     """
-    subject = block.get("ticker")
-    if not isinstance(subject, str) or not subject.strip():
-        raise ScreeningError("The figures block names no ticker; a screen is of one company.")
+    subject = _subject(block)
 
     # D34: every exclusion first, before a figure is read.
-    exclusions = {}
-    for clause in philosophy.checkable:
-        if clause.type == EXCLUDED_INDUSTRY:
-            finding = _excluded_industry(clause, subject, block)
-            if finding.status == EXCLUDED:
-                return [finding]
-            exclusions[clause.id] = finding
+    excluded = exclude(philosophy, block)
+    if excluded is not None:
+        return [excluded]
 
     years = years_filed_by(block, as_of)
     metrics = metrics_by_year(block, _assumptions(philosophy))
@@ -139,7 +138,7 @@ def screen(philosophy: ClauseDocument, block: Mapping, as_of: dt.date) -> List[F
     findings: List[Finding] = []
     for clause in philosophy.checkable:
         if clause.type == EXCLUDED_INDUSTRY:
-            findings.append(exclusions[clause.id])
+            findings.append(_excluded_industry(clause, subject, block))
         elif clause.type == "metric_band":
             findings += _metric_band(clause, subject, years, metrics)
         elif clause.type == "margin_of_safety":
@@ -150,6 +149,28 @@ def screen(philosophy: ClauseDocument, block: Mapping, as_of: dt.date) -> List[F
             # clause silently unscreened.
             raise ScreeningError(f"{clause.id}: no screen for type {clause.type!r}.")
     return findings
+
+
+def exclude(philosophy: ClauseDocument, block: Mapping) -> Optional[Finding]:
+    """D34 and D35 on the code alone: the one excluded finding when an
+    excluded_industry clause lists the company's SIC code, None when none
+    does. Raises when the block carries no code as EDGAR states one, or no
+    ticker. Reads `ticker` and `sic` and nothing else, so it can run before
+    a single figure has been fetched."""
+    subject = _subject(block)
+    for clause in philosophy.checkable:
+        if clause.type == EXCLUDED_INDUSTRY:
+            finding = _excluded_industry(clause, subject, block)
+            if finding.status == EXCLUDED:
+                return finding
+    return None
+
+
+def _subject(block: Mapping) -> str:
+    subject = block.get("ticker")
+    if not isinstance(subject, str) or not subject.strip():
+        raise ScreeningError("The figures block names no ticker; a screen is of one company.")
+    return subject
 
 
 def _assumptions(philosophy: ClauseDocument) -> Mapping[str, object]:

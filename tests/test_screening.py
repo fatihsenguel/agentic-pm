@@ -278,3 +278,36 @@ def test_no_code_no_check(screening, philosophy, sic):
     block = figures() if sic is None else figures(sic=sic)
     with pytest.raises(screening.ScreeningError, match="PHI-3.2.*SIC"):
         screening.screen(philosophy, block, AS_OF)
+
+
+# --- exclude: D34 on the code alone, before any figure is fetched ------------------
+
+def test_exclude_decides_a_bank_on_the_code_alone(screening, philosophy):
+    """The node calls this after the filer fetch and before the facts fetch,
+    so an excluded company's figures are never asked for (decision 29). The
+    block carries the ticker and the code and nothing else."""
+    finding = screening.exclude(philosophy, {"ticker": "JPM", "sic": "6021"})
+    _exclusion(finding, "excluded", "6021", "JPM")
+
+
+def test_exclude_returns_none_for_an_unlisted_code(screening, philosophy):
+    assert screening.exclude(philosophy, {"ticker": "GOOGL", "sic": "7370"}) is None
+
+
+@pytest.mark.parametrize("sic", [None, "", 6021, "602"])
+def test_exclude_stops_on_no_code(screening, philosophy, sic):
+    block = {"ticker": "JPM"} if sic is None else {"ticker": "JPM", "sic": sic}
+    with pytest.raises(screening.ScreeningError, match="PHI-3.2.*SIC"):
+        screening.exclude(philosophy, block)
+
+
+def test_exclude_needs_a_ticker(screening, philosophy):
+    with pytest.raises(screening.ScreeningError, match="ticker"):
+        screening.exclude(philosophy, {"sic": "6021"})
+
+
+def test_screen_and_exclude_agree(screening, philosophy):
+    """One statement of D34 and D35, two callers: what screen returns for a
+    bank is what exclude returns for its code."""
+    block = figures(ticker="JPM", sic="6021", years={k: dict(v) for k, v in JPMORGAN_YEARS.items()})
+    assert screening.screen(philosophy, block, AS_OF) == [screening.exclude(philosophy, block)]
