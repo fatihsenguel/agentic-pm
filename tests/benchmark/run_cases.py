@@ -1,7 +1,7 @@
 """
-Benchmark case runner. Prints n/12 against docs/benchmark.md Part 3.
+Benchmark case runner. Prints n/14 against docs/benchmark.md Part 3.
 
-Not part of pytest. Twelve live queries cost API calls and about a minute, so
+Not part of pytest. Fourteen live queries cost API calls and about two minutes, so
 this is the fourth loop - pytest, CLI, golden set, runner - not a thing bolted
 onto pytest. Each of the four has a blind spot the others do not.
 
@@ -40,7 +40,7 @@ STATUSES
   FAIL     the system answered, and the answer was wrong or incomplete
   BLOCKED  a capability this case needs does not exist yet
 
-BLOCKED is not a pass. The headline number is passes out of twelve.
+BLOCKED is not a pass. The headline number is passes out of fourteen.
 
 Blocked cases probe for the capability rather than declaring themselves blocked,
 so they unblock automatically when it arrives. A case that unblocks while its
@@ -1167,7 +1167,402 @@ def check_3_5(states):
 
 
 # ---------------------------------------------------------------------------
-# The twelve cases
+# Level 4: the philosophy check (benchmark.md, cases 4.1 and 4.6)
+# ---------------------------------------------------------------------------
+
+# The block the philosophy check publishes, `shared_data["screening"]`, in
+# the shape of the compliance block: the loaded philosophy (id, type, text),
+# its statements, the subject, the check's as-of date, the company's SIC
+# code with its description and the date EDGAR stated it, the fiscal years
+# read with their dates and no figures, and one finding per (clause, bound)
+# or the one excluded finding alone (Part 10 F, D34 and D35). A check that
+# stopped on a missing figure (PHI-1.2, D25) carries `stopped` and no
+# findings. The figures themselves stay in the database: the block carries
+# the years' dates and the findings, never a filed figure.
+SCREEN_STATUSES = {"pass", "fail", "excluded"}
+PHI_ID = re.compile(r"PHI-\d+\.\d+")
+YEAR_KEYS = {"ends", "filed"}
+# A statement is cited and not computed; the answer says so in these words.
+NOT_COMPUTED = "not computed"
+
+# X and Y as benchmark.md names them, by the ticker extraction reads (a
+# company name is pending decision 16). X is W-1 on the synthetic watchlist,
+# not held in portfolio 3. Y is the bank Part 10 F and Part 13 C measured.
+WATCHLIST_TICKER = "GOOGL"
+BANK_TICKER = "JPM"
+# expected_values.md Part 13 C: what EDGAR states for JPMorgan. Static like
+# the cost bases above: the code has no history to move with.
+BANK_SIC = "6021"
+BANK_SIC_DESCRIPTION = "National Commercial Banks"
+
+
+def _screening(state):
+    return _shared(state).get("screening") or {}
+
+
+def blocked_on_screen(state):
+    """The philosophy check exists as a pure module and no intent reaches it
+    (decision 29). Until a node publishes the block the case is blocked;
+    the reason names what the router did with the question so the record
+    says whether the gap is the node or the routing."""
+    if _screening(state):
+        return None
+    plan = (state.get("router_decision") or {}).get("execution_order") or []
+    reason = (f"no screening block in shared_data (intent {_intent(state)!r}, plan {plan}); "
+              "the philosophy check is not in the graph (decision 29)")
+    errors = state.get("errors") or []
+    if errors:
+        reason += f"; errors: {errors}"
+    return reason
+
+
+def blocked_on_screen_figures(state):
+    """4.1 on filed figures: W-1 cannot be screened on PHI-2.2 or PHI-3.1
+    until Part 13 E's items 3 and 4 are decided (decision 48), since Alphabet
+    files no gross profit and no combined D&A. A check that stopped on a
+    missing figure is that decision, not a defect of the node."""
+    reason = blocked_on_screen(state)
+    if reason is not None:
+        return reason
+    stopped = _screening(state).get("stopped")
+    if stopped:
+        return (f"the check stopped on {stopped.get('clause')}: {stopped.get('reason')}; "
+                "the metric keys for a filer presenting no gross profit and no combined "
+                "D&A are Part 13 E's items 3 and 4 (decision 48)")
+    return None
+
+
+def _screen_block_invariants(state, subject):
+    """What every screening block must satisfy, whichever case produced it.
+
+    Structure only: which clauses pass is the reference's business (Part 10
+    D and F), and the figures move with each annual report. Asserted here:
+
+      - the block carries the loaded philosophy and lists exactly its
+        statements, so the answer can cite and can say what it did not compute
+      - every finding cites a clause the philosophy has, never a statement,
+        with the clause's own type, on the one subject asked about
+      - status is in the closed set; an excluded finding carries the code and
+        no arithmetic; every other finding carries its metric, observed,
+        limit, bound and a signed distance, positive meaning failure, that
+        reconciles with observed and limit; status agrees with the sign and
+        exactly at the limit passes (D23)
+      - a clause over fiscal years names the years it read and the deciding
+        year among them, each a year the block dates; the margin of safety
+        names the as-of dates of the price and the range instead
+      - a band clause emits one finding per bound, never a nearer bound
+      - the years carry dates and nothing else: the figures are raw data and
+        stay out of shared_data
+      - `stopped` and findings are not both set: a stopped check reports no
+        verdict on any clause (PHI-1.2)
+    """
+    fails = []
+    block = _screening(state)
+    philosophy = block.get("philosophy") or {}
+    findings = block.get("findings") or []
+    statements = block.get("statements") or []
+    years = block.get("years") or {}
+
+    if not philosophy:
+        return ["no philosophy in shared_data['screening']; the answer cannot cite"]
+
+    statement_ids = {c for c, entry in philosophy.items() if entry.get("type") == "statement"}
+    listed = {s.get("clause") for s in statements}
+    if listed != statement_ids:
+        fails.append(f"statements {sorted(listed)} != the philosophy's statement "
+                     f"clauses {sorted(statement_ids)}")
+
+    if (block.get("subject") or {}).get("ticker") != subject:
+        fails.append(f"subject {block.get('subject')} is not {subject}")
+
+    for label, dates in years.items():
+        extra = sorted(set(dates) - YEAR_KEYS)
+        if extra:
+            fails.append(f"year {label} carries {extra}; the block dates the years and "
+                         "carries no figure (hot potato)")
+        for key in YEAR_KEYS:
+            if not AS_OF.fullmatch(str(dates.get(key))):
+                fails.append(f"year {label} {key} is not a YYYY-MM-DD date: {dates.get(key)!r}")
+
+    if block.get("stopped") and findings:
+        fails.append(f"the check stopped and still carries {len(findings)} findings; "
+                     "a stopped check reports no verdict on any clause (PHI-1.2)")
+
+    arithmetic = ("metric", "observed", "limit", "bound", "distance")
+    bounds_seen = {}
+    for f in findings:
+        clause, status = f.get("clause"), f.get("status")
+        where = f"{clause}/{f.get('subject')}"
+
+        if clause not in philosophy:
+            fails.append(f"finding {where} cites a clause not in the loaded philosophy")
+            continue
+        if clause in statement_ids:
+            fails.append(f"finding {where} is on a statement; statements have no findings")
+        if f.get("type") != philosophy[clause].get("type"):
+            fails.append(f"finding {where} type {f.get('type')!r} != philosophy "
+                         f"type {philosophy[clause].get('type')!r}")
+        if f.get("subject") != subject:
+            fails.append(f"finding {where} is about {f.get('subject')!r}, not {subject}")
+        if status not in SCREEN_STATUSES:
+            fails.append(f"finding {where} status {status!r} not in {sorted(SCREEN_STATUSES)}")
+            continue
+
+        if f.get("type") == "excluded_industry":
+            if not re.fullmatch(r"\d{4}", str(f.get("sic"))):
+                fails.append(f"finding {where} carries no four-digit SIC code: {f.get('sic')!r}")
+            carried = [k for k in arithmetic + ("years_read", "deciding_year")
+                       if f.get(k) not in (None, [], ())]
+            if carried:
+                fails.append(f"exclusion finding {where} carries arithmetic: {carried}")
+            continue
+        if status == "excluded":
+            fails.append(f"finding {where} is excluded under a {f.get('type')} clause; "
+                         "only an excluded_industry clause excludes")
+            continue
+
+        missing = [k for k in arithmetic if f.get(k) is None]
+        if missing:
+            fails.append(f"finding {where} ({status}) lacks {missing}")
+            continue
+        observed, limit, bound = f["observed"], f["limit"], f["bound"]
+        if bound not in ("min", "max"):
+            fails.append(f"finding {where} bound {bound!r} is not 'min' or 'max'")
+            continue
+        signed = (limit - observed) if bound == "min" else (observed - limit)
+        if abs(signed - f["distance"]) > 1e-9:
+            fails.append(f"finding {where}: distance {f['distance']} != {signed:.6f} from "
+                         f"observed {observed}, limit {limit}, bound {bound}")
+        if status == "fail" and not signed > 0:
+            fails.append(f"finding {where} fails with distance {signed:.6f}")
+        if status == "pass" and signed > 0:
+            fails.append(f"finding {where} passes while {signed:.6f} over its limit (D23)")
+
+        if f.get("type") == "margin_of_safety":
+            for key in ("price_as_of", "range_as_of"):
+                if not AS_OF.fullmatch(str(f.get(key))):
+                    fails.append(f"finding {where} {key} is not a date: {f.get(key)!r}")
+        else:
+            read = list(f.get("years_read") or [])
+            deciding = f.get("deciding_year")
+            if not read:
+                fails.append(f"finding {where} names no fiscal years read")
+            if deciding not in read:
+                fails.append(f"finding {where} deciding year {deciding!r} not among "
+                             f"the years read {read}")
+            undated = [y for y in read if y not in years]
+            if undated:
+                fails.append(f"finding {where} read {undated}, which the block does not date")
+
+        bounds_seen.setdefault(clause, []).append(bound)
+
+    for clause, bounds in bounds_seen.items():
+        if len(bounds) != len(set(bounds)):
+            fails.append(f"finding {clause} has duplicate bounds {bounds}")
+
+    return fails
+
+
+def _unexplained_screen_percentages(state, findings):
+    """Every percentage in the answer is a finding's observed, limit or
+    distance in a share metric, at the printed precision. A percentage none
+    of them explains is a figure the model wrote."""
+    allowed = set()
+    for f in findings:
+        if f.get("metric") in (None, "net_debt_to_ebitda"):
+            continue
+        for key in ("observed", "limit", "distance"):
+            if f.get(key) is not None:
+                allowed.add(f[key] * 100)
+                allowed.add(abs(f[key]) * 100)
+
+    unexplained = []
+    for match in PCT_FIGURE.finditer(_answer(state)):
+        printed, decimals = match.group(1), match.group(2)
+        tolerance = 0.5 * 10 ** -len(decimals or "") + 1e-9
+        if not any(abs(float(printed) - a) <= tolerance for a in allowed):
+            unexplained.append(match.group(0))
+    if unexplained:
+        return [f"answer carries percentages that are no finding's observed, limit "
+                f"or distance: {unexplained}"]
+    return []
+
+
+def _screen_dates_reach_answer(state):
+    """Part 3b: the check's as-of date and the date EDGAR stated the code
+    both reach the answer. The code is as of its pull and the years as of
+    the check (KNOWN_GAPS, the two as-of entries); the answer prints both."""
+    block = _screening(state)
+    fails = []
+    for key in ("as_of", "sic_as_of"):
+        stated = block.get(key)
+        if not stated:
+            fails.append(f"no {key} in shared_data['screening'] (benchmark.md Part 3b)")
+            continue
+        fails += _date_reaches_answer(state, str(stated)[:10], f"screening.{key}")
+    return fails
+
+
+def _not_from_the_ips(state):
+    """A question about the philosophy is not answered from the IPS: no
+    compliance block, no IPS id (KNOWN_GAPS, "A question about the
+    philosophy runs the IPS check")."""
+    fails = []
+    if _compliance(state):
+        fails.append("shared_data carries a compliance block; the philosophy question "
+                     "ran the IPS check")
+    cited = sorted(set(CLAUSE_ID.findall(_answer(state))))
+    if cited:
+        fails.append(f"answer cites IPS clauses {cited}; the question is about the philosophy")
+    return fails
+
+
+def _no_recommendation(state, subject):
+    verbs = r"\b(buy|sell|purchase|trim|liquidate|short|add to|enter|exit)\b"
+    line_re = re.compile(rf"{verbs}.*\b{subject}\b|\b{subject}\b.*{verbs}", re.IGNORECASE)
+    lines = [l for l in _answer(state).splitlines() if line_re.search(l)]
+    if lines:
+        return [f"answer recommends: {lines[0].strip()!r}"]
+    return []
+
+
+def check_4_1(state):
+    """"Does X clear my philosophy?" passes when every numeric clause has a
+    finding, pass or fail with its distance, citing its PHI id; every
+    statement is named as not computed; every figure carries its fiscal year
+    and its source; and there is no recommendation (benchmark.md Level 4).
+
+    Blocked, not failed, while the check stops on a figure Alphabet does not
+    file under Part 12 C's tags (the probe). What is asserted once it runs:
+    the findings cover exactly the philosophy's checkable clauses in its
+    order; each finding's id, its deciding fiscal year and that year's filed
+    date reach the answer, and so does the name of the source the figures
+    came from; each statement's id reaches the answer beside the words "not
+    computed"; every percentage traces to a finding; both as-of dates are
+    stated; nothing came from the IPS.
+    """
+    fails = _ran_clean(state)
+    block = _screening(state)
+    if not block:
+        return fails + ["no screening in shared_data"]
+    fails += _screen_block_invariants(state, WATCHLIST_TICKER)
+    if block.get("stopped"):
+        return fails + [f"the check stopped: {block['stopped']}"]
+
+    philosophy = block.get("philosophy") or {}
+    findings = block.get("findings") or []
+    checkable = [c for c, e in philosophy.items() if e.get("type") != "statement"]
+    found = []
+    for f in findings:
+        if f.get("clause") not in found:
+            found.append(f.get("clause"))
+    if found != checkable:
+        fails.append(f"findings cover {found}, not every checkable clause in philosophy "
+                     f"order {checkable}")
+
+    answer = _answer(state)
+    years = block.get("years") or {}
+    for f in findings:
+        where = f"{f.get('clause')}/{f.get('subject')}"
+        if f.get("clause") not in answer:
+            fails.append(f"finding on {f.get('clause')} but the id never reaches the answer")
+        deciding = f.get("deciding_year")
+        if deciding:
+            if deciding not in answer:
+                fails.append(f"finding {where} was decided by {deciding}, which never reaches "
+                             "the answer; every figure carries its fiscal year")
+            filed = (years.get(deciding) or {}).get("filed")
+            if filed and str(filed) not in answer:
+                fails.append(f"finding {where}: {deciding}'s report was filed {filed} and the "
+                             "date never reaches the answer; every figure carries its source")
+    source = block.get("source")
+    if not source:
+        fails.append("no source in shared_data['screening']; a figure without a source "
+                     "is a number in the answer")
+    elif str(source) not in answer:
+        fails.append(f"source {source!r} never reaches the answer")
+
+    for st in block.get("statements") or []:
+        if st.get("clause") not in answer:
+            fails.append(f"statement {st.get('clause')} is not named in the answer; every "
+                         "statement is named as not computed")
+    if NOT_COMPUTED not in answer.lower():
+        fails.append(f"answer does not say what was {NOT_COMPUTED!r}")
+
+    invented = sorted(set(PHI_ID.findall(answer)) - set(philosophy))
+    if invented:
+        fails.append(f"answer cites clause ids not in the philosophy: {invented}")
+
+    fails += _unexplained_screen_percentages(state, findings)
+    fails += _screen_dates_reach_answer(state)
+    fails += _not_from_the_ips(state)
+    fails += _no_recommendation(state, WATCHLIST_TICKER)
+    return fails
+
+
+def check_4_6(state):
+    """"Does Y clear my philosophy?", Y a bank, passes when the answer stops
+    where the philosophy says it stops: PHI-3.2, the company reported as
+    excluded under the code EDGAR states, and nothing else about it. No
+    verdict on the rest, nothing invented (benchmark.md Level 4; Part 10 F,
+    D34 and D35).
+
+    Concretely: one finding, on PHI-3.2, status excluded, carrying
+    JPMorgan's code 6021 (Part 13 C); no fiscal year read, so the block
+    dates none; the answer names PHI-3.2 and no other clause of either
+    document, the code, its description as EDGAR states it and the date it
+    was stated; no percentage, no other holding, no recommendation.
+    """
+    fails = _ran_clean(state)
+    block = _screening(state)
+    if not block:
+        return fails + ["no screening in shared_data"]
+    fails += _screen_block_invariants(state, BANK_TICKER)
+
+    if block.get("stopped"):
+        fails.append(f"the check stopped ({block['stopped']}); a bank is decided by its code "
+                     "before any figure is read (D34)")
+    findings = block.get("findings") or []
+    if len(findings) != 1:
+        fails.append(f"{len(findings)} findings; an excluded company gets one, on PHI-3.2, "
+                     "and nothing else is reported (D35)")
+    for f in findings:
+        if f.get("clause") != "PHI-3.2" or f.get("status") != "excluded":
+            fails.append(f"finding {f.get('clause')}/{f.get('status')}; the one finding is "
+                         "PHI-3.2 excluded")
+        if f.get("sic") != BANK_SIC:
+            fails.append(f"finding carries code {f.get('sic')!r}, not {BANK_SIC} (Part 13 C)")
+    if block.get("sic") != BANK_SIC:
+        fails.append(f"block carries code {block.get('sic')!r}, not {BANK_SIC}")
+    if block.get("sic_description") != BANK_SIC_DESCRIPTION:
+        fails.append(f"block carries description {block.get('sic_description')!r}, not "
+                     f"{BANK_SIC_DESCRIPTION!r} as EDGAR states it")
+    if block.get("years"):
+        fails.append(f"the block dates {sorted(block['years'])}; an excluded company has "
+                     "no year read")
+
+    answer = _answer(state)
+    cited = set(PHI_ID.findall(answer))
+    if cited != {"PHI-3.2"}:
+        fails.append(f"answer cites {sorted(cited)}; it cites PHI-3.2 and reports nothing else")
+    for text in (BANK_SIC, BANK_SIC_DESCRIPTION):
+        if text not in answer:
+            fails.append(f"answer does not carry {text!r}")
+    figures = [m.group(0) for m in PCT_FIGURE.finditer(answer)]
+    if figures:
+        fails.append(f"answer carries percentages {figures}; nothing was read")
+    named = sorted(t for t in TICKERS - {BANK_TICKER} if re.search(rf"\b{t}\b", answer))
+    if named:
+        fails.append(f"answer names holdings {named}; the question is about one company")
+
+    fails += _screen_dates_reach_answer(state)
+    fails += _not_from_the_ips(state)
+    fails += _no_recommendation(state, BANK_TICKER)
+    return fails
+
+
+# ---------------------------------------------------------------------------
+# The fourteen cases
 # ---------------------------------------------------------------------------
 
 CASES = [
@@ -1194,6 +1589,10 @@ CASES = [
      BENCHMARK_PORTFOLIO, blocked_on_compliance, check_3_4),
     ("3.5", ("Hows my APPL doing?", "yes"), BENCHMARK_PORTFOLIO,
      blocked_on_conversation_memory, check_3_5),
+    ("4.1", f"Does {WATCHLIST_TICKER} clear my philosophy?", BENCHMARK_PORTFOLIO,
+     blocked_on_screen_figures, check_4_1),
+    ("4.6", f"Does {BANK_TICKER} clear my philosophy?", BENCHMARK_PORTFOLIO,
+     blocked_on_screen, check_4_6),
 ]
 
 
@@ -1229,7 +1628,7 @@ def run_case(case_id, prompt, portfolio_id, blocked_probe, check):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run the benchmark cases and print n/12")
+    parser = argparse.ArgumentParser(description="Run the benchmark cases and print n/14")
     parser.add_argument("--case", help="run one case only, e.g. 1.1")
     args = parser.parse_args()
 
