@@ -13,6 +13,8 @@ from config import config
 import logging
 logger = logging.getLogger(__name__)
 
+import datetime as dt
+import re
 from typing import Dict, Any, Optional, Literal, List, Tuple
 from langchain_core.messages import AIMessage, HumanMessage
 
@@ -1238,6 +1240,192 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
             **add_error(state, f"ComplianceAgent: {str(e)}"),
         }
     finally:
+        if agent_ctx:
+            agent_ctx.__exit__(None, None, None)
+
+
+# =============================================================================
+# SCREENING AGENT NODE - the philosophy applied to one company's filed figures
+# =============================================================================
+
+# The philosophy is the investor's, not the portfolio's, so `ips_path`'s shape
+# does not transfer. Until Order 6 there is one file and it is this one; the
+# personal philosophy replaces it as a file with no code change (decision 30).
+PHILOSOPHY_PATH = "philosophy.toml"
+
+_PHI_ID = re.compile(r"PHI-\d+\.\d+")
+
+
+def edgar_provider():
+    """The EDGAR provider the screening node fetches through. A function so
+    that a test stands in a provider that answers from the record and touches
+    no network; the real one reads EDGAR_USER_AGENT and raises without it."""
+    from portfolio_tool.providers.edgar import EdgarProvider
+    return EdgarProvider()
+
+
+def _utc(instant: dt.datetime) -> str:
+    """A stored pull instant, UTC by the records' rule, with the offset
+    written into the string so that the clock is data (decision 29)."""
+    return instant.replace(tzinfo=dt.timezone.utc).isoformat()
+
+
+async def screening_agent_node(state: AgentState) -> Dict[str, Any]:
+    """
+    Screening Agent node - the philosophy applied to one company's filed
+    figures (decision 29; benchmark cases 4.1 and 4.6).
+
+    One ticker, extraction's, from the router's parameters; none or two is
+    an error, since a screen is of one company. The calls, in this order and
+    for this reason: the SEC ticker file resolves the ticker to a CIK; the
+    submissions document gives the filer's name and SIC code; the exclusion
+    is decided on the code alone (D34, screening.exclude); only a company the
+    philosophy does screen has its company facts fetched, read into fiscal
+    years (filed_years_for) and screened. An excluded company's figures are
+    never asked for. Each fetch is under filings_fetch_interval_days.
+
+    Publishes `shared_data["screening"]`, the shape tests/benchmark/run_cases.py
+    holds it to: the loaded philosophy (id, type and the text a citation
+    quotes) and its statements; the subject as ticker, CIK and EDGAR's name;
+    the check's as-of, the UTC date of the run, which decides the years that
+    count (D21); the code, its description and its as-of, the filers row's
+    pull instant; the fiscal years filed by the as-of, each as its end and
+    filed date and nothing else; the findings, the screen's dataclass; a
+    `stopped` record when the check stopped (PHI-1.2, D25), with its clause
+    and reason, published rather than raised because a stop is an answer;
+    the source the figures came from and their pull instant. The figures
+    themselves stay in the database: the block carries dates and findings.
+    The synthesizer formats and cites; this node does not.
+
+    The philosophy is the committed file (PHILOSOPHY_PATH, decision 30). No
+    portfolio is read: a philosophy check implies no position, so the IPS
+    is not consulted, and the answer says so.
+    """
+    tracer = get_tracer()
+    agent_ctx = None
+
+    try:
+        if tracer and hasattr(tracer, "get_current_request"):
+            req = tracer.get_current_request()
+            if req:
+                agent_ctx = req.trace_agent("ScreeningAgent")
+                agent_ctx.__enter__()
+    except Exception as e:
+        logger.warning(f"Tracing failed in ScreeningAgent (ignoring): {e}")
+
+    print("\n" + "=" * 80)
+    print("SCREENING AGENT - Checking a company against the philosophy")
+    print("=" * 80)
+
+    session = None
+    try:
+        from contextlib import nullcontext
+        from dataclasses import asdict
+
+        from portfolio_tool.database_setup import FiledFetchMetadata, get_session
+        from portfolio_tool.filed_figures import filed_years_for
+        from portfolio_tool.filings import cik_for, update_filed_facts, update_filer
+        from portfolio_tool.philosophy import load_philosophy
+        from portfolio_tool.quant.fundamentals import years_filed_by
+        from portfolio_tool.screening import ScreeningError, exclude, screen
+
+        params = (state.get("router_decision") or {}).get("parameters") or {}
+        tickers = params.get("tickers") or []
+        if len(tickers) != 1:
+            raise DataCalculationError(
+                f"A philosophy check is of one company and the message names {tickers}. "
+                "Name the one ticker to check."
+            )
+        ticker = tickers[0]
+
+        philosophy = load_philosophy(PHILOSOPHY_PATH)
+        print(f"  philosophy: {philosophy.path}")
+        provider = edgar_provider()
+        as_of = dt.datetime.utcnow().date()
+        session = get_session()
+
+        cik = cik_for(session, provider, ticker)
+        filer = update_filer(session, provider, cik)
+        print(f"  {ticker}: CIK {cik}, {filer.name}, SIC {filer.sic or 'not stated'}")
+
+        findings, years, stopped, facts_as_of = [], {}, None, None
+        try:
+            with (agent_ctx.trace_tool("exclude_philosophy") if agent_ctx else nullcontext()) as tool_ctx:
+                if tool_ctx:
+                    tool_ctx.set_input({"philosophy": philosophy.path, "sic": filer.sic})
+                excluded = exclude(philosophy, {"ticker": ticker, "sic": filer.sic})
+                if tool_ctx:
+                    tool_ctx.set_output({"excluded": excluded is not None})
+
+            if excluded is not None:
+                findings = [excluded]
+                print(f"  excluded under {excluded.clause}, code {excluded.sic}; nothing else read")
+            else:
+                update_filed_facts(session, provider, cik)
+                facts_as_of = _utc(session.get(FiledFetchMetadata, cik).last_fetch_time)
+                block = filed_years_for(session, cik, as_of)
+                block["ticker"] = ticker
+                years = {
+                    label: {"ends": block["years"][label]["ends"].isoformat(),
+                            "filed": block["years"][label]["filed"].isoformat()}
+                    for label in years_filed_by(block, as_of)
+                }
+                with (agent_ctx.trace_tool("screen_philosophy") if agent_ctx else nullcontext()) as tool_ctx:
+                    if tool_ctx:
+                        tool_ctx.set_input({"philosophy": philosophy.path, "cik": cik,
+                                            "years": sorted(years), "as_of": as_of.isoformat()})
+                    findings = screen(philosophy, block, as_of)
+                    if tool_ctx:
+                        tool_ctx.set_output({"findings": len(findings)})
+                by_status = {}
+                for f in findings:
+                    by_status[f.status] = by_status.get(f.status, 0) + 1
+                print(f"  {len(years)} fiscal years filed by {as_of}; findings: "
+                      + ", ".join(f"{k} {v}" for k, v in sorted(by_status.items())))
+        except ScreeningError as e:
+            match = _PHI_ID.search(str(e))
+            stopped = {"clause": match.group(0) if match else None, "reason": str(e)}
+            findings = []
+            print(f"  the check stopped: {e}")
+
+        screening_summary = {
+            "philosophy": {c.id: {"type": c.type, "text": c.text} for c in philosophy},
+            "statements": [{"clause": c.id, "text": c.text} for c in philosophy.statements],
+            "subject": {"ticker": ticker, "cik": cik, "name": filer.name},
+            "as_of": as_of.isoformat(),
+            "sic": filer.sic,
+            "sic_description": filer.sic_description,
+            "sic_as_of": _utc(filer.pulled_at),
+            "years": years,
+            "findings": [{**asdict(f), "years_read": list(f.years_read)} for f in findings],
+            "stopped": stopped,
+            "source": provider.name,
+            "facts_as_of": facts_as_of,
+        }
+
+        result = {
+            "success": True,
+            "agent_name": "ScreeningAgent",
+            "screening": screening_summary,
+        }
+
+        return {
+            **mark_agent_complete(state, "ScreeningAgent", result),
+            "shared_data": {**state.get("shared_data", {}), "screening": screening_summary},
+        }
+
+    except Exception as e:
+        if session is not None:
+            session.rollback()
+        return {
+            **mark_agent_complete(
+                state, "ScreeningAgent", {"success": False, "error": str(e)}
+            ),
+            **add_error(state, f"ScreeningAgent: {str(e)}"),
+        }
+    finally:
+        if session is not None:
+            session.close()
         if agent_ctx:
             agent_ctx.__exit__(None, None, None)
 
