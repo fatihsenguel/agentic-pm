@@ -28,16 +28,26 @@ does not state is stored empty, the fact EDGAR states; the screen stops on
 it (D35). `pulled_at` is on the clock `last_fetch_time` is on, so a block
 built from both records carries one clock; which clock a pull date is on
 is decided where an answer first prints one (KNOWN_GAPS, the UTC entry).
+
+The ticker file (ticker_ciks): every (ticker, CIK) pair the SEC's published
+file states, under the same interval (decision 29, question 50). The file
+is one document, so a fetch past the interval rewrites the whole table as
+the file now states it and moves every row's date; a ticker the file
+dropped leaves with it. `cik_for` resolves a ticker through that table,
+fetching first when it is stale or empty, and raises on a ticker the file
+does not list: never asked is not the same as EDGAR listing no filer.
+`pulled_at` is on the same clock as the other two records.
 """
 
 import datetime as dt
 from decimal import Decimal
 from typing import Dict, Optional, Tuple
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from portfolio_tool.data_manager import load_config
-from portfolio_tool.database_setup import FiledFact, FiledFetchMetadata, Filer
+from portfolio_tool.database_setup import FiledFact, FiledFetchMetadata, Filer, TickerCik
 
 
 INTERVAL_KEY = "filings_fetch_interval_days"
@@ -128,3 +138,37 @@ def update_filer(session: Session, provider, cik: int) -> Filer:
     row.pulled_at = now
     session.commit()
     return row
+
+
+def update_ticker_ciks(session: Session, provider) -> int:
+    """Fetch the SEC's ticker file unless fetched within the interval, and
+    store it whole: every row rewritten as the file now states it, every
+    date moved. Returns the number of rows the table holds after a fetch,
+    0 when the table was not asked again."""
+    interval = _interval_days()
+    now = dt.datetime.utcnow()
+
+    latest = session.query(func.max(TickerCik.pulled_at)).scalar()
+    if latest is not None and (now - latest).days < interval:
+        return 0
+
+    stated = provider.tickers()
+
+    session.query(TickerCik).delete()
+    session.add_all(TickerCik(ticker=t.ticker, cik=t.cik, pulled_at=now) for t in stated)
+    session.commit()
+    return len(stated)
+
+
+def cik_for(session: Session, provider, ticker: str) -> int:
+    """The CIK the SEC's ticker file names for `ticker`, through the cache.
+    Raises FiledFactsError on a ticker the file does not list."""
+    update_ticker_ciks(session, provider)
+    asked = ticker.strip().upper()
+    row = session.get(TickerCik, asked)
+    if row is None:
+        raise FiledFactsError(
+            f"{asked}: the SEC's ticker file lists no filer under this ticker, so there is "
+            "no CIK to ask EDGAR about. A company is screened by the filings it made."
+        )
+    return row.cik
