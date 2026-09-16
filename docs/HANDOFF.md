@@ -1,24 +1,25 @@
 # AGENTIC_FINANCE — Session Handoff
 
-**Session date:** 16 September 2026 (twentieth session). Regenerated at its end.
-**Branch:** `node`, cut from `baseline-v1` at 921d1fe, the trunk's tip at session start. **`baseline-v1` is the trunk**: each session branch is merged into it with `--ff-only` when the loops are green; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count 921d1fe..HEAD` — 15, this file's included, counted after it was added. **Not merged and not pushed**: the owner merges and pushes; `origin`'s push URL is `no_push`.
+**Session date:** 16 September 2026 (twenty-first session). Regenerated at its end.
+**Branch:** `keys`, cut from `baseline-v1` at df22b44, the trunk's tip at session start. **`baseline-v1` is the trunk**: each session branch is merged into it with `--ff-only` when the loops are green; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count df22b44..HEAD` — 8, this file's included, counted after it was added. **Not merged and not pushed**: the owner merges and pushes; `origin`'s push URL is `no_push`.
 
-**State:** pytest **1094 passed, 6 xfailed**, up from 1019 by 75 tests: 21 for the ticker-file provider method, 11 for its table, 10 for its cache rule and lookup, 5 for `screening.exclude`, 10 for the node, 11 for the formatter, 7 across the registry tests. **Golden set run twice**, both runs identical and exactly the prediction written into 8c63f2f: one new line, sixteen unchanged, the pinned rebalance failure included; `expected.txt` updated (7c984b8). **Runner 13/14**: 4.6 PASS, 4.1 BLOCKED by design. **Migration e289a03682f2 was run by the owner** and its output pasted; the head is e289a03682f2. **Live fetches, each asked for first:** the SEC ticker file, JPMorgan's and Alphabet's submissions documents, Alphabet's company facts (§4). The CLI ran the node once on "Does JPM clear my philosophy?" and answered as 4.6 expects (§4).
+**State:** pytest **1102 passed, 6 xfailed**, up from 1094 by 8: five for Part 12 H's margins, one for a year without a cost of revenue, one for a block still carrying `gross_profit`, one for the cost-of-revenue field resolving from each filer's own tag. **Golden set run once**, at session start, zero diff, seventeen lines, the pinned rebalance failure included; nothing since touched what it sees, so it was not run again. **Runner 13/14 three times**: at session start, after the code commit and after the probe text; 4.6 PASS, 4.1 BLOCKED at PHI-2.1 for FY2021 every time, by decision since 6e9cc03. **No live fetch**: every request hit the seven-day cache. The CLI ran once, at session start, on the allocation question. **Decision 48's items 3 and 4 are decided (D36, Part 12 H); 48 stays pending on items 6 and 7, brought as a shape and not taken.**
 
 Written for whoever picks this up cold, myself included.
 
 **Regenerate this document at the end of each session rather than patching it.**
 **Check every claim here against the code before acting on it, including
-this file.** The nineteenth session's handoff said the golden set and the
-runner had not run since 175f439; both ran at this session's start and
-were clean, which was news and not a regression. This session's own
-misses, corrected before they landed: a filed date typed a day early in
-the node test, caught by the csv's own-report row; a formatter sentence
-stating that the valuation pipeline does not exist, false in one rendering
-and a status line in the others, removed after the first render was read;
-"yes0" read as yes with a stray key, and said so. One finding after the
-sweep: the suite went red at a documentation commit because a schema test
-had been passing on a table another test emptied (§8).
+this file.** This session's brief expected the 4.1 stop to move from
+PHI-2.1 to PHI-4.1 once the metric keys were decided; measured against the
+stored facts before the shape, the stop turned out to be F7, the
+lease-inclusive debt tag, not the keys, and it does not move (§4). Misses of
+my own, caught before or after landing: the reference commit's note under
+Part 12 B swallowed Part 12 C's heading, found by the field-list test at
+the next commit and restored as its own commit (03ad5ac); a rewrite of the
+Apple csv converted its CRLF endings, seen in the diff and redone on the
+bytes before the commit; an assertion in a new test held for Alphabet and
+not for JPMorgan, fixed before it landed; a margin quoted as 0.4690 in the
+shape and 0.4691 in the reference, the reference being right.
 
 ---
 
@@ -26,15 +27,15 @@ had been passing on a table another test emptied (§8).
 
 | File | What it is |
 |---|---|
-| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1, 2 and 3 are built. **Order 4 is in progress**: the bridge (eighteenth session), the SIC code on the block (nineteenth), and now **the philosophy check node, decision 29** (§4). Left in Order 4: the valuation pipeline (Part 11, case 4.2), prediction scoring (4.5), the research agent (4.3, 4.4), and decision 48 before 4.1 can pass. |
-| `docs/benchmark.md` | **The definition of done.** Levels 1 to 3: 12 cases, 12 pass. Level 4: six research cases; 4.1 and 4.6 have checks on the runner, 4.6 passes, 4.1 blocked by design (status note under Level 4, this session). n/14. |
-| `tests/benchmark/run_cases.py` | **The scoreboard.** Fourteen cases. 4.1 and 4.6 added this session, written first and seen BLOCKED, then 4.6 PASS. |
-| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. 94 trigger lines, 64 reading something other than "none", counted by grep. New this session: the schema test that passed on an emptied table. Closed this session: the philosophy question routed to the IPS, the three unreached modules, the UTC pull date, the code's as-of beside the block's, the Part 10 node entry; the gate entry re-triggered on 4.3. |
-| `tests/golden/expected_values.md` | Hand-computed and transcribed reference, Parts 1 to 13. Two dated notes this session: Part 10 F, the first live 4.6 answer against the expected one; Part 13 E item 8, decided and built. Never update it to match code output. |
-| `tests/golden/expected_values.xlsx` | The workbook, eleven sheets, saved in Excel at c75b73b. Untouched this session. |
+| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1, 2 and 3 are built. **Order 4 is in progress**: the bridge, the SIC code, the philosophy check node, and now **the metric keys for a filer presenting no gross profit (decision 48, items 3 and 4)**. Left in Order 4: the valuation pipeline (Part 11, case 4.2), prediction scoring (4.5), the research agent (4.3, 4.4), and decision 56, whether Alphabet stays case 4.1's X. |
+| `docs/benchmark.md` | **The definition of done.** Levels 1 to 3: 12 cases, 12 pass. Level 4: 4.6 passes, 4.1 blocked by decision (two dated status notes under Level 4, the twenty-first session's saying why). n/14. |
+| `tests/benchmark/run_cases.py` | **The scoreboard.** Fourteen cases. 4.1's reason line names the cause of its stop: D36 on the debt tag until Alphabet's FY2027 report, PHI-3.1 on D&A after it. |
+| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. 103 lines match `Trigger:`, 73 reading something other than "none", counted by grep. New this session: five entries under decision 48 (§4). |
+| `tests/golden/expected_values.md` | Hand-computed and transcribed reference, Parts 1 to 13. New this session: D36 in Part 12's decision table; Part 12 H, gross margin on Apple's filed figures; Part 13 B's note with Alphabet's cost of revenue and margins; Part 10 A, B and E moved to the new formula; Part 13 E items 3 and 4 marked decided. Never update it to match code output. |
+| `tests/golden/expected_values.xlsx` | The workbook, eleven sheets, saved in Excel at c75b73b. Untouched this session; Part 12 H has no sheet, like Part 12 G. |
 | `docs/IPS.md` | The policy, synthetic. Unchanged. |
-| `docs/PHILOSOPHY.md` | What is worth wanting, synthetic: seventeen clauses. Unchanged this session; **read by the graph for the first time**, through `philosophy.toml`. |
-| `docs/WATCHLIST.md` | Two synthetic candidates, four predictions due early 2027. Nothing reads it; the node takes its ticker from the question, not from the watchlist. Unchanged. |
+| `docs/PHILOSOPHY.md` | What is worth wanting, synthetic: seventeen clauses. **PHI-2.2 gained its measure this session** (798d20e), written under the owner's yes. |
+| `docs/WATCHLIST.md` | Two synthetic candidates, four predictions due early 2027. Nothing reads it. Unchanged; decision 56 asks whether W-1 stays X. |
 | `docs/PM-Assistant — Roadmap.md` | Stale; DIRECTION.md's Order supersedes it. |
 | `docs/workflow.md` | Stale: its example plan names RiskManagerAgent, deleted in the seventeenth session. |
 
@@ -58,58 +59,65 @@ to the graph. The router is scaffolding until the tool layer is complete.
 
 ### Design principles
 
-- **Hot potato — agents never see raw data.** This session's form: the
-  screening block carries the fiscal years as two dates each and no
-  figure; the findings are the summary; the runner's checks fail a block
-  whose years carry anything else.
+- **Hot potato — agents never see raw data.** Unchanged in form this
+  session: the block carries the fiscal years as two dates each and no
+  figure; the gross margin change is invisible to the runner for that
+  reason and for the stop's order (§4).
 - **Policy lives in config, not code.** The philosophy is `philosophy.toml`,
-  named once in `nodes.PHILOSOPHY_PATH` until Order 6 (decision 30).
+  named once in `nodes.PHILOSOPHY_PATH` until Order 6 (decision 30). A
+  metric's definition is its formula in Part 10 B and the clause's text
+  names it (PHI-2.1, PHI-3.1 and now PHI-2.2); no parameter carries a
+  definition.
 - **Two policies, two questions.** The IPS says what may be held; the
   philosophy says what is worth wanting. Two intents now: `compliance` and
-  `research`. Before this session a philosophy question on a held ticker
-  ran the IPS check; the golden line pins that it no longer does.
-- **Raise, do not repair.** This session's form: a check that stops on a
-  missing figure is published as a stop and printed as one, no verdict; a
-  ticker the SEC file does not list is an error naming it; none or two
-  tickers is an error; a code EDGAR does not state stops the check naming
-  PHI-3.2.
+  `research`. Since the twentieth session a philosophy question on a held
+  ticker no longer runs the IPS check; the golden line pins it.
+- **Raise, do not repair.** This session's form: a figure the filer does
+  not present is not derived on the way into the block, and a tag that
+  measures something else is not admitted to fill a year; the D&A refusal
+  stays and the debt stop stands until the filer's own reports move it.
+  The standing forms: a check that stops on a missing figure is published
+  as a stop and printed as one, no verdict; a ticker the SEC file does not
+  list is an error naming it; a code EDGAR does not state stops the check
+  naming PHI-3.2.
 - **An excluded company's figures are never asked for.** The exclusion is
   decided on the filers row before the company facts are fetched
   (`screening.exclude`); JPMorgan's first live check read no fact.
 - **Typed facts are not a source.** The reader has fetched Apple and
   Alphabet; the tests' figures stay in the tests.
-- **References before code.** The runner's checks before the node; each
-  test seen failing before its code; the formatter held to the runner's own
-  checks over hand-built blocks.
+- **References before code.** Part 12 H and Part 13 B's rows before the
+  formula moved; each test seen failing against the unchanged source and
+  two wrong versions before its code landed.
 - **No price forecasts as numbers.**
 - **A capability nothing reaches is inventory**: deleted behind a tag.
-- **A value nothing consumes is not stored.** The ticker file's company
-  title is not carried; the filers row holds EDGAR's name.
+- **A value nothing consumes is not stored.** `gross_profit` left the block
+  once no formula read it; the ticker file's company title is not carried.
 
 ### How I work on this
 
 - Every change starts as a written decision in plain words: what it is,
   what changes on a yes, the rejected alternatives, which loop sees it.
-  This session's shape ran to twelve numbered parts and was taken with one
-  yes; then one commit per part, test first and seen failing for its own
-  reason, `git status --short` and the diff read before each commit, and
-  the word yes before it lands.
+  This session's shape covered two items of one decision, was measured on
+  the stored facts before it was written, corrected the brief's
+  expectation, and was taken with one yes; then the reference commit
+  first, and one commit per change, test first and seen failing against
+  the unchanged source and against two deliberately wrong versions with
+  bytecode off, `git status --short` and the diff read before each commit,
+  and the word yes before it lands.
+- **A tag joins a field's list on a witness** (D36): a filer that files
+  it beside a listed tag for the same period at the same value. A wider
+  or narrower measure stays out and its year raises. One exception,
+  recorded as one: Alphabet's cost-of-revenue tag.
 - **Grep for the caller, not the registration, and grep for the writer
-  before trusting a reader.**
-- **A prompt change is a hypothesis.** The prediction went into 8c63f2f's
-  message before the golden run; two runs, both exactly it.
-- **A live fetch is asked for before the machine is touched**, once per
-  request set, with what will be stored named first. Four this session,
-  all yes.
-- **The migration is run by hand** and the output pasted. One this
-  session, e289a03682f2.
-- **An instruction with a stray character is read as what it is**, and the
-  reading is said: "yes0" was a yes.
-- **The import-time checks decide commit order.** A roster entry with no
-  node, or an intent with no synthesizer branch, fails at import, and the
-  registry description is the prompt; so the node and the formatter landed
-  unbound, and the registries landed last with the golden line.
-- **PHILOSOPHY.md and IPS.md are mine to edit.** Untouched this session.
+  before trusting a reader.** This session's form: what stops 4.1 is read
+  from the stored facts and the node's stop, not from the brief.
+- **A live fetch is asked for before the machine is touched.** None this
+  session; every run hit the cache.
+- **PHILOSOPHY.md and IPS.md are the owner's.** A sentence for PHI-2.2 was
+  brought as text, and written into the document only on the owner's
+  explicit word.
+- **A csv with CRLF endings is edited on the bytes.** `Path.read_text`
+  converts them silently and the diff shows every line changed.
 - **CLAUDE.md is mine and untracked.** A session proposes wording; I apply it.
 - No emoji in anything newly written. A count I predict is a count I add up.
 
@@ -144,60 +152,61 @@ python tests/benchmark/run_cases.py
 python src/agents/cli.py --portfolio 3
 ```
 
-**1094 passed, 6 xfailed, 26 warnings, about 3.5 seconds.** Run at session
-start (1019) and after every commit; red once by the pattern between the
-migration commit and the owner's `alembic upgrade head` (1 failed, 4
-errors), and red once by a defect (§8), fixed in 0bd3c45.
+**1102 passed, 6 xfailed, 26 warnings, about 3.5 seconds.** Run at session
+start (1094) and after every commit. Red once by design: the new tests
+against the unchanged source, 37 failed and 22 errored, before the code
+commit.
 
 **Golden set: zero diff, seventeen lines, one pinned failure** ("Should I
-rebalance my portfolio?", errors 1). Run clean at session start against
-the sixteen-line file, then twice after 8c63f2f, both identical and as
-predicted. `expected.txt` moved once (7c984b8), one block added. **Runner
-13/14**: 12/12 at session start, then 4.1 and 4.6 BLOCKED after 873b805,
-then 4.6 PASS and 4.1 BLOCKED on the stop at PHI-2.1 after the binding.
+rebalance my portfolio?", errors 1), run once at session start. Not run
+since: no registry, prompt, router or intent changed, and `expected.txt`
+did not move. **Runner 13/14** three times, the last after a593c9e: 4.6
+PASS, 4.1 BLOCKED with the reason line naming D36.
 
-**The CLI, twice.** "What is my current allocation by asset class?" at
-session start, as the runner's 1.1 expects. "Does JPM clear my philosophy?"
-after the binding: intent research at 0.95, plan and agents run
-`['ScreeningAgent']`, one step, the answer in §4.
+**The CLI, once.** "What is my current allocation by asset class?" at
+session start, as the runner's 1.1 expects.
 
-**Level 4: 1 of 6 cases passes (4.6); 4.1 blocked by design; four have no
+**Level 4: 1 of 6 cases passes (4.6); 4.1 blocked by decision; four have no
 check.** Read n/14 as a count of well-formed answers and never as the
 system being good at research (benchmark.md).
 
 ### Branches and tags
 
 `baseline-v1` is the trunk; sessions branch from its tip and merge back
-`--ff-only` when the loops are green. `node` is this session's branch,
-from 921d1fe. `filer`, `bridge`, `consolidate`, `selection`, `compliance`
-and `vocabulary` are merged and older. `wip/phase7-snapshot` holds rejected
-Compliance/IPS code. `wip/rag-early` and tag `rag-early-parked` hold the
-RAG code. `quant-inventory-parked` at 8d87455 holds the tree before the
-seventeenth session's quant deletions.
+`--ff-only` when the loops are green. `keys` is this session's branch,
+from df22b44. `node`, `filer`, `bridge`, `consolidate`, `selection`,
+`compliance` and `vocabulary` are merged and older. `wip/phase7-snapshot`
+holds rejected Compliance/IPS code. `wip/rag-early` and tag
+`rag-early-parked` hold the RAG code. `quant-inventory-parked` at 8d87455
+holds the tree before the seventeenth session's quant deletions.
 
 ### Database
 
 `data/portfolio.db` is untracked runtime state. Alembic head
-**`e289a03682f2`**, 25 migrations, linear, all applied. One migration this
-session, run by the owner, output pasted. No reseed. **The paid loops now
-write to this file**: the golden line and the runner's 4.1 and 4.6 run the
-node live, and its fetches store rows here under the seven-day interval.
-Tables that matter:
+**`e289a03682f2`**, 25 migrations, linear, all applied. No migration and no
+reseed this session. **The paid loops write to this file**: the golden line
+and the runner's 4.1 and 4.6 run the node live, and its fetches store rows
+here under the seven-day interval; this session every fetch was inside
+the interval and no filed row moved. **The interval runs out on 22 and 23
+September**: Apple's facts were pulled 2026-09-15 22:17 UTC, its filer row
+2026-09-16 00:03, the ticker file and JPMorgan's filer row 01:33,
+Alphabet's filer row and facts 01:38. A paid run after those instants
+fetches again, and a session running one says so first. Tables that matter:
 
 - `portfolios`, `transactions`, `assets` (9 rows).
 - `daily_prices`: 6,966 rows and not a fixed count. `macro_data`: 200 and
   growing.
 - **`ticker_ciks`: 10,422 rows, the SEC ticker file as of 2026-09-16 01:33
-  UTC**, every listed filer's (ticker, CIK) pair. Rewritten whole past the
-  interval.
-- **`filers`: three rows**, Apple (3571), JPMorgan (6021, pulled 01:33 UTC),
-  Alphabet (7370, pulled 01:38 UTC).
-- **`filed_facts`: 28,787 rows, Apple's 15,132 and Alphabet's 13,655.**
-  `filed_fetch_metadata`: two rows, Apple 2026-09-15 22:17 UTC, Alphabet
-  2026-09-16 01:38 UTC. JPMorgan's facts were never fetched: the exclusion
-  decided first.
+  UTC**, 8,022 distinct CIKs; Alphabet's carries GOOG, GOOGL, GOOGM and
+  GOOGN, JPMorgan's nine tickers, mostly preferred series (Part 13 E item
+  7's shape, §5).
+- **`filers`: three rows**, Apple (3571), JPMorgan (6021), Alphabet (7370).
+- **`filed_facts`: 28,787 rows, Apple's 15,132 and Alphabet's 13,655**,
+  us-gaap only. `filed_fetch_metadata`: two rows. JPMorgan's facts were
+  never fetched: the exclusion decides first.
 - `financial_statements`: 65 rows, neither the reader's store nor a source
-  (decision 52). `fx_rates`, `fx_fetch_metadata`: empty.
+  (decision 52). `shares_history`: 947 rows, no source column, never a
+  source. `fx_rates`, `fx_fetch_metadata`: empty.
 
 **There is no holdings table.** Portfolio 3, "Benchmark Portfolio", is the
 only portfolio: nine ledger rows, cost basis 284,500 plus 15,500 cash, USD,
@@ -279,161 +288,217 @@ implied; the gate is designed at 4.3.
 
 ---
 
-## 4. What the twentieth session did
+## 4. What the twenty-first session did
 
-`git log --oneline 921d1fe..HEAD`, 15 commits, this file's included.
-Decision 29 and nothing else on the code, in the order the import-time
-checks dictate.
+`git log --oneline df22b44..HEAD`, 8 commits, this file's included.
+Decision 48, items 3 and 4, and nothing else on the code.
 
-**The loops, first.** pytest 1019, the CLI on the allocation question as
-expected, then with a yes the golden set (zero diff) and the runner (12/12),
-both clean at 921d1fe: the nineteenth session's "nothing since touches
-what they see" held.
+**The loops, first.** pytest 1094, the CLI on the allocation question as
+expected, then with a yes the golden set (zero diff, seventeen lines) and
+the runner (13/14, 4.1 BLOCKED at PHI-2.1 for FY2021, the probe naming
+decision 48), both clean at df22b44 and both on the cache.
 
-**873b805, the runner's checks for 4.1 and 4.6**, written first and seen
-BLOCKED live. 4.1 routed out_of_scope; **4.6 routed compliance with the
-full IPS plan**, the held ticker JPM taking a philosophy question to the
-portfolio check, the wrong face KNOWN_GAPS had recorded, now on a runner
-prompt. The checks assert on `shared_data["screening"]` and the answer,
-never on an agent name; 4.1's probe also blocks on a check that stopped on
-a missing figure, naming decision 48. Prompts name tickers: company names
-are decision 16.
+**The measurement before the shape.** The brief expected the stop to move
+to PHI-4.1 once the keys were decided. Read from the stored facts: PHI-2.1
+stops at FY2021 because return on invested capital needs FY2021's
+borrowings, and Alphabet's non-current debt for FY2021 and FY2022 is filed
+only under `LongTermDebtAndCapitalLeaseObligations`, F7's lease-inclusive
+tag; on the FY2024 report the same tag carries the lease-exclusive figure
+for 2023, so the tag is not even consistent with itself. Alphabet files
+`CostOfRevenue` in every year and no `GrossProfit`; `Depreciation` in every
+year (FY2021's only as a comparative on the FY2023 report, its own report
+having tagged the line outside us-gaap) and no amortisation expense tag at
+all. Apple's cost of sales less revenue equals its filed gross profit to
+the dollar in five years, and revenue less cost of sales less
+`OperatingExpenses` equals operating income in five years; Alphabet's
+revenue less `CostsAndExpenses` equals operating income in five years.
 
-**The shape of decision 29**, twelve parts, one yes: intent `research`
-(4.2 and 4.3 become rows under it), agent `ScreeningAgent`, plan
-`[ScreeningAgent]`, the block, the order of calls with `exclude` before
-the facts fetch, question 50 by the SEC ticker file, question 30 by the
-committed file, the clock UTC, the formatter against Part 3b, the gate idle
-by construction, the commit order, three logged items.
+**The shape of decision 48, items 3 and 4**, one yes. Item 3, D36: a tag
+joins a field's list on a witness, a filer filing it beside a listed tag
+for the same period at the same value; a filer filing both at different
+values has shown two measures and the tag stays out (F7: 13,253 against
+11,870; F8: 9,500 against 11,284 and apart every year); a tag no filer
+files beside a listed one stays out, with the cost-of-revenue list the one
+recorded exception. Item 4: `gross_margin` becomes revenue less cost of
+revenue over revenue, the block carrying `cost_of_revenue` and not
+`gross_profit`, the measure unchanged for a filer that presents both;
+`net_debt_to_ebitda` keeps its formula and the refusal stays, Alphabet
+filing no D&A under any us-gaap tag. Rejected on the way: the wider debt
+tag in the list, which errs in the safe direction and joins two measures
+without a raise; splitting it by the finance-lease liability, arithmetic
+on the way in for two years only; `Depreciation` in the D&A list; two D&A
+fields with a sum, which Alphabet cannot fill and Apple cannot witness; a
+key over operating income plus depreciation alone, a philosophy change;
+keeping `gross_profit` beside the new field with no formula reading it;
+two formulas under one key; a second key PHI-2.2 would have to name.
 
-**Under the yes, nine commits, each test first and seen failing.**
-- **be1158b** `EdgarProvider.tickers`, held to Apple's, Alphabet's and
-  JPMorgan's CIKs. 21 tests.
-- **3cc410c** `TickerCik` and migration e289a03682f2, committed unexecuted;
-  the owner ran it; 11 tests.
-- **269bf3e** `filings.update_ticker_ciks` and `cik_for`: the whole table
-  rewritten past the interval; fetch before saying unlisted. 10 tests.
-- **65cadcf** `screening.exclude`, D34 on the code alone; `screen` calls
-  it; no behaviour change. 5 tests.
-- **927a6f5** the node, unbound. Over stand-in providers fed from the
-  golden csvs: JPM excluded with no facts call; GOOGL fetched and stopped
-  on PHI-2.1 at FY2021 (Part 13 B); dates only; both pull instants UTC
-  with the offset. 10 tests.
-- **f102741** the formatter, three renderings, each held to the runner's
-  own check for its case. 11 tests. A status sentence removed after the
-  first render was read.
-- **8c63f2f** the registries, the graph binding, the synthesizer branch,
-  the golden line, the prediction in the message. Out_of_scope description
-  byte-identical, no few-shot.
-- **7c984b8** `expected.txt`, after two identical runs.
-- **0d99940, 2c259ff, 16ebfac** the record, the reference notes, the
-  benchmark status note.
-- **0bd3c45** the schema test that owned no rows (§8).
+**Under the yes, in order.**
+- **567ca58** the reference: D36 in Part 12's table; Part 12 B's note with
+  Apple's cost of sales; Part 12 H, the identity table and five margins
+  0.4178, 0.4331, 0.4413, 0.4621, 0.4691; Part 13 B's note with Alphabet's
+  cost of revenue and margins 0.5694, 0.5538, 0.5663, 0.5820, 0.5965; Part
+  10 A, B and E moved; Part 13 E items 3 and 4 decided.
+- **03ad5ac** Part 12 C's heading, which the note above it had swallowed,
+  restored; found by `test_filed_fields.py` at the next step.
+- **6e9cc03** the code, one change: `filed_figures.FIELDS` carries
+  `cost_of_revenue` (`CostOfRevenue`, `CostOfGoodsAndServicesSold`) where
+  `gross_profit` stood; `_gross_margin` divides the difference by revenue;
+  Apple's five gross profit rows in the csv keep their provenance as the
+  witness and five cost of sales rows join them, CRLF preserved;
+  Alphabet's csv gains five cost of revenue rows; Part 12 C's row; the
+  tests. Seen failing against the unchanged source (37 failed, 22 errors),
+  against the inverted formula (10 failed: Part 10 C's three margins, Part
+  12 H's five, the PHI-2.2 finding, the band test) and against a one-tag
+  list (3 failed). 8 tests more.
+- **a593c9e** the 4.1 probe's reason line: D36 on the debt tag, the stop
+  standing until Alphabet's FY2027 report, PHI-3.1 on D&A after it.
+- **798d20e** PHI-2.2's sentence in `docs/PHILOSOPHY.md`, written on the
+  owner's "write it, yes", and the same words in `philosophy.toml`.
+- **b1328a1** the record: the node entry's claim about the next stop
+  corrected; the reader entry's trigger narrowed to items 6 and 7; five
+  entries with triggers (§5).
+- **5151f23** benchmark.md's status note under Level 4.
 
-**The live runs.** Golden run one fetched the ticker file and JPMorgan's
-submissions; run two hit the cache. The runner's 4.1 fetched Alphabet's
-submissions and company facts and the check stopped at PHI-2.1 for FY2021,
-as the node test had predicted from the csv. The CLI's answer on JPM:
+**The runner, twice more.** After 6e9cc03: 13/14, the same stop, the old
+reason line; after a593c9e: 13/14, the new reason line. The golden set
+sees none of this and was not run again.
 
-> **PHILOSOPHY CHECK: JPM** — JPMORGAN CHASE & CO, CIK 19617, checked as of
-> 2026-09-16 against the philosophy's 17 clauses. JPM is excluded under
-> PHI-3.2: SIC 6021, National Commercial Banks, as EDGAR stated it on
-> 2026-09-16 UTC. [PHI-3.2's text.] Nothing else is reported about the
-> company: no figure was read and no other clause was checked. **Not
-> done:** no recommendation. No position is implied, so the investment
-> policy was not consulted.
-
-Part 10 F's expected 4.6 answer, with today's pull date; recorded there.
+**Items 6 and 7, brought as a shape and not taken** (the brief's third
+item, no code): §5.
 
 ---
 
 ## 5. Decisions taken, and decisions pending
 
 **Taken this session.**
-- **29.** The node for the philosophy check, as shaped and built above.
-  Inside it: **30**, the philosophy is the committed file until Order 6 (a
-  portfolio column, `.env` and a config key rejected); **50**, a ticker
-  becomes a CIK through the SEC ticker file (the watchlist's CIK, the
-  submissions document's tickers as the forward map, and `assets.cik`
-  rejected); the clock, UTC for all three records, the offset in the data,
-  the day marked UTC in the answer; the gate, idle by construction, designed
-  at 4.3. Rejected on the way: catching the screen's raise as control flow;
-  a stub node so the registries could land first; a formatter sentence
-  about the system's status.
-- **The full test at the end of Order 4** (owner's, unchanged): when Order
-  4's last commit lands, the project stops for a full test across both
-  halves before Order 5.
+- **48, items 3 and 4**, as shaped and built above. Inside them: **D36**,
+  the witness rule for a field's list; the key `gross_margin` reading cost
+  of revenue; the refusal on `net_debt_to_ebitda` standing. 48 is not
+  closed: items 6 and 7 remain.
+
+**Brought as a shape, not taken, on the owner's instruction that they come
+as a shape only.**
+- **Item 6**, the two `marketable_securities` fields no metric reads under
+  Part 12 F's decision A. Recommended: delete both; Part 12 C to twelve
+  rows, the figures kept in Part 12 B and the csvs as witnesses, the
+  unresolved sets shrinking by one for Alphabet and two for JPMorgan;
+  Part 12 F's revisit trigger brings the current field back with its
+  reference row. Rejected: carried-not-read on D32's precedent, which had
+  a contrast row and this has none; kept for a hypothetical.
+- **Item 7**, `shares_outstanding`. Not reachable before Part 11: the node
+  puts neither price nor shares nor range on the block, so PHI-4.1 stops
+  first. Recommended in two halves: the count now, `shares_outstanding` a
+  field of the block, instant, `CommonStockSharesOutstanding`, per year,
+  the metric reading the latest year's (Apple 14,773,260,000 at
+  2025-09-27, Alphabet 12,088,000,000 at 2025-12-31, F9's split on FY2021),
+  reference rows in Part 12 B and Part 13 B first; the price with Part 11,
+  the last close of the ticker the question named, the finding carrying
+  that ticker, the count's date and that the count covers every class,
+  the price gap between classes a known limit with a trigger. Rejected:
+  the dei cover-page count; the weighted average; summing classes, which
+  the artifact cannot; refusing multi-ticker CIKs, which refuses preferreds;
+  the Yahoo shares table.
 
 **Pending — decide before writing code.** Old numbers kept so KNOWN_GAPS
-references resolve. **Ten**, under the cap of 25 (CLAUDE.md's line reads 12
-on 16 September and is the owner's to update to 10).
+references resolve. **Ten, eleven if 56 is numbered**; the cap is 25.
+CLAUDE.md's line reads 10 and is the owner's to update.
 
 10. A window return as a measure with a reference.
 12. The hypothetical mode's instrument type.
 13. A target-weights clause and `OUT_OF_SCOPE_RESPONSE` moving into the IPS.
-16. Company names, German phrasings, the softer 3.5. "Does Alphabet clear
-    my philosophy?" extracts no ticker today and the node refuses; the
-    runner's 4.1 names GOOGL for that reason.
+16. Company names, German phrasings, the softer 3.5.
 17. `group_by` as the subject kind of a compliance finding. Absorbs 35.
 22. Volatility over as-traded closes or a total-return series.
 45. The tool-boundary pass, tagged Order 5. Absorbs 9, 11 and 36.
-48. Part 13 E's questions 3, 4, 6 and 7. **4.1 is blocked on 3 and 4**: the
-    check stops at PHI-2.1 for Alphabet's FY2021. Once decided, the next
-    stop is PHI-4.1 with no valuation range, which is Part 11, and the
-    runner's 4.1 probe will misname that stop as 48 until its text moves.
+48. Part 13 E's items 6 and 7, shaped above. Items 3 and 4 decided.
 51. The four live intents outside the benchmark roster: delete or keep.
     Trigger: the full test at the end of Order 4.
 52. The Yahoo-fed tables: delete or keep.
 54. BaseAgent's tool loop and the three `AgentConfig` fields: delete, its
     own sitting.
+56. **Whether Alphabet stays case 4.1's X**, surfaced this session and
+    numbered by me for the record; the owner's to confirm or renumber.
+    Under D36 W-1 cannot pass 4.1 before its FY2027 report, and not then,
+    on PHI-3.1. The choices are in the record's entry.
 
 ---
 
 ## 6. Where we stand against the benchmark
 
-Levels 1 to 3: 12/12 at 8c63f2f. Level 4: 4.6 PASS, the first Level 4 pass,
-on a refusal decided from stored data with no model in the loop; 4.1
-BLOCKED by design on decision 48; 4.2 to 4.5 have no check. The ledger has
+Levels 1 to 3: 12/12. Level 4: 4.6 PASS; 4.1 BLOCKED by decision, the
+runner's reason line saying why; 4.2 to 4.5 have no check. The ledger has
 four open predictions and no scored one. n/14 is a count of well-formed
-answers.
+answers. What the runner cannot see: that PHI-2.2 would now compute for
+Alphabet, since PHI-2.1 stops first; pytest sees it through the csv rows
+and Part 12 H.
 
 ---
 
 ## 7. Next steps, in order
 
-**1. Decision 48, items 3 and 4**: the metric keys for a filer presenting
-no gross profit and no combined D&A, the owner's, with Part 13 B's rows as
-the measurement. Until then 4.1 stays BLOCKED and nothing fills a figure to
-move it. When 48 is decided, the 4.1 probe's reason text moves with it.
+**1. Decision 56**, the owner's: another candidate as X, X unchanged and
+4.1 blocked by decision, or a PHI-7.1 change to PHI-3.1's measure. Not a
+code question until taken.
 
 **2. The valuation pipeline**, Part 11 by hand first, then case 4.2 as a
-row under `research`; PHI-4.1 stops on its absence today.
+row under `research`; the price on the block comes with it, and item 7's
+second half.
 
 **3. Prediction scoring** with its Part, case 4.5; then the research agent
 for 4.3 and 4.4, where the compliance gate is designed for real.
 
-**At the end of Order 4: the full test** (§5), before Order 5.
+**At the end of Order 4: the full test** (§5 of the twentieth session's
+handoff, unchanged), before Order 5.
 
 ### Later, with reasons
 
-- The formatter headers carrying an emoji, seven in `nodes.py`; the
-  research formatter's header carries none. One commit, the runner run
-  against it. Work, not a decision.
+- Items 6 and 7's first half, shaped in §5, each its own reference rows
+  first and its own commits.
+- The formatter headers carrying an emoji, seven in `nodes.py`. One commit,
+  the runner run against it. Work, not a decision.
 - A philosophy topic lookup ("what does my philosophy say about debt?"):
-  a discriminator row on `research`, the way `policy_topic` is on
-  compliance, when a case asks.
+  a discriminator row on `research`, when a case asks.
 - The node does not confirm the resolved CIK's submissions document lists
-  the ticker asked; `filer()` drops that field (KNOWN_GAPS, the tickers
-  entry).
+  the ticker asked (KNOWN_GAPS, the tickers entry).
 - Decisions 51, 52 and 54, each its own sitting.
 - The registry text naming VaR, drawdown and risk parity: a prompt change,
   prediction first, two golden runs.
 - 3.2's rewrite and Part 2's boundary: at the commit that makes 4.3 answerable.
-- PHI-3.2's code list grows by measured filer, by the owner's hand.
+- PHI-3.2's code list grows by measured filer, by the owner's hand; the
+  field lists grow by witnessed tag (D36), the same way.
+- The seven-day cache runs out on 22 and 23 September; the next paid run
+  after that fetches, and says so first.
 
 ---
 
 ## 8. Rules learned the hard way
+
+**Measure the brief's expectation before writing the shape.** The brief
+said the stop would move to PHI-4.1 once the keys were decided; the stored
+facts said the stop was F7, the debt tag, and the keys were not what 4.1
+was waiting on. A shape built on the brief would have decided the wrong
+question and been surprised by the runner.
+
+**A note that replaces text up to a heading puts the heading back.** The
+reference commit's note under Part 12 B consumed Part 12 C's heading; the
+diff was shown and read and neither of us saw it; the test that reads the
+document by that heading found it one commit later. A heading in a
+replaced span is part of the span.
+
+**A csv with CRLF endings is edited on the bytes.** `Path.read_text`
+converts the endings silently and the diff shows every line as changed.
+Read the diff's shape before its content: a whole-file diff on a five-row
+edit is the first sign.
+
+**A witness for a list is a same-value pair on one filing.** Equal values
+under two tags for one period admit the second tag; different values show
+two measures and keep it out, however much the filer's other years need
+it. The exception is recorded as one, not folded into the rule.
+
+**Say which loop cannot see a change.** The gross margin change is
+invisible to the runner because the check stops in philosophy order and
+PHI-2.1 comes first; a session that read 13/14 as "nothing changed" would
+be wrong in both directions.
 
 **A test over the suite's database copy owns the rows it reads.** The copy
 is the real database, and the real database grows: the first second filer
@@ -516,10 +581,9 @@ PYTHONDONTWRITEBYTECODE=1 pytest -q -p no:cacheprovider tests/<file>.py
 lsof tests/golden/expected_values.xlsx
 
 # merge and push, by the owner only:
-git switch baseline-v1 && git merge --ff-only node
+git switch baseline-v1 && git merge --ff-only keys
 git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1
 ```
-
 ### The four loops
 
 | Loop | Cost | Answers |
