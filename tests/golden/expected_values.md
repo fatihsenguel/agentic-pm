@@ -976,6 +976,13 @@ readings, all defensible, computed on
 Apple from section B (debt = commercial paper plus both long-term debt lines;
 EBITDA = operating income + D&A).
 
+*Note, 2026-09-16, decision 41.* PHI-3.1's text now says so (f3b0deb):
+borrowings less cash and cash equivalents, and nothing else, with the
+presentation-choice reason below as the clause's own. The same sentence is
+the clause's `text` in `philosophy.toml`; no parameter was added, since the
+definition is carried by the key `net_debt_to_ebitda` (decision 47). The
+figures in this section stand as computed.
+
 A word on what "by hand" means in this Part, since it differs from Part 10's.
 Sections A to E are **transcribed**, not computed: the figures are EDGAR's and
 the work was reading them out of one artifact correctly, which is why every
