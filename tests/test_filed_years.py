@@ -274,19 +274,30 @@ def test_the_block_names_its_currency_and_as_of(filed_figures, monkeypatch):
     assert block["as_of"] == AS_OF
 
 
-# --- the same, over what filed_facts holds ----------------------------------------
+# --- the same, over what filed_facts and filers hold --------------------------------
 
-def test_the_stored_rows_give_the_same_block(filed_figures, monkeypatch):
-    """Alphabet's and JPMorgan's fixtures stored through the filings fetch
-    and read back: every figure survives the text column as the same Decimal,
-    and one company's block holds none of the other's rows."""
+def _filers():
+    """Alphabet's and JPMorgan's rows of edgar_submissions.csv (Part 13 C)."""
+    from portfolio_tool.provider_models import ProviderFiler
+    with open(GOLDEN / "edgar_submissions.csv", newline="") as fh:
+        rows = {int(r["cik"]): r for r in csv.DictReader(fh)}
+    return {cik: ProviderFiler(cik=cik, name=rows[cik]["name"], sic=rows[cik]["sic"],
+                               sic_description=rows[cik]["sic_description"])
+            for cik in (ALPHABET, JPMORGAN)}
+
+
+@pytest.fixture
+def stored(monkeypatch):
+    """Both fixtures and both filers stored through the filings fetch, in a
+    session that is rolled back and cleared afterwards."""
     from portfolio_tool import filings
-    from portfolio_tool.database_setup import FiledFact, FiledFetchMetadata, get_session
+    from portfolio_tool.database_setup import FiledFact, FiledFetchMetadata, Filer, get_session
 
     stored_facts = {
         ALPHABET: facts_for(ALPHABET, _rows("edgar_facts_googl.csv"), monkeypatch),
         JPMORGAN: facts_for(JPMORGAN, _rows("edgar_facts_jpm.csv"), monkeypatch),
     }
+    filers = _filers()
 
     class StandIn:
         name = "stand-in filings"
@@ -294,8 +305,11 @@ def test_the_stored_rows_give_the_same_block(filed_figures, monkeypatch):
         def annual_facts(self, cik):
             return stored_facts[cik]
 
+        def filer(self, cik):
+            return filers[cik]
+
     def clear(session):
-        for model in (FiledFact, FiledFetchMetadata):
+        for model in (FiledFact, FiledFetchMetadata, Filer):
             session.query(model).filter(model.cik.in_(list(stored_facts))).delete(
                 synchronize_session=False)
         session.commit()
@@ -305,10 +319,65 @@ def test_the_stored_rows_give_the_same_block(filed_figures, monkeypatch):
         clear(session)
         for cik in stored_facts:
             filings.update_filed_facts(session, StandIn(), cik)
-        for cik, facts in stored_facts.items():
-            assert filed_figures.filed_years_for(session, cik, AS_OF) == \
-                filed_figures.filed_years(facts, AS_OF)
+            filings.update_filer(session, StandIn(), cik)
+        yield session, stored_facts, filers
     finally:
         session.rollback()
         clear(session)
         session.close()
+
+
+def test_the_stored_rows_give_the_same_years(filed_figures, stored):
+    """Alphabet's and JPMorgan's fixtures stored through the filings fetch
+    and read back: every figure survives the text column as the same Decimal,
+    and one company's block holds none of the other's rows."""
+    session, stored_facts, _ = stored
+    for cik, facts in stored_facts.items():
+        pure = filed_figures.filed_years(facts, AS_OF)
+        block = filed_figures.filed_years_for(session, cik, AS_OF)
+        assert {key: block[key] for key in pure} == pure
+
+
+def test_the_block_carries_the_code_as_of_its_pull(filed_figures, stored):
+    """D35: the SIC code as EDGAR states it, on the block, as of its pull
+    date. The pull time is the filers row's, uninterpreted: which calendar
+    day it names is the clock question the UTC entry keeps."""
+    from portfolio_tool.database_setup import Filer
+    session, _, filers = stored
+    for cik, filer in filers.items():
+        block = filed_figures.filed_years_for(session, cik, AS_OF)
+        assert (block["sic"], block["sic_description"]) == (filer.sic, filer.sic_description)
+        assert block["sic_as_of"] == session.get(Filer, cik).pulled_at
+    assert filed_figures.filed_years_for(session, JPMORGAN, AS_OF)["sic"] == "6021"
+    assert filed_figures.filed_years_for(session, ALPHABET, AS_OF)["sic"] == "7370"
+
+
+def test_the_block_has_exactly_these_keys(filed_figures, stored):
+    session, _, _ = stored
+    block = filed_figures.filed_years_for(session, ALPHABET, AS_OF)
+    assert set(block) == {"currency", "as_of", "years", "provenance", "unresolved",
+                          "sic", "sic_description", "sic_as_of"}
+
+
+def test_a_code_edgar_does_not_state_is_none_with_its_pull(filed_figures, stored):
+    from portfolio_tool.database_setup import Filer
+    session, _, _ = stored
+    row = session.get(Filer, ALPHABET)
+    row.sic, row.sic_description = None, None
+    session.commit()
+    block = filed_figures.filed_years_for(session, ALPHABET, AS_OF)
+    assert block["sic"] is None and block["sic_description"] is None
+    assert block["sic_as_of"] == row.pulled_at
+
+
+def test_no_filers_row_raises(filed_figures, stored):
+    """A company whose submissions document was never fetched has no code
+    on the block, and none is assumed: the reader stops and names the
+    fetch, rather than handing the screen a block that reads as EDGAR
+    stating no code."""
+    from portfolio_tool.database_setup import Filer
+    session, _, _ = stored
+    session.query(Filer).filter(Filer.cik == JPMORGAN).delete()
+    session.commit()
+    with pytest.raises(filed_figures.FiledFiguresError, match="19617"):
+        filed_figures.filed_years_for(session, JPMORGAN, AS_OF)

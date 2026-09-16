@@ -15,8 +15,16 @@ date. It builds the `years` half only: the price, the shares and the
 valuation range are not filed facts. Its `years` are in the shape the
 metrics read (Part 12 G): quant/fundamentals.py sums the three borrowing
 fields itself (D33) and taxes NOPAT at the philosophy's stated rate (D32),
-so `effective_tax_rate` is carried as filed and not read. The rest of the
-screen's block, the ticker, the SIC code, the price, the shares and the
+so `effective_tax_rate` is carried as filed and not read.
+
+`filed_years_for` reads the stored rows and puts the SIC code beside the
+years, as EDGAR states it and as of its pull (D35, Part 13 C): `sic`,
+`sic_description` and `sic_as_of` from the filers row, the pull time as
+stored and not turned into a calendar day, since which clock a pull date
+is on is decided where an answer first prints one (KNOWN_GAPS, the UTC
+entry). A company with no filers row raises: never asked is not the same
+as EDGAR stating no code, and the screen stops on the second (D35). The
+rest of the screen's block, the ticker, the price, the shares and the
 range, is the node's to assemble (decision 29).
 """
 
@@ -187,15 +195,27 @@ def _latest(candidates, field: str, label: str):
 
 def filed_years_for(session, cik: int, as_of: dt.date) -> Dict[str, object]:
     """`filed_years` over the rows filed_facts holds for `cik`, each value read
-    back from its text as a Decimal."""
-    from portfolio_tool.database_setup import FiledFact
+    back from its text as a Decimal, with the SIC code the filers row holds
+    beside the years, as of its pull."""
+    from portfolio_tool.database_setup import FiledFact, Filer
     from portfolio_tool.provider_models import ProviderFiledFact
 
+    filer = session.get(Filer, cik)
+    if filer is None:
+        raise FiledFiguresError(
+            f"CIK {cik}: no filers row, so the block has no SIC code as EDGAR states "
+            "one; update_filer has not run for this company, and a code is not assumed."
+        )
+
     rows = session.query(FiledFact).filter(FiledFact.cik == cik).all()
-    return filed_years(
+    block = filed_years(
         (ProviderFiledFact(tag=r.tag, unit=r.unit, start=r.start, end=r.end,
                            value=Decimal(r.value), accn=r.accn, fy=r.fy, fp=r.fp,
                            form=r.form, filed=r.filed, frame=r.frame, source=r.source)
          for r in rows),
         as_of,
     )
+    block["sic"] = filer.sic
+    block["sic_description"] = filer.sic_description
+    block["sic_as_of"] = filer.pulled_at
+    return block
