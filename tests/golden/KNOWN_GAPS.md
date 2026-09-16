@@ -4165,6 +4165,14 @@ the provider's name; the runner's 4.1 probe names decision 48 for every
 stop, and once 48 is decided the next stop is PHI-4.1 with no range, which
 is Part 11; a philosophy topic lookup is not an intent row yet.
 
+**16 September (twenty-first session): the sentence above about the next
+stop was wrong.** Decision 48's items 3 and 4 were decided (567ca58 to
+a593c9e) and the stop did not move: the stop at PHI-2.1 for FY2021 is F7,
+the lease-inclusive debt tag, which D36 keeps out of the list, so it stands
+until Alphabet's FY2027 report; after that PHI-3.1 stops on D&A, which
+Alphabet files under no us-gaap tag. PHI-4.1 is reached on this candidate
+by neither. The probe's reason line says so now (a593c9e).
+
 ### The judgement half's figures come from a reader, never a file - DECIDED 11 September (fourteenth session)
 
 **Trigger:** none: decided; DIRECTION.md invariant 5 holds the rule.
@@ -4332,7 +4340,7 @@ Nothing is built on this until that is done.
 
 ### Order 4, the filings reader: Parts 12 and 13, and what is built
 
-**Trigger:** pending decision 48, Part 13 E's items 3, 4, 6 and 7; 49 was taken 16 September (nineteenth session) and 29 with 50 the same day (twentieth session).
+**Trigger:** pending decision 48, Part 13 E's items 6 and 7; items 3 and 4 were decided 16 September (twenty-first session), 49 was taken 16 September (nineteenth session) and 29 with 50 the same day (twentieth session).
 
 **Built 13 and 14 September (sixteenth session), 5228857 to 98b8ff6.** The
 reference first, then each layer test first, each test seen failing against
@@ -4406,6 +4414,15 @@ it.**
 - **Screen W-1.** Alphabet files no gross profit and no combined D&A, and its
   FY2021 and FY2022 non-current debt only under a wider tag (Part 13 B), so
   PHI-2.1, PHI-2.2 and PHI-3.1 stop. Part 13 E's questions 3 to 8 are these.
+  **Items 3 and 4 decided 16 September (twenty-first session), 567ca58 to
+  a593c9e.** D36: a tag joins a field's list on a witness, one tag at a
+  time, and F7's and F8's tags stay out. `gross_margin` is revenue less cost
+  of revenue over revenue; the block carries `cost_of_revenue` and not
+  `gross_profit` (Part 10 B, Part 12 H, Part 13 B); PHI-2.2 no longer stops
+  on Alphabet. `net_debt_to_ebitda` keeps its formula and the refusal
+  stays. So PHI-2.1 still stops at FY2021 until the FY2027 report, PHI-3.1
+  stops after it, and 4.1 stays BLOCKED by decision; the entries below
+  carry what that leaves open.
 - **Find a company by ticker.** Decided 16 September (twentieth session),
   question 50: the SEC's published ticker file, `EdgarProvider.tickers`,
   one row per (ticker, CIK) pair in `ticker_ciks` under the filings
@@ -4416,6 +4433,81 @@ it.**
   `shares_history` entry).
 - **Limit its rate.** One company is one request and nothing loops over
   companies; the limit lands with the first caller that does.
+
+### A filer that presents gross profit and files no cost-of-revenue tag
+
+**Trigger:** the first candidate that is one.
+
+Logged 16 September (twenty-first session), decision 48. `gross_margin`
+reads `cost_of_revenue` and the block no longer carries `gross_profit`
+(Part 12 H). A filer whose income statement carries a gross profit under
+`GrossProfit` and whose cost line is under a tag the field does not list
+stops on PHI-2.2 naming a figure it does present. None of the three filers
+is one. When it appears, the answer is a witnessed tag for the list (D36)
+where its cost tag and a listed one agree on some filer, and never the
+subtotal read back into the block: two formulas under one key is the
+repair shape D24 refuses.
+
+### A filer with depreciation and amortisation as two lines and no combined figure
+
+**Trigger:** the first candidate that files both an annual depreciation and an annual amortisation expense under us-gaap tags and no combined D&A tag.
+
+Logged 16 September (twenty-first session), decision 48. `net_debt_to_ebitda`
+reads one combined `depreciation_amortisation` field (Part 10 B). Alphabet
+is not this case: it files `Depreciation` and no amortisation expense tag
+at all, so nothing sums to the figure and the refusal stays (Part 13 B).
+A filer that does file both lines is the case where a sum in
+`quant/fundamentals.py` over two fields, the D33 shape, would be right,
+with the combined tags kept for filers that present the total; whether that
+is one key or two is D24's question again, and Apple cannot witness it
+(no annual amortisation tag in the window). Rejected now: `Depreciation`
+in the combined field's list, F8's witness.
+
+### A figure the filer tags in its own namespace is invisible to the reader
+
+**Trigger:** the first candidate whose check stops on a field its filing presents under a tag outside us-gaap.
+
+Logged 16 September (twenty-first session). `EdgarProvider.annual_facts`
+returns us-gaap facts only (`TAXONOMY`), which is right for the block's
+fields and blind to a line a filer tags in its own namespace. The witness:
+Alphabet's own FY2021 report carries no us-gaap depreciation or
+amortisation fact for 2021 at all, and the stored FY2021 `Depreciation`,
+10,273 million, is a comparative on the FY2023 report (Part 13 B's note).
+A candidate whose only vintage of a field is a custom tag has that field
+unresolved with the us-gaap tags named as tried, which is true and not
+the whole truth. Not a repair to make: a custom tag is the filer's own
+definition and belongs in no list (D36); what the record could carry is the
+fact that the filing tagged the line at all, so the stop can say so.
+
+### Whether Alphabet stays case 4.1's X
+
+**Trigger:** pending decision 56, the owner's to number; or Alphabet's FY2027 report, filed around February 2028.
+
+Surfaced 16 September (twenty-first session), decision 48. Under D36 the
+watchlist's first candidate cannot pass 4.1 before its FY2027 report moves
+PHI-2.1's window past FY2022, and not then: PHI-3.1 stops on D&A for as
+long as Alphabet files no combined figure and no amortisation line (Part
+13 B). 4.1 is written to pass on X; benchmark.md names X as a candidate on
+the synthetic watchlist and W-1 is Alphabet. The choices are the owner's:
+another candidate as X, which changes `docs/WATCHLIST.md` and the runner's
+`WATCHLIST_TICKER`; X unchanged and 4.1 blocked by decision, which is the
+state today and reads honestly on the runner; or a philosophy change to
+PHI-3.1's measure, a PHI-7.1 change with a date. Not a code question until
+one is taken.
+
+### The runner's 4.1 cannot see the gross margin change
+
+**Trigger:** the stop at PHI-2.1 moving, by Alphabet's FY2027 report or by a change of X (decision 56).
+
+Logged 16 September (twenty-first session). The check stops in philosophy
+order and PHI-2.1 comes before PHI-2.2, so the runner's 4.1 shows the same
+stop before and after 6e9cc03 and cannot tell a gross margin that would
+compute for Alphabet from one that would not. What sees the change: pytest,
+through the csv rows in `test_filed_years.py` and Part 12 H in
+`test_fundamentals.py`; the live block, through nothing, since the node
+publishes no figure. A blind spot to remember when the stop moves: the
+first live PHI-2.2 finding on a real filer will be new ground that no loop
+has exercised.
 
 ### PHI-3.2's code list fails open, and a code carries no date
 
