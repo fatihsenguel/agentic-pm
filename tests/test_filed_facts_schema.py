@@ -37,6 +37,16 @@ throwaway in-memory database, and the database the suite runs against - the
 copy conftest.py makes of data/portfolio.db - which is what `alembic upgrade
 head` produces. Before the migration is applied the second half fails on the
 table not being there. Every insert into the copy is rolled back.
+
+The database half owns its rows: inside its transaction it first removes
+the two fixture companies' rows from the copy, since the fixtures are real
+filed facts (Part 12 D F5, Part 13 D F6) and collide with the copy's real
+rows on the unique index, and it reads back only what it wrote, by
+`source = 'test'`. Until 16 September (twentieth session) it did neither
+and passed only inside the full run, where an earlier test had cleared
+Apple's rows from the copy: run alone it failed on the collision, and the
+first second filer stored in the real database, Alphabet, made two
+whole-table reads fail in the full run too.
 """
 
 import datetime as dt
@@ -148,9 +158,15 @@ def test_database_column_has_no_default(columns, column):
 
 @pytest.fixture
 def suite_db(columns):
+    """The suite's copy, inside one transaction that is rolled back: the two
+    fixture companies' rows are removed first, so the fixtures, which are
+    real filed facts, do not collide with the copy's real rows on the
+    unique index, and the copy is left as it was."""
     with engine.connect() as conn:
         transaction = conn.begin()
         try:
+            conn.execute(text("DELETE FROM filed_facts WHERE cik IN (:a, :b)"),
+                         {"a": EQUITY["cik"], "b": HALF_YEAR["cik"]})
             yield conn
         finally:
             transaction.rollback()
@@ -190,7 +206,7 @@ def test_a_restatement_is_a_second_row(db):
     db.execute(INSERT, dict(EQUITY, accn="0000320193-25-000079", value="56950000000",
                             form="10-K", filed=dt.date(2025, 10, 31)))
     count = db.execute(text(
-        "SELECT COUNT(*) FROM filed_facts WHERE tag = 'StockholdersEquity'"
+        "SELECT COUNT(*) FROM filed_facts WHERE tag = 'StockholdersEquity' AND source = 'test'"
     )).scalar()
     assert count == 2
 
@@ -199,6 +215,7 @@ def test_the_value_comes_back_as_filed(db):
     db.execute(INSERT, dict(EQUITY, tag="EffectiveIncomeTaxRateContinuingOperations",
                             unit="pure", value="0.241"))
     stored = db.execute(text(
-        "SELECT value FROM filed_facts WHERE tag = 'EffectiveIncomeTaxRateContinuingOperations'"
+        "SELECT value FROM filed_facts WHERE tag = 'EffectiveIncomeTaxRateContinuingOperations' "
+        "AND source = 'test'"
     )).scalar()
     assert stored == "0.241"
