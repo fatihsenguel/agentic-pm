@@ -1,7 +1,7 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 16 September 2026 (twenty-first session). Regenerated at its end.
-**Branch:** `keys`, cut from `baseline-v1` at df22b44, the trunk's tip at session start. **`baseline-v1` is the trunk**: each session branch is merged into it with `--ff-only` when the loops are green; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count df22b44..HEAD` — 8, this file's included, counted after it was added. **Not merged and not pushed**: the owner merges and pushes; `origin`'s push URL is `no_push`.
+**Branch:** `keys`, cut from `baseline-v1` at df22b44, the trunk's tip at session start. **`baseline-v1` is the trunk**: each session branch is merged into it with `--ff-only` when the loops are green; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count df22b44..HEAD` — 10 once this correction lands: nine when this file was written, the record's header having become its own commit after the count was typed, plus the correction itself. **Not merged and not pushed**: the owner merges and pushes; `origin`'s push URL is `no_push`.
 
 **State:** pytest **1102 passed, 6 xfailed**, up from 1094 by 8: five for Part 12 H's margins, one for a year without a cost of revenue, one for a block still carrying `gross_profit`, one for the cost-of-revenue field resolving from each filer's own tag. **Golden set run once**, at session start, zero diff, seventeen lines, the pinned rebalance failure included; nothing since touched what it sees, so it was not run again. **Runner 13/14 three times**: at session start, after the code commit and after the probe text; 4.6 PASS, 4.1 BLOCKED at PHI-2.1 for FY2021 every time, by decision since 6e9cc03. **No live fetch**: every request hit the seven-day cache. The CLI ran once, at session start, on the allocation question. **Decision 48's items 3 and 4 are decided (D36, Part 12 H); 48 stays pending on items 6 and 7, brought as a shape and not taken.**
 
@@ -290,8 +290,8 @@ implied; the gate is designed at 4.3.
 
 ## 4. What the twenty-first session did
 
-`git log --oneline df22b44..HEAD`, 8 commits, this file's included.
-Decision 48, items 3 and 4, and nothing else on the code.
+`git log --oneline df22b44..HEAD`, ten commits with this file and its
+correction. Decision 48, items 3 and 4, and nothing else on the code.
 
 **The loops, first.** pytest 1094, the CLI on the allocation question as
 expected, then with a yes the golden set (zero diff, seventeen lines) and
