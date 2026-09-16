@@ -569,6 +569,17 @@ its 120,000 in the same field. Sections C, D and E are unchanged by this
 and the workbook's `Philosophy` sheet keeps its two columns, since the
 arithmetic they feed is the same.
 
+*The block's shape, 2026-09-16, decision 48 items 3 and 4.* A third column
+is no longer a figure of the block. **Gross profit** is not a field: the
+block carries `cost_of_revenue`, and gross margin is revenue less cost of
+revenue, over revenue (section B, Part 12 H). In the synthetic block
+`cost_of_revenue` is revenue less the gross profit shown, 45,000, 48,160
+and 52,500 for FY2023 to FY2025, blank before, so section C's margins are
+what they were: 55,000 / 100,000, 63,840 / 112,000 and 72,500 / 125,000
+are the same three ratios. Section E's missing-figure row now removes
+FY2024's cost of revenue and stops on the same clause naming the same
+metric and year.
+
 Shares outstanding 4,000 million. Price 171.00 as of 2026-09-10. Valuation
 range 180.00 to 240.00 per share as of 2026-09-10, typed here; Part 11 will
 compute one from stated assumptions.
@@ -577,7 +588,11 @@ compute one from stated assumptions.
 
 - **return_on_invested_capital** = operating income x (1 - tax rate) /
   (equity + debt - cash), per fiscal year, on that year's figures.
-- **gross_margin** = gross profit / revenue.
+- **gross_margin** = (revenue - cost of revenue) / revenue. Until
+  2026-09-16 this line read gross profit / revenue; the measure is the same
+  and the inputs moved with decision 48 (Part 12 H holds the identity on
+  Apple's filed figures, five years to the dollar; Part 13 B the figures
+  for a filer that presents no gross profit).
 - **net_debt_to_ebitda** = (debt - cash) / (operating income + D&A).
 - **free_cash_flow_yield** = (operating cash flow - capex) / (price x shares
   outstanding), the latest fiscal year's cash flows at the as-of price.
@@ -638,8 +653,9 @@ that rounds before comparing, or compares with the wrong inequality, fails
 this row.
 
 **A missing figure stops the check (D25).** The same block with FY2024's
-gross profit absent. The check stops on PHI-2.2 naming `gross_margin` for
-`FY2024` and reports no finding on any clause. Not a pass on PHI-2.1, not a
+cost of revenue absent (gross profit, until 2026-09-16; decision 48). The
+check stops on PHI-2.2 naming `gross_margin` for `FY2024` and reports no
+finding on any clause. Not a pass on PHI-2.1, not a
 verdict on the company, not a finding on PHI-2.2 over the two years it has.
 
 **A year not yet reported is not a year (D21).** The same block asked for
@@ -793,6 +809,7 @@ what has two sides to compare.
 | D31 | What is `frame` for? | **A cross-check, never a key.** It is calendar-aligned and exists only when the window lines up: 9,716 of 25,046 facts on this artifact, 38.8%. Where it exists it disagrees with the filer's own labels by design — one fact for 2013-09-29 to 2013-12-28 carries `fy: 2015`, `fp: Q1` and `frame: CY2013Q4`, three labels for one period. |
 | D32 | Is a tax rate a figure or an assumption? | **Both, and they are different things in different places.** The block carries `EffectiveIncomeTaxRateContinuingOperations` because it is a filed fact and the block reports what the document says. The tax rate that goes into NOPAT is a **stated assumption in config**, not the block's. The evidence for keeping them apart is in Apple's own series: 0.133, 0.162, 0.147, **0.241**, 0.156. FY2024 is a discrete item, not a change in how Apple earns money; fed into NOPAT it swings PHI-2.1's five-year ROIC series for a reason that is not the business, on the metric written to measure the business. Recorded here so it is not re-litigated. D24 stands: the block's figures are as filed. **Decided 2026-09-15 (decision 46):** the stated rate is a parameter of the clause that names the metric, `tax_rate` on PHI-2.1 in `philosophy.toml`, with the sentence that states it in `docs/PHILOSOPHY.md`, mine to write; the metrics take the stated assumptions as an input beside the block, and a clause naming `return_on_invested_capital` without a rate does not load. The synthetic philosophy states 0.20, the rate Part 10 was computed at, so no Part 10 figure moves. Rejected: `config.toml`, which holds values the same for anyone and would keep a personal philosophy from carrying its own rate; a document-level table outside every clause and outside PHI-7.1; a constant in the metrics module. Section G carries the row. |
 | D33 | How does debt reach the block? | **Every borrowing tag as filed, separately; the sum is a metric.** No arithmetic on the way into the block. `net_debt` therefore lives in `quant/fundamentals.py` with its own reference row, and **what nets against debt is policy and belongs in `docs/PHILOSOPHY.md`** — open, section F. Apple's borrowings are `CommercialPaper`, `LongTermDebtCurrent` and `LongTermDebtNoncurrent`. Not `LongTermDebt`, which is a different measure: it agrees with the sum of the two carrying tags in FY2022, FY2023 and FY2024 and disagrees by 19 and 22 million in FY2021 and FY2025. A borrowing tag the block does not name is a raise, not an omission. **Decided 2026-09-15 (decision 47):** `net_debt` is a named function in `quant/fundamentals.py` with its own reference row, section G, and not a key a clause may name; a borrowing is one of the three named fields and a finance lease is not one (Part 13 E5); the last sentence is a known limit, not a rule the code can keep: nothing raises on a tag it does not know, and the list grows one measured tag at a time, the way PHI-3.2's codes do. The revisit trigger for leases is the first candidate whose PHI-3.1 verdict moves when finance leases are counted. |
+| D36 | When does a tag belong in a field's list? | **On a witness, and one witnessed tag at a time.** Decided 2026-09-16 (decision 48, item 3). A tag joins a field's list when a filer files it and a tag already in the list for the same period on the same filing at the same value: Apple's three revenue tags for FY2017 (F4), Alphabet's two for FY2021, FY2023 and FY2024 (Part 13 B). A filer that files both at different values has shown two measures, and the tag stays out even where it is the only tag some filer uses; that year raises: `LongTermDebtAndCapitalLeaseObligations` against `LongTermDebtNoncurrent`, 13,253 against 11,870 at 2023-12-31 on one filing (F7), and `Depreciation` against `DepreciationDepletionAndAmortization`, 9,500 against 11,284 for Apple's FY2021 and apart in every year (F8). A tag no filer has filed beside a listed one has no witness and stays out. One exception, recorded as one: `cost_of_revenue` lists `CostOfRevenue` and `CostOfGoodsAndServicesSold`, which no filer here files together; the field is witnessed by an identity over fields on the block, revenue less Apple's cost of sales equal to Apple's filed gross profit in five years (section H), and Alphabet's tag joins as the taxonomy's element for the same line with no witness of its own. The rule has no automated check; `tests/test_filed_fields.py` holds the list to section C and review holds section C to this row. What it decides for Alphabet: FY2021 and FY2022 have no non-current debt and PHI-2.1 stops at FY2021 until the FY2027 report is filed and the five-year window is FY2023 to FY2027, every year under the narrow tag. Rejected: the wider debt tag in the list, which errs in the safe direction and joins two measures in one series with no raise; splitting it by `FinanceLeaseLiability` less its current part, arithmetic on the way in for two years only. |
 
 ### A. The fiscal years
 
@@ -854,7 +871,15 @@ in the committed csv; they are not repeated here.
 | long_term_debt_current | 9,613 | 11,128 | 9,822 | 10,912 | 12,350 |
 | long_term_debt_noncurrent | 109,106 | 98,959 | 95,281 | 85,750 | 78,328 |
 
-### C. The tag each field resolves from
+*The block's shape, 2026-09-16, decision 48 items 3 and 4.* Every figure
+above stands and one row is no longer a field of the block: `gross_profit`
+is the witness for the formula and is not carried, since no formula reads
+it. The block carries `cost_of_revenue` instead, `CostOfGoodsAndServicesSold`
+for Apple, read from the stored facts of the pull of 2026-09-15 at the
+same vintages as the gross profit row: FY2021 212,981 (0000320193-23-000106),
+FY2022 223,546 (0000320193-24-000123), FY2023 214,137, FY2024 210,352 and
+FY2025 220,960 (0000320193-25-000079). Section H holds the identity between
+the two rows; the csv carries the five rows with their provenance.
 
 In order; the first that yields a fact for the period wins, and none yielding
 a fact leaves the field out of that year, listed as unresolved with the field,
@@ -1107,6 +1132,51 @@ survive to here. The filed-rate column is rounded
 to a tenth and is in this table only so that a bridge reading the wrong
 field is caught by every row, not by FY2024 alone.
 
+### H. Gross margin on the filed figures
+
+Computed 2026-09-16 by hand, decision 48 items 3 and 4, before the key's
+formula changed. Part 10 B now reads gross margin as revenue less cost of
+revenue, over revenue, so that a filer presenting no gross profit can be
+screened on PHI-2.2 from the two lines it does file (Part 13 B). This
+section shows, on Apple, that the formula measures what the old one
+measured: revenue less the cost of sales Apple files equals the gross
+profit Apple files, to the dollar, in every year, so no margin moves for a
+filer that presents both. Plain decimal arithmetic, none of the
+repository's code. USD millions; the identity was checked on the whole
+dollars the block holds and is exact. No workbook sheet: as with section
+G, nothing here has a second source by hand.
+
+| FY | revenue | cost_of_revenue | revenue less cost | gross_profit as filed | Equal | gross_margin |
+|---|---|---|---|---|---|---|
+| FY2021 | 365,817 | 212,981 | 152,836 | 152,836 | yes | **0.4178** |
+| FY2022 | 394,328 | 223,546 | 170,782 | 170,782 | yes | **0.4331** |
+| FY2023 | 383,285 | 214,137 | 169,148 | 169,148 | yes | **0.4413** |
+| FY2024 | 391,035 | 210,352 | 180,683 | 180,683 | yes | **0.4621** |
+| FY2025 | 416,161 | 220,960 | 195,201 | 195,201 | yes | **0.4691** |
+
+The margin is the ratio rounded to four places; the code's float is
+compared at that precision and not closer. The same statements witness
+the cost line's place: revenue less cost of sales less `OperatingExpenses`
+equals `OperatingIncomeLoss` in all five years (43,887, 51,345, 54,847,
+57,467 and 62,151 of operating expenses), so the cost of sales is the line
+between revenue and operating income and nothing else is in it.
+
+**Why the cost line and not the subtotal.** A gross profit is a subtotal
+some filers present and some do not; a cost of revenue is a line every
+income statement has. Under Part 12 F's principle a cost line can only be
+as wide as or wider than the line behind a presented gross profit, so the
+margin computed from it is never the flattering one. Rejected: keeping
+`gross_profit` on the block beside `cost_of_revenue` with no formula
+reading it, which D32 did for the tax rate and which the rule that a value
+nothing consumes is not stored refuses here; two formulas under one key,
+the subtotal where filed and the difference where not, the repair shape;
+a second key, which PHI-2.2 would have to name for a filer-dependent
+reason.
+
+**What is not decided here.** A filer that presents gross profit and files
+no cost-of-revenue tag would stop on PHI-2.2 under this formula; none of
+the three filers is one, and the trigger is the first candidate that is.
+
 ---
 
 ## Part 13 — Two more filers: a December year end and a bank
@@ -1216,6 +1286,46 @@ philosophy check at PHI-1.2, and any one of three clauses would stop it: return
 on invested capital needs FY2021's debt, gross margin needs gross profit, net
 debt to EBITDA needs D&A. That is D25 working, and it is not the answer case
 4.1 is written for.
+
+*Decided 2026-09-16, decision 48 items 3 and 4 (D36, Part 12 H).* The
+table above is the read of 2026-09-13 with Part 12 C's tags as written
+then and stands as read. Since then: `gross_profit` is not a field, so its
+five raises are gone; `cost_of_revenue` is, resolving from `CostOfRevenue`
+in every year, read from the stored facts of the pull of 2026-09-16 at the
+latest vintage, and gross margin is computed from it. Plain decimal
+arithmetic, USD millions, the ratio to four places:
+
+| FY | revenue | cost_of_revenue | Vintage | gross_margin |
+|---|---|---|---|---|
+| FY2021 | 257,637 | 110,939 | 0001652044-24-000022, filed 2024-01-31 | 0.5694 |
+| FY2022 | 282,836 | 126,203 | 0001652044-25-000014, filed 2025-02-05 | 0.5538 |
+| FY2023 | 307,394 | 133,332 | 0001652044-26-000018, filed 2026-02-05 | **0.5663** |
+| FY2024 | 350,018 | 146,306 | 0001652044-26-000018, filed 2026-02-05 | **0.5820** |
+| FY2025 | 402,836 | 162,535 | 0001652044-26-000018, filed 2026-02-05 | **0.5965** |
+
+PHI-2.2 reads the last three, every one above 0.35; the deciding year
+would be FY2023 at 21.63 points of headroom. No gross profit witnesses the
+identity for this filer; what the artifact shows is revenue less
+`CostsAndExpenses` equal to `OperatingIncomeLoss` in all five years
+(178,923, 207,994, 223,101, 237,628 and 273,797), and `CostOfRevenue` is
+one component of that total. That it is the cost of revenue line is the
+taxonomy's definition and a reading of the filing, and D36 records the
+admission as the one without a witness.
+
+The other two raises stand, decided. `depreciation_amortisation`: Alphabet
+files no D&A figure under any us-gaap tag; `Depreciation` is a different
+measure by F8's witness on Apple, no amortisation expense tag exists in
+the artifact in any year, and the FY2021 report tagged its depreciation
+outside us-gaap, so the stored FY2021 figure, 10,273, is a comparative
+from the FY2023 report. PHI-3.1 stops naming the field for as long as
+Alphabet files this way; `Depreciation` in the list, two fields with the
+sum in the metric, and a key over operating income plus depreciation alone
+were rejected, the last as a change to what PHI-3.1 measures for every
+filer. `long_term_debt_noncurrent` for FY2021 and FY2022: D36 keeps the
+wider tag out, PHI-2.1 stops at FY2021, and the stop expires with the
+FY2027 report. So the check on this candidate stops at PHI-2.1 until
+early 2028 and at PHI-3.1 after; the runner's 4.1 says the first, and
+whether Alphabet stays case 4.1's X is a decision surfaced, not taken.
 
 **Shares outstanding, and whether it is a sum.** Not in this artifact, and the
 arithmetic the question points at moves rather than disappears.
@@ -1380,6 +1490,9 @@ FY2025: `CostOfRevenue` 162,535 and `Depreciation` 21,136 are in the artifact;
 `DepreciationAmortizationAndAccretionNet` are not, in any year. A reader that
 falls back to the neighbour returns a gross profit nobody filed or an EBITDA
 with no amortisation in it, and passes a test that only asks for a number.
+*Note, 2026-09-16, decision 48.* `CostOfRevenue` is now a field's own tag
+(D36, section B's note) and no longer a neighbour; `Depreciation` still is,
+and the test that no neighbour is used keeps it.
 
 **F9 — a split reaching back through a 10-Q (D29).** Alphabet's
 `CommonStockSharesOutstanding` at 2021-12-31: **662,121,000** on the FY2021
@@ -1423,10 +1536,16 @@ here.
 2. Which forms count as filing a figure, since D29 excludes none and F10 shows
    one that has to be. Decided 2026-09-13: 10-K, 10-Q, 8-K and their
    amendments (D29).
-3. When a tag belongs in a field's list (F7, F8).
+3. When a tag belongs in a field's list (F7, F8). Decided 2026-09-16
+   (decision 48, D36): on a witness, one tag at a time; F7's and F8's tags
+   stay out.
 4. `gross_margin` and `net_debt_to_ebitda` for a filer that presents no gross
    profit and no combined D&A: D24's question about the metric keys. Until it
-   is answered W-1 cannot be screened on PHI-2.2 or PHI-3.1.
+   is answered W-1 cannot be screened on PHI-2.2 or PHI-3.1. Decided
+   2026-09-16 (decision 48): `gross_margin` is revenue less cost of revenue
+   over revenue, the block carrying `cost_of_revenue` and not `gross_profit`
+   (Part 10 B, Part 12 H, section B's note); `net_debt_to_ebitda` keeps its
+   formula and the refusal stays, W-1 stopping on PHI-3.1 as it files today.
 5. What a borrowing tag is for D33's raise, and whether a finance lease is one.
    Decided 2026-09-15 (decision 47, D33): a borrowing is one of the three
    named fields, a finance lease is not one, and the raise is a known limit,
