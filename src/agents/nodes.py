@@ -2259,6 +2259,155 @@ def _format_out_of_scope_response() -> List[str]:
     return list(OUT_OF_SCOPE_RESPONSE)
 
 
+# The metrics whose unit is a share, printed as percentages; the one ratio
+# is printed as a multiple. The unit is the metric key's (Part 10 B), stated
+# here once for printing and computed nowhere.
+_SHARE_METRICS = frozenset({"return_on_invested_capital", "gross_margin",
+                            "free_cash_flow_yield", "discount_to_range_low"})
+
+
+def _pull_day(instant: Optional[str]) -> str:
+    """A stored pull instant as the block carries it, an ISO string with its
+    UTC offset, printed as the calendar day it names in UTC (decision 29)."""
+    return f"{str(instant)[:10]} UTC"
+
+
+def _metric_figure(metric: Optional[str], value: float) -> str:
+    return f"{value:.2%}" if metric in _SHARE_METRICS else f"{value:.2f}x"
+
+
+def _limit_figure(metric: Optional[str], value: float) -> str:
+    return f"{value:.0%}" if metric in _SHARE_METRICS else f"{value:.2f}x"
+
+
+def _distance_figure(metric: Optional[str], value: float) -> str:
+    return f"{abs(value) * 100:.2f} pp" if metric in _SHARE_METRICS else f"{abs(value):.2f}x"
+
+
+def _format_research_response(sub_results: Dict) -> List[str]:
+    """Format the screening block (decision 29; benchmark 4.1 and 4.6).
+    Cites clause ids and the owner's clause text; prints the figures the
+    screen published and computes none, the percent and the sign word being
+    presentation of a finding's own fields.
+
+    Three renderings, chosen by what the block carries: the company excluded
+    under an industry clause, which reports the code and nothing else (D35);
+    a check that stopped on a missing figure or a missing code, which reports
+    where and why and no verdict (PHI-1.2); and a screened company, one line
+    per finding with its deciding fiscal year and that year's filed date,
+    then the statements the check did not compute. Every rendering states
+    the check's as-of and the date EDGAR stated the code, and ends with what
+    was not done: no recommendation, the IPS not consulted since no position
+    is implied. A missing valuation range is not a fixed sentence here: the
+    screen stops on PHI-4.1 and says so, and the stopped rendering prints it.
+    """
+    result = sub_results.get("ScreeningAgent", {})
+    if not result.get("success"):
+        return ["Philosophy check failed", "", result.get("error", "unknown error")]
+    block = result.get("screening") or {}
+    philosophy = block.get("philosophy") or {}
+    findings = block.get("findings") or []
+    subject = block.get("subject") or {}
+    ticker = subject.get("ticker", "")
+
+    lines = [
+        f"**PHILOSOPHY CHECK: {ticker}**",
+        "",
+        f"{subject.get('name', '')}, CIK {subject.get('cik', '')}, checked as of "
+        f"{block.get('as_of')} against the philosophy's {len(philosophy)} clauses.",
+        "",
+    ]
+
+    excluded = [f for f in findings if f.get("status") == "excluded"]
+    if excluded:
+        f = excluded[0]
+        lines += [
+            f"{ticker} is excluded under {f['clause']}: SIC {f.get('sic')}, "
+            f"{block.get('sic_description')}, as EDGAR stated it on "
+            f"{_pull_day(block.get('sic_as_of'))}.",
+            "",
+            f"**{f['clause']}** — {philosophy.get(f['clause'], {}).get('text', '')}",
+            "",
+            "Nothing else is reported about the company: no figure was read and no other "
+            "clause was checked.",
+        ]
+    elif block.get("stopped"):
+        stopped = block["stopped"]
+        lines += [
+            f"The check stopped at {stopped.get('clause')} and reports no verdict on "
+            f"{ticker} (PHI-1.2).",
+            "",
+            f"  {stopped.get('reason', '')}",
+            "",
+            f"Code: SIC {block.get('sic')}, {block.get('sic_description')}, as EDGAR stated it "
+            f"on {_pull_day(block.get('sic_as_of'))}.",
+        ]
+        lines += _format_screen_source(block)
+    else:
+        lines += _format_screen_findings(block, philosophy, findings, ticker)
+        lines += _format_screen_source(block)
+        statements = block.get("statements") or []
+        if statements:
+            lines += ["", "**Philosophy statements** — cited, not computed"]
+            for st in statements:
+                lines.append(f"  **{st['clause']}** — {st.get('text', '')}")
+
+    lines += [
+        "",
+        "**Not done:** no recommendation. No position is implied, so the investment "
+        "policy was not consulted.",
+    ]
+    return lines
+
+
+def _format_screen_findings(block: Dict, philosophy: Dict, findings: List[Dict],
+                            ticker: str) -> List[str]:
+    """One line per finding: the clause, pass or fail, the observed figure
+    against the bound, the distance, the deciding fiscal year and its filed
+    date. An unlisted code is its own line."""
+    years = block.get("years") or {}
+    lines = [f"**Findings on {ticker}**, one per numeric clause, in philosophy order:", ""]
+    for f in findings:
+        clause, metric = f["clause"], f.get("metric")
+        if f.get("type") == "excluded_industry":
+            lines.append(f"  {clause} pass: SIC {f.get('sic')}, {block.get('sic_description')}, "
+                         f"is not a code this clause lists; as EDGAR stated it on "
+                         f"{_pull_day(block.get('sic_as_of'))}.")
+            continue
+        bound_word = "floor" if f.get("bound") == "min" else "ceiling"
+        if f.get("status") == "fail":
+            relation = "below" if f.get("bound") == "min" else "above"
+        else:
+            relation = "above" if f.get("bound") == "min" else "below"
+        where = ""
+        if f.get("deciding_year"):
+            filed = (years.get(f["deciding_year"]) or {}).get("filed")
+            read = ", ".join(f.get("years_read") or [])
+            where = (f"; decided by {f['deciding_year']} (annual report filed {filed}) "
+                     f"over {read}")
+        elif f.get("price_as_of"):
+            where = (f"; price as of {f['price_as_of']}, range as of {f['range_as_of']}")
+        lines.append(
+            f"  {clause} {f['status'].upper()}: {metric} {_metric_figure(metric, f['observed'])} "
+            f"against a {bound_word} of {_limit_figure(metric, f['limit'])}, "
+            f"{_distance_figure(metric, f['distance'])} {relation} it{where}."
+        )
+    return lines
+
+
+def _format_screen_source(block: Dict) -> List[str]:
+    """Where the figures came from: the source, the fiscal years read with
+    their filed dates, the facts' pull date. Part 3b's data age."""
+    years = block.get("years") or {}
+    lines = ["", f"**Source:** {block.get('source')}, each fiscal year's own annual report"]
+    if block.get("facts_as_of"):
+        lines[-1] += f", pulled {_pull_day(block['facts_as_of'])}"
+    lines[-1] += "."
+    for label, dates in years.items():
+        lines.append(f"  {label}: year ended {dates.get('ends')}, filed {dates.get('filed')}")
+    return lines
+
+
 def _format_optimization_response(sub_results: Dict) -> List[str]:
     """Format optimization results, without the allocation itself.
 
