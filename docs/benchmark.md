@@ -199,6 +199,18 @@ FY2021: the metric keys for a filer presenting no gross profit and no
 combined D&A are decision 48, and no figure is filled to move the case.
 4.2 to 4.5 have no check yet. The runner is the status.
 
+**Status note, 16 September 2026 (twenty-first session).** Decision 48's
+items 3 and 4 are decided and 4.1 is still blocked at the same stop, now by
+decision: Alphabet's FY2021 and FY2022 non-current debt is filed only under
+a lease-inclusive tag that D36 keeps out of the field's list, so PHI-2.1
+stops at FY2021 until the FY2027 report moves the five-year window past
+those years, and PHI-3.1 stops on D&A after that, since Alphabet files no
+combined figure and no amortisation line under any us-gaap tag. Gross
+margin no longer stops it: the key reads revenue less cost of revenue,
+which Alphabet files. Whether Alphabet stays X is an open decision
+(`tests/golden/KNOWN_GAPS.md`, decision 56). Still 13/14; the runner's
+reason line under 4.1 says the cause.
+
 **References before code, none computed yet.** Part 10 of
 `expected_values.md`: the synthetic candidate's typed figures over the
 stated years and every philosophy clause's verdict and distance by hand, for
