@@ -67,7 +67,7 @@ topics = ["balance sheet", "debt", "leverage", "net debt"]
 metric = "net_debt_to_ebitda"
 max = 2.0
 years = 1
-text = """Net debt of at most 2.0 times EBITDA in the latest fiscal year."""
+text = """Net debt of at most 2.0 times EBITDA in the latest fiscal year. Net debt is borrowings less cash and cash equivalents, and nothing else: marketable securities do not net against debt, whether a filer presents them as current or not, because where that line is drawn is a presentation choice, and a safety screen should only ever reject more candidates for its definition, never fewer."""
 
 [[clause]]
 id = "PHI-3.2"

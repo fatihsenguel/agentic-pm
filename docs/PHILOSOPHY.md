@@ -51,6 +51,11 @@ write that paragraph the company is not a candidate, whatever its figures.
 ## 3. Balance sheet
 
 **PHI-3.1** Net debt of at most 2.0 times EBITDA in the latest fiscal year.
+Net debt is borrowings less cash and cash equivalents, and nothing else:
+marketable securities do not net against debt, whether a filer presents them
+as current or not, because where that line is drawn is a presentation
+choice, and a safety screen should only ever reject more candidates for its
+definition, never fewer.
 
 **PHI-3.2** A company whose SIC code, as EDGAR states it, is one of the codes
 this clause lists is not screened by this document: the balance sheet of a
