@@ -110,3 +110,10 @@ Q: Is AAPL too concentrated? | pid=3
   agents_run: ['ComplianceAgent', 'DataAgent', 'PortfolioAnalysisAgent']
   errors: 0
 
+Q: Does JPM clear my philosophy? | pid=3
+  intent: research
+  plan:   ['ScreeningAgent']
+  period: None
+  agents_run: ['ScreeningAgent']
+  errors: 0
+
