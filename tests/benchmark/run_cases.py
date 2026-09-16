@@ -1217,18 +1217,22 @@ def blocked_on_screen(state):
 
 
 def blocked_on_screen_figures(state):
-    """4.1 on filed figures: W-1 cannot be screened on PHI-2.2 or PHI-3.1
-    until Part 13 E's items 3 and 4 are decided (decision 48), since Alphabet
-    files no gross profit and no combined D&A. A check that stopped on a
-    missing figure is that decision, not a defect of the node."""
+    """4.1 on filed figures: W-1 stops by decision, not by defect (decision
+    48, D36, Part 13 B). Alphabet's FY2021 and FY2022 non-current debt is
+    filed only under a lease-inclusive tag that D36 keeps out of the list,
+    so PHI-2.1 stops at FY2021 until the FY2027 report moves the five-year
+    window past those years; after that PHI-3.1 stops on D&A, which Alphabet
+    files under no us-gaap tag. A check that stopped on a missing figure is
+    that decision working, and the case stays blocked on it."""
     reason = blocked_on_screen(state)
     if reason is not None:
         return reason
     stopped = _screening(state).get("stopped")
     if stopped:
         return (f"the check stopped on {stopped.get('clause')}: {stopped.get('reason')}; "
-                "the metric keys for a filer presenting no gross profit and no combined "
-                "D&A are Part 13 E's items 3 and 4 (decision 48)")
+                "decision 48 (D36) keeps the lease-inclusive debt tag out of the list, so "
+                "the stop at PHI-2.1 stands until Alphabet's FY2027 report, and PHI-3.1 "
+                "stops on D&A after it (Part 13 B)")
     return None
 
 
