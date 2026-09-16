@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 16 September (eighteenth session), on branch `bridge`, cut from `baseline-v1` at b0f1499. Order 4 step 1, the bridge between the reader's block and the metrics: decisions 46 and 47 taken, two reference rows by hand in Part 12 G (net debt from the three borrowing fields, NOPAT at the stated rate) with the workbook's Filings sheet section D, then the bridge in two commits by field, net_debt and nopat as named functions, Decimals exact to the first ratio, the stated rate a parameter of PHI-2.1 in the document first. The first live EDGAR fetch: Apple's company facts, 15,132 rows stored, 70 of 70 Part 12 B cells reproduced. The pending list triaged from 32 (not 41, as counted) to 16 and then 14; the .gitignore and .env.example entries closed on the trunk's rewrites. Entries added this session: the pull date is UTC, and Apple's FY2014 operating cash flow does not resolve.
+Last updated 16 September (nineteenth session), on branch `filer`, cut from `baseline-v1` at c75b73b. Decision 49, the SIC code on the block, in four commits test first: `EdgarProvider.filer` held to the fourteen rows of `edgar_submissions.csv`, the `filers` table (migration c8dd6b3dc535, applied by the owner), `filings.update_filer` under `filings_fetch_interval_days`, and `filed_years_for` carrying `sic`, `sic_description` and `sic_as_of` beside the years. Two live submissions fetches: JPMorgan equal to Part 13 C's row, Apple stored as one filers row and read back beside its seventeen years. The published SIC list on www.sec.gov read once with the contact, the fails-open entry updated and nothing acted on. Decision 41 closed: PHI-3.1 states what nets against debt. Entries added this session: the submissions document carries the tickers; the filer fetch downloads the filings index it discards; the code is as of its pull, not the block's as-of.
 ---
 
 # RESOLVED
@@ -4316,7 +4316,18 @@ it.**
   The scratch script is not committed; the check is the reference.
 - **Put a SIC code on the block.** Nothing reads the submissions document, so
   PHI-3.2 is screened on typed blocks only. Decision 49's shape is in the
-  handoff: four commits, moved whole to the next session.
+  handoff: four commits, moved whole to the next session. **Done 16
+  September (nineteenth session), 48e6ff0, ba60cfe, 6e2553a, df08e54**:
+  `EdgarProvider.filer` held to the fourteen rows of `edgar_submissions.csv`;
+  the `filers` table, migration c8dd6b3dc535 applied by the owner;
+  `filings.update_filer` under the same interval, a later pull rewriting the
+  row and moving `pulled_at`; `filed_years_for` carrying `sic`,
+  `sic_description` and `sic_as_of` beside the years, and raising on a
+  company with no filers row. Live: JPMorgan's document through the method
+  equal to Part 13 C's row in every field; Apple's stored, 3571 Electronic
+  Computers as of 2026-09-16 00:03 UTC, read back beside FY2009 to FY2025.
+  The document's `cik` is the ten-digit zero-padded string and `sic` a
+  string, the csv's forms.
 - **Feed the screen.** `quant/fundamentals.py` reads one `tax_rate` and one
   `debt`; the block carries `effective_tax_rate` (D32) and three borrowing
   fields (D33). Two decisions of the owner's come first, where NOPAT's stated
@@ -4329,12 +4340,14 @@ it.**
   read as a Decimal, the ratio the first float; a year carrying a key the
   reader's fields do not name raises. Reference rows Part 12 G. The
   `years` half of the block is now in the metrics' shape; the ticker, the
-  code, the price, the shares and the range are still the node's.
+  price, the shares and the range are still the node's, and the code joined
+  the block 16 September (nineteenth session).
 - **Screen W-1.** Alphabet files no gross profit and no combined D&A, and its
   FY2021 and FY2022 non-current debt only under a wider tag (Part 13 B), so
   PHI-2.1, PHI-2.2 and PHI-3.1 stop. Part 13 E's questions 3 to 8 are these.
 - **Find a company by ticker.** The assembler takes a CIK; where the
-  watchlist's tickers get theirs is decided with the node.
+  watchlist's tickers get theirs is decided with the node. The submissions
+  document carries the filer's tickers (the entry below, 16 September).
 - **Report shares.** No field carries them (Part 13 E7, and the
   `shares_history` entry).
 - **Limit its rate.** One company is one request and nothing loops over
@@ -4342,7 +4355,7 @@ it.**
 
 ### PHI-3.2's code list fails open, and a code carries no date
 
-**Trigger:** the first fetch of `www.sec.gov` with the contact, so the published SIC list can be read; or a bank or insurer filing under a code the list lacks. The first live fetch through the provider happened 16 September (eighteenth session) and went to `data.sec.gov`, which is not the host that carries the list; the list is still unread.
+**Trigger:** a bank or insurer filing under a code the clause does not list; the codes the published list carries in the range are recorded below, and each enters the clause by the owner's hand, one measured filer at a time. The first half of the old trigger, the first fetch of `www.sec.gov` with the contact, fired 16 September (nineteenth session), read only.
 
 **Decided 14 September (sixteenth session), Part 10 F.** PHI-3.2 excludes
 the seven SIC codes the clause lists: 6021 and 6022, commercial banks; 6035
@@ -4368,6 +4381,31 @@ cites a code cites its pull date.
 philosophy has clauses for banks and insurers. At that commit it is
 rewritten with its own cases and not deleted, the rule benchmark.md already
 states for 3.2.
+
+**The published list, read 16 September (nineteenth session).** One request
+to `www.sec.gov/search-filings/standard-industrial-classification-sic-code-list`
+with the contact, HTTP 200, 439 codes, three columns: code, an "Office"
+the SEC assigns, and the title. Nothing stored, nothing acted on. What it
+says:
+
+- Every code the clause lists is on it with the title Part 13 C
+  transcribed, in capitals: 6021, 6022, 6035, 6036, 6211, 6311, 6331; and
+  6411, INSURANCE AGENTS, BROKERS & SERVICE, which the clause declines.
+- Codes in the same range the clause does not list, each a company the
+  screen would read as neither a bank nor an insurer today: banks, 6029
+  COMMERCIAL BANKS, NEC and 6099 FUNCTIONS RELATED TO DEPOSITORY BANKING,
+  NEC; insurers, 6321 ACCIDENT & HEALTH INSURANCE, 6324 HOSPITAL & MEDICAL
+  SERVICE PLANS, 6351 SURETY INSURANCE, 6361 TITLE INSURANCE, 6399
+  INSURANCE CARRIERS, NEC; credit and brokerage, 6111, 6141, 6153, 6159,
+  6162, 6163, 6172, 6189, 6199, 6200, 6221, 6282. Whether a credit
+  institution or an exchange is what PHI-3.2 is about is the owner's, and
+  no code goes on the list from this reading: a code enters with a filer
+  measured under it, the rule the seven followed.
+- The "Office" column is the list's own grouping, Office of Finance on
+  every row from 6021 to 6411 except 6189 (Office of Structured Finance)
+  and the broker-dealer rows shared with an Office of Crypto Assets. It is a
+  different vocabulary from the document's `ownerOrg` "02 Finance", and
+  neither says what the other classifies.
 
 ### A fact on a form outside D29's list is dropped without a word
 
@@ -4399,6 +4437,12 @@ Not chased: which clock a pull date is on is decided where an answer first
 prints one, and `fx_fetch_metadata` and the price cache would want the same
 answer.
 
+*16 September (nineteenth session).* `filers.pulled_at`, written by
+`update_filer`, is on the same clock, so that a block built from both
+records carries one; `filed_years_for` hands it on as `sic_as_of`
+uninterpreted, a datetime and not a calendar day. Observed on the filer
+fetch: 00:03 UTC against 02:03 on the machine, the same day this time.
+
 ### Apple's FY2014 operating cash flow does not resolve under Part 12 C's tag
 
 **Trigger:** a revision of Part 12 C's field list, or a screen whose window reaches FY2014.
@@ -4414,6 +4458,52 @@ looked up: the reference stops at FY2021 and a five-year screen as of today
 reads nothing older. D30 working as written, and the first cell where a
 reader anchored on one tag would want a second inside one filer's own
 history rather than across filers.
+
+### The submissions document carries the tickers, and more Part 13 C did not record
+
+**Trigger:** pending decision 29, the node, where ticker to CIK (50) is decided.
+
+**Recorded 16 September (nineteenth session), from the two live filer
+fetches.** Beside the fields Part 13 C recorded (`cik`, `name`, `sic`,
+`sicDescription`, `entityType`, `ownerOrg`, `fiscalYearEnd`, the dated
+`formerNames`), the document carries `tickers` and `exchanges` as parallel
+lists: Apple one ticker on Nasdaq; JPMorgan nine on the NYSE, JPM and eight
+preferred and note lines. Also `stateOfIncorporation`, `ein`, `lei`,
+`category` ("Large accelerated filer"), `flags`, `description`, `website`,
+`investorWebsite`, `phone`, `addresses`, two insider-transaction booleans,
+and the filings index. None is stored: nothing consumes them. The one that
+will matter is `tickers`, a filed source for the ticker-to-CIK question the
+node decides, which the eighteenth session's shape did not know about; it
+maps one CIK to several tickers, not one ticker to a CIK, so it answers the
+reverse question directly and the forward one only over every filer. Also
+seen: Apple's `fiscalYearEnd` is "0926", a fixed month and day, while its
+year ends move between the 24th and the 30th (Part 12 A); none of the five
+year ends Part 12 A lists falls on the 26th, so a reader of that field would
+get every one of them wrong, which is a reason it is not read.
+
+### The filer fetch downloads the filings index it discards
+
+**Trigger:** the first caller that loops over companies, the same trigger as "Limit its rate" under the Directions entry; or a filer fetch that fails on size or time.
+
+**Recorded 16 September (nineteenth session).** The submissions document is
+the filer's whole filings index with the four fields the method reads on
+top: JPMorgan's is 4.6 MB, Apple's 164 KB, for a name and a code. One
+company a week under `filings_fetch_interval_days` costs nothing worth a
+change; a screen over a watchlist would notice. Whether EDGAR publishes a
+lighter document that carries the code was not looked up. Not chased.
+
+### The code on the block is as of its pull, not as of the block's as-of
+
+**Trigger:** pending decision 29, the node: the first answer that states the block's as-of beside the code's.
+
+**Recorded 16 September (nineteenth session).** `filed_years_for(session,
+cik, as_of)` reads figures filed on or before `as_of` and puts beside them
+the code as of `sic_as_of`, the filers row's pull time, which can be later
+than `as_of`: the years test reads Alphabet as of 2026-09-13 with a code
+pulled the day the test runs. EDGAR keeps no history of the code (Part 13
+C), so a code as of an earlier date cannot be read, only stated as of when
+it was; that is what `sic_as_of` is for, and the answer that prints both
+dates is where their difference becomes a sentence.
 
 ### Questions the system cannot express, and which kind each is
 
