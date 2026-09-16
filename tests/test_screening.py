@@ -113,10 +113,10 @@ def test_exactly_at_the_limit_passes(screening, philosophy):
 
 
 def test_a_missing_figure_stops_the_whole_check(screening, philosophy):
-    """D25: FY2024's gross profit absent. The check stops on PHI-2.2 naming
-    gross_margin and FY2024, and reports no finding on any clause."""
+    """D25: FY2024's cost of revenue absent. The check stops on PHI-2.2
+    naming gross_margin and FY2024, and reports no finding on any clause."""
     block = alphabet()
-    del block["years"]["FY2024"]["gross_profit"]
+    del block["years"]["FY2024"]["cost_of_revenue"]
     with pytest.raises(screening.ScreeningError, match="PHI-2.2.*gross_margin.*FY2024"):
         screening.screen(philosophy, block, AS_OF)
 

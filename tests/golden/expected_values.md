@@ -890,7 +890,7 @@ the year and the tags, for the check to stop on (D30).
 | Field | Kind | Tags, in order |
 |---|---|---|
 | revenue | duration | `RevenueFromContractWithCustomerExcludingAssessedTax`, `SalesRevenueNet`, `Revenues` |
-| gross_profit | duration | `GrossProfit` |
+| cost_of_revenue | duration | `CostOfRevenue`, `CostOfGoodsAndServicesSold` |
 | operating_income | duration | `OperatingIncomeLoss` |
 | effective_tax_rate | duration | `EffectiveIncomeTaxRateContinuingOperations` |
 | depreciation_amortisation | duration | `DepreciationDepletionAndAmortization`, `DepreciationAmortizationAndAccretionNet` |
@@ -907,6 +907,10 @@ the year and the tags, for the check to stop on (D30).
 The revenue ordering is newest-tag-first on purpose: for FY2017, all three
 tags carry the same value and the order decides which `accn` the row cites,
 never which number it reports.
+
+*Row changed 2026-09-16, decision 48 (D36, section H).* `cost_of_revenue`
+stands where `gross_profit` stood. No filer here files both of its tags, so
+the order decides nothing; the taxonomy's total is first.
 
 ### D. Falsifier rows
 

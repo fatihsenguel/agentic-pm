@@ -3,8 +3,10 @@ The figures block's `years`, from filed facts.
 
 Reference: tests/golden/expected_values.md Part 12, with Part 13's two more
 filers. The field list is D30: each field of the block names an ordered list
-of us-gaap tags, and the first that yields a fact for the period wins. It is
-a definition, not policy, so it is code and not config; the test
+of us-gaap tags, and the first that yields a fact for the period wins. A tag
+joins a list on a witness, one tag at a time (D36); a wider or narrower
+measure under another tag stays out and its year raises. It is a definition,
+not policy, so it is code and not config; the test
 tests/test_filed_fields.py holds it to Part 12 C's table.
 
 `filed_years` reads the EDGAR provider's records into fiscal years (D21,
@@ -47,7 +49,7 @@ class Field:
 FIELDS: Tuple[Field, ...] = (
     Field("revenue", "duration", (
         "RevenueFromContractWithCustomerExcludingAssessedTax", "SalesRevenueNet", "Revenues")),
-    Field("gross_profit", "duration", ("GrossProfit",)),
+    Field("cost_of_revenue", "duration", ("CostOfRevenue", "CostOfGoodsAndServicesSold")),
     Field("operating_income", "duration", ("OperatingIncomeLoss",)),
     Field("effective_tax_rate", "duration", ("EffectiveIncomeTaxRateContinuingOperations",)),
     Field("depreciation_amortisation", "duration", (

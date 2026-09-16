@@ -12,12 +12,15 @@ figures, the shares, the price and the range with their as-of dates -
 typed from Part 10 A by hand, in the shape the reader's block carries
 (Part 10 A's note of 2026-09-15): the one debt figure sits in
 long_term_debt_noncurrent and the other two borrowing fields are filed
-zeros.
+zeros, and cost_of_revenue is revenue less the gross profit Part 10 A shows
+(its note of 2026-09-16, decision 48).
 
 Part 12 G holds the bridge to the reader's block on Apple's filed figures,
 in whole dollars as the block carries them: net debt from the three
 borrowing fields, exact, and the ratio as the first place a filed figure
-stops being exact.
+stops being exact. Part 12 H holds gross margin on the same figures, revenue
+less cost of revenue over revenue, equal to the margin on the gross profit
+Apple files (decision 48).
 
 The module is imported inside a fixture so that, before it exists, this
 file is a list of errors and not an interrupted suite.
@@ -46,17 +49,17 @@ YEARS = {
                "equity": 128_000.0, "commercial_paper": 0.0, "long_term_debt_current": 0.0,
                "long_term_debt_noncurrent": 22_000.0, "cash": 42_000.0},
     "FY2023": {"ends": "2023-12-31", "filed": "2024-02-02",
-               "revenue": 100_000.0, "gross_profit": 55_000.0,
+               "revenue": 100_000.0, "cost_of_revenue": 45_000.0,
                "operating_income": 24_000.0,
                "equity": 140_000.0, "commercial_paper": 0.0, "long_term_debt_current": 0.0,
                "long_term_debt_noncurrent": 20_000.0, "cash": 40_000.0},
     "FY2024": {"ends": "2024-12-31", "filed": "2025-02-05",
-               "revenue": 112_000.0, "gross_profit": 63_840.0,
+               "revenue": 112_000.0, "cost_of_revenue": 48_160.0,
                "operating_income": 30_000.0,
                "equity": 150_000.0, "commercial_paper": 0.0, "long_term_debt_current": 0.0,
                "long_term_debt_noncurrent": 18_000.0, "cash": 43_000.0},
     "FY2025": {"ends": "2025-12-31", "filed": "2026-02-04",
-               "revenue": 125_000.0, "gross_profit": 72_500.0,
+               "revenue": 125_000.0, "cost_of_revenue": 52_500.0,
                "operating_income": 36_000.0,
                "depreciation_amortisation": 16_000.0,
                "operating_cash_flow": 52_780.0, "capex": 22_000.0,
@@ -204,30 +207,35 @@ def test_a_figure_that_is_not_a_number_raises(fundamentals):
 
 # Part 12 B's figures in whole dollars, the unit the block carries
 # (edgar_facts_aapl.csv); the dates are Part 12 A's. Only the fields the
-# two rows and their cross-checks read; the filed rate is here because the
-# NOPAT row is the proof it is not read.
+# rows of Part 12 G and H and their cross-checks read; the filed rate is
+# here because the NOPAT row is the proof it is not read.
 APPLE_YEARS = {
     "FY2021": {"ends": "2021-09-25", "filed": "2021-10-29",
+               "revenue": Decimal("365817000000"), "cost_of_revenue": Decimal("212981000000"),
                "effective_tax_rate": Decimal("0.133"), "equity": Decimal("63090000000"),
                "operating_income": Decimal("108949000000"), "depreciation_amortisation": Decimal("11284000000"),
                "cash": Decimal("34940000000"), "commercial_paper": Decimal("6000000000"),
                "long_term_debt_current": Decimal("9613000000"), "long_term_debt_noncurrent": Decimal("109106000000")},
     "FY2022": {"ends": "2022-09-24", "filed": "2022-10-28",
+               "revenue": Decimal("394328000000"), "cost_of_revenue": Decimal("223546000000"),
                "effective_tax_rate": Decimal("0.162"), "equity": Decimal("50672000000"),
                "operating_income": Decimal("119437000000"), "depreciation_amortisation": Decimal("11104000000"),
                "cash": Decimal("23646000000"), "commercial_paper": Decimal("9982000000"),
                "long_term_debt_current": Decimal("11128000000"), "long_term_debt_noncurrent": Decimal("98959000000")},
     "FY2023": {"ends": "2023-09-30", "filed": "2023-11-03",
+               "revenue": Decimal("383285000000"), "cost_of_revenue": Decimal("214137000000"),
                "effective_tax_rate": Decimal("0.147"), "equity": Decimal("62146000000"),
                "operating_income": Decimal("114301000000"), "depreciation_amortisation": Decimal("11519000000"),
                "cash": Decimal("29965000000"), "commercial_paper": Decimal("5985000000"),
                "long_term_debt_current": Decimal("9822000000"), "long_term_debt_noncurrent": Decimal("95281000000")},
     "FY2024": {"ends": "2024-09-28", "filed": "2024-11-01",
+               "revenue": Decimal("391035000000"), "cost_of_revenue": Decimal("210352000000"),
                "effective_tax_rate": Decimal("0.241"), "equity": Decimal("56950000000"),
                "operating_income": Decimal("123216000000"), "depreciation_amortisation": Decimal("11445000000"),
                "cash": Decimal("29943000000"), "commercial_paper": Decimal("9967000000"),
                "long_term_debt_current": Decimal("10912000000"), "long_term_debt_noncurrent": Decimal("85750000000")},
     "FY2025": {"ends": "2025-09-27", "filed": "2025-10-31",
+               "revenue": Decimal("416161000000"), "cost_of_revenue": Decimal("220960000000"),
                "effective_tax_rate": Decimal("0.156"), "equity": Decimal("73733000000"),
                "operating_income": Decimal("133050000000"), "depreciation_amortisation": Decimal("11698000000"),
                "cash": Decimal("35934000000"), "commercial_paper": Decimal("7979000000"),
@@ -287,6 +295,27 @@ def test_invested_capital_reads_the_same_three_fields(fundamentals):
     assert "return_on_invested_capital" not in fundamentals.metrics_by_year(block, ASSUMPTIONS)["FY2025"]
 
 
+# --- Part 12 H: gross margin on the filed figures --------------------------------
+
+@pytest.mark.parametrize("year, margin", [
+    ("FY2021", 0.4178), ("FY2022", 0.4331), ("FY2023", 0.4413), ("FY2024", 0.4621), ("FY2025", 0.4691),
+])
+def test_gross_margin_on_the_filed_figures(fundamentals, year, margin):
+    """Part 12 H: revenue less cost of revenue over revenue, four places.
+    The reference shows the difference equal to the gross profit Apple
+    files in every year, so this is the margin the old formula gave; a
+    formula reading the cost line the other way round fails every row."""
+    value = fundamentals.metrics_by_year(apple(), ASSUMPTIONS)[year]["gross_margin"]
+    assert isinstance(value, float)
+    assert round(value, 4) == margin
+
+
+def test_without_a_cost_of_revenue_a_year_has_no_gross_margin(fundamentals):
+    block = apple()
+    del block["years"]["FY2025"]["cost_of_revenue"]
+    assert "gross_margin" not in fundamentals.metrics_by_year(block, ASSUMPTIONS)["FY2025"]
+
+
 # --- Part 12 G: NOPAT at the stated rate --------------------------------------
 
 @pytest.mark.parametrize("year, nopat", [
@@ -341,12 +370,13 @@ def test_a_stated_rate_that_is_not_a_fraction_raises(fundamentals, rate):
         fundamentals.metrics_by_year(apple(), {"tax_rate": rate})
 
 
-@pytest.mark.parametrize("key", ["tax_rate", "debt"])
+@pytest.mark.parametrize("key", ["tax_rate", "debt", "gross_profit"])
 def test_a_figure_key_the_block_does_not_carry_raises(fundamentals, key):
     """The block's figures are the reader's fields (Part 12 C). A year
     carrying a key no field names is a typed block in an old shape, and it
     raises rather than being read around: a fixture still carrying the
-    one debt figure or a per-year rate would otherwise pass silently."""
+    one debt figure, a per-year rate or a gross profit (not a field since
+    decision 48) would otherwise pass silently."""
     block = apple()
     block["years"]["FY2025"][key] = Decimal("1")
     with pytest.raises(fundamentals.FundamentalsError, match=f"FY2025.*{key}"):

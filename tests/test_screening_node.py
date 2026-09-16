@@ -167,11 +167,13 @@ async def test_the_dates_are_on_one_clock_with_the_offset_written_in(provider):
 # --- a company the philosophy screens: the facts are fetched and the check runs ------
 
 async def test_alphabet_is_fetched_and_the_check_stops_on_a_missing_figure(provider):
-    """Alphabet files no gross profit and no combined D&A, and its FY2021 and
-    FY2022 non-current debt only under a wider tag (Part 13 B), so the check
-    stops (PHI-1.2, D25) on the first clause in philosophy order whose metric
-    a year lacks. A stop is published, not raised: the answer says where the
-    check stopped and reports no verdict."""
+    """Alphabet files no combined D&A, and its FY2021 and FY2022 non-current
+    debt only under a wider tag (Part 13 B, D36), so the check stops
+    (PHI-1.2, D25) on the first clause in philosophy order whose metric a
+    year lacks: PHI-2.1 at FY2021. Gross margin no longer stops it, since
+    decision 48 reads cost of revenue, which Alphabet files. A stop is
+    published, not raised: the answer says where the check stopped and
+    reports no verdict."""
     out = await nodes.screening_agent_node(state_with(["GOOGL"]))
     assert out.get("errors") is None, out.get("errors")
     assert provider.calls == ["tickers", ("filer", ALPHABET), ("annual_facts", ALPHABET)]

@@ -159,10 +159,14 @@ def _return_on_invested_capital(year: str, f: Mapping, block: Figures,
 
 
 def _gross_margin(year: str, f: Mapping, block: Figures, assumptions: Assumptions) -> Optional[float]:
-    revenue, gross_profit = _figure(year, f, "revenue"), _figure(year, f, "gross_profit")
-    if revenue is None or gross_profit is None:
+    """Revenue less cost of revenue, over revenue (Part 10 B since decision
+    48, Part 12 H): the cost line every income statement has, so a filer
+    that presents no gross profit subtotal is screened on the two lines it
+    files. The difference is exact; the ratio is the float."""
+    revenue, cost = _figure(year, f, "revenue"), _figure(year, f, "cost_of_revenue")
+    if revenue is None or cost is None:
         return None
-    return _divide(year, gross_profit, revenue, "revenue")
+    return _divide(year, revenue - cost, revenue, "revenue")
 
 
 def _net_debt_to_ebitda(year: str, f: Mapping, block: Figures, assumptions: Assumptions) -> Optional[float]:

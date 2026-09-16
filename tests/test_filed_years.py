@@ -207,12 +207,11 @@ def test_every_figure_is_the_reference_row(filed_figures, monkeypatch, name, cik
         source = block["provenance"][label][row["field"]]
         assert (source["tag"], source["accn"]) == (row["tag"], row["accn"]), row
         checked += 1
-    assert checked == {"A": 70, "B": 57, "C": 25}[section]
+    assert checked == {"A": 70, "B": 62, "C": 25}[section]
 
 
 ALPHABET_UNRESOLVED = (
-    {(y, "gross_profit") for y in ("FY2021", "FY2022", "FY2023", "FY2024", "FY2025")}
-    | {(y, "depreciation_amortisation") for y in ("FY2021", "FY2022", "FY2023", "FY2024", "FY2025")}
+    {(y, "depreciation_amortisation") for y in ("FY2021", "FY2022", "FY2023", "FY2024", "FY2025")}
     | {("FY2025", "marketable_securities_noncurrent"),
        ("FY2021", "long_term_debt_noncurrent"), ("FY2022", "long_term_debt_noncurrent")}
 )
@@ -220,7 +219,7 @@ ALPHABET_UNRESOLVED = (
 JPMORGAN_UNRESOLVED = {
     (y, field)
     for y in ("FY2021", "FY2022", "FY2023", "FY2024", "FY2025")
-    for field in ("gross_profit", "operating_income", "capex", "cash",
+    for field in ("cost_of_revenue", "operating_income", "capex", "cash",
                   "marketable_securities_current", "marketable_securities_noncurrent",
                   "commercial_paper", "long_term_debt_current", "long_term_debt_noncurrent")
 }
@@ -236,17 +235,41 @@ def test_a_field_no_tag_yields_is_named_and_not_filled(filed_figures, monkeypatc
     assert unresolved == expected
     for year, field in expected:
         assert field not in block["years"][year]
-    tags = {u["field"]: u["tags"] for u in block["unresolved"]}
-    assert tags["gross_profit"] == ("GrossProfit",)
+    lists = {f.name: f.tags for f in filed_figures.FIELDS}
+    for entry in block["unresolved"]:
+        assert entry["tags"] == lists[entry["field"]], entry
+
+
+def test_cost_of_revenue_resolves_from_each_filers_own_tag(filed_figures, monkeypatch):
+    """D36 and Part 12 H: the field lists two tags no filer files together,
+    Apple's cost of sales and Alphabet's cost of revenue; each year cites
+    the filer's own, and the bank, which files neither, has both named as
+    tried."""
+    apple = filed_figures.filed_years(
+        facts_for(APPLE, _rows("edgar_facts_aapl.csv", {"A", "Y"}), monkeypatch), AS_OF)
+    alphabet = filed_figures.filed_years(
+        facts_for(ALPHABET, _rows("edgar_facts_googl.csv"), monkeypatch), AS_OF)
+    jpmorgan = filed_figures.filed_years(
+        facts_for(JPMORGAN, _rows("edgar_facts_jpm.csv"), monkeypatch), AS_OF)
+    years = ("FY2021", "FY2022", "FY2023", "FY2024", "FY2025")
+    assert {apple["provenance"][y]["cost_of_revenue"]["tag"] for y in years} == {"CostOfGoodsAndServicesSold"}
+    assert {alphabet["provenance"][y]["cost_of_revenue"]["tag"] for y in years} == {"CostOfRevenue"}
+    assert apple["years"]["FY2025"]["cost_of_revenue"] == Decimal("220960000000")
+    assert alphabet["years"]["FY2025"]["cost_of_revenue"] == Decimal("162535000000")
+    tried = {u["tags"] for u in jpmorgan["unresolved"] if u["field"] == "cost_of_revenue"}
+    assert tried == {("CostOfRevenue", "CostOfGoodsAndServicesSold")}
+    assert all("gross_profit" not in year for block in (apple, alphabet, jpmorgan)
+               for year in block["years"].values())
 
 
 def test_the_neighbour_is_not_used(filed_figures, monkeypatch):
-    """F8 and Part 13 C: CostOfRevenue, Depreciation, pre-tax income and
-    CashAndDueFromBanks are in the facts and belong to no field."""
+    """F8 and Part 13 C: Depreciation, pre-tax income and CashAndDueFromBanks
+    are in the facts and belong to no field. CostOfRevenue left this set on
+    2026-09-16: it is cost_of_revenue's own tag (D36)."""
     for name, cik in (("edgar_facts_googl.csv", ALPHABET), ("edgar_facts_jpm.csv", JPMORGAN)):
         block = filed_figures.filed_years(facts_for(cik, _rows(name), monkeypatch), AS_OF)
         used = {s["tag"] for year in block["provenance"].values() for s in year.values()}
-        assert not used & {"CostOfRevenue", "Depreciation", "CashAndDueFromBanks",
+        assert not used & {"Depreciation", "CashAndDueFromBanks",
                            "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"}
 
 

@@ -4,6 +4,11 @@ B,revenue,,RevenueFromContractWithCustomerExcludingAssessedTax,USD,2022-01-01,20
 B,revenue,,RevenueFromContractWithCustomerExcludingAssessedTax,USD,2023-01-01,2023-12-31,307394000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023
 B,revenue,,RevenueFromContractWithCustomerExcludingAssessedTax,USD,2024-01-01,2024-12-31,350018000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2024
 B,revenue,,Revenues,USD,2025-01-01,2025-12-31,402836000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2025
+B,cost_of_revenue,,CostOfRevenue,USD,2021-01-01,2021-12-31,110939000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2021
+B,cost_of_revenue,,CostOfRevenue,USD,2022-01-01,2022-12-31,126203000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2022
+B,cost_of_revenue,,CostOfRevenue,USD,2023-01-01,2023-12-31,133332000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2023
+B,cost_of_revenue,,CostOfRevenue,USD,2024-01-01,2024-12-31,146306000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024
+B,cost_of_revenue,,CostOfRevenue,USD,2025-01-01,2025-12-31,162535000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2025
 B,operating_income,,OperatingIncomeLoss,USD,2021-01-01,2021-12-31,78714000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2021
 B,operating_income,,OperatingIncomeLoss,USD,2022-01-01,2022-12-31,74842000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2022
 B,operating_income,,OperatingIncomeLoss,USD,2023-01-01,2023-12-31,84293000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2023
@@ -56,7 +61,7 @@ B,long_term_debt_current,,LongTermDebtCurrent,USD,,2025-12-31,1996000000,0001652
 B,long_term_debt_noncurrent,,LongTermDebtNoncurrent,USD,,2023-12-31,11870000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
 B,long_term_debt_noncurrent,,LongTermDebtNoncurrent,USD,,2024-12-31,10883000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024Q4I
 B,long_term_debt_noncurrent,,LongTermDebtNoncurrent,USD,,2025-12-31,46547000000,0001652044-26-000071,2026,Q2,10-Q,2026-07-23,CY2025Q4I
-B,,absent: no fact of this tag anywhere in the artifact,GrossProfit,,,,,,,,,,
+B,,"absent: no fact of this tag anywhere in the artifact; not a field since 2026-09-16 (decision 48)",GrossProfit,,,,,,,,,,
 B,,absent: no fact of this tag anywhere in the artifact,DepreciationDepletionAndAmortization,,,,,,,,,,
 B,,absent: no fact of this tag anywhere in the artifact,DepreciationAmortizationAndAccretionNet,,,,,,,,,,
 B,,absent: no cover-page share count of any class in the artifact,EntityCommonStockSharesOutstanding,,,,,,,,,,
