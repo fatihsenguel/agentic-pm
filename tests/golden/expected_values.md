@@ -584,6 +584,18 @@ Shares outstanding 4,000 million. Price 171.00 as of 2026-09-10. Valuation
 range 180.00 to 240.00 per share as of 2026-09-10, typed here; Part 11 will
 compute one from stated assumptions.
 
+*The block's shape, 2026-09-17, decision 48 item 7 (Part 11 D39).* The
+share count is a figure of the fiscal year, not of the block:
+`shares_outstanding` sits in FY2025's figures, the 4,000 million above, the
+way the reader carries the filer's year-end count (Part 12 B's note), and
+the yield divides the year's free cash flow by the price times the year's
+own count. FY2021 to FY2024 carry no count in this synthetic block and
+their yield is absent, as it already was for want of their cash flows. The
+price and the range stay on the block with their as-of dates. Nothing in
+sections C, D or E moves. Part 11's range is computed by hand on filed
+figures and this typed range stands as the screen's input until a pipeline
+publishes one.
+
 ### B. The metric formulas (D24)
 
 - **return_on_invested_capital** = operating income x (1 - tax rate) /
@@ -596,6 +608,10 @@ compute one from stated assumptions.
 - **net_debt_to_ebitda** = (debt - cash) / (operating income + D&A).
 - **free_cash_flow_yield** = (operating cash flow - capex) / (price x shares
   outstanding), the latest fiscal year's cash flows at the as-of price.
+  Since 2026-09-17 the count is the year's own, a figure of the block's
+  years like the cash flows (decision 48 item 7, Part 11 D39), and the
+  price stays on the block with its as-of date: the same measure, the
+  divisor's home moved.
 
 ### C. The metrics by year
 
