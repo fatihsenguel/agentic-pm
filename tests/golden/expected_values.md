@@ -745,10 +745,221 @@ pull day of Part 13 C's own fetch.
 
 ## Part 11 — The valuation range
 
-Not computed. Reserved for the valuation pipeline (DIRECTION.md Order 4, case
-4.2): a range from stated assumptions, by hand, before the pipeline exists.
-Part 12 was written first because the reader comes before the valuation it
-would value.
+Computed 2026-09-17 by hand, before any pipeline exists (DIRECTION.md Order
+4, invariant 6; PHI-4.1 and PHI-4.3; benchmark case 4.2), so the pipeline
+has something independent to be wrong against. Decisions D37 to D40. Plain
+decimal arithmetic at 28 significant digits, none of the repository's code.
+The filed inputs are read from the stored facts of the pulls of 2026-09-15
+(Apple) and 2026-09-16 (Alphabet) at the latest vintage (D29); every figure
+below is the same on every vintage that carries it. USD millions except the
+share count, in millions of shares, and the value per share, in dollars to
+the cent from the unrounded quotient. Part 12 was written before this Part
+because the reader comes before the valuation it feeds.
+
+**The assumptions are synthetic**, stand-ins in the synthetic philosophy
+and watchlist the way PHI-2.1's 20% is, so that the arithmetic has a
+reference before my own numbers exist. A range is computed for two filers,
+Alphabet, W-1 on the watchlist with a December year end, and Apple, held in
+portfolio 3 with a September year end, both because their blocks carry
+every input in the latest year. The Apple range is a witness for the
+arithmetic on a second year end and says nothing about the holding; nothing
+in the philosophy reads it.
+
+### Decisions
+
+| # | Decision | Choice |
+|---|---|---|
+| D37 | What is the range? | **A discounted cash flow over the latest fiscal year's free cash flow, run twice, once at each of two stated growth rates; the low end is the low rate and the high end the high rate.** Free cash flow FCF0 is operating cash flow less capex of the year. For t = 1 to N, FCF_t = FCF0 x (1 + g)^t, discounted at (1 + r)^t and summed; the terminal value at year N is FCF_N x (1 + gT) / (r - gT), discounted at (1 + r)^N; enterprise value is the sum; equity is enterprise value less net debt; the value per share is equity over the share count. There is no midpoint and no spread: the two ends are two runs of one formula on two stated assumptions, which is what PHI-4.3's "a range from stated assumptions" means here. Rejected: a multiple of free cash flow, since a multiple is what the market pays and stating one is a price forecast under an assumption's name; a one-stage perpetuity, in which one difference, r less g, sets the whole value and a decade's growth cannot be stated apart from forever's; a pair of discount rates beside the pair of growth rates, four ends for a two-ended range; a point with a spread, which is the shape PHI-4.3 refuses. |
+| D38 | Whose assumptions, and where do they live? | **Five, all mine, each stated in a document and carried to the record with the id of the clause or entry that states it.** The investor's three on PHI-4.3 in `philosophy.toml`, the way D46 put `tax_rate` on PHI-2.1: `required_return` r, `terminal_growth` gT, `horizon_years` N. The business's two on the watchlist entry in `watchlist.toml`: `growth_low` and `growth_high`. An assumption reaches the range record as its name, its value and its source id, and that citation is what case 4.2 means by an assumption marked as mine; a proposal by a model (case 4.3) would carry a different source, and no vocabulary for it is added before the case asks. A clause or entry that states none of them, or a growth pair without both ends, does not load. Rejected: `config.toml`, whose values are the same for anyone and would keep a personal philosophy from carrying its own rate; a constant in the module; the model proposing a rate, a number in a model's hands. |
+| D39 | Which year, which figures? | **The latest fiscal year filed by the as-of date (D21), the year PHI-4.2 reads, for every filed input at once.** FCF0 is that year's `operating_cash_flow` less `capex`; net debt is `quant/fundamentals.net_debt` on that year, borrowings less cash under Part 12 F's definition A (D33), so the range and PHI-3.1 share one arithmetic path and marketable securities net against nothing; the share count is that year's, `shares_outstanding` at the year end as Part 13 E item 7's first half shapes it, pending decision 48. Rejected: free cash flow computed on the way into the block, D33's refused shape; an average of several years' cash flow, a figure nobody filed; the latest quarterly count against a fiscal year's cash flow, two dates in one ratio. |
+| D40 | What does the record carry, and what raises? | **Low, high, as-of, the year read with its end and filed dates, the source, the five assumptions with their sources, and no filed figure**, the rule the screening block already keeps: the year, its filed date and the source trace the inputs, and the figures stay in the database. The pipeline raises, naming which, when `growth_low` is not below `growth_high` (equal ends are a point, PHI-4.3), when r is not above gT (the terminal value is undefined or negative), when FCF0 is not positive (this method values a business that generates cash and does not say what one that burns it is worth), when equity at the low end is not positive (a value PHI-4.1's division cannot read), when the share count is missing for the year, or when an assumption is not stated. Nothing is sorted, clamped, defaulted or filled. Rejected: carrying FCF0 and net debt on the record for traceability, a filed figure in shared_data; sorting two ends that came out reversed, which hides that the stated assumptions contradict each other. |
+
+### A. The stated assumptions
+
+| Name | Symbol | Value | Stated on |
+|---|---|---|---|
+| required_return | r | 0.09 | PHI-4.3 |
+| terminal_growth | gT | 0.03 | PHI-4.3 |
+| horizon_years | N | 10 | PHI-4.3 |
+| growth_low | g_low | 0.06 | W-1 (and, for the witness, the same pair on Apple) |
+| growth_high | g_high | 0.12 | W-1 |
+
+The powers the tables below use, exact: (1.06)^10 = 1.79084769654285362176,
+(1.12)^10 = 3.10584820834420916224, (1.09)^10 = 2.36736367459211723401.
+
+### B. The filed inputs
+
+Alphabet FY2025 ends 2025-12-31, own report 0001652044-26-000018 filed
+2026-02-05. Apple FY2025 ends 2025-09-27, own report 0000320193-25-000079
+filed 2025-10-31. The duration figures are on each year's own report; the
+instants recur on the following 10-Qs at the same value, and the latest
+vintage is that 10-Q (Alphabet 0001652044-26-000071, filed 2026-07-23;
+Apple 0000320193-26-000020, filed 2026-07-31). The share count is
+`CommonStockSharesOutstanding`, whole shares as filed, 12,088,000,000 and
+14,773,260,000, shown in millions.
+
+| Input | Field or formula | Alphabet FY2025 | Apple FY2025 |
+|---|---|---|---|
+| operating cash flow | `operating_cash_flow` | 164,713 | 111,482 |
+| capex | `capex` | 91,447 | 12,715 |
+| **FCF0** | operating cash flow - capex | **73,266** | **98,767** |
+| commercial paper | `commercial_paper` | 0 | 7,979 |
+| long-term debt, current | `long_term_debt_current` | 1,996 | 12,350 |
+| long-term debt, non-current | `long_term_debt_noncurrent` | 46,547 | 78,328 |
+| borrowings | the three added (D33) | 48,543 | 98,657 |
+| cash | `cash` | 30,708 | 35,934 |
+| **net debt** | borrowings - cash | **17,835** | **62,723** |
+| shares (millions) | `shares_outstanding` | 12,088 | 14,773.26 |
+
+Apple's net debt reproduces Part 12 G's FY2025 row, 62,723, from the same
+figures.
+
+### C. The range, step by step
+
+Each table is one run of D37's formula. FCF_t and PV_t to a tenth of a
+million; (1 + r)^t exact.
+
+**Alphabet, low end, g = 0.06**
+
+| t | FCF_t | (1.09)^t | PV_t |
+|---|---|---|---|
+| 1 | 77,662.0 | 1.09 | 71,249.5 |
+| 2 | 82,321.7 | 1.1881 | 69,288.5 |
+| 3 | 87,261.0 | 1.295029 | 67,381.5 |
+| 4 | 92,496.6 | 1.41158161 | 65,526.9 |
+| 5 | 98,046.4 | 1.5386239549 | 63,723.5 |
+| 6 | 103,929.2 | 1.677100110841 | 61,969.6 |
+| 7 | 110,165.0 | 1.82803912081669 | 60,264.0 |
+| 8 | 116,774.9 | 1.9925626416901921 | 58,605.4 |
+| 9 | 123,781.4 | 2.171893279442309389 | 56,992.4 |
+| 10 | 131,208.2 | 2.36736367459211723401 | 55,423.8 |
+
+Sum of PV_t 630,425.0. Terminal value 131,208.2 x 1.03 / 0.06 =
+2,252,408.2, discounted 951,441.6. Enterprise value 1,581,866.6; equity
+1,581,866.6 - 17,835 = 1,564,031.6; per share 1,564,031.6 / 12,088 =
+**129.39** (129.3871305225...).
+
+**Alphabet, high end, g = 0.12**
+
+| t | FCF_t | (1.09)^t | PV_t |
+|---|---|---|---|
+| 1 | 82,057.9 | 1.09 | 75,282.5 |
+| 2 | 91,904.9 | 1.1881 | 77,354.5 |
+| 3 | 102,933.5 | 1.295029 | 79,483.5 |
+| 4 | 115,285.5 | 1.41158161 | 81,671.1 |
+| 5 | 129,119.7 | 1.5386239549 | 83,919.0 |
+| 6 | 144,614.1 | 1.677100110841 | 86,228.7 |
+| 7 | 161,967.8 | 1.82803912081669 | 88,601.9 |
+| 8 | 181,403.9 | 1.9925626416901921 | 91,040.5 |
+| 9 | 203,172.4 | 2.171893279442309389 | 93,546.2 |
+| 10 | 227,553.1 | 2.36736367459211723401 | 96,120.9 |
+
+Sum of PV_t 853,248.8. Terminal value 227,553.1 x 1.03 / 0.06 =
+3,906,327.8, discounted 1,650,075.1. Enterprise value 2,503,323.8; equity
+2,485,488.8; per share **205.62** (205.6162184284...).
+
+**Apple, low end, g = 0.06**
+
+| t | FCF_t | (1.09)^t | PV_t |
+|---|---|---|---|
+| 1 | 104,693.0 | 1.09 | 96,048.6 |
+| 2 | 110,974.6 | 1.1881 | 93,405.1 |
+| 3 | 117,633.1 | 1.295029 | 90,834.3 |
+| 4 | 124,691.1 | 1.41158161 | 88,334.3 |
+| 5 | 132,172.5 | 1.5386239549 | 85,903.1 |
+| 6 | 140,102.9 | 1.677100110841 | 83,538.8 |
+| 7 | 148,509.0 | 1.82803912081669 | 81,239.5 |
+| 8 | 157,419.6 | 1.9925626416901921 | 79,003.6 |
+| 9 | 166,864.8 | 2.171893279442309389 | 76,829.2 |
+| 10 | 176,876.7 | 2.36736367459211723401 | 74,714.6 |
+
+Sum of PV_t 849,851.1. Terminal value 176,876.7 x 1.03 / 0.06 =
+3,036,382.6, discounted 1,282,600.8. Enterprise value 2,132,451.9; equity
+2,132,451.9 - 62,723 = 2,069,728.9; per share 2,069,728.9 / 14,773.26 =
+**140.10** (140.0996741701...).
+
+**Apple, high end, g = 0.12**
+
+| t | FCF_t | (1.09)^t | PV_t |
+|---|---|---|---|
+| 1 | 110,619.0 | 1.09 | 101,485.4 |
+| 2 | 123,893.3 | 1.1881 | 104,278.5 |
+| 3 | 138,760.5 | 1.295029 | 107,148.6 |
+| 4 | 155,411.8 | 1.41158161 | 110,097.6 |
+| 5 | 174,061.2 | 1.5386239549 | 113,127.8 |
+| 6 | 194,948.5 | 1.677100110841 | 116,241.4 |
+| 7 | 218,342.4 | 1.82803912081669 | 119,440.8 |
+| 8 | 244,543.5 | 1.9925626416901921 | 122,728.1 |
+| 9 | 273,888.7 | 2.171893279442309389 | 126,106.0 |
+| 10 | 306,755.3 | 2.36736367459211723401 | 129,576.8 |
+
+Sum of PV_t 1,150,231.0. Terminal value 306,755.3 x 1.03 / 0.06 =
+5,265,966.2, discounted 2,224,401.0. Enterprise value 3,374,632.0; equity
+3,311,909.0; per share **224.18** (224.1826772441...).
+
+**The ranges.** Alphabet FY2025: **129.39 to 205.62** per share. Apple
+FY2025: **140.10 to 224.18** per share. Each is two runs of one formula on
+the stand-in assumptions and says nothing about either company; the
+terminal value is three fifths of enterprise value at the low ends and two
+thirds at the high ends, which is what a ten-year horizon at these rates
+gives and is not a finding.
+
+### D. Falsifier rows
+
+**A one-year horizon with no terminal growth collapses to one line (D37).**
+With N = 1 and gT = 0 the formula is FCF0 x (1 + g) / (1 + r) + FCF0 x
+(1 + g) / r / (1 + r), which is FCF0 x (1 + g) / r exactly. Enterprise
+value: Alphabet 862,910.67 at g = 0.06 and 911,754.67 at g = 0.12; Apple
+1,163,255.78 and 1,229,100.44. A pipeline that discounts the terminal value
+one year too many or too few, or grows FCF_N once more before the terminal
+step, fails all four: by a factor of 1.09 for the discounting, of 1.06 or
+1.12 for the growth.
+
+**Swapped rates raise (D40).** `growth_low` 0.12 and `growth_high` 0.06
+raises naming both; a pipeline that sorts the ends prints 129.39 to 205.62
+and hides that the stated assumptions contradict each other. Equal rates,
+0.06 and 0.06, raise too: two ends that are one number are a point.
+
+**A required return at or below the terminal growth raises (D40).** r =
+0.03 with gT = 0.03 divides by zero in the terminal value; r = 0.02 makes
+it negative. Both raise naming r and gT; neither prints a value.
+
+**A non-positive free cash flow raises (D40).** The same Alphabet year with
+capex 164,713 has FCF0 0 and raises naming FCF0 and the year; capex
+170,000 gives -5,287 and raises the same way. Nothing is discounted from a
+negative base.
+
+**A non-positive low end raises (D40).** The same Alphabet year with net
+debt of 1,581,866.6 or more has equity at the low end of 0 or less and
+raises; the high end, 2,503,323.8 less the same net debt, is positive and
+is not printed alone.
+
+**A missing count raises (D40, D39).** The Alphabet year without
+`shares_outstanding` raises naming the field and FY2025; nothing divides by
+a count from another date.
+
+**The as-of date moves the year (D39, D21).** As of 2026-01-31 Alphabet's
+latest filed year is FY2024, and the range is FY2024's inputs, 125,299 -
+52,535 = 72,764 of free cash flow, its own net debt and its own count, not
+FY2025's. No row is computed here for it; the rule is D21's and the
+metrics already keep it.
+
+### E. What Part 11 does not cover
+
+- **The price and PHI-4.1's discount.** The range needs no price; the
+  margin of safety and case 4.2's "price and its as-of date stated" do,
+  and a price source for a candidate not held in portfolio 3 is undecided
+  and unnumbered. Part 10 D's synthetic row stands for the discount's
+  arithmetic until a stored close for a candidate has its own Part 9 row.
+- **A second method.** One formula; a different formula is a different
+  range and gets its own decision and its own rows.
+- **A model's proposal.** Every assumption here is mine by document. What
+  a proposed assumption is, how it is marked and how it reaches the record
+  is case 4.3's.
+- **More than one share class.** One count against one value, the known
+  limit Part 13 B records; Alphabet's count is the filer's own and covers
+  every class.
+- **The workbook.** No sheet, like Part 12 G and H.
 
 ---
 
