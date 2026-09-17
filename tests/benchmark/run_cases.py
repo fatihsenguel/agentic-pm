@@ -1,7 +1,7 @@
 """
-Benchmark case runner. Prints n/14 against docs/benchmark.md Part 3.
+Benchmark case runner. Prints n/15 against docs/benchmark.md Part 3.
 
-Not part of pytest. Fourteen live queries cost API calls and about two minutes, so
+Not part of pytest. Fifteen live queries cost API calls and about two minutes, so
 this is the fourth loop - pytest, CLI, golden set, runner - not a thing bolted
 onto pytest. Each of the four has a blind spot the others do not.
 
@@ -40,7 +40,7 @@ STATUSES
   FAIL     the system answered, and the answer was wrong or incomplete
   BLOCKED  a capability this case needs does not exist yet
 
-BLOCKED is not a pass. The headline number is passes out of fourteen.
+BLOCKED is not a pass. The headline number is passes out of fifteen.
 
 Blocked cases probe for the capability rather than declaring themselves blocked,
 so they unblock automatically when it arrives. A case that unblocks while its
@@ -1379,6 +1379,11 @@ def _unexplained_screen_percentages(state, findings):
             if f.get(key) is not None:
                 allowed.add(f[key] * 100)
                 allowed.add(abs(f[key]) * 100)
+    # The range's rates are stated inputs, printed as the documents write
+    # them (9% for 0.09); each traces to the record, not to a finding.
+    for name, entry in ((_valuation(state).get("assumptions") or {})).items():
+        if name != "horizon_years" and isinstance(entry.get("value"), (int, float)):
+            allowed.add(entry["value"] * 100)
 
     unexplained = []
     for match in PCT_FIGURE.finditer(_answer(state)):
@@ -1565,8 +1570,163 @@ def check_4_6(state):
     return fails
 
 
+def _valuation(state):
+    return _screening(state).get("valuation") or {}
+
+
+def blocked_on_range(state):
+    """4.2 needs a published range. Until the node computes one the case is
+    blocked on it, not failed: Part 11 is computed by hand and
+    quant/valuation.py reproduces it, and nothing in the graph calls it
+    (KNOWN_GAPS, "What the node needs before it can publish a range")."""
+    reason = blocked_on_screen(state)
+    if reason is not None:
+        return reason
+    block = _screening(state)
+    if not block.get("valuation") and not block.get("valuation_stopped"):
+        return ("no valuation record in shared_data['screening']; nothing publishes a "
+                "range (Part 11, decision 57)")
+    return None
+
+
+# The assumptions a range is computed from, by name (Part 11 D38): three the
+# philosophy's, two the watchlist entry's. Their sources are clause or entry
+# ids; a model's proposal has no vocabulary yet (case 4.3).
+RANGE_ASSUMPTIONS = ("required_return", "terminal_growth", "horizon_years",
+                     "growth_low", "growth_high")
+ASSUMPTION_SOURCE = re.compile(r"^(PHI-\d+\.\d+|W-\d+)$")
+# A forecast of a price, the one thing a valuation answer may never say
+# (PHI-4.3, DIRECTION.md invariant 7).
+PRICE_FORECAST = re.compile(r"\b(will (?:reach|be at|hit|trade at)|price target|target price)\b",
+                            re.IGNORECASE)
+
+
+def check_4_2(state):
+    """"What is X worth?" passes when the answer carries a range and not a
+    point; every assumption listed as an input with its source; the
+    arithmetic traceable to the pipeline; the price and its as-of date
+    stated; and no forecast of a price (benchmark.md Level 4).
+
+    Structure only, and that is the whole of what this check can see: a
+    range of 1.00 to 2.00 per share with five assumptions named would pass
+    it (KNOWN_GAPS, "The runner's 4.2 check, once written, cannot see the
+    arithmetic"). What holds the ends is tests/test_valuation.py against
+    Part 11 C. The seam between them, the node assembling the block and
+    the assumptions from live rows, is what this check runs and pytest
+    does not, and n/15 says nothing about the range being right.
+
+    Asserted on the record: a low end below a high end, both positive; the
+    as-of; the fiscal year read with its end and filed dates, a year the
+    block dates; the source; exactly the five assumptions, each with a
+    value and a clause or entry id as its source; no filed figure. On the
+    price: a value, an as-of date, a source, the ticker asked about. On
+    the answer: both ends as printed, the year and its filed date, every
+    assumption's source id, the price with its date, both source names;
+    the midpoint of the ends nowhere in it; no forecast phrase; no
+    recommendation; nothing from the IPS. A range that stopped (a
+    candidate stating no growth pair) is not this case's X and fails here
+    naming the stop.
+    """
+    fails = _ran_clean(state)
+    block = _screening(state)
+    if not block:
+        return fails + ["no screening in shared_data"]
+    fails += _screen_block_invariants(state, WATCHLIST_TICKER)
+    if block.get("valuation_stopped"):
+        return fails + [f"the range stopped: {block['valuation_stopped']}"]
+    record = _valuation(state)
+    if not record:
+        return fails + ["no valuation record in shared_data['screening']"]
+    answer = _answer(state)
+
+    low, high = record.get("low"), record.get("high")
+    for name, value in (("low", low), ("high", high)):
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
+            fails.append(f"valuation {name} is not a positive number: {value!r}")
+    if isinstance(low, (int, float)) and isinstance(high, (int, float)):
+        if not low < high:
+            fails.append(f"valuation low {low} is not below high {high}; a range, not a point")
+        for name, value in (("low", low), ("high", high)):
+            if f"{value:.2f}" not in answer:
+                fails.append(f"valuation {name} {value:.2f} never reaches the answer")
+        midpoint = f"{(low + high) / 2:.2f}"
+        if midpoint in answer:
+            fails.append(f"answer carries the midpoint {midpoint}; the range has no middle "
+                         "(PHI-4.3)")
+
+    filed_figures = sorted(k for k in record if k in (
+        "free_cash_flow", "net_debt", "shares_outstanding", "operating_cash_flow", "capex"))
+    if filed_figures:
+        fails.append(f"valuation record carries filed figures {filed_figures}; the record "
+                     "carries the ends, the year, its dates, the source and the assumptions "
+                     "(D40, hot potato)")
+
+    years = block.get("years") or {}
+    year = record.get("year")
+    if year not in years:
+        fails.append(f"valuation year {year!r} is not a year the block dates {sorted(years)}")
+    for key in ("as_of", "ends", "filed"):
+        fails += _date_reaches_answer(state, record.get(key), f"valuation.{key}")
+    if year and year not in answer:
+        fails.append(f"valuation year {year} never reaches the answer")
+    source = record.get("source")
+    if not source:
+        fails.append("valuation record names no source")
+    elif str(source) not in answer:
+        fails.append(f"valuation source {source!r} never reaches the answer")
+
+    assumptions = record.get("assumptions") or {}
+    if sorted(assumptions) != sorted(RANGE_ASSUMPTIONS):
+        fails.append(f"valuation assumptions are {sorted(assumptions)}, not "
+                     f"{sorted(RANGE_ASSUMPTIONS)}")
+    for name, entry in assumptions.items():
+        if not isinstance(entry, dict) or "value" not in entry:
+            fails.append(f"assumption {name} carries no value")
+            continue
+        origin = entry.get("source")
+        if not isinstance(origin, str) or not ASSUMPTION_SOURCE.match(origin):
+            fails.append(f"assumption {name} has no clause or entry id as its source: "
+                         f"{origin!r}")
+        elif origin not in answer:
+            fails.append(f"assumption {name} is stated on {origin}, which never reaches "
+                         "the answer; an assumption is marked as mine by its source")
+        if name not in answer:
+            fails.append(f"assumption {name} is never named in the answer")
+
+    price = block.get("price") or {}
+    if not price:
+        fails.append("no price in shared_data['screening']; the price and its as-of date "
+                     "are stated (decision 57)")
+    else:
+        value = price.get("value")
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
+            fails.append(f"price value is not a positive number: {value!r}")
+        elif f"{value:.2f}" not in answer:
+            fails.append(f"price {value:.2f} never reaches the answer")
+        fails += _date_reaches_answer(state, price.get("as_of"), "price.as_of")
+        if not price.get("source"):
+            fails.append("price names no source")
+        elif str(price["source"]) not in answer:
+            fails.append(f"price source {price['source']!r} never reaches the answer")
+        if price.get("ticker") != WATCHLIST_TICKER:
+            fails.append(f"price is for {price.get('ticker')!r}, not {WATCHLIST_TICKER}")
+
+    forecast = PRICE_FORECAST.search(answer)
+    if forecast:
+        fails.append(f"answer forecasts a price: {forecast.group(0)!r}")
+    if "PHI-4.3" not in answer:
+        fails.append("answer does not cite PHI-4.3, the clause that says a range is not a "
+                     "forecast")
+
+    fails += _unexplained_screen_percentages(state, block.get("findings") or [])
+    fails += _screen_dates_reach_answer(state)
+    fails += _not_from_the_ips(state)
+    fails += _no_recommendation(state, WATCHLIST_TICKER)
+    return fails
+
+
 # ---------------------------------------------------------------------------
-# The fourteen cases
+# The fifteen cases
 # ---------------------------------------------------------------------------
 
 CASES = [
@@ -1595,6 +1755,8 @@ CASES = [
      blocked_on_conversation_memory, check_3_5),
     ("4.1", f"Does {WATCHLIST_TICKER} clear my philosophy?", BENCHMARK_PORTFOLIO,
      blocked_on_screen_figures, check_4_1),
+    ("4.2", f"What is {WATCHLIST_TICKER} worth?", BENCHMARK_PORTFOLIO,
+     blocked_on_range, check_4_2),
     ("4.6", f"Does {BANK_TICKER} clear my philosophy?", BENCHMARK_PORTFOLIO,
      blocked_on_screen, check_4_6),
 ]
@@ -1632,7 +1794,7 @@ def run_case(case_id, prompt, portfolio_id, blocked_probe, check):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run the benchmark cases and print n/14")
+    parser = argparse.ArgumentParser(description="Run the benchmark cases and print n/15")
     parser.add_argument("--case", help="run one case only, e.g. 1.1")
     args = parser.parse_args()
 
