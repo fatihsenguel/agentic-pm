@@ -16,8 +16,10 @@
 # for the candidate, a low and a high, as fractions (Part 11 D38); a
 # candidate without one has no range until it states them.
 #
-# No metric here depends on the price (DIRECTION.md invariant 7). No loader
-# reads this file yet; tests/test_watchlist.py holds it to the document.
+# No metric here depends on the price (DIRECTION.md invariant 7).
+# portfolio_tool/watchlist.py reads the candidates and their growth pairs;
+# the prediction rows are read by nothing yet (case 4.5).
+# tests/test_watchlist.py holds this file to the document.
 
 [[candidate]]
 id = "W-1"

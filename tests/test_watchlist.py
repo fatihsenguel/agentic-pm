@@ -5,10 +5,11 @@ ledger on it.
 The document is the theses and the predictions in my words; the TOML is
 derived from it. If they disagree, the TOML is wrong.
 
-No loader reads the TOML yet (DIRECTION.md Order 3: shapes and references
-before any tool reads them), so this test reads the file itself and carries
-the shape the loader and the scorer will own in Order 4: a prediction is
-dated, specific, falsifiable, attached to a thesis, and never a price.
+This test reads the file itself, not through a loader, and carries the
+whole shape: a prediction is dated, specific, falsifiable, attached to a
+thesis, and never a price. portfolio_tool/watchlist.py reads the candidates
+and their growth pairs (test_watchlist_loader.py); the prediction rows are
+the scorer's, case 4.5, and are read by nothing yet.
 """
 
 import datetime as dt
