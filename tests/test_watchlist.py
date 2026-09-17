@@ -28,10 +28,15 @@ PREDICTION_ID = re.compile(r"^(W-\d+)\.\d+$")
 DOC_SECTION = re.compile(r"^## (W-\d+) ", re.M)
 DOC_THESIS = re.compile(r"\*\*Thesis\.\*\*\s+(.*?)(?:\n\s*\n|\Z)", re.S)
 DOC_PREDICTION = re.compile(r"\*\*(W-\d+\.\d+)\*\*\s+(.*?)(?:\n\s*\n|\Z)", re.S)
+# Part 11 D38: the growth I assume for a candidate, a low and a high, in
+# the document's words: "Free cash flow growth of 6% to 12% a year".
+DOC_VALUATION = re.compile(
+    r"\*\*Valuation assumptions\.\*\*\s+Free cash flow growth of (\d+)% to (\d+)% a year")
 
 CANDIDATE_KEYS = {"id", "ticker", "name", "currency", "added_on", "thesis",
                   "entry_condition", "status", "prediction"}
-CANDIDATE_OPTIONAL = {"philosophy_check", "closed_on", "closed_reason"}
+CANDIDATE_OPTIONAL = {"philosophy_check", "closed_on", "closed_reason", "valuation"}
+VALUATION_KEYS = {"growth_low", "growth_high"}
 ENTRY_KINDS = {"valuation", "event"}
 STATUSES = {"active", "closed"}
 
@@ -61,10 +66,13 @@ def _document():
         end = starts[i + 1].start() if i + 1 < len(starts) else len(text)
         body = text[m.start():end]
         thesis = DOC_THESIS.search(body)
+        valuation = DOC_VALUATION.search(body)
         sections[m.group(1)] = {
             "thesis": _squash(thesis.group(1)) if thesis else None,
             "predictions": {p.group(1): _squash(p.group(2)) for p in DOC_PREDICTION.finditer(body)},
             "unchecked": "not yet checked" in body.lower(),
+            "valuation": ({"growth_low": int(valuation.group(1)) / 100,
+                           "growth_high": int(valuation.group(2)) / 100} if valuation else None),
         }
     return sections
 
@@ -134,6 +142,28 @@ def test_candidate_shape(candidates):
         else:
             assert "closed_on" not in entry and "closed_reason" not in entry, cid
         assert entry["prediction"], f"{cid}: a thesis carries at least one prediction (PHI-6.1)"
+
+
+def test_valuation_assumptions_are_the_documents(candidates):
+    """Part 11 D38: the growth pair a candidate states, a low below a high,
+    each a fraction, is the document's line under that candidate; a
+    candidate that states none has no line, and its range cannot be
+    computed until it does."""
+    doc = _document()
+    stated = 0
+    for cid, entry in candidates.items():
+        if "valuation" not in entry:
+            assert doc[cid]["valuation"] is None, f"{cid}: the document states growth the config lacks"
+            continue
+        pair = entry["valuation"]
+        assert set(pair) == VALUATION_KEYS, cid
+        for key in VALUATION_KEYS:
+            assert isinstance(pair[key], float) and not isinstance(pair[key], bool), (cid, key)
+            assert 0 <= pair[key] < 1, (cid, key)
+        assert pair["growth_low"] < pair["growth_high"], cid
+        assert doc[cid]["valuation"] == pair, (cid, doc[cid]["valuation"], pair)
+        stated += 1
+    assert stated == 1, "W-1 states its growth and W-2 does not"
 
 
 def test_prediction_shape(candidates):

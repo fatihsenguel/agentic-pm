@@ -12,6 +12,10 @@
 # scored_on, result) are absent until the date comes and then all four are
 # written; result is right or wrong.
 #
+# A [candidate.valuation] table states the free cash flow growth I assume
+# for the candidate, a low and a high, as fractions (Part 11 D38); a
+# candidate without one has no range until it states them.
+#
 # No metric here depends on the price (DIRECTION.md invariant 7). No loader
 # reads this file yet; tests/test_watchlist.py holds it to the document.
 
@@ -27,6 +31,10 @@ thesis = """Search and YouTube are the advertising businesses that keep growing 
 [candidate.entry_condition]
 kind = "valuation"
 clause = "PHI-4.1"
+
+[candidate.valuation]
+growth_low = 0.06
+growth_high = 0.12
 
 [[candidate.prediction]]
 id = "W-1.1"

@@ -31,7 +31,10 @@ its source are written.
 
 **Entry conditions.** A `valuation` condition means PHI-4.1 is met against
 the current valuation range, which is a pipeline's to compute from my stated
-assumptions and is not written here. An `event` condition names the event.
+assumptions and is not written here. A candidate under a `valuation`
+condition states the growth I assume for it, a low and a high; until it
+does, the range cannot be computed and the condition cannot be met. An
+`event` condition names the event.
 
 **The philosophy check.** The check exists in Order 4. Until then each
 candidate is on the list on its thesis alone, marked not yet checked, and the
@@ -52,6 +55,9 @@ capital spending on data centres shows in cloud revenue rather than in
 lasting margin damage.
 
 **Entry condition.** Valuation: PHI-4.1 met against the current range.
+
+**Valuation assumptions.** Free cash flow growth of 6% to 12% a year over
+the horizon.
 
 **Philosophy check.** Not yet checked.
 
