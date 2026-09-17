@@ -1,7 +1,7 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 17 to 18 September 2026 (twenty-third session). Regenerated at its end.
-**Branch:** `publish`, cut from `baseline-v1` at cb3de91, the trunk's tip at session start. **`baseline-v1` is the trunk**: each session branch is merged into it with `--ff-only` when the loops are green; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count cb3de91..HEAD` — 14 with this file. **Not merged and not pushed**: the owner merges and pushes; `origin`'s push URL is `no_push`.
+**Branch:** `publish`, cut from `baseline-v1` at cb3de91, the trunk's tip at session start. **`baseline-v1` is the trunk**: each session branch is merged into it with `--ff-only` when the loops are green; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count cb3de91..HEAD` — 14: ten for the case, the record, benchmark.md, this file, and the correction of this count, which was first written as 14 when it was 13 and corrected 18 September in a commit of its own. **Not merged and not pushed**: the owner merges and pushes; `origin`'s push URL is `no_push`.
 
 **State:** pytest **1204 passed, 6 xfailed**, up from 1156 by 48: 26 for the watchlist loader, 7 for the node's range and price, 3 for the investor's assumptions read off PHI-4.1, 9 for the rendering, 3 for the candidate's stored closes against Part 9 C. **Golden set: eighteen lines.** Zero diff on seventeen at session start; the eighteenth, "What is GOOGL worth?", recorded at out_of_scope on its baseline run and then at research on two identical runs after the registry's correction, as predicted; the pinned rebalance failure throughout. **Runner 14/15 once**, after the rendering landed: 4.2 PASS on the live answer, 4.6 PASS, 4.1 BLOCKED at PHI-2.1 for FY2021, the reason line naming D36. 13/14 at session start. **The CLI three times**: the allocation question at session start; "What is GOOGL worth?" twice after the runner, to read the first live record. **No EDGAR fetch**: every filings request hit the seven-day cache. **One live price fetch**: the node stored GOOGL's closes for 10 to 17 September through the price provider on the golden set's first run after the correction; cached since. Three requests to the exchange's historical quotes by hand for Part 9 C, and one call to the provider's library from the shell, storing nothing. **Case 4.2 is in the graph and passes on structure. Decisions 56 and 57 are taken. Order 4 is not done: prediction scoring (4.5) and the research agent (4.3, 4.4) remain, then the full test before anything of Order 5.**
 
@@ -343,8 +343,10 @@ for the FY2027 report.
 
 ## 4. What the twenty-third session did
 
-`git log --oneline cb3de91..HEAD`, fourteen commits with this file. Case
-4.2 into the graph, the check first, and nothing else.
+`git log --oneline cb3de91..HEAD`, fourteen commits with this file and
+the correction of this count (first written as fourteen when it was
+thirteen, corrected 18 September). Case 4.2 into the graph, the check
+first, and nothing else.
 
 **The loops, first.** pytest 1156, the CLI on the allocation question as
 expected, then with a yes the golden set with stderr kept and the runner,
