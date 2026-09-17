@@ -1,8 +1,8 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 16 September (twenty-first session), on branch `keys`, cut from `baseline-v1` at df22b44. Decision 48, items 3 and 4, in seven commits, the reference first: D36, a tag joins a field's list on a witness, one tag at a time, F7's and F8's tags kept out; `gross_margin` reads revenue less cost of revenue over revenue, the block carrying `cost_of_revenue` and not `gross_profit`, Part 12 H the identity on Apple's filed figures in five years to the dollar, Part 13 B Alphabet's figures and margins; `net_debt_to_ebitda` unchanged and the refusal standing. The 4.1 probe's reason line names the real stop, D36 on the lease-inclusive debt tag until Alphabet's FY2027 report, PHI-3.1 on D&A after it; PHI-2.2 names its measure. Runner 13/14 three times, 4.1 BLOCKED by decision at the same stop; golden set zero diff at session start and not touched since; no live fetch. Entries added: a filer with gross profit and no cost tag; a filer with two D&A lines; a figure under a filer's own namespace; whether Alphabet stays X (decision 56); the runner's 4.1 blind to the gross margin change. Corrected: the node entry's claim that the next stop is PHI-4.1.
+Last updated 17 September (twenty-second session), on branch `range`, cut from `baseline-v1` at 7edc7f9. Part 11, the valuation range, by hand before any pipeline, and item 7's first half, in ten commits, the reference first: D37 to D40, a discounted cash flow over the latest filed year's free cash flow run once at each of two stated growth rates, the low end the low rate and the high end the high rate, five assumptions each carried with the clause or entry that states it, net debt as PHI-3.1 computes it, a record with no filed figure and six conditions that raise; Alphabet FY2025 129.39 to 205.62 per share and Apple FY2025 140.10 to 224.18 on synthetic assumptions; `shares_outstanding` a field of the block, the filer's year-end count, the unit `shares` not a currency, the yield reading the year's count; `quant/valuation.py` held to Part 11; the three investor assumptions on PHI-4.1, corrected from PHI-4.3 the day the Part was written because a statement carries no number, the sentence in `docs/PHILOSOPHY.md` and the values in `philosophy.toml` on the owner's word; W-1's growth pair in `docs/WATCHLIST.md` and `watchlist.toml`. Nothing reaches the graph. Runner 13/14 once, 4.1 BLOCKED at the same stop; golden set run twice, the first run's first line a transient router error, the second zero diff; no live fetch. Entries added: the golden loop discards a transient error's text; what the node needs to publish a range; a price for a candidate not held (decision 57, the owner's to number); the runner's 4.2 check will be blind to the arithmetic; a count under another unit; JPMorgan's fixture without the count. Resolved: `shares_history` has no source column, the count being a filed fact with its provenance. Decision 56 stays pending.
 
-Previously: 16 September (twentieth session), on branch `node`, cut from `baseline-v1` at 921d1fe. Decision 29, the node for the philosophy check, in nine commits test first, closing 30 and 50 with it: the runner's checks for 4.1 and 4.6 seen BLOCKED; `EdgarProvider.tickers` over the SEC ticker file, the `ticker_ciks` table (migration e289a03682f2, applied by the owner) and `filings.cik_for` under the interval; `screening.exclude`; `screening_agent_node`, which fetches the ticker file, the submissions document, decides the exclusion on the code alone and only then the company facts; the research formatter; the `research` intent and `ScreeningAgent` bound into the graph; the golden line "Does JPM clear my philosophy?", two runs as predicted, expected.txt updated. Runner 13/14: 4.6 PASS, 4.1 BLOCKED on the stop at PHI-2.1 (decision 48). Live: the ticker file (10,422 pairs), JPMorgan's and Alphabet's submissions, Alphabet's company facts (13,655 rows). Entries closed: the philosophy question routed to the IPS, the three unreached modules, the UTC pull date, the code's as-of beside the block's; the gate entry re-triggered on 4.3.
+Previously: 16 September (twenty-first session), on branch `keys`, cut from `baseline-v1` at df22b44. Decision 48, items 3 and 4, in seven commits, the reference first: D36, a tag joins a field's list on a witness, one tag at a time, F7's and F8's tags kept out; `gross_margin` reads revenue less cost of revenue over revenue, the block carrying `cost_of_revenue` and not `gross_profit`, Part 12 H the identity on Apple's filed figures in five years to the dollar, Part 13 B Alphabet's figures and margins; `net_debt_to_ebitda` unchanged and the refusal standing. The 4.1 probe's reason line names the real stop, D36 on the lease-inclusive debt tag until Alphabet's FY2027 report, PHI-3.1 on D&A after it; PHI-2.2 names its measure. Runner 13/14 three times, 4.1 BLOCKED by decision at the same stop; golden set zero diff at session start and not touched since; no live fetch. Entries added: a filer with gross profit and no cost tag; a filer with two D&A lines; a figure under a filer's own namespace; whether Alphabet stays X (decision 56); the runner's 4.1 blind to the gross margin change. Corrected: the node entry's claim that the next stop is PHI-4.1.
 ---
 
 # RESOLVED
@@ -3496,9 +3496,9 @@ without the misleading name and needs nothing.
 Nobody runs either. Renaming it the way `test_imports.py` became
 `check_imports.py` is the fix, own commit after a grep for the name.
 
-### `shares_history` has no `source` column at all
+### `shares_history` has no `source` column at all - RESOLVED 17 September (twenty-second session)
 
-**Trigger:** pending decision 48, item 7: which share count.
+**Trigger:** none: the count the block carries is a filed fact with its tag, accession and filed date (730fd2d), and `shares_history` is not read; what becomes of the table is decision 52's.
 
 Found 11 September (fifteenth session), while reading the tables the filings
 reader might use. The handoff and this file both say every table's source
@@ -3512,6 +3512,12 @@ It matters when the reader publishes shares: the figures block carries
 `shares_outstanding`, the free cash flow yield divides by it times the price,
 and a share count of unknown origin under a figure that names its source is
 the shape D24 exists to prevent. Decide with the reader, not before.
+
+**Resolved 17 September (twenty-second session), decision 48 item 7.**
+`shares_outstanding` is a field of the block, `CommonStockSharesOutstanding`
+at the fiscal year end, each count carrying the filing it came from (Part
+12 B's and Part 13 B's notes); nothing reads `shares_history` for it, and
+the table stays a Yahoo-fed one under decision 52.
 
 ### The rebalance verdict word is wider than its schema, and part of it is advice
 
@@ -4340,7 +4346,7 @@ Nothing is built on this until that is done.
 
 ### Order 4, the filings reader: Parts 12 and 13, and what is built
 
-**Trigger:** pending decision 48, Part 13 E's items 6 and 7; items 3 and 4 were decided 16 September (twenty-first session), 49 was taken 16 September (nineteenth session) and 29 with 50 the same day (twentieth session).
+**Trigger:** pending decision 48, Part 13 E's item 6 and item 7's second half, the price and a filer with more than one class; item 7's first half, the count as a field, was taken 17 September (twenty-second session), items 3 and 4 were decided 16 September (twenty-first session), 49 was taken 16 September (nineteenth session) and 29 with 50 the same day (twentieth session).
 
 **Built 13 and 14 September (sixteenth session), 5228857 to 98b8ff6.** The
 reference first, then each layer test first, each test seen failing against
@@ -4508,6 +4514,101 @@ through the csv rows in `test_filed_years.py` and Part 12 H in
 publishes no figure. A blind spot to remember when the stop moves: the
 first live PHI-2.2 finding on a real filer will be new ground that no loop
 has exercised.
+
+### The golden loop discards the text of a transient error
+
+**Trigger:** the next golden run whose diff is off the pinned line and does not reproduce on a second run.
+
+Logged 17 September (twenty-second session). The first golden run of the
+session came back with its first line, "What is the current market
+regime?", at intent None and one error, and the second run, eighty seconds
+later, zero diff on seventeen lines; one CLI call on the same question in
+between routed it as expected. The router call itself failed once, and
+what it said is gone: the loop as CLAUDE.md and the handoff write it sends
+stderr to /dev/null, so a transient error leaves a diff and no reason. A
+line that only holds most of the time has failed, and this one held on the
+second run, but the record cannot say what it was. Not a repair to make
+here: the loop's command is the owner's; keeping stderr to a file beside
+the output would cost nothing and would have named the cause.
+
+### What the node needs before it can publish a range
+
+**Trigger:** the commit that computes a range in `screening_agent_node` for case 4.2.
+
+Logged 17 September (twenty-second session), Part 11. `quant/valuation.py`
+exists and nothing calls it. To publish `valuation_range` on the block the
+node needs, in order: the block's `source`, which the module requires and
+the reader's block does not carry (the node keeps the provider's name
+beside the block, not on it); the five assumptions gathered into one
+mapping with their sources, the three on PHI-4.1's parameters and the pair
+on the watchlist entry, for which no loader exists (`watchlist.toml` is
+read by its test alone); the range record published as a summary, two
+floats with the year, its dates, the source and the assumptions, and no
+filed figure; and, for PHI-4.1's finding and case 4.2's "price and its
+as-of date", a price, which is the next entry's decision. The screen's
+margin of safety reads `low` and `as_of` from the record and nothing else
+of it today. A candidate that states no growth pair, W-2, must stop with
+the pair named, not with a range from a default: `valuation_range` raises,
+and the node publishes the stop as it does the screen's.
+
+### A price for a candidate not held
+
+**Trigger:** pending decision 57, the owner's to number.
+
+Surfaced 17 September (twenty-second session), Part 11 E. The range needs
+no price. PHI-4.1's discount and case 4.2's stated price do, and every
+close the system stores belongs to an assets row of a held portfolio, so a
+candidate on the watchlist has none. The shape: the last close of the
+ticker the question named, on the day it is asked, stored with its source
+and its date the way Part 9 defended the holdings' closes, and a Part 9
+row for one candidate before any close of one is trusted. Choices the
+owner has: the existing price provider through a row that is not a holding
+(the `assets` table is a portfolio's, and a watchlist company is its EDGAR
+number, `database_setup.py`); the exchange's own quotes Part 9 used by hand;
+a price the question carries, which puts a number in the asker's hands
+and is refused. Alphabet has four tickers under one CIK and the count
+covers every class, so which ticker's close is the item 7 second-half
+question (Part 13 B, Part 13 E item 7). Until decided, PHI-4.1 stops on
+the missing price and the reason names it, as the screen already does.
+
+### The runner's 4.2 check, once written, cannot see the arithmetic
+
+**Trigger:** the commit that writes `check_4_2` in `tests/benchmark/run_cases.py`.
+
+Logged 17 September (twenty-second session), Part 11. Case 4.2 passes on
+structure: a range and not a point, every assumption listed with its
+source, the price with its as-of date, no forecast. None of that says the
+ends are right; a range of 1.00 to 2.00 per share with five assumptions
+named would pass. What holds the ends is `tests/test_valuation.py` against
+Part 11 C, and the seam between them is the node's assembly of the block
+and the assumptions, which the runner sees and pytest does not. Say so in
+the check's docstring when it is written, and do not read n/14 as the
+range being right.
+
+### A count filed under a unit other than `shares` raises as a second currency
+
+**Trigger:** the first filer whose `CommonStockSharesOutstanding` carries a unit other than `shares`.
+
+Logged 17 September (twenty-second session), 730fd2d. The block's
+one-currency rule reads every unit but `pure` and `shares` as money, a
+stated set of two. Both filers here file the count in `shares`, the
+taxonomy's unit for it; a filer filing it under another string would
+raise the block as filed in two currencies, naming the strings. A true
+raise with the wrong reason; the fix when it comes is one more entry in
+the set, witnessed by that filer, not a rule that guesses which units are
+money.
+
+### JPMorgan's fixture carries no share count
+
+**Trigger:** the next read of JPMorgan's company facts for any field.
+
+Logged 17 September (twenty-second session). `edgar_facts_jpm.csv` was
+written from a read of the artifact on 13 September and the artifact is
+not stored, because the exclusion decides before the facts are fetched; it
+was not read again for `shares_outstanding`, so the field is unresolved
+for the bank in every year by construction and the test asserts that. It
+says nothing about what JPMorgan files under the tag. Part 13 C's note of
+17 September records the same.
 
 ### PHI-3.2's code list fails open, and a code carries no date
 
