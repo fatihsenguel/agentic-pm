@@ -502,6 +502,45 @@ ex-dividend date, and the fix is at the provider: ask for the unadjusted
 close, then refetch the stored history once so that the table holds one
 convention. Under D20 the reference does not move.
 
+### C. A candidate not held — Alphabet, GOOGL
+
+Computed 2026-09-17 by hand, before any code stores a close for a company
+outside portfolio 3 (decision 57; Part 11 E). Case 4.2 states the price a
+range is measured against, and PHI-4.1 reads it, and every close the
+system stored until now belonged to a holding. The source is the same
+provider as A and B, asked for the unadjusted close as Part 9 made it
+ask; the row defends that call on a ticker nothing has fetched before.
+
+**The second source**, as above: the exchange's historical quotes for
+`GOOGL` with `assetclass=stocks`, 10 to 16 September 2026, field
+`Close/Last`, five rows. Fetched by me on 2026-09-17 with one command from
+the shell. **The provider's figure**: the library the provider wraps,
+called from the shell the way the provider calls it,
+`history(start, end, auto_adjust=False)` over the same days, storing no
+row and passing through no cache. Both as printed are the record.
+
+| Date | Exchange | Provider | Difference | Verdict |
+|---|---|---|---|---|
+| 2026-09-16 | 342.87 | 342.87 | 0.00 | agrees |
+| 2026-09-15 | 344.98 | 344.98 | 0.00 | agrees |
+| 2026-09-14 | 349.39 | 349.39 | 0.00 | agrees |
+| 2026-09-11 | 338.50 | 338.50 | 0.00 | agrees |
+| 2026-09-10 | 332.60 | 332.60 | 0.00 | agrees |
+
+Five of five. The exchange prints volume to the share and the library to
+the hundred (18,928,860 against 18,928,900 on the 16th); the close is the
+figure a valuation reads and the only one this row checks.
+
+**What C settles.** The first close the system stores for GOOGL, the last
+close before 2026-09-17, is defended when it equals 342.87 on 2026-09-16
+with its source on the row. The ticker is the one the question names,
+not the CIK's other classes: GOOG's print is a different figure and
+would need its own row (Part 13 E item 7, second half).
+
+**What C does not cover.** A refetch after Alphabet's next ex-dividend
+date: B is the falsifier for that and the provider's call has not changed
+since. A candidate in another currency: the watchlist's two are USD.
+
 ### What Part 9 does not cover
 
 - **Splits.** None of the nine holdings split inside Part 4's window, so
