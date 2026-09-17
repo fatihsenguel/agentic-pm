@@ -35,9 +35,9 @@ AS_OF = dt.date(2026, 9, 17)
 
 # Part 11 A. Values as the documents would state them, with their sources.
 ASSUMPTIONS = {
-    "required_return": {"value": 0.09, "source": "PHI-4.3"},
-    "terminal_growth": {"value": 0.03, "source": "PHI-4.3"},
-    "horizon_years": {"value": 10, "source": "PHI-4.3"},
+    "required_return": {"value": 0.09, "source": "PHI-4.1"},
+    "terminal_growth": {"value": 0.03, "source": "PHI-4.1"},
+    "horizon_years": {"value": 10, "source": "PHI-4.1"},
     "growth_low": {"value": 0.06, "source": "W-1"},
     "growth_high": {"value": 0.12, "source": "W-1"},
 }
@@ -243,7 +243,7 @@ def test_an_unstated_assumption_raises(valuation, name):
 
 def test_an_assumption_no_formula_reads_raises(valuation):
     stated = assumptions()
-    stated["exit_multiple"] = {"value": 15, "source": "PHI-4.3"}
+    stated["exit_multiple"] = {"value": 15, "source": "PHI-4.1"}
     with pytest.raises(valuation.ValuationError, match="exit_multiple"):
         valuation.valuation_range(alphabet(), stated, AS_OF)
 
