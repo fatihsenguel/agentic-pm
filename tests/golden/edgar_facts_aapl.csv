@@ -14,6 +14,7 @@ A,marketable_securities_noncurrent,,MarketableSecuritiesNoncurrent,USD,,2021-09-
 A,commercial_paper,,CommercialPaper,USD,,2021-09-25,6000000000,0000320193-22-000108,2022,FY,10-K,2022-10-28,CY2021Q3I
 A,long_term_debt_current,,LongTermDebtCurrent,USD,,2021-09-25,9613000000,0000320193-22-000108,2022,FY,10-K,2022-10-28,CY2021Q3I
 A,long_term_debt_noncurrent,,LongTermDebtNoncurrent,USD,,2021-09-25,109106000000,0000320193-22-000108,2022,FY,10-K,2022-10-28,CY2021Q3I
+A,shares_outstanding,,CommonStockSharesOutstanding,shares,,2021-09-25,16426786000,0000320193-22-000108,2022,FY,10-K,2022-10-28,CY2021Q3I
 A,revenue,,RevenueFromContractWithCustomerExcludingAssessedTax,USD,2021-09-26,2022-09-24,394328000000,0000320193-24-000123,2024,FY,10-K,2024-11-01,CY2022
 A,,"witness, not a field since 2026-09-16 (decision 48): revenue less cost_of_revenue equals it, Part 12 H",GrossProfit,USD,2021-09-26,2022-09-24,170782000000,0000320193-24-000123,2024,FY,10-K,2024-11-01,CY2022
 A,cost_of_revenue,,CostOfGoodsAndServicesSold,USD,2021-09-26,2022-09-24,223546000000,0000320193-24-000123,2024,FY,10-K,2024-11-01,CY2022
@@ -29,6 +30,7 @@ A,marketable_securities_noncurrent,,MarketableSecuritiesNoncurrent,USD,,2022-09-
 A,commercial_paper,,CommercialPaper,USD,,2022-09-24,9982000000,0000320193-23-000106,2023,FY,10-K,2023-11-03,CY2022Q3I
 A,long_term_debt_current,,LongTermDebtCurrent,USD,,2022-09-24,11128000000,0000320193-23-000106,2023,FY,10-K,2023-11-03,CY2022Q3I
 A,long_term_debt_noncurrent,,LongTermDebtNoncurrent,USD,,2022-09-24,98959000000,0000320193-23-000106,2023,FY,10-K,2023-11-03,CY2022Q3I
+A,shares_outstanding,,CommonStockSharesOutstanding,shares,,2022-09-24,15943425000,0000320193-23-000106,2023,FY,10-K,2023-11-03,CY2022Q3I
 A,revenue,,RevenueFromContractWithCustomerExcludingAssessedTax,USD,2022-09-25,2023-09-30,383285000000,0000320193-25-000079,2025,FY,10-K,2025-10-31,CY2023
 A,,"witness, not a field since 2026-09-16 (decision 48): revenue less cost_of_revenue equals it, Part 12 H",GrossProfit,USD,2022-09-25,2023-09-30,169148000000,0000320193-25-000079,2025,FY,10-K,2025-10-31,CY2023
 A,cost_of_revenue,,CostOfGoodsAndServicesSold,USD,2022-09-25,2023-09-30,214137000000,0000320193-25-000079,2025,FY,10-K,2025-10-31,CY2023
@@ -44,6 +46,7 @@ A,marketable_securities_noncurrent,,MarketableSecuritiesNoncurrent,USD,,2023-09-
 A,commercial_paper,,CommercialPaper,USD,,2023-09-30,5985000000,0000320193-24-000123,2024,FY,10-K,2024-11-01,CY2023Q3I
 A,long_term_debt_current,,LongTermDebtCurrent,USD,,2023-09-30,9822000000,0000320193-24-000123,2024,FY,10-K,2024-11-01,CY2023Q3I
 A,long_term_debt_noncurrent,,LongTermDebtNoncurrent,USD,,2023-09-30,95281000000,0000320193-24-000123,2024,FY,10-K,2024-11-01,CY2023Q3I
+A,shares_outstanding,,CommonStockSharesOutstanding,shares,,2023-09-30,15550061000,0000320193-24-000123,2024,FY,10-K,2024-11-01,CY2023Q3I
 A,revenue,,RevenueFromContractWithCustomerExcludingAssessedTax,USD,2023-10-01,2024-09-28,391035000000,0000320193-25-000079,2025,FY,10-K,2025-10-31,CY2024
 A,,"witness, not a field since 2026-09-16 (decision 48): revenue less cost_of_revenue equals it, Part 12 H",GrossProfit,USD,2023-10-01,2024-09-28,180683000000,0000320193-25-000079,2025,FY,10-K,2025-10-31,CY2024
 A,cost_of_revenue,,CostOfGoodsAndServicesSold,USD,2023-10-01,2024-09-28,210352000000,0000320193-25-000079,2025,FY,10-K,2025-10-31,CY2024
@@ -59,6 +62,7 @@ A,marketable_securities_noncurrent,,MarketableSecuritiesNoncurrent,USD,,2024-09-
 A,commercial_paper,,CommercialPaper,USD,,2024-09-28,9967000000,0000320193-25-000079,2025,FY,10-K,2025-10-31,CY2024Q3I
 A,long_term_debt_current,,LongTermDebtCurrent,USD,,2024-09-28,10912000000,0000320193-25-000079,2025,FY,10-K,2025-10-31,CY2024Q3I
 A,long_term_debt_noncurrent,,LongTermDebtNoncurrent,USD,,2024-09-28,85750000000,0000320193-25-000079,2025,FY,10-K,2025-10-31,CY2024Q3I
+A,shares_outstanding,,CommonStockSharesOutstanding,shares,,2024-09-28,15116786000,0000320193-25-000079,2025,FY,10-K,2025-10-31,CY2024Q3I
 A,revenue,,RevenueFromContractWithCustomerExcludingAssessedTax,USD,2024-09-29,2025-09-27,416161000000,0000320193-25-000079,2025,FY,10-K,2025-10-31,CY2025
 A,,"witness, not a field since 2026-09-16 (decision 48): revenue less cost_of_revenue equals it, Part 12 H",GrossProfit,USD,2024-09-29,2025-09-27,195201000000,0000320193-25-000079,2025,FY,10-K,2025-10-31,CY2025
 A,cost_of_revenue,,CostOfGoodsAndServicesSold,USD,2024-09-29,2025-09-27,220960000000,0000320193-25-000079,2025,FY,10-K,2025-10-31,CY2025
@@ -74,6 +78,7 @@ A,marketable_securities_noncurrent,,MarketableSecuritiesNoncurrent,USD,,2025-09-
 A,commercial_paper,,CommercialPaper,USD,,2025-09-27,7979000000,0000320193-26-000020,2026,Q3,10-Q,2026-07-31,CY2025Q3I
 A,long_term_debt_current,,LongTermDebtCurrent,USD,,2025-09-27,12350000000,0000320193-26-000020,2026,Q3,10-Q,2026-07-31,CY2025Q3I
 A,long_term_debt_noncurrent,,LongTermDebtNoncurrent,USD,,2025-09-27,78328000000,0000320193-26-000020,2026,Q3,10-Q,2026-07-31,CY2025Q3I
+A,shares_outstanding,,CommonStockSharesOutstanding,shares,,2025-09-27,14773260000,0000320193-26-000020,2026,Q3,10-Q,2026-07-31,CY2025Q3I
 F1,,one fiscal-2015 fact under three fy values,NetIncomeLoss,USD,2014-09-28,2015-09-26,53394000000,0001193125-15-356351,2015,FY,10-K,2015-10-28,
 F1,,one fiscal-2015 fact under three fy values,NetIncomeLoss,USD,2014-09-28,2015-09-26,53394000000,0001628280-16-020309,2016,FY,10-K,2016-10-26,
 F1,,one fiscal-2015 fact under three fy values,NetIncomeLoss,USD,2014-09-28,2015-09-26,53394000000,0000320193-17-000070,2017,FY,10-K,2017-11-03,CY2015

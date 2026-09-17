@@ -17,7 +17,11 @@ date. It builds the `years` half only: the price, the shares and the
 valuation range are not filed facts. Its `years` are in the shape the
 metrics read (Part 12 G): quant/fundamentals.py sums the three borrowing
 fields itself (D33) and taxes NOPAT at the philosophy's stated rate (D32),
-so `effective_tax_rate` is carried as filed and not read.
+so `effective_tax_rate` is carried as filed and not read. `shares_outstanding`
+is the filer's own count at the year end in whole shares (Part 12 B's and
+Part 13 B's notes of 2026-09-17, decision 48 item 7); its unit is shares,
+not money, and the block's one reporting currency is read from the money
+fields alone.
 
 `filed_years_for` reads the stored rows and puts the SIC code beside the
 years, as EDGAR states it and as of its pull (D35, Part 13 C): `sic`,
@@ -63,12 +67,17 @@ FIELDS: Tuple[Field, ...] = (
     Field("commercial_paper", "instant", ("CommercialPaper",)),
     Field("long_term_debt_current", "instant", ("LongTermDebtCurrent",)),
     Field("long_term_debt_noncurrent", "instant", ("LongTermDebtNoncurrent",)),
+    Field("shares_outstanding", "instant", ("CommonStockSharesOutstanding",)),
 )
 
 
 # --- the years -----------------------------------------------------------------
 
 ANNUAL_REPORT_FORMS = frozenset({"10-K", "10-K/A"})
+
+# The units that are not a currency: a rate is pure and a count is shares.
+# Every other unit a figure is filed in is money, and a block has one.
+NON_MONEY_UNITS = frozenset({"pure", "shares"})
 
 # D28: a year end closer than this to the previous one is a change of fiscal
 # year, and the assembler does not guess which year is which.
@@ -161,7 +170,7 @@ def filed_years(facts: Iterable, as_of: dt.date) -> Dict[str, object]:
             year[field.name] = chosen.value
             sources[field.name] = {"tag": chosen.tag, "accn": chosen.accn,
                                    "form": chosen.form, "filed": chosen.filed}
-            if chosen.unit != "pure":
+            if chosen.unit not in NON_MONEY_UNITS:
                 currencies.add(chosen.unit)
         years[label] = year
         provenance[label] = sources

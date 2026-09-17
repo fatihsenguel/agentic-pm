@@ -45,7 +45,7 @@ def fields():
 
 def test_the_reference_table_is_read():
     rows = _part_12_c()
-    assert len(rows) == 14
+    assert len(rows) == 15
     assert rows[0] == ("revenue", "duration", (
         "RevenueFromContractWithCustomerExcludingAssessedTax", "SalesRevenueNet", "Revenues"))
 

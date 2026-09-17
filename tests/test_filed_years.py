@@ -18,6 +18,10 @@ each year with the filing it comes from. The rules, from the reference:
   D30  The first tag in the field's list with a fact at the year end wins. A
        field no tag yields is left out of that year and listed as unresolved
        with the tags tried; nothing fills it.
+  D39  The share count is a field like the others, the filer's own count at
+       the year end in whole shares (Part 12 B's and Part 13 B's notes,
+       decision 48 item 7). Its unit is shares, not money, and the block's
+       one currency is read from the money fields alone.
 
 The facts go through the EDGAR provider over a stand-in session, so what the
 assembler sees is what the provider returns. The fixtures are samples of a
@@ -207,7 +211,7 @@ def test_every_figure_is_the_reference_row(filed_figures, monkeypatch, name, cik
         source = block["provenance"][label][row["field"]]
         assert (source["tag"], source["accn"]) == (row["tag"], row["accn"]), row
         checked += 1
-    assert checked == {"A": 70, "B": 62, "C": 25}[section]
+    assert checked == {"A": 75, "B": 67, "C": 25}[section]
 
 
 ALPHABET_UNRESOLVED = (
@@ -221,7 +225,8 @@ JPMORGAN_UNRESOLVED = {
     for y in ("FY2021", "FY2022", "FY2023", "FY2024", "FY2025")
     for field in ("cost_of_revenue", "operating_income", "capex", "cash",
                   "marketable_securities_current", "marketable_securities_noncurrent",
-                  "commercial_paper", "long_term_debt_current", "long_term_debt_noncurrent")
+                  "commercial_paper", "long_term_debt_current", "long_term_debt_noncurrent",
+                  "shares_outstanding")
 }
 
 
@@ -260,6 +265,37 @@ def test_cost_of_revenue_resolves_from_each_filers_own_tag(filed_figures, monkey
     assert tried == {("CostOfRevenue", "CostOfGoodsAndServicesSold")}
     assert all("gross_profit" not in year for block in (apple, alphabet, jpmorgan)
                for year in block["years"].values())
+
+
+def test_the_share_count_is_the_filers_year_end_count(filed_figures, monkeypatch):
+    """Part 12 B's and Part 13 B's notes of 2026-09-17: shares_outstanding
+    resolves from CommonStockSharesOutstanding at the year end, in whole
+    shares as filed. Alphabet's FY2021 is the split-adjusted count on the
+    FY2022 10-K, the later vintage F9 shows, not the FY2021 report's
+    662,121,000."""
+    apple = filed_figures.filed_years(
+        facts_for(APPLE, _rows("edgar_facts_aapl.csv", {"A", "Y"}), monkeypatch), AS_OF)
+    alphabet = filed_figures.filed_years(
+        facts_for(ALPHABET, _rows("edgar_facts_googl.csv"), monkeypatch), AS_OF)
+    assert apple["years"]["FY2025"]["shares_outstanding"] == Decimal("14773260000")
+    assert apple["years"]["FY2021"]["shares_outstanding"] == Decimal("16426786000")
+    assert alphabet["years"]["FY2025"]["shares_outstanding"] == Decimal("12088000000")
+    assert alphabet["years"]["FY2021"]["shares_outstanding"] == Decimal("13242000000")
+    source = alphabet["provenance"]["FY2021"]["shares_outstanding"]
+    assert (source["tag"], source["accn"]) == ("CommonStockSharesOutstanding", "0001652044-23-000016")
+    assert all("shares_outstanding" in year for block in (apple, alphabet)
+               for year in block["years"].values())
+
+
+def test_a_count_in_shares_is_not_a_second_currency(filed_figures, monkeypatch):
+    """The count's unit is shares. A block that carries it beside dollar
+    figures has one reporting currency, USD, and does not raise as if it
+    were filed in two."""
+    for name, cik, sections in (("edgar_facts_aapl.csv", APPLE, {"A", "Y"}),
+                                ("edgar_facts_googl.csv", ALPHABET, None)):
+        block = filed_figures.filed_years(facts_for(cik, _rows(name, sections), monkeypatch), AS_OF)
+        assert block["currency"] == "USD"
+        assert "shares_outstanding" in block["years"]["FY2025"]
 
 
 def test_the_neighbour_is_not_used(filed_figures, monkeypatch):

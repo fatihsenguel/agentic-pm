@@ -61,6 +61,11 @@ B,long_term_debt_current,,LongTermDebtCurrent,USD,,2025-12-31,1996000000,0001652
 B,long_term_debt_noncurrent,,LongTermDebtNoncurrent,USD,,2023-12-31,11870000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
 B,long_term_debt_noncurrent,,LongTermDebtNoncurrent,USD,,2024-12-31,10883000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024Q4I
 B,long_term_debt_noncurrent,,LongTermDebtNoncurrent,USD,,2025-12-31,46547000000,0001652044-26-000071,2026,Q2,10-Q,2026-07-23,CY2025Q4I
+B,shares_outstanding,,CommonStockSharesOutstanding,shares,,2021-12-31,13242000000,0001652044-23-000016,2022,FY,10-K,2023-02-03,CY2021Q4I
+B,shares_outstanding,,CommonStockSharesOutstanding,shares,,2022-12-31,12849000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2022Q4I
+B,shares_outstanding,,CommonStockSharesOutstanding,shares,,2023-12-31,12460000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
+B,shares_outstanding,,CommonStockSharesOutstanding,shares,,2024-12-31,12211000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024Q4I
+B,shares_outstanding,,CommonStockSharesOutstanding,shares,,2025-12-31,12088000000,0001652044-26-000071,2026,Q2,10-Q,2026-07-23,CY2025Q4I
 B,,"absent: no fact of this tag anywhere in the artifact; not a field since 2026-09-16 (decision 48)",GrossProfit,,,,,,,,,,
 B,,absent: no fact of this tag anywhere in the artifact,DepreciationDepletionAndAmortization,,,,,,,,,,
 B,,absent: no fact of this tag anywhere in the artifact,DepreciationAmortizationAndAccretionNet,,,,,,,,,,

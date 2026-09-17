@@ -1128,6 +1128,7 @@ the year and the tags, for the check to stop on (D30).
 | commercial_paper | instant | `CommercialPaper` |
 | long_term_debt_current | instant | `LongTermDebtCurrent` |
 | long_term_debt_noncurrent | instant | `LongTermDebtNoncurrent` |
+| shares_outstanding | instant | `CommonStockSharesOutstanding` |
 
 The revenue ordering is newest-tag-first on purpose: for FY2017, all three
 tags carry the same value and the order decides which `accn` the row cites,
@@ -1136,6 +1137,14 @@ never which number it reports.
 *Row changed 2026-09-16, decision 48 (D36, section H).* `cost_of_revenue`
 stands where `gross_profit` stood. No filer here files both of its tags, so
 the order decides nothing; the taxonomy's total is first.
+
+*Row added 2026-09-17, decision 48 item 7, first half (section B's note,
+Part 13 B's note, Part 11 D39).* `shares_outstanding` is the fifteenth
+field. A new field's first tag has no listed tag to be witnessed against
+(D36); it is the taxonomy's element for the line, as `CostOfRevenue` was
+admitted, and its falsifier is F9, the split reaching FY2021's count through
+a later vintage. Its unit is `shares`: the one-currency rule reads the units
+of money fields only, so the count is not a second currency.
 
 ### D. Falsifier rows
 
