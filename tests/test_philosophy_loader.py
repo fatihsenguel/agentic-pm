@@ -75,6 +75,18 @@ def test_inline_good_loads(philosophy, tmp_path):
                                    "tax_rate": 0.20}
 
 
+VALUED = SAFETY.replace("discount = 0.25", "discount = 0.25\nrequired_return = 0.09\n"
+                        "terminal_growth = 0.03\nhorizon_years = 10")
+
+
+def test_the_range_assumptions_load_on_the_margin_of_safety(philosophy, tmp_path):
+    """Part 11 D38: the investor's three assumptions sit on PHI-4.1, the
+    clause that reads the range, the way tax_rate sits on PHI-2.1."""
+    doc = philosophy.load_philosophy(_write(tmp_path, VALUED))
+    assert dict(doc["PHI-4.1"].params) == {"discount": 0.25, "required_return": 0.09,
+                                           "terminal_growth": 0.03, "horizon_years": 10}
+
+
 def test_margin_of_safety_loads(philosophy, tmp_path):
     doc = philosophy.load_philosophy(_write(tmp_path, SAFETY))
     assert dict(doc["PHI-4.1"].params) == {"discount": 0.25}
@@ -142,6 +154,19 @@ def test_the_type_vocabulary(philosophy):
     (SAFETY.replace("discount = 0.25", "discount = 0"), "fraction in \\(0, 1\\)"),
     (SAFETY.replace("discount = 0.25\n", ""), "needs \\['discount'\\]"),
     (SAFETY.replace("discount = 0.25", "discount = 0.25\nyears = 1"), "does not take"),
+    # Part 11 D38: the range's assumptions, all three or none, each of its kind
+    (VALUED.replace("required_return = 0.09\n", ""), "all three"),
+    (VALUED.replace("terminal_growth = 0.03\n", ""), "all three"),
+    (VALUED.replace("horizon_years = 10", ""), "all three"),
+    (VALUED.replace("required_return = 0.09", "required_return = 9"), "fraction in \\(0, 1\\)"),
+    (VALUED.replace("required_return = 0.09", 'required_return = "9%"'), "fraction in \\(0, 1\\)"),
+    (VALUED.replace("terminal_growth = 0.03", "terminal_growth = 0.09"), "not above terminal_growth"),
+    (VALUED.replace("terminal_growth = 0.03", "terminal_growth = 0.10"), "not above terminal_growth"),
+    (VALUED.replace("terminal_growth = 0.03", 'terminal_growth = "3%"'), "terminal_growth.*not a number"),
+    (VALUED.replace("horizon_years = 10", "horizon_years = 0"), "horizon_years.*positive whole number"),
+    (VALUED.replace("horizon_years = 10", "horizon_years = 2.5"), "horizon_years.*positive whole number"),
+    (VALUED.replace("horizon_years = 10", "horizon_years = true"), "horizon_years.*positive whole number"),
+    (GOOD.replace("tax_rate = 0.20", "tax_rate = 0.20\nrequired_return = 0.09"), "does not take"),
     (EXCLUSION.replace('sic_codes = ["6021", "6022", "6035", "6036", "6211", "6311", "6331"]\n', ""),
      "needs \\['sic_codes'\\]"),
     (EXCLUSION.replace('["6021", "6022", "6035", "6036", "6211", "6311", "6331"]', "[]"), "at least one"),

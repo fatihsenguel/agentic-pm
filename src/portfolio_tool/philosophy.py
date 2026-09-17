@@ -19,7 +19,12 @@ named figure held to a floor, a ceiling or both over a stated number of
 latest fiscal years; a margin_of_safety, the price against the low end of
 the valuation range less a discount; an excluded_industry, the SIC codes of
 companies the philosophy does not screen at all (expected_values.md Part 10
-F). And every `metric` key is one quant/fundamentals.METRICS computes: a key
+F). The margin_of_safety may carry the range's three investor assumptions,
+required_return, terminal_growth and horizon_years, all three or none
+(Part 11 D38): they sit on the clause that reads the range the way
+tax_rate sits on the clause that names its metric (decision 46), and a
+statement carries no number. And every `metric` key is one
+quant/fundamentals.METRICS computes: a key
 nothing computes fails to load, so a philosophy that loads is one every
 numeric clause of which can be screened. The vocabulary grows one clause at
 a time, reference first, the way the IPS's does (ips.py's docstring has the
@@ -48,11 +53,13 @@ CLAUSE_ID = re.compile(r"^PHI-\d+\.\d+$")
 CLAUSE_TYPES: Mapping[str, tuple] = MappingProxyType({
     STATEMENT: ((), ()),
     "metric_band": (("metric", "years"), ("min", "max", "tax_rate")),
-    "margin_of_safety": (("discount",), ()),
+    "margin_of_safety": (("discount",), ("required_return", "terminal_growth", "horizon_years")),
     "excluded_industry": (("sic_codes",), ()),
 })
 
 _BOUNDS = ("min", "max")
+# Part 11 D38: the range's assumptions a margin_of_safety may state, together.
+_RANGE_ASSUMPTIONS = ("required_return", "terminal_growth", "horizon_years")
 _ASSUMPTION_KEYS = tuple(sorted({k for keys in ASSUMPTIONS.values() for k in keys}))
 
 # A SIC code as EDGAR's submissions document carries it (expected_values.md
@@ -125,6 +132,25 @@ def _validate_params(where: str, clause_type: str, params: Mapping[str, Any]) ->
         if not _is_number(discount) or not 0 < discount < 1:
             raise PhilosophyError(f"{where}: discount = {discount!r} is not a fraction in "
                                   "(0, 1); a 25% discount is 0.25.")
+        stated = [k for k in _RANGE_ASSUMPTIONS if k in params]
+        if stated and len(stated) < len(_RANGE_ASSUMPTIONS):
+            raise PhilosophyError(f"{where}: the range's assumptions are stated all three or "
+                                  f"none, {list(_RANGE_ASSUMPTIONS)}; {stated} alone is not "
+                                  "a range anyone can compute.")
+        if stated:
+            r, g, n = (params[k] for k in _RANGE_ASSUMPTIONS)
+            if not _is_number(r) or not 0 < r < 1:
+                raise PhilosophyError(f"{where}: required_return = {r!r} is not a fraction in "
+                                      "(0, 1); a 9% return is 0.09.")
+            if not _is_number(g):
+                raise PhilosophyError(f"{where}: terminal_growth = {g!r} is not a number; a "
+                                      "3% growth is 0.03.")
+            if r <= g:
+                raise PhilosophyError(f"{where}: required_return {r} is not above terminal_growth "
+                                      f"{g}; the terminal value is undefined or negative.")
+            if not isinstance(n, int) or isinstance(n, bool) or n < 1:
+                raise PhilosophyError(f"{where}: horizon_years = {n!r} is not a positive whole "
+                                      "number of fiscal years.")
 
 
 SPEC = DocumentSpec(
