@@ -1092,6 +1092,20 @@ FY2022 223,546 (0000320193-24-000123), FY2023 214,137, FY2024 210,352 and
 FY2025 220,960 (0000320193-25-000079). Section H holds the identity between
 the two rows; the csv carries the five rows with their provenance.
 
+*The block's shape, 2026-09-17, decision 48 item 7, first half (Part 11
+D39).* A fifteenth field joins the table: `shares_outstanding`, the filer's
+own count at the fiscal year end from `CommonStockSharesOutstanding`, in
+whole shares as filed and never in millions. Read from the stored facts of
+the pull of 2026-09-15 at the latest vintage: FY2021 **16,426,786,000**,
+FY2022 **15,943,425,000**, FY2023 **15,550,061,000**, FY2024
+**15,116,786,000**, each on the following year's 10-K (0000320193-22-000108,
+-23-000106, -24-000123, -25-000079), and FY2025 **14,773,260,000** on the
+10-Q filed 2026-07-31 (0000320193-26-000020); every count is the same on
+every vintage that carries it, the year's own 10-K included. The unit is
+`shares`, not money: the block's one-currency rule reads money units only,
+so a count beside dollar figures is not a second currency. The second half
+of item 7, the price and a filer with more than one class, stays open.
+
 ### C. The tag each field resolves from
 
 In order; the first that yields a fact for the period wins, and none yielding
@@ -1568,6 +1582,23 @@ arithmetic the question points at moves rather than disappears.
 - **Also not decided**: the year-end count or the cover-page count, each
   against a price of a later date. Part 12 carries no shares field.
 
+*Decided 2026-09-17, decision 48 item 7, first half (Part 11 D39).* The
+count is a field, `shares_outstanding`, the filer's own count at the year
+end from `CommonStockSharesOutstanding`, whole shares, one per year, the
+range and the yield reading the latest year's. From the stored facts of the
+pull of 2026-09-16 at the latest vintage: FY2021 **13,242,000,000** on the
+FY2022 10-K (0001652044-23-000016, filed 2023-02-03), the split-adjusted
+count F9 shows reaching back, and not the FY2021 report's 662,121,000;
+FY2022 **12,849,000,000**, FY2023 **12,460,000,000** and FY2024
+**12,211,000,000**, each on the following year's 10-K (0001652044-24-000022,
+-25-000014, -26-000018); FY2025 **12,088,000,000** on the 10-Q filed
+2026-07-23 (0001652044-26-000071). The filer's own count covers every class
+and is read, not summed. Rejected, from the shape the handoff carried: the
+cover-page count, which Alphabet does not file; the weighted average, a
+different measure; summing the classes, which the artifact cannot do;
+refusing a CIK with several tickers, which refuses every preferred series.
+The second half, the price and the classes, is open.
+
 ### C. JPMorgan: the SIC code, the label, and a block that mostly raises
 
 **What EDGAR states.** In the submissions document: `sic` "6021",
@@ -1650,6 +1681,13 @@ rate.
 `long_term_debt_noncurrent`. **Raises in every year**, the tag last used long
 before the window: `cash` (`CashAndCashEquivalentsAtCarryingValue`, last at
 2018-12-31) and `commercial_paper` (last at 2017-09-30).
+
+*Note, 2026-09-17, decision 48 item 7.* `shares_outstanding` is not in this
+fixture. The artifact was read on 2026-09-13 for the fields of that day and
+is not stored, since the exclusion decides before the facts are fetched,
+and it was not read again for this field. In the fixture the field is
+unresolved in every year by construction, which says nothing about what
+JPMorgan files under the tag.
 
 **Whether that is D30 working, or D30 needing a bank rule: working.** Every
 raise is true: JPMorgan files no gross profit, no operating income and no
@@ -1770,7 +1808,11 @@ here.
 6. The two `marketable_securities` fields in Part 12 B, which no metric reads
    under Part 12 F's decision A.
 7. `shares_outstanding`: which count, and `free_cash_flow_yield` for a filer
-   with more than one class.
+   with more than one class. First half decided 2026-09-17 (decision 48,
+   Part 11 D39): the filer's own year-end count, `CommonStockSharesOutstanding`,
+   a field of the block per year, the range and the yield reading the latest
+   year's (Part 12 B's and section B's notes). The second half, the price
+   and a filer with more than one class, is open.
 8. Whether an industry exclusion is decided before the years are read.
    Decided 2026-09-14 (D34, Part 10 F): before. *Note, 2026-09-16, decision
    29.* Built as `screening.exclude`, which the node runs on the filers row
