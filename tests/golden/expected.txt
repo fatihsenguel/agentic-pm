@@ -118,9 +118,9 @@ Q: Does JPM clear my philosophy? | pid=3
   errors: 0
 
 Q: What is GOOGL worth? | pid=3
-  intent: out_of_scope
-  plan:   []
+  intent: research
+  plan:   ['ScreeningAgent']
   period: None
-  agents_run: []
+  agents_run: ['ScreeningAgent']
   errors: 0
 
