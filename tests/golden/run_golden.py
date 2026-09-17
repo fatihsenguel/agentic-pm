@@ -46,6 +46,12 @@ QUERIES = [
     # 16 September). The line pins that the philosophy and the IPS are two
     # intents. Runs the node live: the fetches are under their intervals.
     ("Does JPM clear my philosophy?", 3),
+    # The valuation range (case 4.2, Part 11, decision 57), on the watchlist's
+    # first candidate. Added 18 September at out_of_scope, where the router
+    # put it before the registry described a valuation; the line pins what
+    # the registry's correction moves. Routed research it runs the node
+    # live: the price fetch is under its interval, the filings fetches too.
+    ("What is GOOGL worth?", 3),
 ]
 
 
