@@ -47,7 +47,7 @@ bank after the filer fetch and before the facts fetch (decision 29).
 import datetime as dt
 import re
 from dataclasses import dataclass
-from typing import List, Mapping, Optional, Tuple
+from typing import Dict, List, Mapping, Optional, Tuple
 
 from portfolio_tool.clauses import Clause, ClauseDocument
 from portfolio_tool.quant.fundamentals import ASSUMPTIONS, metrics_by_year, years_filed_by
@@ -189,6 +189,37 @@ def _assumptions(philosophy: ClauseDocument) -> Mapping[str, object]:
                     f"{value}. A philosophy states one rate, and the screen does not pick.")
             stated.setdefault(key, value)
             by.setdefault(key, clause.id)
+    return stated
+
+
+# Part 11 D38: the range's three investor assumptions, parameters of the
+# margin_of_safety clause that reads the range.
+RANGE_ASSUMPTIONS = ("required_return", "terminal_growth", "horizon_years")
+
+
+def range_assumptions(philosophy: ClauseDocument) -> Dict[str, Dict[str, object]]:
+    """The investor's assumptions for the valuation range, each as its value
+    and the id of the clause that states it, the shape
+    quant/valuation.valuation_range reads (D38). A philosophy whose
+    margin_of_safety clause states none raises naming the three; two
+    clauses stating two are a philosophy stating none, as _assumptions
+    treats a rate stated twice."""
+    stated: Dict[str, Dict[str, object]] = {}
+    for clause in philosophy.checkable:
+        if clause.type != "margin_of_safety" or RANGE_ASSUMPTIONS[0] not in clause.params:
+            continue
+        for key in RANGE_ASSUMPTIONS:
+            entry = {"value": clause.params[key], "source": clause.id}
+            if key in stated and stated[key]["value"] != entry["value"]:
+                raise ScreeningError(
+                    f"{key} is stated twice: {stated[key]['source']} says {stated[key]['value']} "
+                    f"and {clause.id} says {entry['value']}. A philosophy states one, and the "
+                    "range does not pick.")
+            stated.setdefault(key, entry)
+    if not stated:
+        raise ScreeningError(
+            f"No margin_of_safety clause states {list(RANGE_ASSUMPTIONS)}; the range follows "
+            "from stated assumptions and nothing is assumed for you.")
     return stated
 
 

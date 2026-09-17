@@ -1252,6 +1252,13 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
 # does not transfer. Until Order 6 there is one file and it is this one; the
 # personal philosophy replaces it as a file with no code change (decision 30).
 PHILOSOPHY_PATH = "philosophy.toml"
+# The committed watchlist, the same way (Part 11 D38): the growth pair a
+# candidate's range is computed from is the entry's, read by its ticker.
+WATCHLIST_PATH = "watchlist.toml"
+# Calendar days the last-close fetch asks the price provider for, so that
+# the window holds a trading day across any weekend or holiday. Not policy:
+# nobody would set it differently, and only the latest stored row is read.
+LAST_CLOSE_WINDOW_DAYS = 7
 
 _PHI_ID = re.compile(r"PHI-\d+\.\d+")
 
@@ -1262,6 +1269,57 @@ def edgar_provider():
     no network; the real one reads EDGAR_USER_AGENT and raises without it."""
     from portfolio_tool.providers.edgar import EdgarProvider
     return EdgarProvider()
+
+
+def price_provider():
+    """The price provider the screening node stores a candidate's close
+    through: the one the holdings' closes come from, defended against the
+    exchange in Part 9 and, for a candidate, Part 9 C. A function so that
+    a test stands in a provider answering from the record."""
+    from portfolio_tool.providers.yfinance_provider import YFinanceProvider
+    from portfolio_tool.services.quota_manager import DatabaseQuotaManager
+    return YFinanceProvider(quota_manager=DatabaseQuotaManager(provider_name="yfinance",
+                                                               daily_limit=2000))
+
+
+def _last_close(session, ticker: str, name: str, watchlist, as_of: dt.date) -> Dict[str, Any]:
+    """Decision 57: the last close stored for the ticker the question named,
+    through the existing price path on an assets row. A held company has
+    its row; a candidate's is created here from the ticker, EDGAR's name
+    and the watchlist entry's currency, and nothing else is filled, since
+    nothing reads an asset class or an instrument type on a company that is
+    not held and the IPS check raises on the blank when it is asked to
+    size. A ticker neither held nor listed has no currency to store a
+    close under and gets none. The record is the row's own figure, date
+    and source; the fetch is under price_fetch_interval_days."""
+    from portfolio_tool.data_manager import DataManager
+    from portfolio_tool.database_setup import Asset, DailyPrice
+    from portfolio_tool.watchlist import WatchlistError
+
+    asset = session.query(Asset).filter(Asset.ticker == ticker).first()
+    if asset is None:
+        try:
+            candidate = watchlist.by_ticker(ticker)
+        except WatchlistError:
+            raise DataCalculationError(
+                f"{ticker} is neither held nor on the watchlist, so there is no currency to "
+                "store a close under; no price is fetched (decision 57).")
+        asset = Asset(ticker=ticker, name=name, currency=candidate.currency)
+        session.add(asset)
+        session.commit()
+
+    manager = DataManager(session=session, provider=price_provider())
+    result = manager.update_prices_for_asset(
+        asset, start_date=as_of - dt.timedelta(days=LAST_CLOSE_WINDOW_DAYS))
+    if not result.success:
+        raise DataCalculationError(f"{ticker}: the price fetch failed: {result.error_message}")
+    row = (session.query(DailyPrice).filter(DailyPrice.asset_id == asset.id)
+           .order_by(DailyPrice.date.desc()).first())
+    if row is None:
+        raise DataCalculationError(f"{ticker}: the provider returned no close in the "
+                                   f"{LAST_CLOSE_WINDOW_DAYS} days to {as_of}, and none is stored.")
+    return {"ticker": ticker, "value": float(row.close), "as_of": row.date.isoformat(),
+            "source": row.source}
 
 
 def _utc(instant: dt.datetime) -> str:
@@ -1297,6 +1355,18 @@ async def screening_agent_node(state: AgentState) -> Dict[str, Any]:
     themselves stay in the database: the block carries dates and findings.
     The synthesizer formats and cites; this node does not.
 
+    Past the exclusion and before the screen, two more things (case 4.2):
+    the last close for the ticker named, `price` with its date and source
+    (decision 57, _last_close), and the valuation range, `valuation`, D40's
+    record from the five assumptions, three off PHI-4.1's parameters and
+    two off the candidate's watchlist entry, each carried with the id that
+    states it (Part 11 D38); the range goes on the block for PHI-4.1 and
+    the price for PHI-4.1 and PHI-4.2. Each has a `_stopped` beside it,
+    a reason string when it could not be produced: a candidate stating no
+    growth pair, a ticker on neither list, a provider that failed. A stop
+    is published, the other of the two stands, and the screen runs on
+    whatever the block carries, stopping on its own where it must.
+
     The philosophy is the committed file (PHILOSOPHY_PATH, decision 30). No
     portfolio is read: a philosophy check implies no position, so the IPS
     is not consulted, and the answer says so.
@@ -1327,7 +1397,9 @@ async def screening_agent_node(state: AgentState) -> Dict[str, Any]:
         from portfolio_tool.filings import cik_for, update_filed_facts, update_filer
         from portfolio_tool.philosophy import load_philosophy
         from portfolio_tool.quant.fundamentals import years_filed_by
-        from portfolio_tool.screening import ScreeningError, exclude, screen
+        from portfolio_tool.quant.valuation import ValuationError, valuation_range
+        from portfolio_tool.screening import ScreeningError, exclude, range_assumptions, screen
+        from portfolio_tool.watchlist import WatchlistError, growth_pair, load_watchlist
 
         params = (state.get("router_decision") or {}).get("parameters") or {}
         tickers = params.get("tickers") or []
@@ -1349,6 +1421,7 @@ async def screening_agent_node(state: AgentState) -> Dict[str, Any]:
         print(f"  {ticker}: CIK {cik}, {filer.name}, SIC {filer.sic or 'not stated'}")
 
         findings, years, stopped, facts_as_of = [], {}, None, None
+        price, price_stopped, valuation, valuation_stopped = None, None, None, None
         try:
             with (agent_ctx.trace_tool("exclude_philosophy") if agent_ctx else nullcontext()) as tool_ctx:
                 if tool_ctx:
@@ -1365,11 +1438,48 @@ async def screening_agent_node(state: AgentState) -> Dict[str, Any]:
                 facts_as_of = _utc(session.get(FiledFetchMetadata, cik).last_fetch_time)
                 block = filed_years_for(session, cik, as_of)
                 block["ticker"] = ticker
+                block["source"] = provider.name
                 years = {
                     label: {"ends": block["years"][label]["ends"].isoformat(),
                             "filed": block["years"][label]["filed"].isoformat()}
                     for label in years_filed_by(block, as_of)
                 }
+
+                watchlist = load_watchlist(WATCHLIST_PATH)
+                with (agent_ctx.trace_tool("last_close") if agent_ctx else nullcontext()) as tool_ctx:
+                    if tool_ctx:
+                        tool_ctx.set_input({"ticker": ticker, "as_of": as_of.isoformat()})
+                    try:
+                        price = _last_close(session, ticker, filer.name, watchlist, as_of)
+                        block["price"] = {"value": price["value"], "as_of": price["as_of"]}
+                        print(f"  price: {ticker} {price['value']} on {price['as_of']} "
+                              f"({price['source']})")
+                    except DataCalculationError as e:
+                        session.rollback()
+                        price_stopped = str(e)
+                        print(f"  no price: {e}")
+                    if tool_ctx:
+                        tool_ctx.set_output({"price": price, "stopped": price_stopped})
+
+                with (agent_ctx.trace_tool("valuation_range") if agent_ctx else nullcontext()) as tool_ctx:
+                    if tool_ctx:
+                        tool_ctx.set_input({"philosophy": philosophy.path, "watchlist": watchlist.path,
+                                            "cik": cik, "as_of": as_of.isoformat()})
+                    try:
+                        assumptions = {**range_assumptions(philosophy), **growth_pair(watchlist, ticker)}
+                        record = valuation_range(block, assumptions, as_of)
+                        block["valuation_range"] = record
+                        valuation = {**record, "as_of": record["as_of"].isoformat(),
+                                     "ends": record["ends"].isoformat(),
+                                     "filed": record["filed"].isoformat()}
+                        print(f"  range {record['year']}: {record['low']:.2f} to "
+                              f"{record['high']:.2f} per share")
+                    except (WatchlistError, ValuationError, ScreeningError) as e:
+                        valuation_stopped = str(e)
+                        print(f"  no range: {e}")
+                    if tool_ctx:
+                        tool_ctx.set_output({"valuation": valuation, "stopped": valuation_stopped})
+
                 with (agent_ctx.trace_tool("screen_philosophy") if agent_ctx else nullcontext()) as tool_ctx:
                     if tool_ctx:
                         tool_ctx.set_input({"philosophy": philosophy.path, "cik": cik,
@@ -1401,6 +1511,10 @@ async def screening_agent_node(state: AgentState) -> Dict[str, Any]:
             "stopped": stopped,
             "source": provider.name,
             "facts_as_of": facts_as_of,
+            "price": price,
+            "price_stopped": price_stopped,
+            "valuation": valuation,
+            "valuation_stopped": valuation_stopped,
         }
 
         result = {

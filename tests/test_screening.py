@@ -226,6 +226,53 @@ JPMORGAN_YEARS = {
 }
 
 
+# --- the range's investor assumptions (Part 11 D38) ---------------------------------
+
+SAFETY = '''
+[[clause]]
+id = "{cid}"
+type = "margin_of_safety"
+topics = ["price"]
+discount = 0.25
+required_return = {r}
+terminal_growth = 0.03
+horizon_years = 10
+text = "I pay at most the low end of my valuation range less a 25% discount."
+'''
+
+
+def test_the_committed_philosophy_states_the_three_on_phi_4_1(screening, philosophy):
+    assert screening.range_assumptions(philosophy) == {
+        "required_return": {"value": 0.09, "source": "PHI-4.1"},
+        "terminal_growth": {"value": 0.03, "source": "PHI-4.1"},
+        "horizon_years": {"value": 10, "source": "PHI-4.1"},
+    }
+
+
+def test_a_philosophy_stating_none_raises_naming_the_three(screening, tmp_path):
+    p = tmp_path / "p.toml"
+    p.write_text('''
+[[clause]]
+id = "PHI-4.1"
+type = "margin_of_safety"
+topics = ["price"]
+discount = 0.25
+text = "I pay at most the low end of my valuation range less a 25% discount."
+''', encoding="utf-8")
+    with pytest.raises(screening.ScreeningError,
+                       match=r"No margin_of_safety clause states \['required_return', "
+                             r"'terminal_growth', 'horizon_years'\]"):
+        screening.range_assumptions(load_philosophy(str(p)))
+
+
+def test_two_clauses_stating_two_returns_raise(screening, tmp_path):
+    p = tmp_path / "p.toml"
+    p.write_text(SAFETY.format(cid="PHI-4.1", r=0.09) + SAFETY.format(cid="PHI-4.4", r=0.10),
+                 encoding="utf-8")
+    with pytest.raises(screening.ScreeningError, match="required_return.*PHI-4.1.*PHI-4.4"):
+        screening.range_assumptions(load_philosophy(str(p)))
+
+
 def test_the_committed_philosophy_lists_part_10_fs_codes(philosophy):
     clause = philosophy["PHI-3.2"]
     assert clause.type == "excluded_industry"

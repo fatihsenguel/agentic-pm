@@ -23,10 +23,30 @@ What the node decides (decision 29):
   - a ScreeningError is a stop, published with its clause, not an error
   - the philosophy is the committed file (decision 30); every pull date is
     the stored UTC instant with its offset written into it
+
+And, for case 4.2 (Part 11, decisions 57 and 48 item 7):
+
+  - past the exclusion the node puts the provider's name on the block as
+    its source, gathers the five assumptions, three from PHI-4.1's
+    parameters and two from the watchlist entry, calls valuation_range and
+    publishes D40's record as `valuation`; the ends on the fixture's
+    Alphabet rows are Part 11 C's, since the seam between pytest's typed
+    blocks and the live block is the node's assembly
+  - the price is the last close the existing price path stores for the
+    ticker the question named, on an assets row the node creates from
+    what it knows and nothing more; published as `price` with its date
+    and source, the row's figure Part 9 C's
+  - a candidate stating no growth pair, or a ticker not on the watchlist,
+    is a `valuation_stopped` naming why, never a default; a ticker neither
+    held nor on the watchlist is a `price_stopped`; both stops are
+    published beside the screen, which still runs
+  - an excluded company gets neither a price nor a range: its figures
+    are never asked for, and neither is its close
 """
 
 import csv
 import datetime as dt
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -34,9 +54,10 @@ import pytest
 from agents import nodes
 from agents.state import create_initial_state
 from portfolio_tool.database_setup import (
-    FiledFact, FiledFetchMetadata, Filer, TickerCik, get_session,
+    Asset, AssetFetchMetadata, DailyPrice, FiledFact, FiledFetchMetadata, Filer, TickerCik,
+    get_session,
 )
-from portfolio_tool.provider_models import ProviderFiler, ProviderTicker
+from portfolio_tool.provider_models import ProviderFiler, ProviderPriceData, ProviderTicker
 
 from test_filed_years import _rows, facts_for
 
@@ -46,7 +67,13 @@ APPLE, ALPHABET, JPMORGAN = 320193, 1652044, 19617
 BENCHMARK_PORTFOLIO = 3
 
 BLOCK_KEYS = {"philosophy", "statements", "subject", "as_of", "sic", "sic_description",
-              "sic_as_of", "years", "findings", "stopped", "source", "facts_as_of"}
+              "sic_as_of", "years", "findings", "stopped", "source", "facts_as_of",
+              "price", "price_stopped", "valuation", "valuation_stopped"}
+# D40: the record carries the ends, the year with its dates, the source and
+# the assumptions, and no filed figure.
+RECORD_KEYS = {"low", "high", "as_of", "year", "ends", "filed", "source", "assumptions"}
+# Part 9 C: GOOGL's closes as the exchange printed them.
+PART_9_C = {dt.date(2026, 9, 15): "344.98", dt.date(2026, 9, 16): "342.87"}
 
 
 def _filers():
@@ -80,6 +107,22 @@ class StandIn:
         return self.facts[cik]
 
 
+class PriceStandIn:
+    """The price provider's one method the node's path calls, answering
+    Part 9 C's rows for GOOGL and nothing for anyone else."""
+
+    name = "stand-in prices"
+
+    def __init__(self):
+        self.calls = []
+
+    def get_daily_prices(self, ticker, start, end):
+        self.calls.append((ticker, start, end))
+        return [ProviderPriceData(date=day, open=Decimal(close), high=Decimal(close),
+                                  low=Decimal(close), close=Decimal(close), volume=1)
+                for day, close in PART_9_C.items() if start <= day < end and ticker == "GOOGL"]
+
+
 def _clear():
     session = get_session()
     try:
@@ -87,6 +130,13 @@ def _clear():
             session.query(model).filter(model.cik.in_([ALPHABET, JPMORGAN])).delete(
                 synchronize_session=False)
         session.query(TickerCik).delete()
+        # The candidate's assets row is the node's to create; JPMorgan's is a
+        # holding and stays.
+        for asset in session.query(Asset).filter(Asset.ticker == "GOOGL").all():
+            session.query(DailyPrice).filter(DailyPrice.asset_id == asset.id).delete()
+            session.query(AssetFetchMetadata).filter(
+                AssetFetchMetadata.asset_id == asset.id).delete()
+            session.delete(asset)
         session.commit()
     finally:
         session.close()
@@ -100,9 +150,28 @@ def provider(monkeypatch):
     }
     stand_in = StandIn(facts, _filers())
     monkeypatch.setattr(nodes, "edgar_provider", lambda: stand_in)
+    prices = PriceStandIn()
+    monkeypatch.setattr(nodes, "price_provider", lambda: prices)
+    stand_in.prices = prices
     _clear()
     yield stand_in
     _clear()
+
+
+def _watchlist(monkeypatch, tmp_path, text):
+    path = tmp_path / "watchlist.toml"
+    path.write_text(text)
+    monkeypatch.setattr(nodes, "WATCHLIST_PATH", str(path))
+
+
+W1_WITHOUT_A_PAIR = '''
+[[candidate]]
+id = "W-1"
+ticker = "GOOGL"
+name = "Alphabet"
+currency = "USD"
+status = "active"
+'''
 
 
 def state_with(tickers, portfolio_id=BENCHMARK_PORTFOLIO):
@@ -133,6 +202,9 @@ async def test_a_bank_is_excluded_before_its_facts_are_fetched(provider):
     assert block["years"] == {}
     assert block["stopped"] is None
     assert block["facts_as_of"] is None
+    assert (block["price"], block["price_stopped"]) == (None, None)
+    assert (block["valuation"], block["valuation_stopped"]) == (None, None)
+    assert provider.prices.calls == []
     assert out["sub_results"]["ScreeningAgent"]["screening"] is block
     assert out["sub_results"]["ScreeningAgent"]["success"] is True
     assert out["agents_to_run"] == []
@@ -234,3 +306,121 @@ async def test_a_code_edgar_does_not_state_is_a_stop_naming_phi_3_2(provider):
     assert block["stopped"]["clause"] == "PHI-3.2"
     assert block["sic"] is None
     assert ("annual_facts", JPMORGAN) not in provider.calls
+
+
+# --- case 4.2: the range and the price, beside the screen ----------------------------
+
+async def test_the_range_on_the_fixture_is_part_11_c(provider):
+    """The seam pytest's typed blocks do not see: the node assembles the
+    block from stored rows and the assumptions from two documents, and the
+    ends come out as Part 11 C computed them by hand. The screen still
+    stops at PHI-2.1; the range does not depend on it."""
+    out = await nodes.screening_agent_node(state_with(["GOOGL"]))
+    assert out.get("errors") is None, out.get("errors")
+    block = _block(out)
+    assert set(block) == BLOCK_KEYS
+    record = block["valuation"]
+    assert set(record) == RECORD_KEYS
+    assert (round(record["low"], 2), round(record["high"], 2)) == (129.39, 205.62)
+    assert (record["year"], record["ends"], record["filed"]) == \
+        ("FY2025", "2025-12-31", "2026-02-05")
+    assert record["as_of"] == block["as_of"]
+    assert record["source"] == "stand-in filings"
+    assert record["assumptions"] == {
+        "required_return": {"value": 0.09, "source": "PHI-4.1"},
+        "terminal_growth": {"value": 0.03, "source": "PHI-4.1"},
+        "horizon_years": {"value": 10, "source": "PHI-4.1"},
+        "growth_low": {"value": 0.06, "source": "W-1"},
+        "growth_high": {"value": 0.12, "source": "W-1"},
+    }
+    assert block["valuation_stopped"] is None
+    assert block["stopped"]["clause"] == "PHI-2.1"
+
+
+async def test_the_price_is_the_last_stored_close_on_a_row_the_node_creates(provider):
+    """Decision 57: the existing price path, on an assets row made from the
+    ticker asked, EDGAR's name and the watchlist entry's currency, nothing
+    else filled; the last stored close with its date and its source. The
+    figure is Part 9 C's."""
+    out = await nodes.screening_agent_node(state_with(["GOOGL"]))
+    block = _block(out)
+    assert block["price"] == {"ticker": "GOOGL", "value": 342.87, "as_of": "2026-09-16",
+                              "source": "stand-in prices"}
+    assert block["price_stopped"] is None
+    [(ticker, start, end)] = provider.prices.calls
+    assert ticker == "GOOGL" and start < dt.date(2026, 9, 16) <= end
+    session = get_session()
+    try:
+        asset = session.query(Asset).filter(Asset.ticker == "GOOGL").one()
+        assert (asset.name, asset.currency) == ("Alphabet Inc.", "USD")
+        assert (asset.asset_class, asset.sector, asset.instrument_type) == (None, None, None)
+        rows = session.query(DailyPrice).filter(DailyPrice.asset_id == asset.id).all()
+        assert {r.date: (round(r.close, 2), r.source) for r in rows} == {
+            dt.date(2026, 9, 15): (344.98, "stand-in prices"),
+            dt.date(2026, 9, 16): (342.87, "stand-in prices"),
+        }
+    finally:
+        session.close()
+
+
+async def test_a_second_run_asks_the_price_provider_for_nothing_the_same_day(provider):
+    await nodes.screening_agent_node(state_with(["GOOGL"]))
+    provider.prices.calls.clear()
+    block = _block(await nodes.screening_agent_node(state_with(["GOOGL"])))
+    assert provider.prices.calls == []
+    assert block["price"]["value"] == 342.87
+
+
+async def test_a_candidate_stating_no_pair_stops_the_range_and_not_the_screen(
+        provider, monkeypatch, tmp_path):
+    """W-2's case (KNOWN_GAPS, "What the node needs before it can publish a
+    range"): the stop names the pair, no range is defaulted, and the price
+    and the screen are published as they are."""
+    _watchlist(monkeypatch, tmp_path, W1_WITHOUT_A_PAIR)
+    out = await nodes.screening_agent_node(state_with(["GOOGL"]))
+    assert out.get("errors") is None, out.get("errors")
+    block = _block(out)
+    assert block["valuation"] is None
+    assert "W-1 (GOOGL) states no growth_low and growth_high" in block["valuation_stopped"]
+    assert block["price"]["value"] == 342.87
+    assert block["stopped"]["clause"] == "PHI-2.1"
+
+
+async def test_a_ticker_neither_held_nor_listed_has_no_range_and_no_price(
+        provider, monkeypatch, tmp_path):
+    _watchlist(monkeypatch, tmp_path, W1_WITHOUT_A_PAIR.replace('"GOOGL"', '"ADBE"'))
+    out = await nodes.screening_agent_node(state_with(["GOOGL"]))
+    assert out.get("errors") is None, out.get("errors")
+    block = _block(out)
+    assert block["valuation"] is None
+    assert "GOOGL is not on the watchlist" in block["valuation_stopped"]
+    assert block["price"] is None
+    assert "neither held nor on the watchlist" in block["price_stopped"]
+    assert provider.prices.calls == []
+    session = get_session()
+    try:
+        assert session.query(Asset).filter(Asset.ticker == "GOOGL").count() == 0
+    finally:
+        session.close()
+    assert block["stopped"]["clause"] == "PHI-2.1"
+
+
+async def test_a_price_provider_that_fails_is_a_price_stop_and_the_range_stands(provider):
+    def failing(ticker, start, end):
+        raise RuntimeError("the vendor is down")
+    provider.prices.get_daily_prices = failing
+    out = await nodes.screening_agent_node(state_with(["GOOGL"]))
+    assert out.get("errors") is None, out.get("errors")
+    block = _block(out)
+    assert block["price"] is None
+    assert "the vendor is down" in block["price_stopped"]
+    assert round(block["valuation"]["low"], 2) == 129.39
+
+
+async def test_the_record_carries_no_filed_figure(provider):
+    record = _block(await nodes.screening_agent_node(state_with(["GOOGL"])))["valuation"]
+    for key in ("free_cash_flow", "net_debt", "shares_outstanding", "operating_cash_flow",
+                "capex"):
+        assert key not in record
+    for value in record.values():
+        assert not isinstance(value, Decimal)
