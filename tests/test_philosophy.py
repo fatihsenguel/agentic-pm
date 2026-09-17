@@ -32,7 +32,8 @@ CHECKABLE = {
     "PHI-3.1": ("metric_band", {"metric": "net_debt_to_ebitda", "max": 2.0, "years": 1}),
     "PHI-3.2": ("excluded_industry",
                 {"sic_codes": ["6021", "6022", "6035", "6036", "6211", "6311", "6331"]}),
-    "PHI-4.1": ("margin_of_safety", {"discount": 0.25}),
+    "PHI-4.1": ("margin_of_safety", {"discount": 0.25, "required_return": 0.09,
+                                     "terminal_growth": 0.03, "horizon_years": 10}),
     "PHI-4.2": ("metric_band", {"metric": "free_cash_flow_yield", "min": 0.04, "years": 1}),
 }
 STATEMENTS = {"PHI-1.1", "PHI-1.2", "PHI-2.3", "PHI-4.3",

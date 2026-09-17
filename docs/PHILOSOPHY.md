@@ -72,7 +72,12 @@ not own them until this document has clauses for them.
 
 **PHI-4.1** I pay at most the low end of my valuation range less a 25%
 discount. The range comes from assumptions I state; the price is the last
-close.
+close. The range is a discounted cash flow over the latest fiscal year's
+free cash flow, operating cash flow less capital expenditure: ten years of
+growth at a rate I state per candidate, a low and a high, then growth of 3%
+for good, discounted at my required return of 9%, less net debt as PHI-3.1
+defines it, per share. The low end is the low rate and the high end the
+high rate.
 
 **PHI-4.2** Free cash flow yield of at least 4% at the last close, on the
 latest fiscal year's free cash flow.
