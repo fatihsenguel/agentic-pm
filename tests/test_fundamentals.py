@@ -8,12 +8,13 @@ deliberately. Do NOT update these figures to match code output.
 
 The fixture is the figures block in the shape the screen will read - one
 company, its fiscal years with their end and filed dates and reported
-figures, the shares, the price and the range with their as-of dates -
-typed from Part 10 A by hand, in the shape the reader's block carries
-(Part 10 A's note of 2026-09-15): the one debt figure sits in
-long_term_debt_noncurrent and the other two borrowing fields are filed
-zeros, and cost_of_revenue is revenue less the gross profit Part 10 A shows
-(its note of 2026-09-16, decision 48).
+figures, the price and the range with their as-of dates - typed from Part
+10 A by hand, in the shape the reader's block carries (Part 10 A's note of
+2026-09-15): the one debt figure sits in long_term_debt_noncurrent and the
+other two borrowing fields are filed zeros, cost_of_revenue is revenue
+less the gross profit Part 10 A shows (its note of 2026-09-16, decision
+48), and the share count is FY2025's figure, not the block's (its note of
+2026-09-17, decision 48 item 7).
 
 Part 12 G holds the bridge to the reader's block on Apple's filed figures,
 in whole dollars as the block carries them: net debt from the three
@@ -64,7 +65,8 @@ YEARS = {
                "depreciation_amortisation": 16_000.0,
                "operating_cash_flow": 52_780.0, "capex": 22_000.0,
                "equity": 170_000.0, "commercial_paper": 0.0, "long_term_debt_current": 0.0,
-               "long_term_debt_noncurrent": 16_000.0, "cash": 42_000.0},
+               "long_term_debt_noncurrent": 16_000.0, "cash": 42_000.0,
+               "shares_outstanding": 4_000.0},
 }
 
 
@@ -73,7 +75,6 @@ def figures(**overrides):
         "ticker": "GOOGL",
         "currency": "USD",
         "source": "expected_values.md Part 10",
-        "shares_outstanding": 4_000.0,
         "price": {"value": 171.00, "as_of": "2026-09-10"},
         "valuation_range": {"low": 180.00, "high": 240.00, "as_of": "2026-09-10"},
         "years": {label: dict(year) for label, year in YEARS.items()},
@@ -116,6 +117,19 @@ def test_net_debt_to_ebitda(metrics):
 
 def test_free_cash_flow_yield(metrics):
     assert metrics["FY2025"]["free_cash_flow_yield"] == pytest.approx(0.0450, abs=1e-12)
+
+
+def test_the_count_is_the_years_figure_not_the_blocks(fundamentals):
+    """Part 10 A's note of 2026-09-17 (decision 48 item 7): the yield
+    divides by the year's own count. A count typed on the block, the shape
+    before the reader carried one per year, is not read and does not fill
+    a year that has none."""
+    block = figures()
+    del block["years"]["FY2025"]["shares_outstanding"]
+    block["shares_outstanding"] = 4_000.0
+    metrics = fundamentals.metrics_by_year(block, ASSUMPTIONS)
+    assert "free_cash_flow_yield" not in metrics["FY2025"]
+    assert "shares_outstanding" in fundamentals.FIGURE_FIELDS
 
 
 def test_a_metric_whose_inputs_a_year_lacks_is_absent_not_zero(metrics):

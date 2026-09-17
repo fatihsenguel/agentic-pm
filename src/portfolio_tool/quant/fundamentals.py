@@ -12,11 +12,11 @@ this existed, and its decisions:
        the formula here is the definition of the metric key the philosophy
        names (Part 10 B). A different formula is a different key.
 
-Pure functions over the figures block, the shape the screen reads and a
-reader tool will one day publish: one company, its fiscal years with their
-end and filed dates and reported figures by name, the shares outstanding,
-the price and the valuation range with their as-of dates. No database, no
-model, no state.
+Pure functions over the figures block, the shape the screen reads and the
+reader publishes: one company, its fiscal years with their end and filed
+dates and reported figures by name, the share count among them (Part 10
+A's note of 2026-09-17, decision 48 item 7), the price and the valuation
+range with their as-of dates. No database, no model, no state.
 
 A blank figure is allowed - Part 10 A has them - and the metric that needs
 it is then absent for that year, never zero. Whether the absence matters is
@@ -179,14 +179,16 @@ def _net_debt_to_ebitda(year: str, f: Mapping, block: Figures, assumptions: Assu
 
 
 def _free_cash_flow_yield(year: str, f: Mapping, block: Figures, assumptions: Assumptions) -> Optional[float]:
-    """The year's free cash flow at the as-of price: the one metric that
-    needs the price and the shares, which sit on the block, not the year."""
+    """The year's free cash flow over the price times the year's own share
+    count: the one metric that needs the price, which sits on the block with
+    its as-of date. The count is the year's figure, the filer's count at that
+    year end (Part 12 B's note, decision 48 item 7); a count anywhere else on
+    the block is not read."""
     ocf, capex = _figure(year, f, "operating_cash_flow"), _figure(year, f, "capex")
-    price, shares = block.get("price"), block.get("shares_outstanding")
-    if ocf is None or capex is None or not isinstance(price, Mapping) or shares is None:
+    shares, price = _figure(year, f, "shares_outstanding"), block.get("price")
+    if ocf is None or capex is None or shares is None or not isinstance(price, Mapping):
         return None
-    price_value = _number(year, "price", price.get("value"))
-    market_value = price_value * _number(year, "shares_outstanding", shares)
+    market_value = _number(year, "price", price.get("value")) * shares
     return _divide(year, ocf - capex, market_value, "market value (price x shares)")
 
 
