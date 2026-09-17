@@ -170,7 +170,8 @@ cannot say it yet: the predictions in it today are mine, typed into
 `docs/WATCHLIST.md`, so scoring them in early 2027 measures me rather than
 the system. The system's own record starts when case 4.3 makes it produce
 a prediction of its own, and the first score on that arrives a year after
-it is made. Until then **n/14 is a count of well-formed answers**, and no
+it is made. Until then **n/14 is a count of well-formed answers** (n/15
+since 18 September 2026, when the runner gained 4.2), and no
 session should read it as the system being good at research. Every case in
 Levels 1 to 3 had a hand-computed reference behind its verdict; this level
 is the first where passing and being right are different questions.
@@ -219,6 +220,20 @@ reproduces it exists and nothing in the graph calls it. PHI-4.1 states the
 method and my three assumptions, W-1 its growth pair. 4.2 has no check and
 no node publishes a range; the price a candidate is measured against is an
 open decision. Still 13/14.
+
+**Status note, 18 September 2026 (twenty-third session).** 4.2 passes on
+Alphabet: the runner has its check, on structure only, and the philosophy
+check node publishes the range beside the screen, 129.39 to 205.62 per
+share on FY2025 from the five stated assumptions, each carried with the
+clause or entry that states it, and the last close of the ticker asked
+with its date and source, the close stored through the same provider as
+the holdings' closes and held to the exchange's print for the dates Part
+9 C covers (decision 57). The router reads "What is X worth?" as research
+since the intent registry says a company's worth is a range and not a
+forecast, two golden runs. 4.1 stays blocked at the same stop, Alphabet
+staying X (decision 56). The runner prints n/15: 14/15, and the count says
+nothing about whether the ends are right; pytest holds that through Part
+11 C on typed blocks and on the node's assembly of the fixture's rows.
 
 **References before code, none computed yet.** Part 10 of
 `expected_values.md`: the synthetic candidate's typed figures over the
