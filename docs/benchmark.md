@@ -211,12 +211,25 @@ which Alphabet files. Whether Alphabet stays X is an open decision
 (`tests/golden/KNOWN_GAPS.md`, decision 56). Still 13/14; the runner's
 reason line under 4.1 says the cause.
 
+**Status note, 17 September 2026 (twenty-second session).** Part 11 is
+computed by hand: a discounted cash flow over the latest filed year's free
+cash flow, run once at each of two growth rates I state, on Alphabet's and
+Apple's FY2025 filings with synthetic assumptions; the pure module that
+reproduces it exists and nothing in the graph calls it. PHI-4.1 states the
+method and my three assumptions, W-1 its growth pair. 4.2 has no check and
+no node publishes a range; the price a candidate is measured against is an
+open decision. Still 13/14.
+
 **References before code, none computed yet.** Part 10 of
 `expected_values.md`: the synthetic candidate's typed figures over the
 stated years and every philosophy clause's verdict and distance by hand, for
 4.1. Part 11: a valuation range from stated assumptions, by hand, for 4.2.
 Prediction scoring, a stated outcome against a stated condition, gets its
 reference with the ledger. Each is written before its pipeline, in Order 4.
+*Corrected 17 September 2026: Part 10 was computed on 10 September and
+Part 11 on 17 September, each before its pipeline; the sentence above
+described the state on 10 September. Prediction scoring's reference is
+still to come.*
 
 **When 3.2 expires.** 3.2 stays live and keeps passing on a refusal until the
 first Order 4 commit that makes 4.3 answerable. At that commit 3.2 is
