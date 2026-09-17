@@ -2416,6 +2416,16 @@ def _format_research_response(sub_results: Dict) -> List[str]:
     was not done: no recommendation, the IPS not consulted since no position
     is implied. A missing valuation range is not a fixed sentence here: the
     screen stops on PHI-4.1 and says so, and the stopped rendering prints it.
+
+    Beside the stopped and the screened renderings, the valuation range and
+    the last close (case 4.2, Part 11, decision 57): the two ends the
+    pipeline computed, the year with its dates, every assumption as the
+    document writes it with the clause or entry that states it, the close
+    with its date and its source, and PHI-4.3's words. No midpoint, no
+    currency the record does not carry, no arithmetic: the ends and the
+    rates are printed as published. Where the node published a stop
+    instead, the stop's reason is printed where the range or the price
+    would be. An excluded company has neither and prints neither.
     """
     result = sub_results.get("ScreeningAgent", {})
     if not result.get("success"):
@@ -2458,9 +2468,11 @@ def _format_research_response(sub_results: Dict) -> List[str]:
             f"Code: SIC {block.get('sic')}, {block.get('sic_description')}, as EDGAR stated it "
             f"on {_pull_day(block.get('sic_as_of'))}.",
         ]
+        lines += _format_valuation(block, philosophy)
         lines += _format_screen_source(block)
     else:
         lines += _format_screen_findings(block, philosophy, findings, ticker)
+        lines += _format_valuation(block, philosophy)
         lines += _format_screen_source(block)
         statements = block.get("statements") or []
         if statements:
@@ -2508,6 +2520,52 @@ def _format_screen_findings(block: Dict, philosophy: Dict, findings: List[Dict],
             f"against a {bound_word} of {_limit_figure(metric, f['limit'])}, "
             f"{_distance_figure(metric, f['distance'])} {relation} it{where}."
         )
+    return lines
+
+
+def _rate(value) -> str:
+    """A rate as the document writes it, 0.09 as 9% and 0.085 as 8.5%: the
+    number's own digits, not a rounding."""
+    return f"{value * 100:g}%"
+
+
+def _format_valuation(block: Dict, philosophy: Dict) -> List[str]:
+    """The range and the price as the node published them, or the stop that
+    stands where each would be; nothing when the block carries neither key
+    (an excluded company, or a block published before 4.2)."""
+    if "valuation" not in block and "price" not in block:
+        return []
+    ticker = (block.get("subject") or {}).get("ticker", "")
+    lines = [""]
+    record = block.get("valuation")
+    if record:
+        years = block.get("years") or {}
+        dates = years.get(record.get("year")) or {}
+        lines += [
+            f"**VALUATION RANGE: {ticker}** as of {record.get('as_of')}, on {record.get('year')} "
+            f"(year ended {dates.get('ends', record.get('ends'))}, annual report filed "
+            f"{dates.get('filed', record.get('filed'))}, figures from {record.get('source')})",
+            f"  {record['low']:.2f} to {record['high']:.2f} per share: the pipeline's arithmetic "
+            "under PHI-4.1's method from the assumptions below, two runs of one formula, one at "
+            "each growth rate, and no middle.",
+            "**Assumptions**, each mine, stated on the clause or entry named:",
+        ]
+        for name, entry in (record.get("assumptions") or {}).items():
+            value = entry.get("value")
+            shown = f"{value} years" if name == "horizon_years" else _rate(value)
+            lines.append(f"  {name} {shown} ({entry.get('source')})")
+        text = (philosophy.get("PHI-4.3") or {}).get("text", "")
+        lines += ["", f"**PHI-4.3** — {text}", "  A range from stated assumptions, never a "
+                  "forecast of a price."]
+    elif block.get("valuation_stopped"):
+        lines += [f"**VALUATION RANGE: {ticker}** not computed.",
+                  f"  {block['valuation_stopped']}"]
+    price = block.get("price")
+    if price:
+        lines.append(f"**Last close:** {price.get('ticker')} {price['value']:.2f} on "
+                     f"{price.get('as_of')}, source {price.get('source')}.")
+    elif block.get("price_stopped"):
+        lines.append(f"**Last close:** none stored. {block['price_stopped']}")
     return lines
 
 

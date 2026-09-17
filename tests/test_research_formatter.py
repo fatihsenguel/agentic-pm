@@ -1,7 +1,10 @@
 """
 The research formatter over hand-built screening blocks, in its three
 renderings: a company excluded on its code, a check that stopped, and a
-company screened clause by clause (decision 29; benchmark 4.1 and 4.6).
+company screened clause by clause (decision 29; benchmark 4.1 and 4.6);
+and, beside the stopped and the screened renderings, the valuation range
+with its assumptions and the last close (case 4.2, Part 11, decision 57),
+or the stop that stands where each would be.
 
 Hand-built input holds the formatter to a shape, not the node to the tool
 (the handoff's rule); the node's own test is test_screening_node.py. The
@@ -93,6 +96,39 @@ def screened_block():
         "sic_as_of": PULLED, "years": years, "findings": findings, "stopped": None,
         "source": "expected_values.md Part 10", "facts_as_of": "2026-09-15T22:17:00+00:00",
     }
+
+
+# Part 11 C, Alphabet FY2025, as valuation_range returns it: the unrounded
+# quotients, the year with its dates, the source, the five assumptions.
+def valuation_record():
+    return {
+        "low": 129.3871305225, "high": 205.6162184284, "as_of": "2026-09-16",
+        "year": "FY2025", "ends": "2025-12-31", "filed": "2026-02-05",
+        "source": "EDGAR companyfacts",
+        "assumptions": {
+            "required_return": {"value": 0.09, "source": "PHI-4.1"},
+            "terminal_growth": {"value": 0.03, "source": "PHI-4.1"},
+            "horizon_years": {"value": 10, "source": "PHI-4.1"},
+            "growth_low": {"value": 0.06, "source": "W-1"},
+            "growth_high": {"value": 0.12, "source": "W-1"},
+        },
+    }
+
+
+# Part 9 C: the last close before 2026-09-17.
+def price_record():
+    return {"ticker": "GOOGL", "value": 342.87, "as_of": "2026-09-16", "source": "yfinance"}
+
+
+def valued_block(base=stopped_block):
+    """Alphabet as the node publishes it today: the screen stopped at
+    PHI-2.1, the range and the price beside it (the range does not depend
+    on the screen)."""
+    block = base()
+    block["years"]["FY2025"] = {"ends": "2025-12-31", "filed": "2026-02-05"}
+    block.update({"valuation": valuation_record(), "valuation_stopped": None,
+                  "price": price_record(), "price_stopped": None})
+    return block
 
 
 def render(block):
@@ -201,3 +237,77 @@ def test_a_failed_agent_prints_its_error_and_nothing_else():
     text = "\n".join(lines)
     assert "ZZZZ" in text and "lists no filer" in text
     assert "PHI-" not in text
+
+
+# --- the range and the price, beside the screen (case 4.2) ---------------------------
+
+def test_the_valued_rendering_passes_the_runners_4_2():
+    block = valued_block()
+    assert run_cases.check_4_2(state_for(block, render(block))) == []
+
+
+def test_the_screened_rendering_with_a_range_passes_both_4_1_and_4_2():
+    block = valued_block(screened_block)
+    text = render(block)
+    assert run_cases.check_4_1(state_for(block, text)) == []
+    assert run_cases.check_4_2(state_for(block, text)) == []
+
+
+def test_the_range_prints_both_ends_the_year_and_its_dates_and_no_middle():
+    text = render(valued_block())
+    assert "129.39" in text and "205.62" in text
+    assert "FY2025" in text and "2025-12-31" in text and "2026-02-05" in text
+    assert "167.50" not in text and "167.51" not in text
+    assert "PHI-4.1" in text and "PHI-4.3" in text
+    assert PHILOSOPHY["PHI-4.3"].text in text
+
+
+def test_every_assumption_prints_as_the_document_writes_it_with_its_source():
+    text = render(valued_block())
+    for line in ("required_return 9% (PHI-4.1)", "terminal_growth 3% (PHI-4.1)",
+                 "horizon_years 10 years (PHI-4.1)", "growth_low 6% (W-1)",
+                 "growth_high 12% (W-1)"):
+        assert line in text, line
+    assert "mine" in text
+
+
+def test_the_price_prints_with_its_date_and_source():
+    text = render(valued_block())
+    assert "GOOGL 342.87 on 2026-09-16" in text and "yfinance" in text
+
+
+def test_a_stopped_range_prints_where_it_stopped_and_no_end():
+    block = valued_block()
+    block["valuation"] = None
+    block["valuation_stopped"] = ("W-2 (ADBE) states no growth_low and growth_high; a "
+                                  "candidate under a valuation condition states the growth "
+                                  "I assume for it, and until it does it has no range.")
+    text = render(block)
+    assert "no growth_low and growth_high" in text
+    assert "129.39" not in text and "205.62" not in text and "PHI-4.3" not in text
+    assert "GOOGL 342.87 on 2026-09-16" in text
+
+
+def test_a_missing_price_prints_why_and_the_range_stands():
+    block = valued_block()
+    block["price"] = None
+    block["price_stopped"] = ("GOOGL is neither held nor on the watchlist, so there is no "
+                              "currency to store a close under; no price is fetched (decision 57).")
+    text = render(block)
+    assert "no price is fetched" in text
+    assert "342.87" not in text
+    assert "129.39" in text and "205.62" in text
+
+
+def test_a_block_without_the_range_keys_renders_as_before():
+    """The excluded rendering and blocks published before 4.2: no range
+    section at all, not a sentence about one."""
+    for block in (bank_block(), stopped_block()):
+        text = render(block)
+        assert "VALUATION" not in text and "Last close" not in text
+
+
+def test_the_valued_rendering_forecasts_no_price():
+    text = render(valued_block())
+    assert run_cases.PRICE_FORECAST.search(text) is None
+    assert "never a forecast of a price" in text
