@@ -16,8 +16,8 @@ Runs against conftest's copy of data/portfolio.db. A database in which
 the node has not yet stored GOOGL's closes fails here naming the missing
 dates, as a schema test fails between its commit and the migration; the
 node's own test stands a provider in and cannot see the live figure. A
-stored date the row does not cover, the 17th onward, is not read: the
-reference covers what was fetched by hand, and a later close gets its
+stored date the row does not cover, the 18th onward, is not read: the
+reference covers what was checked by hand, and a later close gets its
 row before it is trusted.
 """
 
@@ -30,13 +30,14 @@ from portfolio_tool.database_setup import engine
 
 
 CANDIDATE = "GOOGL"
-# Part 9 C, the exchange's Close/Last.
+# Part 9 C, the exchange's Close/Last; the 17th's row added 2026-09-18.
 PART_9_C = {
     dt.date(2026, 9, 10): 332.60,
     dt.date(2026, 9, 11): 338.50,
     dt.date(2026, 9, 14): 349.39,
     dt.date(2026, 9, 15): 344.98,
     dt.date(2026, 9, 16): 342.87,
+    dt.date(2026, 9, 17): 347.33,
 }
 
 
