@@ -1544,6 +1544,147 @@ async def screening_agent_node(state: AgentState) -> Dict[str, Any]:
             agent_ctx.__exit__(None, None, None)
 
 
+def utc_today() -> dt.date:
+    """The UTC date of the run, the clock the ledger is read on (Part 14
+    D43). A function so that a test pins the date."""
+    return dt.datetime.utcnow().date()
+
+
+def _plain(value):
+    """A record for shared_data: dataclasses as dicts, dates as strings,
+    floats as they are. Nothing else is converted."""
+    from dataclasses import asdict, is_dataclass
+    if is_dataclass(value):
+        return _plain(asdict(value))
+    if isinstance(value, dict):
+        return {k: _plain(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_plain(v) for v in value]
+    if isinstance(value, dt.date):
+        return value.isoformat()
+    return value
+
+
+async def ledger_agent_node(state: AgentState) -> Dict[str, Any]:
+    """
+    Ledger Agent node - the prediction ledger read as of today (case 4.5;
+    PHI-6.2; Part 14, D41 to D45).
+
+    Reads the watchlist's prediction rows (WATCHLIST_PATH) and, for every
+    figure prediction whose date has come, the candidate's filed figures
+    through the filings path the screening node uses: the ticker file
+    resolves the ticker to a CIK, the submissions document gives the
+    filer's row the facts hang off, the company facts are fetched under
+    filings_fetch_interval_days and read into fiscal years. Nothing is
+    fetched for an open prediction or an event; today nothing is due and
+    the node reads no figure. A ticker the file lacks is an error, as it
+    is for the screen. The scorer, portfolio_tool/predictions.py, then
+    gives every prediction its record and the counts, once.
+
+    Publishes `shared_data["ledger"]`, the shape tests/benchmark/run_cases.py
+    holds it to: the as-of, the ledger's path, one record per prediction
+    in document order (D45: id, candidate, kind, statement, made_on, due,
+    status; a figure's metric, bound, value and period; the written score
+    where the ledger carries one; the filing's verdict with the reported
+    figure, its form, filed date and source where one was computed;
+    whether the two agree; the reason where a due one could not be
+    scored), the summary, and for each candidate whose figures were read
+    the source and the pull instant. The synthesizer formats; this node
+    computes no count and writes no score anywhere.
+    """
+    tracer = get_tracer()
+    agent_ctx = None
+
+    try:
+        if tracer and hasattr(tracer, "get_current_request"):
+            req = tracer.get_current_request()
+            if req:
+                agent_ctx = req.trace_agent("LedgerAgent")
+                agent_ctx.__enter__()
+    except Exception as e:
+        logger.warning(f"Tracing failed in LedgerAgent (ignoring): {e}")
+
+    print("\n" + "=" * 80)
+    print("LEDGER AGENT - The prediction ledger as of today")
+    print("=" * 80)
+
+    session = None
+    try:
+        from contextlib import nullcontext
+
+        from portfolio_tool.database_setup import FiledFetchMetadata, get_session
+        from portfolio_tool.filed_figures import filed_years_for
+        from portfolio_tool.filings import cik_for, update_filed_facts, update_filer
+        from portfolio_tool.predictions import OPEN, ledger, status
+        from portfolio_tool.watchlist import load_watchlist, predictions
+
+        watchlist = load_watchlist(WATCHLIST_PATH)
+        as_of = utc_today()
+        rows = predictions(watchlist)
+        print(f"  ledger: {watchlist.path}, {len(rows)} predictions as of {as_of}")
+
+        needed = sorted({p.candidate for p in rows
+                         if p.kind == "figure" and status(p, as_of) != OPEN})
+        blocks, figures = {}, {}
+        if needed:
+            provider = edgar_provider()
+            session = get_session()
+        for cid in needed:
+            candidate = watchlist.candidates[cid]
+            with (agent_ctx.trace_tool("filed_figures") if agent_ctx else nullcontext()) as tool_ctx:
+                if tool_ctx:
+                    tool_ctx.set_input({"candidate": cid, "ticker": candidate.ticker,
+                                        "as_of": as_of.isoformat()})
+                cik = cik_for(session, provider, candidate.ticker)
+                filer = update_filer(session, provider, cik)
+                update_filed_facts(session, provider, cik)
+                block = filed_years_for(session, cik, as_of)
+                block["source"] = provider.name
+                blocks[cid] = block
+                figures[cid] = {"ticker": candidate.ticker, "cik": cik, "name": filer.name,
+                                "source": provider.name,
+                                "facts_as_of": _utc(session.get(FiledFetchMetadata, cik).last_fetch_time)}
+                if tool_ctx:
+                    tool_ctx.set_output({"years": sorted(block["years"])})
+            print(f"  {cid} ({candidate.ticker}): {len(block['years'])} fiscal years read")
+
+        result = ledger(rows, blocks, as_of)
+        print("  " + ", ".join(f"{k} {v}" for k, v in result.summary.items()))
+        for r in result.records:
+            said = r.status
+            if r.filing:
+                said += f", the filing says {r.filing.result}"
+            elif r.unscored:
+                said += ", unscored"
+            print(f"  {r.id}: {said}")
+
+        summary = {
+            "as_of": as_of.isoformat(),
+            "watchlist": watchlist.path,
+            "records": _plain(result.records),
+            "summary": dict(result.summary),
+            "figures": figures,
+        }
+        out = {"success": True, "agent_name": "LedgerAgent", "ledger": summary}
+        return {
+            **mark_agent_complete(state, "LedgerAgent", out),
+            "shared_data": {**state.get("shared_data", {}), "ledger": summary},
+        }
+
+    except Exception as e:
+        if session is not None:
+            session.rollback()
+        return {
+            **mark_agent_complete(state, "LedgerAgent", {"success": False, "error": str(e)}),
+            **add_error(state, f"LedgerAgent: {str(e)}"),
+        }
+    finally:
+        if session is not None:
+            session.close()
+        if agent_ctx:
+            agent_ctx.__exit__(None, None, None)
+
+
 # =============================================================================
 # FIXED: OPTIMIZATION AGENT NODE
 # =============================================================================
