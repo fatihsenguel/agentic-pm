@@ -5,8 +5,9 @@ test_watchlist.py.
 
 What the loader reads (Part 11 D38): each candidate's id, ticker, name,
 currency and status, and its valuation table, the growth I assume for it
-as a low and a high. What it leaves alone: the prediction rows, which are
-the scorer's (case 4.5) and are read by nothing yet. What it refuses: a
+as a low and a high; since case 4.5 the prediction rows too, held in
+test_watchlist_predictions_loader.py. What it leaves alone: the thesis,
+the entry condition and added_on, read by nothing. What it refuses: a
 missing file with no default, a top-level key nothing reads, a candidate
 lacking a field, two candidates with one id or one ticker, a valuation
 table that is not exactly the two ends as fractions. The order of the two
@@ -204,9 +205,11 @@ def test_the_order_of_the_ends_is_the_ranges_rule_not_the_loaders(load):
     assert wl.candidates["W-1"].growth == {"growth_low": 0.20, "growth_high": 0.12}
 
 
-def test_the_prediction_rows_are_left_alone(load):
-    """The scorer's rows (case 4.5): the loader neither reads nor exposes
-    them, so a candidate's shape here has no prediction field."""
+def test_the_prediction_rows_are_read_and_the_rest_left_alone(load):
+    """The scorer's rows (case 4.5, Part 14) are read since the twenty-fourth
+    session, held in test_watchlist_predictions_loader.py; the thesis, the
+    entry condition and added_on are still read by nothing."""
     wl = load(W1)
-    assert not hasattr(wl.candidates["W-1"], "prediction")
-    assert not hasattr(wl.candidates["W-1"], "predictions")
+    assert [p.id for p in wl.candidates["W-1"].predictions] == ["W-1.1"]
+    for field in ("thesis", "entry_condition", "added_on"):
+        assert not hasattr(wl.candidates["W-1"], field), field
