@@ -201,6 +201,17 @@ METRICS: Mapping[str, Callable[[str, Mapping, Figures, Assumptions], Optional[fl
     "free_cash_flow_yield": _free_cash_flow_yield,
 }
 
+# The fields each formula reads, stated beside it so that a caller citing
+# a metric's source can name the filings those fields came from (case 4.5,
+# Part 14 D45). tests/test_predictions.py holds each list to its formula:
+# a year lacking any one of them yields no value for the metric.
+READS: Mapping[str, Tuple[str, ...]] = {
+    "return_on_invested_capital": ("operating_income", "equity", "cash") + BORROWING_FIELDS,
+    "gross_margin": ("revenue", "cost_of_revenue"),
+    "net_debt_to_ebitda": ("operating_income", "depreciation_amortisation", "cash") + BORROWING_FIELDS,
+    "free_cash_flow_yield": ("operating_cash_flow", "capex", "shares_outstanding"),
+}
+
 _DATES = ("ends", "filed")
 
 
