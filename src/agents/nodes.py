@@ -2723,6 +2723,99 @@ def _format_screen_source(block: Dict) -> List[str]:
     return lines
 
 
+def _stated_figure(metric: Optional[str], value) -> str:
+    """A prediction's stated value as the document writes it: a share as
+    0.87 is 87%, a multiple as 2x, a money figure with its digits."""
+    if metric in _SHARE_METRICS:
+        return _rate(value)
+    if metric == "net_debt_to_ebitda":
+        return f"{value:g}x"
+    return f"{value:,.0f}"
+
+
+def _reported_figure(metric: Optional[str], value) -> str:
+    """A reported figure as the filing's verdict carries it: a ratio to two
+    decimals of a percent, a multiple to two decimals, a money figure to
+    the unit filed."""
+    if metric in _SHARE_METRICS:
+        return f"{value:.2%}"
+    if metric == "net_debt_to_ebitda":
+        return f"{value:.2f}x"
+    return f"{value:,.0f}"
+
+
+def _format_ledger_response(sub_results: Dict) -> List[str]:
+    """Format the ledger block (case 4.5; Part 14 D45). Prints every
+    prediction with its due date and status; a written score as written,
+    with the filing's verdict beside a figure's and whether they agree;
+    a due figure prediction's verdict from the filing, marked not yet
+    recorded; a due one that could not be scored with its reason; the
+    counts as the scorer published them. No count, comparison or rate is
+    computed here: a percent and a thousands separator are presentation
+    of a figure the record carries. No currency is printed: the record
+    carries none (KNOWN_GAPS, the currency entry). Nothing here says what
+    a price will be."""
+    result = sub_results.get("LedgerAgent", {})
+    if not result.get("success"):
+        return ["Prediction ledger not read", "", result.get("error", "unknown error")]
+    block = result.get("ledger") or {}
+    summary = block.get("summary") or {}
+    lines = [
+        f"**PREDICTION LEDGER** as of {block.get('as_of')}",
+        "",
+        f"{summary.get('predictions')} predictions: {summary.get('scored')} scored, "
+        f"{summary.get('due')} due, {summary.get('open')} open. The counts are the "
+        f"ledger's, {block.get('watchlist')}.",
+    ]
+    for r in block.get("records") or []:
+        metric = r.get("metric")
+        if r.get("kind") == "figure":
+            bound = "at least" if r.get("bound") == "min" else "at most"
+            what = (f"figure: {metric} {bound} {_stated_figure(metric, r.get('value'))} "
+                    f"for {r.get('period')}")
+        else:
+            what = "event"
+        lines += ["", f"**{r.get('id')}** ({r.get('candidate')}), {what}. Made "
+                      f"{r.get('made_on')}, due {r.get('due')}.",
+                  f"  {r.get('statement')}"]
+        status, score, filing = r.get("status"), r.get("score"), r.get("filing")
+        if status == "open":
+            lines.append(f"  Status: open, due {r.get('due')}.")
+        elif status == "scored":
+            lines.append(f"  Status: scored {score.get('result')} on {score.get('scored_on')}. "
+                         f"Outcome: {score.get('outcome')} Source: {score.get('source')}.")
+            if filing:
+                word = "agree" if r.get("agrees") else "differ"
+                lines.append(f"  The filing says {filing.get('result')}: reported "
+                             f"{_reported_figure(metric, filing.get('reported'))} against "
+                             f"{bound} {_stated_figure(metric, r.get('value'))} "
+                             f"({filing.get('form')} filed {filing.get('filed')}, source "
+                             f"{filing.get('source')}). The ledger and the filing {word}.")
+        elif filing:
+            lines.append(f"  Status: due since {r.get('due')}. The filing says "
+                         f"{filing.get('result')}: reported "
+                         f"{_reported_figure(metric, filing.get('reported'))} against "
+                         f"{bound} {_stated_figure(metric, r.get('value'))} for "
+                         f"{r.get('period')} ({filing.get('form')} filed {filing.get('filed')}, "
+                         f"source {filing.get('source')}). Not yet recorded in the ledger.")
+        else:
+            lines.append(f"  Status: due since {r.get('due')}, unscored. {r.get('unscored')}")
+    figures = block.get("figures") or {}
+    if figures:
+        lines += ["", "**Figures read**, each fiscal year's own annual report:"]
+        for cid, f in figures.items():
+            lines.append(f"  {cid}: {f.get('ticker')}, {f.get('name')}, CIK {f.get('cik')}, "
+                         f"source {f.get('source')}, pulled {_pull_day(f.get('facts_as_of'))}.")
+    lines += [
+        "",
+        "**Not done:** no score was written by this system. The scores in the ledger are "
+        "written by hand with their outcome and source (PHI-6.2); the filing's verdict on a "
+        "due figure prediction is reported beside the ledger, never into it. No price is "
+        "forecast.",
+    ]
+    return lines
+
+
 def _format_optimization_response(sub_results: Dict) -> List[str]:
     """Format optimization results, without the allocation itself.
 
