@@ -2451,3 +2451,32 @@ Neither `FALSE` on a line of its own nor `0001652044` anywhere is in the
 text. What the fixture cannot show is the whole document's counts in
 sections A to C; the extractor was held to them once, by hand, on the
 fetched document: 2,745 lines and 343,344 characters.
+
+### H. Which filing, and where its document is
+
+Added 2026-09-19, recorded from the submissions document,
+`https://data.sec.gov/submissions/CIK0001652044.json`, **pulled 2026-09-18
+22:00 UTC**, 154,521 bytes, and from the stored facts. Decisions D54 and
+D55, taken 2026-09-19.
+
+| # | Decision | Choice |
+|---|---|---|
+| D54 | Which filing is read? | **The filer's latest 10-K filed by the as-of date, read off the stored facts: the latest `filed` among its facts whose `form` is exactly `10-K`, and that fact's accession.** The facts are under the filings interval already, and it is the filing the prediction frame takes its threshold from (Part 15 C), so the reading and the figure cite one report. For Alphabet as of 2026-09-18: 0001652044-26-000018, filed 2026-02-05. **An amendment refuses**: when the facts carry a `10-K/A` filed after that 10-K and by the as-of date, nothing is read, naming the amendment, since which text stands is not decided. Apple's facts carry one 10-K/A, Part 12's FY2008 amendment, filed before its latest 10-K, so it refuses nothing today. A filer with no 10-K among its facts is refused naming that (D47). Rejected: reading the amendment as the latest, which can be a two-page exhibit fix; passing over amendments silently; a listing of the filer's filings kept in a table, which would be a second copy of what the facts say. |
+| D55 | Where is the document? | **`https://www.sec.gov/Archives/edgar/data/<CIK without padding>/<accession without hyphens>/<primaryDocument>`, the file's name taken from the accession's row in the submissions document's `filings.recent`, asked once per accession.** `recent` is sixteen arrays of one length, newest first: 1,013 rows here, from 2023-06-29 to 2026-09-16, no accession twice and no `primaryDocument` empty; 1,692 older filings stand in one further file that `filings.files` names. **An accession that is not in `recent` refuses**, stating how many filings the listing holds and from when; the further files are not asked for. **A row whose form or filed date is not what the facts say for the accession refuses**: two EDGAR documents disagreeing about one filing. A name is letters, digits, `.`, `_`, `-` and `/`, without `..`: other forms' names carry a directory, `xslF345X06/ownership.xml`, and a 10-K's here does not. Rejected: paging into the older files, a third request shape for a case no filer here has; the accession's index page, a fourth. |
+
+`tests/golden/edgar_filings_goog.csv` holds six rows of that listing as
+pulled, with their index in `recent`: the first and the last, a 10-Q, and
+the three 10-Ks, the only rows of 1,013 whose form names a 10-K.
+
+| index | accession | filed | report date | form | primaryDocument |
+|---|---|---|---|---|---|
+| 0 | 0001193125-26-393517 | 2026-09-16 | 2026-09-14 | 4 | xslF345X06/ownership.xml |
+| 46 | 0001652044-26-000071 | 2026-07-23 | 2026-06-30 | 10-Q | goog-20260630.htm |
+| 237 | 0001652044-26-000018 | 2026-02-05 | 2025-12-31 | 10-K | goog-20251231.htm |
+| 564 | 0001652044-25-000014 | 2025-02-05 | 2024-12-31 | 10-K | goog-20241231.htm |
+| 887 | 0001652044-24-000022 | 2024-01-31 | 2023-12-31 | 10-K | goog-20231231.htm |
+| 1012 | 0001921094-23-000351 | 2023-06-29 | | 144 | xsl144X01/primary_doc.xml |
+
+The stored facts name the same three 10-Ks with the same filed dates, and
+a fourth, 0001652044-23-000016, filed 2023-02-03, which `recent` no longer
+holds: asked for, it is D55's refusal.
