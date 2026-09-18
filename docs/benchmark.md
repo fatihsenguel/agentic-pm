@@ -171,7 +171,8 @@ cannot say it yet: the predictions in it today are mine, typed into
 the system. The system's own record starts when case 4.3 makes it produce
 a prediction of its own, and the first score on that arrives a year after
 it is made. Until then **n/14 is a count of well-formed answers** (n/15
-since 18 September 2026, when the runner gained 4.2), and no
+since 18 September 2026, when the runner gained 4.2; n/16 the same day,
+when it gained 4.5), and no
 session should read it as the system being good at research. Every case in
 Levels 1 to 3 had a hand-computed reference behind its verdict; this level
 is the first where passing and being right are different questions.
@@ -235,6 +236,21 @@ staying X (decision 56). The runner prints n/15: 14/15, and the count says
 nothing about whether the ends are right; pytest holds that through Part
 11 C on typed blocks and on the node's assembly of the fixture's rows.
 
+**Status note, 18 September 2026 (twenty-fourth session).** 4.5 passes on
+the ledger as it stands: four predictions, all open, each listed with its
+due date, the count the file's, read by the runner with its own parser and
+not through the loader. Prediction scoring is computed by hand first, Part
+14: right or wrong on a strict comparison at the bound, the period's own
+annual report through the reader, the score written by hand into the
+ledger and never by the system, the filing's verdict on a due figure
+prediction reported beside it. The ledger is its own intent, `ledger`,
+since research is one named company and this names none; the golden set
+pins the routing on two runs. What 4.5 cannot see today: any due
+prediction, since the first due date is 1 February 2027; its due branch
+runs in pytest over Part 14's synthetic ledger only, and the first live
+due record is read by hand against the filer's report before it is
+believed. The runner prints n/16: 15/16, 4.1 blocked as before.
+
 **References before code, none computed yet.** Part 10 of
 `expected_values.md`: the synthetic candidate's typed figures over the
 stated years and every philosophy clause's verdict and distance by hand, for
@@ -244,7 +260,10 @@ reference with the ledger. Each is written before its pipeline, in Order 4.
 *Corrected 17 September 2026: Part 10 was computed on 10 September and
 Part 11 on 17 September, each before its pipeline; the sentence above
 described the state on 10 September. Prediction scoring's reference is
-still to come.*
+still to come.* *Corrected 18 September 2026: Part 14, prediction
+scoring, was computed on 18 September before the scorer, on synthetic
+predictions over Alphabet's filed FY2025 lines, since every real
+prediction is due in 2027.*
 
 **When 3.2 expires.** 3.2 stays live and keeps passing on a refusal until the
 first Order 4 commit that makes 4.3 answerable. At that commit 3.2 is
