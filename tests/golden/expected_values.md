@@ -1920,3 +1920,139 @@ filed it, is in each committed csv with section `Y`. JPMorgan's FY2025 report
 is filed under an accession whose prefix is not JPMorgan's CIK: the prefix
 names whoever submitted the filing, and it is not a way to find the filer's
 own reports.
+
+---
+
+## Part 14 — Prediction scoring
+
+Computed 2026-09-18 by hand, before any code (DIRECTION.md, step 5 of the
+judgement half, invariant 6; PHI-6.2; benchmark case 4.5), so the scorer
+has something independent to be wrong against. Decisions D41 to D45.
+Plain decimal arithmetic, none of the repository's code. The ledger is the
+four predictions in `docs/WATCHLIST.md`; all four are due in 2027 and none
+can be scored today, so the rows below are **synthetic predictions, stated
+here and nowhere else, over real filed figures**: Alphabet's FY2025 lines
+from Part 13 B, read from the stored facts of the pull of 2026-09-16 at
+the latest vintage (D29), the year's own annual report Part 13 F's,
+`0001652044-26-000018` filed 2026-02-05. USD millions. Nothing in this
+Part is written into `docs/WATCHLIST.md` or `watchlist.toml`, and nothing
+in the code writes a score into either: the score in the ledger is mine.
+
+### Decisions
+
+| # | Decision | Choice |
+|---|---|---|
+| D41 | What is a score? | **Right or wrong, one comparison, strict and unrounded, no partial credit and no distance.** A `min` prediction is right when the reported figure is at or above the stated value and a `max` one when it is at or below it: "at least" and "at most" admit equality, the mirror of D9 and D23. Rejected: a distance beside the result, which is what a screen reports and a ledger does not ("No partial credit"); rounding either side before comparing, which F7 catches. |
+| D42 | Which figure is the reported one? | **The period's own annual report, through the reader the screen uses (Part 12, D21 and D29), the field or metric the prediction names.** `revenue` is a field of the block, read as filed; `gross_margin`, `return_on_invested_capital` and `net_debt_to_ebitda` are Part 10 B's metric keys, by their one formula each. `operating_margin` and `free_cash_flow` are in the ledger's vocabulary (`tests/test_watchlist.py`) and no formula in the repository computes them: a prediction naming either stops naming the metric, and the formula is added with its row here when a prediction asks. A period the filer has not filed by the as-of date is not a figure: the prediction is due and unscored with that reason, never wrong (the document: "never scored right because nothing was reported", and never wrong for the same reason). A period filed but the field missing stops naming the figure, PHI-1.2's shape (D25). Rejected: the latest year in place of the stated period; a quarterly figure; a figure from anywhere but the reader. |
+| D43 | When is a prediction due? | **On and after its due date, by the UTC date of the run**, the clock the screening node keeps (decision 29). Open before it, whatever has been filed. Rejected: due only after the date has passed, which leaves a prediction "by 1 March" open on 1 March; a default as-of. |
+| D44 | Who writes the score, and what does the pipeline compute? | **I write the score into the ledger, with the outcome, its source, the date and the result** (`docs/WATCHLIST.md`; PHI-6.2). The pipeline writes nowhere. For a due figure prediction it computes the filing's verdict under D41 and D42 and reports it as the filing's, marked not yet recorded until the ledger carries the score; where the ledger carries one, both are reported and the answer says whether they agree, and a disagreement changes nothing, since a prediction is never edited. For an event prediction the pipeline has no outcome and reports the prediction as due and awaiting mine, listed, never skipped. Rejected: the system writing into either document; reading an event's outcome off filed facts, which is a reading and not a figure; a due event counted as scored. |
+| D45 | What does the record carry? | **Per prediction: id, candidate, kind, statement, made_on, due, status (open, due, scored), and for a figure prediction its metric, bound, value and period; for a ledger-scored one the four written fields; for a due figure one the reported figure, the result, the form, the filed date and the source name; for a due one that could not be scored, the reason.** One reported figure per due prediction reaches the record, the way a finding carries `observed`: the outcome is the point of the answer. No array, no document, no figure for an open prediction. The summary beside the records: the counts of predictions, scored, due and open, computed once in the scorer and printed by the formatter. Rejected: dates only, which leaves the answer unable to state the outcome case 4.5 asks for; every year's figures; the counts in the formatter. |
+
+### A. The ledger as of three dates
+
+The four predictions as `watchlist.toml` carries them, none scored.
+
+| id | kind | period | due | 2026-09-18 | 2027-02-01 | 2027-03-01 |
+|---|---|---|---|---|---|---|
+| W-1.1 | figure, revenue, min 420,000 | FY2026 | 2027-03-01 | open | open | due |
+| W-1.2 | event | | 2027-03-01 | open | open | due |
+| W-2.1 | figure, revenue, min 25,500 | FY2026 | 2027-02-01 | open | due | due |
+| W-2.2 | figure, gross_margin, min 0.87 | FY2026 | 2027-02-01 | open | due | due |
+
+| as of | predictions | scored | due | open |
+|---|---|---|---|---|
+| 2026-09-18 | 4 | 0 | 0 | 4 |
+| 2027-02-01 | 4 | 0 | 2 | 2 |
+| 2027-03-01 | 4 | 0 | 4 | 0 |
+
+W-2.1 and W-2.2 are due on 2027-02-01 (D43); whether Adobe's FY2026 report
+is filed by then is what decides scored against due-and-unscored, and
+nothing here assumes it. W-1.2 on 2027-03-01 is section D's E-2 shape.
+
+### B. The filed inputs
+
+Alphabet, FY2025, the year's own 10-K, both lines on one filing.
+
+| Field | Tag | Value | Form, accession, filed |
+|---|---|---|---|
+| revenue | `Revenues` | 402,836 | 10-K, 0001652044-26-000018, 2026-02-05 |
+| cost_of_revenue | `CostOfRevenue` | 162,535 | 10-K, 0001652044-26-000018, 2026-02-05 |
+
+gross profit = 402,836 - 162,535 = 240,301
+gross_margin = 240,301 / 402,836 = 0.5965231508603997656614602468 (Part
+10 B's formula; the Decimal quotient at 28 digits, 0.596523 at six).
+
+### C. Figure predictions against the filed figure
+
+Synthetic, made 2026-01-01, due 2026-03-01, period FY2025, read as of
+2026-09-18: every row is due (D43) and FY2025 is filed, so every row is
+scored. The reported figure and its source are section B's.
+
+| id | metric | bound | value | reported | comparison | result |
+|---|---|---|---|---|---|---|
+| S-1 | revenue | min | 400,000 | 402,836 | 402,836 >= 400,000 | right |
+| S-2 | revenue | min | 410,000 | 402,836 | 402,836 < 410,000 | wrong |
+| S-3 | revenue | min | 402,836 | 402,836 | equal, at the bound | right |
+| S-4 | revenue | max | 400,000 | 402,836 | 402,836 > 400,000 | wrong |
+| S-5 | revenue | max | 402,836 | 402,836 | equal, at the bound | right |
+| S-6 | gross_margin | min | 0.59 | 0.596523... | 0.596523 >= 0.59 | right |
+| S-7 | gross_margin | min | 0.60 | 0.596523... | 0.596523 < 0.60 | wrong |
+
+The record for S-1 (D45): status scored by the filing, not recorded;
+reported 402,836,000,000 as filed, in the block's currency USD; result
+right; form 10-K, filed 2026-02-05, source EDGAR. S-6's reported figure is
+the ratio, 0.5965231508603997 as a float, as a finding carries a metric.
+
+### D. Event predictions
+
+| id | shape | as of | status | what is reported |
+|---|---|---|---|---|
+| E-1 | event, due 2026-03-01, the four score fields written: outcome "the FY2025 annual report's segment note shows the cloud segment with positive operating income for the full year", source "10-K 0001652044-26-000018 filed 2026-02-05, segment note", scored_on 2026-02-06, result right | 2026-09-18 | scored | the four fields as written; nothing computed, nothing checked against a figure |
+| E-2 | event, due 2026-03-01, no score written | 2026-09-18 | due | due since 2026-03-01, awaiting the outcome, which is mine to write; listed, never skipped, never right |
+| E-3 | event, due 2027-03-01, no score written (W-1.2's shape) | 2026-09-18 | open | open, due 2027-03-01 |
+
+E-1's outcome text is a stand-in for the shape and not a claim about
+Alphabet's segment note; a real written score carries what I read, and no
+figure is invented here for one. The scorer copies the fields and computes
+nothing.
+
+### E. Falsifier rows
+
+- **F1: before the due date, nothing is scored (D43).** S-1 read as of
+  2026-02-28: open, no figure read, no result, though FY2025 was filed on
+  2026-02-05. A scorer that scores a filed period ahead of the date fails.
+- **F2: on the due date it is due (D43).** S-1 as of 2026-03-01: due and
+  scored. A scorer reading "passed" as strictly after fails here.
+- **F3: an unfiled period is never wrong (D42).** A revenue prediction,
+  min 400,000, period FY2026, due 2026-03-01, as of 2026-09-18: due,
+  unscored, reason "FY2026 is not filed by 2026-09-18", no result. A scorer
+  that returns wrong, or that reads FY2025 in place of FY2026, fails.
+- **F4: a metric with no formula stops (D42).** The same prediction with
+  metric `operating_margin`: a stop naming the metric. No result.
+- **F5: a filed period missing the field stops (D42, D25).** S-6 over a
+  block whose FY2025 carries revenue and no cost_of_revenue: a stop naming
+  `cost_of_revenue` for FY2025. No result, not wrong.
+- **F6: a written score that disagrees is reported, not repaired (D44).**
+  S-2 with a written score, result right, outcome "revenue 410,200", source
+  "press release": the record carries the written four fields and the
+  filing's verdict, wrong, with its source; the answer says the two differ.
+  Nothing is changed and nothing is raised.
+- **F7: strict and unrounded (D41).** Revenue min 402,835.999: right.
+  Revenue min 402,836.001: wrong. A scorer rounding to the million calls
+  both right.
+- **F8: the count is the file's (case 4.5).** A ledger of four with one
+  record missing from the block is a defect the runner names; the summary's
+  four counts sum to the number of predictions on every date in section A.
+
+### F. What Part 14 does not cover
+
+- A prediction on `return_on_invested_capital` or `net_debt_to_ebitda`:
+  allowed by D42, no row, since no prediction states one and Alphabet's
+  block stops on both (Part 13 B). The row comes with the first prediction.
+- A real due prediction: February and March 2027, on Adobe's and
+  Alphabet's FY2026 reports, neither filed. Adobe has no facts stored
+  (KNOWN_GAPS, "What W-2 needs before it has a range").
+- A figure restated between the period's own report and a later filing:
+  D29 reads the latest vintage, and no row here has two vintages.
+- The score I write into the ledger: its shape is `tests/test_watchlist.py`'s
+  and the loader's; nothing here scores my scoring.
