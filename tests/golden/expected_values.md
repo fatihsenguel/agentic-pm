@@ -1019,7 +1019,9 @@ metrics already keep it.
   range and gets its own decision and its own rows.
 - **A model's proposal.** Every assumption here is mine by document. What
   a proposed assumption is, how it is marked and how it reaches the record
-  is case 4.3's.
+  is case 4.3's. *Decided 18 September 2026: a direction from a closed
+  set and never a number, Part 15 D48 and B (decision 59); the record's
+  `source` stays a clause or entry id.*
 - **More than one share class.** One count against one value, the known
   limit Part 13 B records; Alphabet's count is the filer's own and covers
   every class.
@@ -2088,3 +2090,154 @@ the report is filed.*
   D29 reads the latest vintage, and no row here has two vintages.
 - The score I write into the ledger: its shape is `tests/test_watchlist.py`'s
   and the loader's; nothing here scores my scoring.
+
+---
+
+## Part 15 — The reading record and a prediction the system proposes
+
+Written 2026-09-18 by hand, before any code (DIRECTION.md Order 4, the
+research agent, invariants 1, 3, 6 and 7; PHI-6.1 and PHI-6.2; benchmark
+cases 4.3 and 4.4), so the reader's validation and the prediction frame
+have something independent to be wrong against. Decisions D47 to D50;
+D46 is left unused because Part 11's D38 writes "D46" where it means
+pending decision 46, the tax rate on PHI-2.1. Most of this Part is rules
+over text and closed sets, and the little arithmetic in it is plain
+decimal arithmetic at 28 significant digits, none of the repository's
+code. The filed inputs are Part 14 B's, Alphabet's FY2025 lines on the
+year's own 10-K. Nothing in this Part is written into `docs/WATCHLIST.md`
+or `watchlist.toml`, and nothing in the code writes a row or a score into
+either: a prediction the system proposes is entered by me or not at all.
+
+What this Part leaves to the next one: the compliance gate's check of a
+candidate at a stated weight and the rule that composes case 4.3's
+outcome. Both wait on pending decisions 63, 64, 65 and 68, and nothing is
+built on them before their own Part.
+
+### Decisions
+
+| # | Decision | Choice |
+|---|---|---|
+| D47 | What does a reading return, and what does it refuse? | **A record, never the document: the filing (form, accession, filed date, fiscal year, source), the section, between one and twelve claims, and the sections not read with the reason.** A claim is one sentence of summary, one verbatim quote of at most 300 characters that supports it, and an uncertainty from a closed set: `stated`, the filing says it in so many words, or `inferred`, read across passages. Code, not the model, holds every claim: the quote is a substring of the stored section after runs of whitespace on both sides collapse to one space, and nothing else is normalised, not case and not punctuation; the claim's sentence carries no digit, so a figure appears only inside a verified quote, where it is the filing's with its source; the uncertainty is one of the two words. One claim that fails refuses the whole reading with the reason, and nothing is cached. The caps bound the quoted text at 3,600 characters a section, which is what keeps a record from becoming the document. The sections are Item 1, Item 1A and Item 7 of the latest 10-K filed by the as-of date; a filer with no 10-K, a heading not found, or a section above the model's input size is refused naming it. The prompt is fixed per section and never carries the question asked. Rejected: dropping a failed claim and keeping the rest, which is repair; a number in a claim's sentence, a number in a model's hands; tone for uncertainty; a nearest heading; a truncated section. |
+| D48 | What is a model's proposal on an assumption of mine? | **A direction from a closed set, never a number (decision 59; Part 11 E's open item).** On `growth_low` and on `growth_high`, the business's two, one view each: `consistent`, `too_high`, `too_low` or `no_view`, with the ids of the claims that are its reasons and an uncertainty, `stated` or `inferred`. On `required_return`, `terminal_growth` and `horizon_years` there is no view to give: they are what I require, not facts about the business. The proposal has no numeric field and a digit in its prose refuses it. The range is computed from my five numbers only, and an assumption's `source` on the valuation record stays a clause or entry id. Rejected: a growth pair from the model and a second range beside mine, a number in a model's hands printed with the pipeline's authority, different from run to run, with no reference possible before the model speaks. |
+| D49 | What is a prediction the system proposes? | **The ledger's own row, the model choosing what to test and the pipeline every number (decision 60).** The model supplies the kind; for a figure the metric, from the vocabulary the scorer computes (D42), and the bound; for an event the event in words; and its reasons as claim ids. No digit in anything it supplies. The pipeline supplies the rest. `period` is the fiscal year after the latest one filed by the as-of date. `made_on` is the as-of date and `due` the same day and month a year later, 28 February for a 29 February, so that the prediction falls within a year (PHI-6.1). `value` is the latest filed year's figure for the metric through the reader (D42): a field as filed, to the unit; a ratio cut to four decimal places toward the side that makes "holds at last year's level" right, down for `min` and up for `max`, since the scorer compares strictly and unrounded (D41) and the sentence has to say the value it is scored on. The sentence is written from a template around those figures. A metric outside the vocabulary, a metric the price enters, a figure the latest year lacks, or a price phrase in the event stops naming it, and no other metric is tried. Rejected: the model choosing the threshold; a threshold from my growth pair, which is about free cash flow and has no formula in the scorer; a default metric when the one chosen stops. |
+| D50 | Who enters it, and how is it marked? | **I do, by hand, and the row carries `author = "system"` (decision 61).** The answer prints the row in `watchlist.toml`'s format and the sentence for `docs/WATCHLIST.md`, marked proposed and not entered, with the next free id under the candidate. A row without `author` is mine. Once the ledger carries a system row for the same candidate, metric and period, the frame proposes no second one and the answer cites the entered row by its id. The score on it is written by me like any other (D44). Rejected: the system writing either file; a table in the database for its predictions, which would keep the eval set in untracked runtime state. |
+
+### A. The reading record, on a stand-in section
+
+The section below is a stand-in written for this Part. It is no filer's
+words and no figure in it is a fact; it exists so that each rule has a
+row. Its line breaks are part of it.
+
+> The company sells subscriptions to software it has already written.
+> Customers renew because their work lives in the files.
+> Revenue from subscriptions was 1,234 million in the year, and the
+> company expects competition from new tools to increase.
+
+| id | claim | quote | uncertainty | result |
+|---|---|---|---|---|
+| R-1 | The business is subscription software that customers keep renewing. | Customers renew because their work lives in the files. | stated | accepted |
+| R-2 | Renewals and subscription revenue are described together. | lives in the files. Revenue from subscriptions | inferred | accepted: the line break and the space are both whitespace |
+| R-3 | The filing states the year's subscription revenue. | Revenue from subscriptions was 1,234 million in the year | stated | accepted: the figure is inside the quote |
+| R-4 | Subscription revenue was 1,234 million. | Revenue from subscriptions was 1,234 million in the year | stated | refused: a digit in the claim |
+| R-5 | Customers renew because of their files. | Customers renew because their work is in the files. | stated | refused: the quote is not in the section, one word differs |
+| R-6 | The business is subscription software. | the company sells subscriptions | stated | refused: the quote is not in the section, case is not normalised |
+| R-7 | Competition is expected to increase. | the company expects competition from new tools to increase | likely | refused: `likely` is not an uncertainty |
+
+A quote of 300 characters is accepted and one of 301 refused. A reading
+of no claims is refused, and so is one of thirteen. A reading holding R-1
+and R-4 is refused whole, naming R-4's reason; R-1 is not kept.
+
+### B. A proposal on an assumption
+
+| id | assumption | view | reasons | result |
+|---|---|---|---|---|
+| V-1 | growth_high | too_high | two claim ids of the reading | accepted |
+| V-2 | growth_low | no_view | none | accepted: no view needs no reason |
+| V-3 | growth_low | consistent | none | refused: a view without a reason |
+| V-4 | required_return | too_low | one claim id | refused: not an assumption a model has a view on |
+| V-5 | growth_high | lower | one claim id | refused: `lower` is not a view |
+| V-6 | growth_high | too_high, with "closer to 8%" in its prose | one claim id | refused: a digit |
+| V-7 | growth_high | too_high | a claim id the reading does not carry | refused: the reason is not a claim of the reading |
+
+### C. The frame, for W-1 as of 2026-09-18
+
+Alphabet's latest year filed by 2026-09-18 is FY2025, so the period is
+FY2026; `made_on` is 2026-09-18 and `due` 2027-09-18. The filed inputs
+are Part 14 B's: revenue 402,836 and cost of revenue 162,535, USD
+millions, both on 10-K 0001652044-26-000018 filed 2026-02-05.
+
+gross_margin = 240,301 / 402,836 = 0.5965231508603997656614602468
+cut to four places: 0.5965 down, for `min`; 0.5966 up, for `max`.
+
+| id | the model supplies | value | sentence |
+|---|---|---|---|
+| P-1 | figure, gross_margin, min | 0.5965 | By 18 September 2027 Alphabet will have reported a gross margin for fiscal 2026 of at least 59.65%. |
+| P-2 | figure, gross_margin, max | 0.5966 | By 18 September 2027 Alphabet will have reported a gross margin for fiscal 2026 of at most 59.66%. |
+| P-3 | figure, revenue, min | 402836000000 | By 18 September 2027 Alphabet will have reported revenue for fiscal 2026 of at least 402,836,000,000. |
+| P-4 | event: "the cloud segment profitable at the operating level for the full year" | | By 18 September 2027 Alphabet's annual report for fiscal 2026 will show the cloud segment profitable at the operating level for the full year. |
+
+Each figure row carries its source beside the value: the form, the
+accession and the filed date above, and EDGAR. P-3's sentence carries no
+currency word because the reported figure carries none yet (KNOWN_GAPS,
+the currency entry). Against FY2026 equal to FY2025, P-1, P-2 and P-3
+are all right under D41: 0.596523 is at least 0.5965 and at most 0.5966.
+
+P-1 as the row the answer prints, the next free id under W-1 being W-1.3:
+
+    [[candidate.prediction]]
+    id = "W-1.3"
+    made_on = 2026-09-18
+    due = 2027-09-18
+    kind = "figure"
+    metric = "gross_margin"
+    bound = "min"
+    value = 0.5965
+    period = "FY2026"
+    author = "system"
+    statement = """By 18 September 2027 Alphabet will have reported a gross margin for fiscal 2026 of at least 59.65%."""
+
+### D. Falsifier rows
+
+- **F1: the value is the pipeline's (D49).** A proposal carrying a value,
+  or a digit anywhere in what the model supplies, is refused. A frame that
+  reads a threshold from the model fails.
+- **F2: cut toward the side that holds (D49).** P-1's value is 0.5965 and
+  not 0.5966, the rounded-up figure that would score FY2026 equal to
+  FY2025 as wrong; P-2's is 0.5966 and not 0.5965. A frame that rounds to
+  nearest gives P-2 0.5965 and fails it.
+- **F3: a field is not cut (D49).** P-3's value is 402,836,000,000 to the
+  unit. A frame that cuts or rounds it to the billion fails.
+- **F4: a year later, within a year (D49).** Made on 2028-02-29, due
+  2029-02-28, not 2029-03-01.
+- **F5: a metric outside the vocabulary stops (D42).** `operating_margin`:
+  a stop naming the metric, no prediction, and no other metric in its
+  place.
+- **F6: a metric the price enters stops by name (invariant 7).**
+  `free_cash_flow_yield`.
+- **F7: a figure the latest year lacks stops (D25).** gross_margin over a
+  block whose FY2025 carries revenue and no cost_of_revenue: a stop
+  naming `cost_of_revenue` for FY2025, Part 14 F5's block.
+- **F8: a price in an event stops.** "the share price above its level
+  today": refused on the phrase, the list `tests/test_watchlist.py` keeps.
+- **F9: the ledger already carries it (D50).** With a row under W-1 of
+  `author = "system"`, metric gross_margin and period FY2026 in the file,
+  P-1 is not proposed again and the entered id is cited.
+- **F10: the next free id is the file's (D50).** W-1 carries W-1.1 and
+  W-1.2, so the first proposal is W-1.3 and a second in the same answer
+  W-1.4.
+
+### E. What Part 15 does not cover
+
+- Whether a claim is faithful to the section beyond its quote being
+  there: a true quote can sit under a wrong summary, and no rule here
+  sees it. The first live reading is read by hand against the 10-K.
+- A number written in words in a claim, "fifteen percent": the digit
+  rule does not see it.
+- Whether the period's report is filed by the due date. A year from
+  `made_on` can fall before the next annual report; the prediction is
+  then due and unscored with that reason (Part 14 F3), never wrong.
+- The sectioner: finding Item 1, Item 1A and Item 7 in a filing's
+  document is held by its own tests over a fixture and by a first live
+  document read by hand.
+- The gate and the outcome of case 4.3: the next Part.
+- The workbook. No sheet, like Parts 11, 12 G and 14.
