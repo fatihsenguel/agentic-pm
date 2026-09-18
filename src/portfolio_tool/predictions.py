@@ -34,7 +34,7 @@ from portfolio_tool.quant.fundamentals import (FIGURE_FIELDS, METRICS, READS,
 from portfolio_tool.watchlist import Prediction, Score
 
 __all__ = ["Filing", "Record", "Ledger", "PredictionError", "OPEN", "DUE", "SCORED",
-           "STATUSES", "status", "verdict", "record", "ledger", "SCORABLE"]
+           "STATUSES", "status", "reported_figure", "verdict", "record", "ledger", "SCORABLE"]
 
 OPEN, DUE, SCORED = "open", "due", "scored"
 STATUSES = (OPEN, DUE, SCORED)
@@ -123,16 +123,15 @@ def _one_filing(pid: str, period: str, provenance: Mapping, fields: Sequence[str
     return {"form": form, "accn": accn, "filed": filed}
 
 
-def verdict(prediction: Prediction, block: Mapping, as_of: dt.date,
-            assumptions: Optional[Mapping[str, Any]] = None) -> Filing:
-    """The filing's verdict on a figure prediction over the reader's block
-    (D41, D42). Raises PredictionError where the figure cannot honestly be
-    read; says nothing about the due date, which is `record`'s to check."""
-    pid = prediction.id
-    if prediction.kind != "figure":
-        raise PredictionError(f"{pid} is an event prediction; an event has no figure to score "
-                              "and is scored by hand against its source (PHI-6.2).")
-    metric, period = prediction.metric, prediction.period
+def reported_figure(pid: str, metric: str, period: str, block: Mapping, as_of: dt.date,
+                    assumptions: Optional[Mapping[str, Any]] = None):
+    """The figure a filer reported for a metric and a period, through the
+    reader's block (D42): the figure as the comparison reads it, a Decimal
+    for a field and a float for a metric key, and the one filing the fields
+    it reads came from, with the block's source. Raises PredictionError
+    where the figure cannot honestly be read. The one place a reported
+    figure is looked up, for the verdict here and for a threshold proposed
+    from the last filed year (Part 15 D49)."""
     if metric not in SCORABLE:
         raise PredictionError(f"{pid}: {metric} is not a figure the scorer reads; it reads "
                               f"{', '.join(SCORABLE)}, and a metric is added with its row "
@@ -156,8 +155,6 @@ def verdict(prediction: Prediction, block: Mapping, as_of: dt.date,
         if isinstance(raw, bool) or not isinstance(raw, (int, float, Decimal)):
             raise PredictionError(f"{pid}: {period}: {metric} = {raw!r} is not a number.")
         observed = raw if isinstance(raw, Decimal) else Decimal(str(raw))
-        result = _compare(observed, Decimal(str(prediction.value)), prediction.bound)
-        reported = float(observed)
         fields = (metric,)
     else:
         try:
@@ -172,13 +169,29 @@ def verdict(prediction: Prediction, block: Mapping, as_of: dt.date,
                    else "an assumption it needs is not stated")
                 + ". The prediction is not scored and the figure is named (D25).")
         observed = computed[period][metric]
-        result = _compare(observed, float(prediction.value), prediction.bound)
-        reported = observed
         fields = READS[metric]
 
     where = _one_filing(pid, period, provenance, fields)
-    return Filing(reported=reported, result=result, form=where["form"], accn=where["accn"],
-                  filed=where["filed"], source=source)
+    return observed, {**where, "source": source}
+
+
+def verdict(prediction: Prediction, block: Mapping, as_of: dt.date,
+            assumptions: Optional[Mapping[str, Any]] = None) -> Filing:
+    """The filing's verdict on a figure prediction over the reader's block
+    (D41, D42). Raises PredictionError where the figure cannot honestly be
+    read; says nothing about the due date, which is `record`'s to check."""
+    pid = prediction.id
+    if prediction.kind != "figure":
+        raise PredictionError(f"{pid} is an event prediction; an event has no figure to score "
+                              "and is scored by hand against its source (PHI-6.2).")
+    observed, where = reported_figure(pid, prediction.metric, prediction.period, block, as_of,
+                                      assumptions)
+    if isinstance(observed, Decimal):
+        result = _compare(observed, Decimal(str(prediction.value)), prediction.bound)
+    else:
+        result = _compare(observed, float(prediction.value), prediction.bound)
+    return Filing(reported=float(observed), result=result, form=where["form"],
+                  accn=where["accn"], filed=where["filed"], source=where["source"])
 
 
 def record(prediction: Prediction, block: Optional[Mapping], as_of: dt.date,
