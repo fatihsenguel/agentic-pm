@@ -1,6 +1,6 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 18 September (twenty-third session), on branch `publish`, cut from `baseline-v1` at cb3de91. Case 4.2 into the graph, in ten commits (written as eleven at first, corrected 18 September), the check first: `check_4_2` in the runner, seen BLOCKED before any capability and on routing; Part 9 C, GOOGL's closes against the exchange by hand, five of five; the watchlist loader, candidates and their growth pairs, nothing defaulted; the node putting the source on the block, storing the last close through the existing price path on an assets row it creates from EDGAR's name and the entry's currency and nothing else (decision 57, taken), gathering the five assumptions off PHI-4.1 and the entry, calling `valuation_range` and publishing D40's record and the price with a stop beside each; the formatter printing the ends, the year with its dates, every assumption with its source, the close with its date, PHI-4.3's words, no midpoint; the golden set's eighteenth line, "What is GOOGL worth?", recorded at out_of_scope and then, after the registry's two sentences saying a company's worth is research, at research on two runs as predicted; the runner 14/15, 4.2 PASS on the live answer, 4.1 BLOCKED at the same stop; the first live record Part 11 C's ends to the cent on the stored rows, the stored closes Part 9 C's on every covered date, the 17th's close unchecked. Decision 56 taken: Alphabet stays X. Entries added: the range and the close print without a currency; a stored close past the reference's dates; the probe's stale wording; what W-2 needs; the registry hypothesis that held. Resolved: what the node needs before it can publish a range; a price for a candidate not held; whether Alphabet stays X; the 4.2 check's entry retitled as the standing blind spot it is.
+Last updated 18 September (twenty-fourth session), on branch `score`, cut from `baseline-v1` at 264aa7a. Case 4.5 into the graph, in eighteen commits with two items carried from the last session and decision 48's item 6, the reference first: Part 9 C's row for the 17th, six of six, and the candidate closes test pinning it; the runner's `blocked_on_screen` wording; Part 14, prediction scoring by hand, D41 to D45, synthetic rows on Alphabet's filed FY2025 lines, corrected twice the same day (a float digit, E-1's score date); `check_4_5` and `blocked_on_ledger`, sixteen cases, sighted BLOCKED at clarification_needed where out_of_scope was predicted; the loader's prediction rows; the pure scorer with `READS` beside the formulas; the ledger node, reading figures only for a figure prediction whose date has come; the rendering; the nineteenth golden line, at its sighted baseline and then at intent `ledger` with LedgerAgent on two identical runs, as predicted; the runner 15/16, 4.5 PASS on four open predictions; the first live record Part 14 A's row for the day; the two `marketable_securities` fields out of the block. Decision 58 taken with the shape: the ledger is its own intent. Entries added: the sighting prediction that missed; the reported figure without a currency; what W-2 needs before its predictions are scored; what the 4.5 check cannot see until 2027; two ledger metrics with no formula; a return-on-capital prediction and the rate the node does not state; a figure across two filings. Resolved: the 17th's close; the BLOCKED reason's wording; decision 48's item 6 in its trigger line.
 
 Previously: 17 September (twenty-second session), on branch `range`, cut from `baseline-v1` at 7edc7f9. Part 11, the valuation range, by hand before any pipeline, and item 7's first half, in ten commits, the reference first: D37 to D40, a discounted cash flow over the latest filed year's free cash flow run once at each of two stated growth rates, the low end the low rate and the high end the high rate, five assumptions each carried with the clause or entry that states it, net debt as PHI-3.1 computes it, a record with no filed figure and six conditions that raise; Alphabet FY2025 129.39 to 205.62 per share and Apple FY2025 140.10 to 224.18 on synthetic assumptions; `shares_outstanding` a field of the block, the filer's year-end count, the unit `shares` not a currency, the yield reading the year's count; `quant/valuation.py` held to Part 11; the three investor assumptions on PHI-4.1, corrected from PHI-4.3 the day the Part was written because a statement carries no number, the sentence in `docs/PHILOSOPHY.md` and the values in `philosophy.toml` on the owner's word; W-1's growth pair in `docs/WATCHLIST.md` and `watchlist.toml`. Nothing reaches the graph. Runner 13/14 once, 4.1 BLOCKED at the same stop; golden set run twice, the first run's first line a transient router error, the second zero diff; no live fetch. Entries added: the golden loop discards a transient error's text; what the node needs to publish a range; a price for a candidate not held (decision 57, the owner's to number); the runner's 4.2 check will be blind to the arithmetic; a count under another unit; JPMorgan's fixture without the count. Resolved: `shares_history` has no source column, the count being a filed fact with its provenance. Decision 56 stays pending.
 ---
@@ -4346,7 +4346,7 @@ Nothing is built on this until that is done.
 
 ### Order 4, the filings reader: Parts 12 and 13, and what is built
 
-**Trigger:** pending decision 48, Part 13 E's item 6 and item 7's second half, the price and a filer with more than one class; item 7's first half, the count as a field, was taken 17 September (twenty-second session), items 3 and 4 were decided 16 September (twenty-first session), 49 was taken 16 September (nineteenth session) and 29 with 50 the same day (twentieth session).
+**Trigger:** pending decision 48, Part 13 E's item 7's second half, the price and a filer with more than one class; item 6, the two `marketable_securities` fields, was taken 18 September (twenty-fourth session, e85b170 and 4d51ddb); item 7's first half, the count as a field, was taken 17 September (twenty-second session), items 3 and 4 were decided 16 September (twenty-first session), 49 was taken 16 September (nineteenth session) and 29 with 50 the same day (twentieth session).
 
 **Built 13 and 14 September (sixteenth session), 5228857 to 98b8ff6.** The
 reference first, then each layer test first, each test seen failing against
@@ -4663,6 +4663,13 @@ convention is Part 9 B on the holdings, run on every pytest. The 17th
 gets its row when the table carries it, by hand, and nothing about the
 node changes either way.
 
+**Resolved 18 September (twenty-fourth session), 7d1f3cb and b68c5ad.**
+Asked at about 02:00 UTC on the 18th the exchange's table carried the
+17th, 347.33, equal to the stored row; the row is in Part 9 C, six of six,
+with a note that the provider's figure on it is the node's stored close and
+not a shell call, and the candidate closes test pins the date. The general
+form stands: a later close gets its row before it is trusted.
+
 ### The runner's BLOCKED reason says the philosophy check is not in the graph
 
 **Trigger:** the next commit that touches `blocked_on_screen` in `tests/benchmark/run_cases.py`.
@@ -4675,6 +4682,11 @@ it, which is what 4.2's first sighting showed, at out_of_scope with an
 empty plan. The wording should say the question did not reach the
 check, with the intent and plan it already names. A wording change in
 the runner, its own commit, no loop sees it but the runner's own text.
+
+**Resolved 18 September (twenty-fourth session), 7744259.** The reason
+ends "the question did not reach the philosophy check" and the docstring
+says the node publishes the block when routing reaches it. The ledger's
+probe, written the same day, uses the same wording.
 
 ### What W-2 needs before it has a range
 
@@ -4705,6 +4717,107 @@ research with ScreeningAgent, seventeen others unchanged. Held on two
 runs, zero diff between them. The registry describing a capability that
 exists is the shape allowed; a rule tuned to a case is not, and none was
 added.
+
+### The ledger sighting's prediction missed: clarification_needed, not out_of_scope
+
+**Trigger:** none; recorded because predictions are.
+
+18 September (twenty-fourth session), f6d6f4a. The shape predicted that
+"How have my predictions done?", sighted with `--case 4.5` before any
+intent described the ledger, would go to out_of_scope with an empty plan,
+reading the question as a judgement. The router put it at
+clarification_needed with an empty plan: too vague, not refused. The
+golden line was added at that baseline and the routing commit's prediction
+was written from the sighting, not from the shape, and held on two runs.
+A prediction about where a question lands before the registry describes
+it is a guess about the model and was wrong; the one after the registry
+describes the capability is the hypothesis the rule is for, and it held.
+
+### The reported figure in a filing's verdict prints without a currency
+
+**Trigger:** the first due figure prediction, 2027-02-01, W-2.1 and W-2.2; the same trigger moves the range and close entry above.
+
+Logged 18 September (twenty-fourth session). A ledger record's `filing`
+carries the reported figure as filed, 402,836,000,000 on Part 14's S-1,
+and the rendering prints it bare, as the range and the close print bare
+(the entry "The range and the close print without a currency"). The
+reader's block carries one currency and the scorer reads it; the record
+does not carry it because no case asks, both candidates being USD filers.
+When the currency goes on the range record it goes on this one in the
+same commit, from the same block field. Not a repair for the formatter.
+
+### What W-2 needs before its predictions are scored
+
+**Trigger:** 2027-02-01, the due date of W-2.1 and W-2.2; or the first ledger question after Adobe's FY2026 report is filed.
+
+Logged 18 September (twenty-fourth session). The ledger node reads a
+candidate's figures only for a figure prediction whose date has come, so
+Adobe's filer row and company facts are fetched live for the first time
+on the first ledger question on or after 2027-02-01: two EDGAR requests
+under the seven-day interval, each a live fetch a session says so before.
+Adobe's fiscal year ends in November; whether its FY2026 report is filed
+by 1 February decides scored against due-and-unscored (Part 14 A), and
+nothing assumes it. W-2.2 reads `gross_margin`, revenue less cost of
+revenue, under whatever tags Adobe files; a filer using neither listed
+cost tag stops naming `cost_of_revenue` for FY2026 (Part 14 F5), which is
+D36's rule working and not a defect, and the row for its tag comes on a
+witness. The entry "What W-2 needs before it has a range" covers the
+same fetch from the screen's side.
+
+### The runner's 4.5 check cannot see the due branch until 2027
+
+**Trigger:** 2027-02-01, the first due date; and the first ledger question after it.
+
+Logged 18 September (twenty-fourth session). `check_4_5` holds the answer
+to the file and asserts on due and scored records, and today every
+prediction is open, so its due branch has run on the live graph never
+and in pytest only, over Part 14's synthetic ledger through the formatter
+test. What it will never see: whether the filing's verdict is right, which
+pytest holds to Part 14 C; whether the reader's figure is the right filed
+one, Part 12's. The first live due record, in February 2027, is read by
+hand against the filer's report before it is believed, the way the first
+range was read against Part 11 C: the reported figure, the form and the
+filed date the answer states, against the 10-K.
+
+### Two ledger metrics have no formula: operating_margin and free_cash_flow
+
+**Trigger:** a prediction in `docs/WATCHLIST.md` naming either.
+
+Logged 18 September (twenty-fourth session). `tests/test_watchlist.py`
+allows six prediction metrics and the scorer reads four: `revenue` as a
+field, `gross_margin`, `return_on_invested_capital` and
+`net_debt_to_ebitda` by Part 10 B's formulas (D42). `operating_margin`
+and `free_cash_flow` have no formula anywhere in the repository; a
+prediction naming one stops naming the metric (Part 14 F4). Each gets its
+formula in `quant/fundamentals.py` with its row in Part 14 when a
+prediction asks, one at a time, and nothing is added ahead of one.
+
+### A return-on-capital prediction stops: the ledger node states no tax rate
+
+**Trigger:** a prediction in `docs/WATCHLIST.md` naming `return_on_invested_capital`.
+
+Logged 18 September (twenty-fourth session). The scorer computes
+`return_on_invested_capital` through `metrics_by_year`, which taxes
+operating income at the rate PHI-2.1 states (D32, decision 46), and takes
+the assumptions as an argument; the ledger node passes none, since no
+prediction names the metric, so such a prediction would stop with "an
+assumption it needs is not stated". The fix when a prediction asks: the
+node reads PHI-2.1's `tax_rate` off the philosophy the way the screen
+does, carried with its clause id, and Part 14 gets the row. Not added
+now: a number read for nothing.
+
+### A figure across two filings stops the verdict
+
+**Trigger:** the first due figure prediction whose metric reads two fields, W-2.2 on 2027-02-01; or a restated figure on any candidate.
+
+Logged 18 September (twenty-fourth session). A filing's verdict names one
+filing as its source, the provenance of the fields the metric reads
+(`quant/fundamentals.READS`). D29 reads each field at its latest vintage,
+so revenue and cost of revenue for one year can come from two filings
+when one is restated, and the scorer then stops rather than name one of
+them (Part 14 F, "no row has two vintages"). No row covers it because no
+stored fact shows it. When it happens the verdict wants a source per
+field, a change to the `Filing` record and its row here and in Part 14.
 
 ### JPMorgan's fixture carries no share count
 
