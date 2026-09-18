@@ -14,6 +14,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 import datetime as dt
+import os
 import re
 from typing import Dict, Any, Optional, Literal, List, Tuple
 from langchain_core.messages import AIMessage, HumanMessage
@@ -2767,7 +2768,7 @@ def _format_ledger_response(sub_results: Dict) -> List[str]:
         "",
         f"{summary.get('predictions')} predictions: {summary.get('scored')} scored, "
         f"{summary.get('due')} due, {summary.get('open')} open. The counts are the "
-        f"ledger's, {block.get('watchlist')}.",
+        f"ledger's, {os.path.basename(str(block.get('watchlist')))}.",
     ]
     for r in block.get("records") or []:
         metric = r.get("metric")
