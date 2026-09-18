@@ -86,6 +86,17 @@ class ProviderTicker:
     cik: int
 
 @dataclass
+class ProviderFiling:
+    """One filing as the submissions document's `filings.recent` lists it
+    (expected_values.md Part 16 H, D55): its accession, its form, the date
+    it was filed and the name of its primary document, which is the one
+    thing the stored facts do not carry and the archive's address needs."""
+    accn: str
+    form: str
+    filed: date
+    primary_document: str
+
+@dataclass
 class ProviderDividendData:
     ex_date: date
     amount: Decimal

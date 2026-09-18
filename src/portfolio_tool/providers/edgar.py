@@ -36,6 +36,13 @@ naming two CIKs, or an entry without a ticker or a readable CIK, raises:
 a map with a hole in it is not the map. The file's company title has no
 consumer and is not returned.
 
+`filing` reads the same submissions document for one accession's row in
+`filings.recent`, and `document` fetches that filing's primary document from
+the archive on www.sec.gov, as bytes (Part 16 H, D55). An accession that
+`recent` does not hold is refused stating what the listing holds; the older
+files it names are not asked for. What the bytes say is
+`portfolio_tool.filing_text`'s to decide, not this module's.
+
 Not the price vendor's interface: `DataProviderInterface` has no method this
 source can fill.
 """
@@ -49,7 +56,9 @@ from typing import List, Optional
 import requests
 
 import config
-from portfolio_tool.provider_models import ProviderFiledFact, ProviderFiler, ProviderTicker
+from portfolio_tool.provider_models import (
+    ProviderFiledFact, ProviderFiler, ProviderFiling, ProviderTicker,
+)
 
 
 COMPANY_FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
@@ -57,6 +66,16 @@ SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
 # The ticker file is served from www.sec.gov, not data.sec.gov, with the same
 # contact. URL and shape from memory until the first live fetch records them.
 TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
+# D55: the CIK without padding, the accession without hyphens, the file's name.
+ARCHIVE_URL = "https://www.sec.gov/Archives/edgar/data/{cik}/{folder}/{name}"
+# The source a stored document states; `name` above is the facts'.
+ARCHIVE_NAME = "EDGAR filing archive"
+
+ACCESSION = re.compile(r"^\d{10}-\d{2}-\d{6}$")
+# D55: a primary document's name as `recent` writes them, a directory allowed.
+DOCUMENT_NAME = re.compile(r"^[A-Za-z0-9._/-]+$")
+# The columns of `filings.recent` that `filing` reads.
+LISTING_COLUMNS = ("accessionNumber", "form", "filingDate", "primaryDocument")
 
 # D27: annual periods measured on three filers are 363 to 370 days; the
 # nearest durations that are not a year are 273 and 925.
@@ -139,9 +158,9 @@ class EdgarProvider:
                     ))
         return facts
 
-    def filer(self, cik: int) -> ProviderFiler:
-        """The filer's number, name, SIC code and its description from the
-        submissions document, as EDGAR states them today."""
+    def _submissions(self, cik: int) -> dict:
+        """The submissions document for `cik`, refused when it is another
+        company's."""
         document = json.loads(self._get(SUBMISSIONS_URL.format(cik=cik)))
 
         # The document's `cik` is compared as a number. The company-facts
@@ -155,6 +174,12 @@ class EdgarProvider:
             raise EdgarError(f"Asked for CIK {cik}, and the document states {stated!r} as its CIK.")
         if stated_cik != cik:
             raise EdgarError(f"Asked for CIK {cik}, and the document is for CIK {stated_cik}.")
+        return document
+
+    def filer(self, cik: int) -> ProviderFiler:
+        """The filer's number, name, SIC code and its description from the
+        submissions document, as EDGAR states them today."""
+        document = self._submissions(cik)
 
         name = document.get("name")
         if not isinstance(name, str) or not name:
@@ -168,6 +193,65 @@ class EdgarProvider:
             description = None
 
         return ProviderFiler(cik=cik, name=name, sic=sic, sic_description=description)
+
+    def filing(self, cik: int, accn: str) -> ProviderFiling:
+        """One accession's row in the submissions document's
+        `filings.recent` (D55): its form, its filed date and the name of its
+        primary document."""
+        if not ACCESSION.match(accn):
+            raise EdgarError(f"{accn!r} is not an accession number.")
+        document = self._submissions(cik)
+
+        recent = (document.get("filings") or {}).get("recent")
+        if not isinstance(recent, dict):
+            raise EdgarError(f"The submissions document for CIK {cik} lists no recent filings.")
+        columns = {name: recent.get(name) for name in LISTING_COLUMNS}
+        unreadable = sorted(name for name, column in columns.items()
+                            if not isinstance(column, list))
+        if unreadable:
+            raise EdgarError(f"The recent filings of CIK {cik} lack {unreadable}.")
+        lengths = {len(column) for column in columns.values()}
+        if len(lengths) != 1:
+            raise EdgarError(f"The recent filings of CIK {cik} are columns of different "
+                             f"lengths, {sorted(lengths)}; a row cannot be read across them.")
+
+        rows = [i for i, listed in enumerate(columns["accessionNumber"]) if listed == accn]
+        if not rows:
+            count = lengths.pop()
+            dates = sorted(d for d in columns["filingDate"] if d)
+            span = f", filed {dates[0]} to {dates[-1]}" if dates else ""
+            raise EdgarError(
+                f"Accession {accn} is not among the {count} recent filings the submissions "
+                f"document lists for CIK {cik}{span}. The older files it names are not "
+                "asked for."
+            )
+        if len(rows) > 1:
+            raise EdgarError(f"The recent filings of CIK {cik} list accession {accn} "
+                             f"{len(rows)} times; one accession is one filing.")
+
+        row = rows[0]
+        name = columns["primaryDocument"][row]
+        if not isinstance(name, str) or not DOCUMENT_NAME.match(name) or ".." in name:
+            raise EdgarError(f"Accession {accn} names {name!r} as its primary document, "
+                             "which is not a file's name.")
+        form = columns["form"][row]
+        if not isinstance(form, str) or not form:
+            raise EdgarError(f"Accession {accn} is listed without a form.")
+        stated = columns["filingDate"][row]
+        try:
+            filed = dt.date.fromisoformat(stated)
+        except (TypeError, ValueError):
+            raise EdgarError(f"Accession {accn} is listed as filed on {stated!r}, which is "
+                             "not a date.")
+        return ProviderFiling(accn=accn, form=form, filed=filed, primary_document=name)
+
+    def document(self, cik: int, accn: str, name: str) -> bytes:
+        """A filing's primary document from the archive, as bytes (D55)."""
+        if not ACCESSION.match(accn):
+            raise EdgarError(f"{accn!r} is not an accession number.")
+        if not DOCUMENT_NAME.match(name) or ".." in name:
+            raise EdgarError(f"{name!r} is not a file's name.")
+        return self._get(ARCHIVE_URL.format(cik=cik, folder=accn.replace("-", ""), name=name))
 
     def tickers(self) -> List[ProviderTicker]:
         """Every (ticker, CIK) pair the SEC's ticker file states today, one
