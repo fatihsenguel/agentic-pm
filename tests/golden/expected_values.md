@@ -1170,6 +1170,16 @@ every vintage that carries it, the year's own 10-K included. The unit is
 so a count beside dollar figures is not a second currency. The second half
 of item 7, the price and a filer with more than one class, stays open.
 
+*The block's shape, 2026-09-18, decision 48 item 6.* Two rows are no
+longer fields of the block: `marketable_securities_current` and
+`marketable_securities_noncurrent`. No metric reads them under section F's
+decision A, net debt being borrowings less cash and nothing else, and a
+value nothing consumes is not in the schema. The figures above stand as
+Apple filed them and are not a reference for anything the code computes;
+the committed csv keeps their rows with the field column blank and a note,
+the way section C's absent rows are written, so the provenance is not lost.
+Nothing is recomputed: Part 10 B's formulas never read either field.
+
 ### C. The tag each field resolves from
 
 In order; the first that yields a fact for the period wins, and none yielding
@@ -1187,8 +1197,6 @@ the year and the tags, for the check to stop on (D30).
 | capex | duration | `PaymentsToAcquirePropertyPlantAndEquipment` |
 | equity | instant | `StockholdersEquity` |
 | cash | instant | `CashAndCashEquivalentsAtCarryingValue` |
-| marketable_securities_current | instant | `MarketableSecuritiesCurrent` |
-| marketable_securities_noncurrent | instant | `MarketableSecuritiesNoncurrent` |
 | commercial_paper | instant | `CommercialPaper` |
 | long_term_debt_current | instant | `LongTermDebtCurrent` |
 | long_term_debt_noncurrent | instant | `LongTermDebtNoncurrent` |
@@ -1201,6 +1209,12 @@ never which number it reports.
 *Row changed 2026-09-16, decision 48 (D36, section H).* `cost_of_revenue`
 stands where `gross_profit` stood. No filer here files both of its tags, so
 the order decides nothing; the taxonomy's total is first.
+
+*Two rows removed 2026-09-18, decision 48 item 6.* `marketable_securities_current`
+(`MarketableSecuritiesCurrent`) and `marketable_securities_noncurrent`
+(`MarketableSecuritiesNoncurrent`) stood between `cash` and
+`commercial_paper`; no metric reads them (section B's note of the same day).
+The table is thirteen fields.
 
 *Row added 2026-09-17, decision 48 item 7, first half (section B's note,
 Part 13 B's note, Part 11 D39).* `shares_outstanding` is the fifteenth
@@ -1561,6 +1575,11 @@ USD millions except the tax rate. Latest filed per D29. A cell reading
 | long_term_debt_current | 0 | 0 | 1,000 | 999 | 1,996 |
 | long_term_debt_noncurrent | **raises** | **raises** | 11,870 | 10,883 | 46,547 |
 
+*Note, 2026-09-18, decision 48 item 6.* The two `marketable_securities`
+rows are what Alphabet filed and are no longer fields of the block (Part
+12 B's note of the same day); the FY2025 raise on the non-current one is
+no longer a raise the reader reports.
+
 **Revenue changes tag in the other direction.** Alphabet tags
 `RevenueFromContractWithCustomerExcludingAssessedTax` through FY2024 and
 `Revenues` on the FY2025 10-K; where both exist, in FY2021, FY2023 and FY2024,
@@ -1762,6 +1781,10 @@ and it was not read again for this field. In the fixture the field is
 unresolved in every year by construction, which says nothing about what
 JPMorgan files under the tag.
 
+*Note, 2026-09-18, decision 48 item 6.* The two `marketable_securities`
+fields in the list of raises above are no longer fields of the block, so
+the reader's list of raises for JPMorgan is two shorter on the same facts.
+
 **Whether that is D30 working, or D30 needing a bank rule: working.** Every
 raise is true: JPMorgan files no gross profit, no operating income and no
 capital expenditure under those tags, and has not used the cash or commercial
@@ -1879,7 +1902,9 @@ here.
    named fields, a finance lease is not one, and the raise is a known limit,
    not a rule the code can keep (Part 12 G).
 6. The two `marketable_securities` fields in Part 12 B, which no metric reads
-   under Part 12 F's decision A.
+   under Part 12 F's decision A. Decided 2026-09-18 (decision 48, item 6):
+   deleted from the block; a value nothing consumes is not in the schema.
+   Part 12 B's and C's notes of that day; nothing recomputed.
 7. `shares_outstanding`: which count, and `free_cash_flow_yield` for a filer
    with more than one class. First half decided 2026-09-17 (decision 48,
    Part 11 D39): the filer's own year-end count, `CommonStockSharesOutstanding`,
