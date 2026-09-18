@@ -2241,3 +2241,163 @@ P-1 as the row the answer prints, the next free id under W-1 being W-1.3:
   document read by hand.
 - The gate and the outcome of case 4.3: the next Part.
 - The workbook. No sheet, like Parts 11, 12 G and 14.
+
+## Part 16 — A filing's document and its sections
+
+Recorded 2026-09-19 by hand from one fetched document, before any provider
+method, table or sectioner exists, so the sectioner has something
+independent to be wrong against. This is the Part 12 pattern applied to a
+filing's text instead of its figures: Part 12 asked whether a stored figure
+is what the filer filed; this asks where Item 1, Item 1A and Item 7 are in
+the document the filer filed, and what the text I keep is against it.
+Decisions D51 to D53. Part 15 D47 named the sections and refused a heading
+not found, a nearest heading and a truncated section; the rule that finds a
+heading was left to a first live document, and this is it.
+
+**Source:** the primary document of Alphabet Inc.'s 10-K, CIK 1652044,
+accession 0001652044-26-000018, filed 2026-02-05 for the year ended
+2025-12-31,
+`https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm`.
+The file's name is the `primaryDocument` of that accession's row in the
+submissions document's `filings.recent`, index 237 of 1,013 rows on the
+day. **Pulled 2026-09-18 22:03 UTC**, HTTP 200, 2,616,613 bytes, sha256
+`8a74f902f3652c0c02a1f5539b94075544684d98be1c2f4928daa02cd34d9f9e`. The
+submissions row's `size`, 15,653,193, is the whole filing with its exhibits
+and is not this document's.
+
+**One filer is one witness**, as Part 12 said of Apple. Every count below is
+this document's. The rules are written so that a document they do not fit
+is refused naming why, and never read by guess; whether the next filer's
+10-K fits is unknown until it is looked at.
+
+**The document is not committed.** The sectioner's fixture is cut from it
+and committed with the sectioner; the hash above pins what it was cut from.
+
+### Decisions
+
+| # | Decision | Choice |
+|---|---|---|
+| D51 | What is the document's text? | **What the standard library's HTML parser yields from the bytes, with the inline XBRL header left out and nothing else.** The document declares ASCII and every byte is; its other characters arrive as character references and are resolved, and a no-break space, 1,891 of them, is a space. Text under `head`, `script`, `style` and `ix:header` is left out: the last is 224,439 characters of markup whose text, 37,707 characters of contexts and units, is no word of the filing. The other inline XBRL elements, `ix:nonFraction` 1,632 times, `ix:nonNumeric` 229 and `ix:continuation` 87, are transparent: the text inside them is the filing's. A line ends where a `div`, a `table` or a `tr` starts or ends, and at a `br` and an `hr`; a `td` separates by a space. Runs of whitespace inside a line collapse to one space and an empty line is dropped. The elements this document carries outside the XBRL namespaces are `html`, `head`, `meta`, `title`, `body`, `script`, `div`, `span`, `table`, `tr`, `td`, `a`, `br`, `hr` and `img`, and no other. **A document carrying an element outside that list and outside a namespace prefix is refused naming the element**, until a document that carries it has been looked at and this row says what it does to a line. The result here: 2,745 lines, 343,344 characters with the lines joined by one newline. Rejected: a rule leaving out elements styled `display:none`, which is 717 elements here, one `div` that wraps the `ix:header` and 716 empty cells, and changes no character, so nothing would exercise it; a parser the project does not declare; treating an unknown element as inline, which fuses a heading into a paragraph on the first filer that writes `p` and finds nothing, or something else. |
+| D52 | What is a heading, and where does a section end? | **A heading is a line that starts with `Item`, whitespace, one or two digits, an optional letter A to C, and a period, case disregarded; the title is not read. Over the whole document the heading lines, in order, form exactly two runs, each rising in item order and both carrying the same items: the first is the table of contents and the second the body. A section is the lines from its heading in the second run to the line before that run's next heading, whichever item that is.** Measured: 46 heading lines, two runs of 23, the same items, 1 to 16 with 1A, 1B, 1C, 7A, 9A, 9B and 9C. The table of contents writes `Item 1A.` alone on its line, the title on the next and the page on the one after; the body writes `ITEM 1A.RISK FACTORS`, the title fused to the period with no space on 21 of 23 and with one on 1C and 9C. Refused, naming it: a wanted item absent from the second run; a number of runs other than two, stating the count; two runs that differ in their items; a wanted item that is last in its run, so that nothing ends it; a heading with no line beneath it. Rejected: the first match, which is the table of contents; the last match without the runs, which takes a cross-reference that starts a line on the first document that has one; case as the rule, `ITEM` for the body, which is this filer's typography; matching the title, which is the filer's wording; a minimum length, since Item 1B here is "Not applicable." and any number would be a guess; a nearest heading and a truncated section, D47's. |
+| D53 | Does the page furniture stay in the text? | **Yes, as extracted (decided 2026-09-19).** The document has 98 page breaks, each an `hr`, and at 96 of them the text carries three lines between one page's words and the next: the page number with a period, `Table of Contents`, and `Alphabet Inc.`. They fall inside sections and inside sentences (section C, F7). A quote that crosses one is not a substring of the stored section unless it carries the three lines, and D47 then refuses the whole reading: an honest failure at the cost of one call, and a quote inside one paragraph never meets it, the furniture sitting between lines. Rejected: removing the block before and the table after each `hr`, which is the filing agent's layout and already fails to fit two of the 98; removing the three-line pattern from the text, which needs the filer's name as it is printed and deletes a list line that reads `12.`. Logged with a trigger, not fixed. |
+
+### A. The headings
+
+Line numbers are the text's, from 0, under D51.
+
+| item | table of contents | body | the body's line |
+|---|---|---|---|
+| Item 1 | 84 | 165 | `ITEM 1.BUSINESS` |
+| Item 1A | 87 | 262 | `ITEM 1A.RISK FACTORS` |
+| Item 1B | 90 | 464 | `ITEM 1B.UNRESOLVED STAFF COMMENTS` |
+| Item 7 | 112 | 534 | `ITEM 7.MANAGEMENT’S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND RESULTS OF OPERATIONS` |
+| Item 7A | 115 | 907 | `ITEM 7A.QUANTITATIVE AND QUALITATIVE DISCLOSURES ABOUT MARKET RISK` |
+| Item 8 | 118 | 951 | `ITEM 8.FINANCIAL STATEMENTS AND SUPPLEMENTARY DATA` |
+| Item 9 | 121 | 2298 | |
+
+Outside the 46 heading lines the items are named in running text, Item 1
+four times, Item 1A nine, Item 7 five and Item 8 twenty-five: every one
+without the period and none at the start of a line. `PART I` to
+`PART IV` each stand on their own line twice and are not read.
+
+### B. The three sections
+
+Characters count the heading line and one newline between lines.
+
+| section | lines | characters | ends at | page breaks inside | digits |
+|---|---|---|---|---|---|
+| Item 1 | 165 to 261, 97 | 23,802 | Item 1A | 6 | 63 |
+| Item 1A | 262 to 463, 202 | 85,181 | Item 1B | 14 | 148 |
+| Item 7 | 534 to 906, 373 | 52,391 | Item 7A | 13 | 1,527 |
+
+Together 161,374 characters of the document's 343,344. Item 7A is 7,985
+characters and Item 8 130,405; neither is read (D47). A paragraph is one
+line; the longest are 1,425 characters in Item 1, 1,899 in Item 1A and
+1,049 in Item 7.
+
+### C. The page furniture
+
+97 lines read `Table of Contents`: the contents page's own title at line
+74, and 96 inside the three-line pattern of D53. Of the page breaks inside
+the sections, the line before the furniture ends without closing
+punctuation at none in Item 1, ten in Item 1A and two in Item 7, one of
+the two a subheading, `Costs and Expenses`, and the other a sentence. The
+count is by that reading of a line's last character and is a floor on
+nothing: it says sentences are cut, and roughly how often.
+
+### D. Falsifier rows
+
+- **F1: the table of contents is not the body (D52).** The first line
+  reading `Item 1A.` is line 87 and what follows it is `Risk Factors`,
+  `9`, `Item 1B.`. A sectioner taking the first match returns two lines.
+  The section starts at 262.
+- **F2: a section ends at the next heading, whichever it is (D52).** Item
+  7 is 52,391 characters, to Item 7A. A sectioner that ends Item 7 at Item
+  8 returns 60,377.
+- **F3: a cross-reference is not a heading (D52).** `Item 1A` is written
+  eleven times and two are headings. A pattern that does not anchor at
+  the start of the line and require the period finds eleven.
+- **F4: the title is fused (D52).** `ITEM 1.BUSINESS` has no space after
+  the period. A pattern requiring whitespace or the line's end after it
+  finds 23 lines in the first run and two in the second, 1C and 9C: the
+  runs differ and the document is refused, where the rule finds 23 and
+  23.
+- **F5: case is not the rule (D52).** The first run is `Item` and the
+  second `ITEM`. With every heading of the second run rewritten `Item`,
+  the rule returns the same three sections; a rule keyed on capitals
+  finds no body.
+- **F6: what is refused (D52), each on the document with one change.** The
+  lines 84 to 153 removed, one run: refused stating one. A line
+  `Item 1A. Risk Factors above describes these.` added inside Item 7,
+  three runs: refused stating three. The body's `ITEM 7.` line removed:
+  the runs differ, refused naming Item 7. Every heading after `ITEM 7.` in
+  the second run removed together with its counterpart in the first:
+  Item 7 is last, refused naming it. The lines 535 to 906 removed, so
+  that `ITEM 7A.` follows `ITEM 7.` directly: refused, nothing beneath
+  the heading.
+- **F7: the furniture stays (D53).** Lines 285 to 289 collapse to "…other
+  companies may develop 10. Table of Contents Alphabet Inc. AI products
+  and technologies that are similar or superior to our technologies…". A
+  quote reading "other companies may develop AI products and technologies"
+  is not in the section and the reading is refused (D47, R-5's rule); the
+  same words with the three lines between them are, and are accepted.
+- **F8: nothing is cut (D47).** The sectioner returns 85,181 characters
+  for Item 1A, the whole of it.
+- **F9: an element not looked at is refused (D51).** The document with one
+  `div` rewritten `p`: refused naming `p`.
+
+### E. What the text loses against the filing
+
+- **Tables.** 185 of them. A row is a line of its cells a space apart:
+  `Consolidated revenues $ 350,018 $ 402,836 $ 52,818 15 %`. Which column
+  is which year stands only in a header line above, and alignment,
+  spanning and indentation are gone.
+- **Footnotes.** A table's notes survive as lines starting `(1)`, 21 of
+  them, 4 in Item 7, no longer tied to the cell that cites them.
+- **Emphasis and structure.** Bold, italics and indentation are gone. A
+  risk factor's heading is told from its paragraph only by being a line
+  of its own.
+- **Images.** Two, `goog-20251231_g1.jpg` and `_g2.jpg`, the total-return
+  graphs under Item 5: separate files of the filing, not fetched.
+- **Exhibits.** Separate documents of the filing; Item 15 lists them and
+  none is fetched.
+- **Links and tagging.** The 246 anchors and the XBRL tags around 1,861
+  figures and blocks. The figures' tagged values are what Part 12 reads
+  from company facts; nothing here reads them from the document.
+
+### F. What Part 16 does not cover
+
+- Any other filer, filing agent or year. A document with no table of
+  contents, with an index of items at its end, or with a cross-reference
+  that starts a line with `Item 7.` is refused by D52, and that refusal is
+  the finding.
+- A section that says only that it is incorporated by reference: it
+  passes as a short section.
+- Which filing is "the latest 10-K": a 10-K/A, and a filer whose latest
+  10-K has left `filings.recent`, which here reaches back to 2023-06-29
+  because 803 of its 1,013 rows are Forms 4 and 144. The provider method's
+  tests hold what is decided there.
+- D47's refusal of a section above the model's input size. No number is
+  stated here: the largest section is 85,181 characters, and the refusal
+  is the reader's and comes with the reader.
+- The workbook. No sheet, like Parts 11, 12 G, 14 and 15.
