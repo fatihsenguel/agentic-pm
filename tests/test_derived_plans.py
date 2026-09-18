@@ -36,6 +36,7 @@ ROWS = [
     # Part 11; the ticker is extraction's (decision 29).
     ("research", {"tickers": ["JPM"]}, [S]),
     ("research", {}, [S]),
+    ("ledger", {}, ["LedgerAgent"]),
     ("clarification_needed", {}, []),
     ("out_of_scope", {}, []),
 ]

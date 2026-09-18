@@ -28,6 +28,7 @@ INTENTS: Dict[str, str] = {
     'data_fetch': 'User wants raw price data or metrics',
     'risk_analysis': 'User wants risk metrics (VaR, volatility, drawdown)',
     'research': 'User asks whether one named company clears their investment philosophy, or how it screens against the philosophy\'s criteria (return on capital, margins, balance sheet, price against value). The philosophy is not the Investment Policy Statement: a question naming the philosophy is research even when the company is held, and compliance is only for the IPS and the portfolio. The company is screened clause by clause on its filed figures; no recommendation is made. It also covers what one named company is worth: the answer is a valuation range the pipeline computes from the owner\'s stated assumptions, never a forecast of a price, so a question about a company\'s worth or value is research, not out_of_scope.',
+    'ledger': 'User asks how their predictions have done, which predictions are due, scored or still open, or what the prediction ledger says: the ledger is read as of today and every prediction is listed with its due date and its status, a due one with what the company reported against it. No company is named in such a question and no judgement is made; a question about one named company is research, above.',
     'compliance': 'User asks about their Investment Policy Statement: whether the portfolio complies with it or breaks a rule, whether a position is too big, what would have to change to be within its limits, whether a proposed weight in one position is allowed, or what the policy says about a topic',
     'clarification_needed': 'Request is in scope but too vague to plan, need to ask user',
     'out_of_scope': 'Request is clear, and what it asks for is something this system does not do: a judgement about whether to own a security (should I buy/sell/hold X, is X a good investment, what should I buy, screening or finding candidates), a price or return forecast, tax assessment, or placing an order. What a company is worth is not a forecast: a valuation range from the owner\'s stated assumptions is research, above. Whether the security is held makes no difference to refusing that judgement - and no difference the other way: a question about a held position\'s own figures is in scope, below. Plan NO agents, leave clarification_question null. Questions about a portfolio the user already holds - its allocation, P&L, risk, drift, whether and how to rebalance it, whether it complies with their policy - are IN scope and keep their normal intent: "Should I rebalance my portfolio?" is rebalancing, not out_of_scope and not clarification_needed, because it asks about mechanics on holdings already chosen, not about whether to own a security. A question about how a ticker the active portfolio holds has performed, gained or lost, or how large it is, is a question about that position even without the word "my": data_fetch with PortfolioAnalysisAgent, measure "position_pnl" or "allocation", tickers [that symbol] - not out_of_scope. If a request could be either an in-scope question or an out-of-scope one (e.g. "analyze X" could mean price data), that is clarification_needed, not out_of_scope: ambiguity wins over refusal.',
@@ -59,6 +60,7 @@ AGENTS: Dict[str, str] = {
     "PortfolioAnalysisAgent": "Computes figures about an EXISTING portfolio's holdings: allocation by asset class and by sector, P&L per position since purchase, and the portfolio's own volatility from its weights and the covariance matrix. Needs DataAgent first (holdings, prices, cash, covariance).",
     "ComplianceAgent": "Checks an EXISTING portfolio against the owner's Investment Policy Statement: every clause with a numeric limit, breach or headroom per clause with the distance to the limit, citing clause ids. Needs DataAgent and PortfolioAnalysisAgent first.",
     "ScreeningAgent": "Screens ONE named company against the owner's investment philosophy on its filed figures from EDGAR: one finding per numeric clause, pass or fail with the distance, citing PHI ids; a bank or insurer is excluded on its SIC code before any figure is read. Needs no other agent.",
+    "LedgerAgent": "Reads the owner's prediction ledger as of today: every prediction with its due date and its status, open, due or scored; a due figure prediction's verdict from the company's filing; the counts the ledger's. Names no company. Needs no other agent.",
 }
 
 
@@ -190,6 +192,7 @@ TERMINAL: Dict[str, Dict[str, Tuple[Optional[str], bool]]] = {
         "policy_topic": ("ComplianceAgent", False),
     },
     "research": {"": ("ScreeningAgent", True)},
+    "ledger": {"": ("LedgerAgent", True)},
     "clarification_needed": {"": (None, True)},
     "out_of_scope": {"": (None, True)},
 }

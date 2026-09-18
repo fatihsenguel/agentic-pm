@@ -2176,7 +2176,7 @@ async def backtest_agent_node(state: AgentState) -> Dict[str, Any]:
 # the synthesizer (KNOWN_GAPS, "Clarification exits the graph on a proxy").
 SYNTHESIZER_INTENTS = frozenset({
     "optimization", "macro_analysis", "rebalancing", "backtest", "data_fetch",
-    "risk_analysis", "out_of_scope", "compliance", "research",
+    "risk_analysis", "out_of_scope", "compliance", "research", "ledger",
 })
 _UNSYNTHESIZED_INTENTS = frozenset({"clarification_needed"})
 
@@ -2236,6 +2236,8 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             lines.extend(_format_compliance_response(decision, sub_results))
         elif intent == "research":
             lines.extend(_format_research_response(sub_results))
+        elif intent == "ledger":
+            lines.extend(_format_ledger_response(sub_results))
         else:
             lines.append("Analysis complete. See details below:")
             for agent, result in sub_results.items():
