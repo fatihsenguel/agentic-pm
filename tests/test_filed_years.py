@@ -211,20 +211,18 @@ def test_every_figure_is_the_reference_row(filed_figures, monkeypatch, name, cik
         source = block["provenance"][label][row["field"]]
         assert (source["tag"], source["accn"]) == (row["tag"], row["accn"]), row
         checked += 1
-    assert checked == {"A": 75, "B": 67, "C": 25}[section]
+    assert checked == {"A": 65, "B": 58, "C": 25}[section]
 
 
 ALPHABET_UNRESOLVED = (
     {(y, "depreciation_amortisation") for y in ("FY2021", "FY2022", "FY2023", "FY2024", "FY2025")}
-    | {("FY2025", "marketable_securities_noncurrent"),
-       ("FY2021", "long_term_debt_noncurrent"), ("FY2022", "long_term_debt_noncurrent")}
+    | {("FY2021", "long_term_debt_noncurrent"), ("FY2022", "long_term_debt_noncurrent")}
 )
 
 JPMORGAN_UNRESOLVED = {
     (y, field)
     for y in ("FY2021", "FY2022", "FY2023", "FY2024", "FY2025")
     for field in ("cost_of_revenue", "operating_income", "capex", "cash",
-                  "marketable_securities_current", "marketable_securities_noncurrent",
                   "commercial_paper", "long_term_debt_current", "long_term_debt_noncurrent",
                   "shares_outstanding")
 }

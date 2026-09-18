@@ -39,15 +39,15 @@ B,cash,,CashAndCashEquivalentsAtCarryingValue,USD,,2022-12-31,21879000000,000165
 B,cash,,CashAndCashEquivalentsAtCarryingValue,USD,,2023-12-31,24048000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
 B,cash,,CashAndCashEquivalentsAtCarryingValue,USD,,2024-12-31,23466000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024Q4I
 B,cash,,CashAndCashEquivalentsAtCarryingValue,USD,,2025-12-31,30708000000,0001652044-26-000071,2026,Q2,10-Q,2026-07-23,CY2025Q4I
-B,marketable_securities_current,,MarketableSecuritiesCurrent,USD,,2021-12-31,118704000000,0001652044-23-000016,2022,FY,10-K,2023-02-03,CY2021Q4I
-B,marketable_securities_current,,MarketableSecuritiesCurrent,USD,,2022-12-31,91883000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2022Q4I
-B,marketable_securities_current,,MarketableSecuritiesCurrent,USD,,2023-12-31,86868000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
-B,marketable_securities_current,,MarketableSecuritiesCurrent,USD,,2024-12-31,72191000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024Q4I
-B,marketable_securities_current,,MarketableSecuritiesCurrent,USD,,2025-12-31,96135000000,0001652044-26-000071,2026,Q2,10-Q,2026-07-23,CY2025Q4I
-B,marketable_securities_noncurrent,,MarketableSecuritiesNoncurrent,USD,,2021-12-31,1400000000,0001652044-23-000016,2022,FY,10-K,2023-02-03,CY2021Q4I
-B,marketable_securities_noncurrent,,MarketableSecuritiesNoncurrent,USD,,2022-12-31,803000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2022Q4I
-B,marketable_securities_noncurrent,,MarketableSecuritiesNoncurrent,USD,,2023-12-31,1400000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
-B,marketable_securities_noncurrent,,MarketableSecuritiesNoncurrent,USD,,2024-12-31,266000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024Q4I
+B,,not a field of the block since 2026-09-18 (decision 48 item 6),MarketableSecuritiesCurrent,USD,,2021-12-31,118704000000,0001652044-23-000016,2022,FY,10-K,2023-02-03,CY2021Q4I
+B,,not a field of the block since 2026-09-18 (decision 48 item 6),MarketableSecuritiesCurrent,USD,,2022-12-31,91883000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2022Q4I
+B,,not a field of the block since 2026-09-18 (decision 48 item 6),MarketableSecuritiesCurrent,USD,,2023-12-31,86868000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
+B,,not a field of the block since 2026-09-18 (decision 48 item 6),MarketableSecuritiesCurrent,USD,,2024-12-31,72191000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024Q4I
+B,,not a field of the block since 2026-09-18 (decision 48 item 6),MarketableSecuritiesCurrent,USD,,2025-12-31,96135000000,0001652044-26-000071,2026,Q2,10-Q,2026-07-23,CY2025Q4I
+B,,not a field of the block since 2026-09-18 (decision 48 item 6),MarketableSecuritiesNoncurrent,USD,,2021-12-31,1400000000,0001652044-23-000016,2022,FY,10-K,2023-02-03,CY2021Q4I
+B,,not a field of the block since 2026-09-18 (decision 48 item 6),MarketableSecuritiesNoncurrent,USD,,2022-12-31,803000000,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2022Q4I
+B,,not a field of the block since 2026-09-18 (decision 48 item 6),MarketableSecuritiesNoncurrent,USD,,2023-12-31,1400000000,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I
+B,,not a field of the block since 2026-09-18 (decision 48 item 6),MarketableSecuritiesNoncurrent,USD,,2024-12-31,266000000,0001652044-26-000018,2025,FY,10-K,2026-02-05,CY2024Q4I
 B,commercial_paper,,CommercialPaper,USD,,2021-12-31,0,0001652044-23-000016,2022,FY,10-K,2023-02-03,CY2021Q4I
 B,commercial_paper,,CommercialPaper,USD,,2022-12-31,0,0001652044-24-000022,2023,FY,10-K,2024-01-31,CY2022Q4I
 B,commercial_paper,,CommercialPaper,USD,,2023-12-31,0,0001652044-25-000014,2024,FY,10-K,2025-02-05,CY2023Q4I

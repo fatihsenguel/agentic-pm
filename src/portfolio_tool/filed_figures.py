@@ -62,8 +62,6 @@ FIELDS: Tuple[Field, ...] = (
     Field("capex", "duration", ("PaymentsToAcquirePropertyPlantAndEquipment",)),
     Field("equity", "instant", ("StockholdersEquity",)),
     Field("cash", "instant", ("CashAndCashEquivalentsAtCarryingValue",)),
-    Field("marketable_securities_current", "instant", ("MarketableSecuritiesCurrent",)),
-    Field("marketable_securities_noncurrent", "instant", ("MarketableSecuritiesNoncurrent",)),
     Field("commercial_paper", "instant", ("CommercialPaper",)),
     Field("long_term_debt_current", "instant", ("LongTermDebtCurrent",)),
     Field("long_term_debt_noncurrent", "instant", ("LongTermDebtNoncurrent",)),
