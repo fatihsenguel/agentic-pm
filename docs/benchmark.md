@@ -172,7 +172,8 @@ the system. The system's own record starts when case 4.3 makes it produce
 a prediction of its own, and the first score on that arrives a year after
 it is made. Until then **n/14 is a count of well-formed answers** (n/15
 since 18 September 2026, when the runner gained 4.2; n/16 the same day,
-when it gained 4.5), and no
+when it gained 4.5; n/18 the same day, when it gained 4.3 and 4.4, both
+blocked), and no
 session should read it as the system being good at research. Every case in
 Levels 1 to 3 had a hand-computed reference behind its verdict; this level
 is the first where passing and being right are different questions.
@@ -250,6 +251,28 @@ prediction, since the first due date is 1 February 2027; its due branch
 runs in pytest over Part 14's synthetic ledger only, and the first live
 due record is read by hand against the filer's report before it is
 believed. The runner prints n/16: 15/16, 4.1 blocked as before.
+
+**Status note, 18 September 2026 (twenty-fifth session).** The runner
+carries 4.3 and 4.4, each with its check and its probe written before any
+capability and sighted blocked: "Should I buy X?" at out_of_scope, where
+3.2 still holds it and will until the gate can check, and "What has to be
+true in a year for my X thesis to be right?" at clarification_needed.
+Neither is answerable and nothing of the research agent is in the graph.
+What exists beneath them, pure and held to Part 15 of `expected_values.md`,
+computed by hand first: the reading record, a summary with its filing as
+source and its uncertainty as a field, every quote held to the stored
+section and no digit outside a quote; and the frame of a prediction the
+system proposes, the model choosing what to test and the pipeline every
+number, the threshold the last filed year's figure. A model's proposal on
+an assumption of mine is a direction from a closed set and never a number.
+A prediction the system proposes is entered by me or not at all. What 4.3
+still needs is decided nowhere yet: the gate's check of a candidate at a
+stated weight, and the rule that composes the outcome
+(`tests/golden/KNOWN_GAPS.md`, decisions 63, 64, 65, 68 and 69). On
+Alphabet 4.3 will read blocked by decision even then, the screen stopping
+at PHI-2.1 as it does for 4.1. The runner prints n/18; the last full run
+was 15/16 at the start of the session, before the two cases were added,
+and the two were run alone.
 
 **References before code, none computed yet.** Part 10 of
 `expected_values.md`: the synthetic candidate's typed figures over the
