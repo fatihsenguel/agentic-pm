@@ -52,6 +52,12 @@ QUERIES = [
     # the registry's correction moves. Routed research it runs the node
     # live: the price fetch is under its interval, the filings fetches too.
     ("What is GOOGL worth?", 3),
+    # The prediction ledger (case 4.5, Part 14), naming no company. Added
+    # 18 September at clarification_needed, where the runner's first
+    # sighting found it before any intent described the ledger; the line
+    # pins what the registry's row moves. Routed to the ledger it runs the
+    # node live: today nothing is due and nothing is fetched.
+    ("How have my predictions done?", 3),
 ]
 
 
