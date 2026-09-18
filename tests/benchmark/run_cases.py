@@ -1,7 +1,7 @@
 """
-Benchmark case runner. Prints n/16 against docs/benchmark.md Part 3.
+Benchmark case runner. Prints n/17 against docs/benchmark.md Part 3.
 
-Not part of pytest. Sixteen live queries cost API calls and about two minutes, so
+Not part of pytest. Seventeen live queries cost API calls and about two minutes, so
 this is the fourth loop - pytest, CLI, golden set, runner - not a thing bolted
 onto pytest. Each of the four has a blind spot the others do not.
 
@@ -40,7 +40,7 @@ STATUSES
   FAIL     the system answered, and the answer was wrong or incomplete
   BLOCKED  a capability this case needs does not exist yet
 
-BLOCKED is not a pass. The headline number is passes out of sixteen.
+BLOCKED is not a pass. The headline number is passes out of seventeen.
 
 Blocked cases probe for the capability rather than declaring themselves blocked,
 so they unblock automatically when it arrives. A case that unblocks while its
@@ -1614,7 +1614,7 @@ def check_4_2(state):
     arithmetic"). What holds the ends is tests/test_valuation.py against
     Part 11 C. The seam between them, the node assembling the block and
     the assumptions from live rows, is what this check runs and pytest
-    does not, and n/16 says nothing about the range being right.
+    does not, and n/17 says nothing about the range being right.
 
     Asserted on the record: a low end below a high end, both positive; the
     as-of; the fiscal year read with its end and filed dates, a year the
@@ -1890,7 +1890,327 @@ def check_4_5(state):
 
 
 # ---------------------------------------------------------------------------
-# The sixteen cases
+# Level 4: the research agent (benchmark.md, case 4.4; Part 15)
+# ---------------------------------------------------------------------------
+
+# The block the research agent publishes, `shared_data["research"]` (Part
+# 15, D47, D49 and D50): the as-of, the subject with its watchlist entry,
+# the thesis as the file states it, one reading per section read, each a
+# record and never the document, the sections not read with the reason,
+# and the predictions the system proposes. The vocabularies are repeated
+# here and not imported, so the check can fail before the capability
+# exists and a vocabulary that widens in the code is caught by one that
+# did not.
+READING_FORM = "10-K"
+READING_SECTIONS = {"Item 1", "Item 1A", "Item 7"}
+UNCERTAINTIES = {"stated", "inferred"}
+QUOTE_CAP = 300
+CLAIMS_CAP = 12
+ACCESSION = re.compile(r"\d{10}-\d{2}-\d{6}")
+DIGIT = re.compile(r"\d")
+# The metrics the scorer computes (Part 14 D42); none depends on the price.
+PROPOSAL_METRICS = {"revenue", "gross_margin", "return_on_invested_capital",
+                    "net_debt_to_ebitda"}
+PROPOSAL_KINDS = {"figure", "event"}
+PROPOSAL_STATUSES = {"proposed", "entered"}
+SYSTEM_AUTHOR = "system"
+NOT_ENTERED = "proposed, not entered"
+PERIOD_LABEL = re.compile(r"FY\d{4}")
+# The phrases tests/test_watchlist.py refuses in a prediction's statement.
+PRICE_PHRASES = ("share price", "stock price", "price target", "will be at", "will trade")
+
+
+def _research(state):
+    return _shared(state).get("research") or {}
+
+
+def _watchlist_entry(ticker):
+    """The candidate in watchlist.toml under a ticker, read here with tomli
+    and not through the loader: its id, its thesis, and its prediction rows
+    by id. None when the file has no such candidate."""
+    import tomli
+    with open(LEDGER_PATH, "rb") as f:
+        raw = tomli.load(f)
+    for candidate in raw.get("candidate") or []:
+        if candidate.get("ticker") == ticker:
+            return {"id": candidate["id"], "thesis": candidate.get("thesis"),
+                    "predictions": {p["id"]: p for p in candidate.get("prediction") or []}}
+    return None
+
+
+def blocked_on_research(state):
+    """4.4 needs the research block. Until a node publishes it the case is
+    blocked on that, not failed; the reason names what the router did with
+    the question, so the first sighting records the routing."""
+    if _research(state):
+        return None
+    plan = (state.get("router_decision") or {}).get("execution_order") or []
+    reason = (f"no research block in shared_data (intent {_intent(state)!r}, plan {plan}); "
+              "the question did not reach the research agent")
+    errors = state.get("errors") or []
+    if errors:
+        reason += f"; errors: {errors}"
+    return reason
+
+
+def _one_year_later(day):
+    """The same day and month a year later, 28 February for a 29 February
+    (Part 15 D49, F4)."""
+    import datetime as dt
+    try:
+        return day.replace(year=day.year + 1)
+    except ValueError:
+        return dt.date(day.year + 1, 2, 28)
+
+
+def _readings_invariants(state):
+    """What every reading in the block must satisfy (Part 15 D47), and the
+    claims by id. Structure only: whether a quote is in the filing is held
+    by the reader's own tests, since the document never reaches the block
+    and this check cannot look."""
+    fails, claims = [], {}
+    block = _research(state)
+    answer = _answer(state)
+    readings = block.get("readings")
+    if not isinstance(readings, list) or not readings:
+        return ["research block carries no readings; a thesis is tested against what "
+                "the filing says, with its source"], claims
+    for r in readings:
+        where = f"reading {r.get('section')!r}"
+        if r.get("form") != READING_FORM:
+            fails.append(f"{where}: form {r.get('form')!r} is not {READING_FORM}")
+        if not ACCESSION.fullmatch(str(r.get("accn"))):
+            fails.append(f"{where}: accession {r.get('accn')!r} is not an accession number")
+        if r.get("section") not in READING_SECTIONS:
+            fails.append(f"{where}: not one of {sorted(READING_SECTIONS)}")
+        if not PERIOD_LABEL.fullmatch(str(r.get("fiscal_year"))):
+            fails.append(f"{where}: fiscal year {r.get('fiscal_year')!r} is not a label like FY2025")
+        if not r.get("source"):
+            fails.append(f"{where}: names no source")
+        for key in ("form", "accn", "section", "fiscal_year", "source"):
+            if r.get(key) and str(r[key]) not in answer:
+                fails.append(f"{where}: {key} {r[key]!r} never reaches the answer")
+        fails += _date_reaches_answer(state, r.get("filed"), f"{where}.filed")
+
+        listed = r.get("claims")
+        if not isinstance(listed, list) or not 1 <= len(listed) <= CLAIMS_CAP:
+            fails.append(f"{where}: {len(listed) if isinstance(listed, list) else listed!r} "
+                         f"claims; a reading carries between 1 and {CLAIMS_CAP}")
+            continue
+        for c in listed:
+            cid = c.get("id")
+            at = f"{where} claim {cid!r}"
+            if not cid or cid in claims:
+                fails.append(f"{at}: a claim id is missing or repeated")
+                continue
+            claims[cid] = c
+            text, quote = c.get("claim") or "", c.get("quote") or ""
+            if not text.strip():
+                fails.append(f"{at}: no sentence")
+            if DIGIT.search(text):
+                fails.append(f"{at}: a digit in the claim's sentence; a figure appears only "
+                             "inside a quote, where it is the filing's")
+            if not quote.strip():
+                fails.append(f"{at}: no quote; a claim without its source is tone")
+            if len(quote) > QUOTE_CAP:
+                fails.append(f"{at}: a quote of {len(quote)} characters; the cap is {QUOTE_CAP} "
+                             "and a record is not the document")
+            if c.get("uncertainty") not in UNCERTAINTIES:
+                fails.append(f"{at}: uncertainty {c.get('uncertainty')!r} is not one of "
+                             f"{sorted(UNCERTAINTIES)}")
+    for entry in block.get("not_read") or []:
+        if not entry.get("section") or not entry.get("reason"):
+            fails.append(f"not_read entry {entry!r} lacks its section or its reason")
+        elif str(entry["reason"]) not in answer:
+            fails.append(f"{entry['section']} was not read and the reason never reaches "
+                         "the answer")
+    return fails, claims
+
+
+def _proposed_predictions(state, entry, claims):
+    """The predictions the system proposes, held to Part 15 D49 and D50 and
+    to the file. What this cannot see is whether a value is the filed
+    figure: the block carries the value and its filing, never the year's
+    figures, and pytest holds the value to Part 15 C."""
+    import datetime as dt
+    fails = []
+    block = _research(state)
+    answer = _answer(state)
+    predictions = block.get("predictions")
+    if not isinstance(predictions, list) or not predictions:
+        return ["research block carries no prediction; the case asks what has to be true "
+                "by a date"]
+    try:
+        as_of = dt.date.fromisoformat(str(block.get("as_of")))
+    except ValueError:
+        return [f"research as_of {block.get('as_of')!r} is not a date"]
+
+    # The next free id is the file's (D50, F10): proposals continue the
+    # entry's numbering, in order, and take no id the file carries.
+    taken = max((int(i.rsplit(".", 1)[1]) for i in entry["predictions"]), default=0)
+    proposed = [str(p.get("id")) for p in predictions if p.get("status") == "proposed"]
+    expected = [f"{entry['id']}.{taken + n}" for n in range(1, len(proposed) + 1)]
+    if proposed != expected:
+        fails.append(f"proposed ids {proposed}; the next free ids under {entry['id']} "
+                     f"are {expected}")
+
+    seen = set()
+    for p in predictions:
+        pid = p.get("id")
+        where = f"prediction {pid!r}"
+        if not re.fullmatch(rf"{re.escape(entry['id'])}\.\d+", str(pid)) or pid in seen:
+            fails.append(f"{where}: not a new id under {entry['id']}")
+            continue
+        seen.add(pid)
+        if p.get("candidate") != entry["id"]:
+            fails.append(f"{where}: attached to {p.get('candidate')!r}, not {entry['id']}")
+        if p.get("author") != SYSTEM_AUTHOR:
+            fails.append(f"{where}: author {p.get('author')!r}; a prediction the system "
+                         f"proposes is marked {SYSTEM_AUTHOR!r}")
+        if p.get("kind") not in PROPOSAL_KINDS:
+            fails.append(f"{where}: kind {p.get('kind')!r} is not one of {sorted(PROPOSAL_KINDS)}")
+            continue
+
+        status = p.get("status")
+        in_file = entry["predictions"].get(pid)
+        if status not in PROPOSAL_STATUSES:
+            fails.append(f"{where}: status {status!r} is not one of {sorted(PROPOSAL_STATUSES)}")
+        elif status == "entered":
+            if not in_file or in_file.get("author") != SYSTEM_AUTHOR:
+                fails.append(f"{where}: entered, and watchlist.toml carries no row of the "
+                             "system's under that id; the ledger is the file")
+        else:
+            if in_file:
+                fails.append(f"{where}: proposed under an id watchlist.toml already carries")
+            if NOT_ENTERED not in answer:
+                fails.append(f"{where}: the answer does not say it is {NOT_ENTERED!r}")
+            made, due = str(p.get("made_on")), str(p.get("due"))
+            if made != as_of.isoformat():
+                fails.append(f"{where}: made_on {made}, the as-of is {as_of}")
+            elif due != _one_year_later(as_of).isoformat():
+                fails.append(f"{where}: due {due}; a year after {as_of} is "
+                             f"{_one_year_later(as_of)} (D49)")
+        for key in ("made_on", "due"):
+            fails += _date_reaches_answer(state, p.get(key), f"{where}.{key}")
+
+        statement = p.get("statement") or ""
+        if not statement.strip():
+            fails.append(f"{where}: no statement")
+        elif statement not in answer:
+            fails.append(f"{where}: the statement never reaches the answer")
+        priced = [ph for ph in PRICE_PHRASES if ph in statement.lower()]
+        if priced or PRICE_FORECAST.search(statement):
+            fails.append(f"{where}: the statement names a price: {priced or statement!r}")
+
+        if p.get("kind") == "figure":
+            if p.get("metric") not in PROPOSAL_METRICS:
+                fails.append(f"{where}: metric {p.get('metric')!r} is not one the scorer "
+                             f"computes {sorted(PROPOSAL_METRICS)}")
+            if p.get("bound") not in ("min", "max"):
+                fails.append(f"{where}: bound {p.get('bound')!r} is not min or max")
+            value = p.get("value")
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                fails.append(f"{where}: value {value!r} is not a number")
+            if not PERIOD_LABEL.fullmatch(str(p.get("period"))):
+                fails.append(f"{where}: period {p.get('period')!r} is not a label like FY2026")
+            source = p.get("source") or {}
+            missing = [k for k in ("form", "accn", "filed", "source") if not source.get(k)]
+            if missing:
+                fails.append(f"{where}: the value's filing lacks {missing}; a threshold "
+                             "without its filing is a number from nowhere")
+            else:
+                for k in ("form", "accn", "source"):
+                    if str(source[k]) not in answer:
+                        fails.append(f"{where}: the value's {k} {source[k]!r} never reaches "
+                                     "the answer")
+                fails += _date_reaches_answer(state, source.get("filed"), f"{where}.source.filed")
+
+        reasons = p.get("reasons")
+        if not isinstance(reasons, list) or not reasons:
+            fails.append(f"{where}: no reasons; a prediction is attached to what was read")
+            continue
+        for cid in reasons:
+            claim = claims.get(cid)
+            if claim is None:
+                fails.append(f"{where}: reason {cid!r} is not a claim of any reading")
+                continue
+            line = next((l for l in answer.splitlines() if claim.get("claim") and
+                         claim["claim"] in l), None)
+            if line is None:
+                fails.append(f"{where}: claim {cid}, its reason, never reaches the answer")
+            elif str(claim.get("uncertainty")) not in line:
+                fails.append(f"{where}: claim {cid} is printed without its uncertainty on "
+                             "the line; uncertainty is a field, not tone")
+            if claim.get("quote") and claim["quote"] not in answer:
+                fails.append(f"{where}: claim {cid}'s quote never reaches the answer")
+    return fails
+
+
+def check_4_4(state):
+    """"What has to be true in a year for my X thesis to be right?" passes
+    when the prediction is dated, about the business, and stated so that a
+    reported figure or an event settles it; attached to the thesis; and
+    names no price (benchmark.md Level 4; Part 15).
+
+    Asserted on the block: the subject is X and its watchlist entry, read
+    from watchlist.toml here and not through the loader; the thesis is the
+    file's, word for word; every reading is a record of a 10-K section
+    with its accession, filed date and source, one to twelve claims, no
+    digit in a claim's sentence, a quote within the cap and an uncertainty
+    from the closed set; at least one prediction, the system's by its
+    author, made on the as-of and due a year later, a figure one on a
+    metric the scorer computes with its value's filing beside it, reasons
+    that are claims of the readings; proposed and not entered unless the
+    file carries the row. On the answer: every source, date, statement and
+    cited claim with its quote and its uncertainty; no price phrase, no
+    recommendation, nothing from the IPS: a thesis question implies no
+    position and the gate has nothing to check.
+
+    What this check cannot see: whether a quote is in the filing, which
+    the reader's tests hold and the block cannot show, the document never
+    being in it; whether a summary is faithful to its quote, which nothing
+    holds and the first live reading is read by hand for; whether a value
+    is the filed figure, pytest's against Part 15 C; whether the
+    prediction tests the thesis, and whether it comes true, which is the
+    ledger's to say a year on; and that the system wrote no file, which
+    only `git status` after a run shows.
+    """
+    fails = _ran_clean(state)
+    block = _research(state)
+    if not block:
+        return fails + ["no research in shared_data"]
+    entry = _watchlist_entry(WATCHLIST_TICKER)
+    if entry is None:
+        return fails + [f"watchlist.toml has no candidate under {WATCHLIST_TICKER}"]
+    answer = _answer(state)
+
+    subject = block.get("subject") or {}
+    if subject.get("ticker") != WATCHLIST_TICKER or subject.get("candidate") != entry["id"]:
+        fails.append(f"subject {subject} is not {WATCHLIST_TICKER} under {entry['id']}")
+    fails += _date_reaches_answer(state, block.get("as_of"), "research.as_of")
+
+    thesis = block.get("thesis") or {}
+    if thesis.get("candidate") != entry["id"] or thesis.get("text") != entry["thesis"]:
+        fails.append(f"the thesis in the block is not {entry['id']}'s as watchlist.toml "
+                     "states it; the thesis is mine and is not rewritten")
+    if entry["id"] not in answer:
+        fails.append(f"{entry['id']} never reaches the answer; a prediction is attached to "
+                     "its thesis by the entry's id")
+
+    reading_fails, claims = _readings_invariants(state)
+    fails += reading_fails
+    fails += _proposed_predictions(state, entry, claims)
+
+    forecast = PRICE_FORECAST.search(answer)
+    if forecast:
+        fails.append(f"answer forecasts a price: {forecast.group(0)!r}")
+    fails += _not_from_the_ips(state)
+    fails += _no_recommendation(state, WATCHLIST_TICKER)
+    return fails
+
+
+# ---------------------------------------------------------------------------
+# The seventeen cases
 # ---------------------------------------------------------------------------
 
 CASES = [
@@ -1921,6 +2241,8 @@ CASES = [
      blocked_on_screen_figures, check_4_1),
     ("4.2", f"What is {WATCHLIST_TICKER} worth?", BENCHMARK_PORTFOLIO,
      blocked_on_range, check_4_2),
+    ("4.4", f"What has to be true in a year for my {WATCHLIST_TICKER} thesis to be right?",
+     BENCHMARK_PORTFOLIO, blocked_on_research, check_4_4),
     ("4.5", "How have my predictions done?", BENCHMARK_PORTFOLIO,
      blocked_on_ledger, check_4_5),
     ("4.6", f"Does {BANK_TICKER} clear my philosophy?", BENCHMARK_PORTFOLIO,
@@ -1960,7 +2282,7 @@ def run_case(case_id, prompt, portfolio_id, blocked_probe, check):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run the benchmark cases and print n/16")
+    parser = argparse.ArgumentParser(description="Run the benchmark cases and print n/17")
     parser.add_argument("--case", help="run one case only, e.g. 1.1")
     args = parser.parse_args()
 
