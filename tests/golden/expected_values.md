@@ -2272,12 +2272,19 @@ is refused naming why, and never read by guess; whether the next filer's
 
 **The document is not committed.** The sectioner's fixture is cut from it
 and committed with the sectioner; the hash above pins what it was cut from.
+*Corrected 2026-09-19: the fixture is committed with the extractor, which
+needs it first, as `tests/golden/edgar_document_goog_excerpt.htm`; section
+G describes it. And the hash pins less than it says: the bytes end, after
+the filing's last element, with a `script` element whose `src` is a path on
+www.sec.gov. The filing agent did not write it, the site's delivery did,
+and whether a second pull carries the same path is not measured. D51 leaves
+the element out, so the text does not depend on it; the hash may.*
 
 ### Decisions
 
 | # | Decision | Choice |
 |---|---|---|
-| D51 | What is the document's text? | **What the standard library's HTML parser yields from the bytes, with the inline XBRL header left out and nothing else.** The document declares ASCII and every byte is; its other characters arrive as character references and are resolved, and a no-break space, 1,891 of them, is a space. Text under `head`, `script`, `style` and `ix:header` is left out: the last is 224,439 characters of markup whose text, 37,707 characters of contexts and units, is no word of the filing. The other inline XBRL elements, `ix:nonFraction` 1,632 times, `ix:nonNumeric` 229 and `ix:continuation` 87, are transparent: the text inside them is the filing's. A line ends where a `div`, a `table` or a `tr` starts or ends, and at a `br` and an `hr`; a `td` separates by a space. Runs of whitespace inside a line collapse to one space and an empty line is dropped. The elements this document carries outside the XBRL namespaces are `html`, `head`, `meta`, `title`, `body`, `script`, `div`, `span`, `table`, `tr`, `td`, `a`, `br`, `hr` and `img`, and no other. **A document carrying an element outside that list and outside a namespace prefix is refused naming the element**, until a document that carries it has been looked at and this row says what it does to a line. The result here: 2,745 lines, 343,344 characters with the lines joined by one newline. Rejected: a rule leaving out elements styled `display:none`, which is 717 elements here, one `div` that wraps the `ix:header` and 716 empty cells, and changes no character, so nothing would exercise it; a parser the project does not declare; treating an unknown element as inline, which fuses a heading into a paragraph on the first filer that writes `p` and finds nothing, or something else. |
+| D51 | What is the document's text? | **What the standard library's HTML parser yields from the bytes, with the inline XBRL header left out and nothing else.** The document declares ASCII and every byte is; its other characters arrive as character references and are resolved, and a no-break space, 1,891 of them, is a space. Text under `head`, `script`, `style` and `ix:header` is left out: the last is 224,439 characters of markup whose text, 37,707 characters of contexts and units, is no word of the filing. The other inline XBRL elements, `ix:nonFraction` 1,632 times, `ix:nonNumeric` 229 and `ix:continuation` 87, are transparent: the text inside them is the filing's. A line ends where a `div`, a `table` or a `tr` starts or ends, and at a `br` and an `hr`; a `td` separates by a space. Runs of whitespace inside a line collapse to one space and an empty line is dropped. The elements this document carries outside the XBRL namespaces are `html`, `head`, `meta`, `title`, `body`, `script`, `div`, `span`, `table`, `tr`, `td`, `a`, `br`, `hr` and `img`, and no other. **A document carrying an element outside that list and outside a namespace prefix is refused naming the element**, until a document that carries it has been looked at and this row says what it does to a line. The result here: 2,745 lines, 343,344 characters with the lines joined by one newline. Rejected: a rule leaving out elements styled `display:none`, which is 717 elements here, one `div` that wraps the `ix:header` and 716 empty cells, and changes no character, so nothing would exercise it; a parser the project does not declare; treating an unknown element as inline, which fuses a heading into a paragraph on the first filer that writes `p` and finds nothing, or something else. **Corrected 2026-09-19, measured while the extractor was written, each on the whole document.** `style` is struck from the elements left out: the document carries none, so it is an element not looked at and is refused like any other. A line ends where a `div` or a `tr` starts or ends and at a `br`, and at nothing else: `table` and `hr` stay in the list of known elements and end no line of their own, since without either rule the text is the same 2,745 lines, a `table` always standing inside a `div` and an `hr` between two. Without the `br` rule the text is 2,707 lines, without `tr` 2,151, without `div` 1,258. The document's one `script` is empty, so leaving it out changes no character here either; it stays left out, because a script's text is never the filing's words, and the rule is held on the document with text put into that script. A document that declares an encoding other than ASCII, or none, or carries a byte that is not ASCII, is refused naming it, on the principle of the element rule. |
 | D52 | What is a heading, and where does a section end? | **A heading is a line that starts with `Item`, whitespace, one or two digits, an optional letter A to C, and a period, case disregarded; the title is not read. Over the whole document the heading lines, in order, form exactly two runs, each rising in item order and both carrying the same items: the first is the table of contents and the second the body. A section is the lines from its heading in the second run to the line before that run's next heading, whichever item that is.** Measured: 46 heading lines, two runs of 23, the same items, 1 to 16 with 1A, 1B, 1C, 7A, 9A, 9B and 9C. The table of contents writes `Item 1A.` alone on its line, the title on the next and the page on the one after; the body writes `ITEM 1A.RISK FACTORS`, the title fused to the period with no space on 21 of 23 and with one on 1C and 9C. Refused, naming it: a wanted item absent from the second run; a number of runs other than two, stating the count; two runs that differ in their items; a wanted item that is last in its run, so that nothing ends it; a heading with no line beneath it. Rejected: the first match, which is the table of contents; the last match without the runs, which takes a cross-reference that starts a line on the first document that has one; case as the rule, `ITEM` for the body, which is this filer's typography; matching the title, which is the filer's wording; a minimum length, since Item 1B here is "Not applicable." and any number would be a guess; a nearest heading and a truncated section, D47's. |
 | D53 | Does the page furniture stay in the text? | **Yes, as extracted (decided 2026-09-19).** The document has 98 page breaks, each an `hr`, and at 96 of them the text carries three lines between one page's words and the next: the page number with a period, `Table of Contents`, and `Alphabet Inc.`. They fall inside sections and inside sentences (section C, F7). A quote that crosses one is not a substring of the stored section unless it carries the three lines, and D47 then refuses the whole reading: an honest failure at the cost of one call, and a quote inside one paragraph never meets it, the furniture sitting between lines. Rejected: removing the block before and the table after each `hr`, which is the filing agent's layout and already fails to fit two of the 98; removing the three-line pattern from the text, which needs the filer's name as it is printed and deletes a list line that reads `12.`. Logged with a trigger, not fixed. |
 
@@ -2401,3 +2408,46 @@ nothing: it says sentences are cut, and roughly how often.
   stated here: the largest section is 85,181 characters, and the refusal
   is the reader's and comes with the reader.
 - The workbook. No sheet, like Parts 11, 12 G, 14 and 15.
+
+### G. The committed fixture
+
+Added 2026-09-19. `tests/golden/edgar_document_goog_excerpt.htm`, 134,155
+bytes, sha256
+`52d9a0de8a4cf5ec08261f913b553274b57d850d6171ec19e5040c51dca0064c`: an
+excerpt of the document above, cut where the top-level elements of its
+`body` begin and end, 143 of 1,210 kept. Every byte in it is the
+document's, in the document's order; nothing is rewritten. The document's
+start through `<body>` and its end from `</body>` are whole. The XBRL
+header is cut down to its wrapper, its first hidden fact, whose text is
+`FALSE`, and its first context, whose text is `0001652044`, `2025-01-01`
+and `2025-12-31`.
+
+Kept: the cover's last paragraph and the contents page whole, with the
+page break between them; the forward-looking note's heading and last
+paragraph; every heading of the body with the first line beneath it and
+the last line before the next heading, page furniture and `PART` lines at
+those edges kept whole, and the elements that yield no line between two
+kept neighbours, eleven `hr` among them; the page break inside a sentence
+of Item 1A (F7); the purchases table of Item 5, whose header cells hold a
+`br`; the first results table of Item 7 with its footnote; the last page's
+number and the `script` after it. No `img` is kept.
+
+The text under D51 is 228 lines, 17,764 characters.
+
+| what | lines, from 0 | |
+|---|---|---|
+| the first run of headings | 12 to 81, `Item 1.` at 12, `Item 1A.` at 15, `Item 7.` at 40 | 23 |
+| the second run | 91 to 225 | 23 |
+| Item 1 | 91 to 96 | 1,485 characters |
+| Item 1A | 97 to 104 | 1,745 characters |
+| Item 7 | 146 to 160, ending at `ITEM 7A.`; to `ITEM 8.` it would be 2,029 | 1,601 characters |
+| the page break of F7 | 99 ends "…other companies may develop", 100 to 102 are `10.`, `Table of Contents`, `Alphabet Inc.`, 103 starts "AI products and technologies" | |
+| a table row | 150, `Consolidated revenues $ 350,018 $ 402,836 $ 52,818 15 %`: the cells are `td` with no whitespace between them in the markup, and the figures sit inside `ix:nonFraction` | |
+| a `br` | 135 and 136, `Approximate Dollar Value of Shares that May Yet Be Purchased Under the Program` and `(in millions)`, one cell; without the rule the text is 227 lines | |
+| a fused heading | 91, `ITEM 1.BUSINESS`, two `span` with nothing between | |
+| the last line | 227, `98.`; the `script` after it yields nothing | |
+
+Neither `FALSE` on a line of its own nor `0001652044` anywhere is in the
+text. What the fixture cannot show is the whole document's counts in
+sections A to C; the extractor was held to them once, by hand, on the
+fetched document: 2,745 lines and 343,344 characters.
