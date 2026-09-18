@@ -1,6 +1,8 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 18 September (twenty-fourth session), on branch `score`, cut from `baseline-v1` at 264aa7a. Case 4.5 into the graph, in eighteen commits with two items carried from the last session and decision 48's item 6, the reference first: Part 9 C's row for the 17th, six of six, and the candidate closes test pinning it; the runner's `blocked_on_screen` wording; Part 14, prediction scoring by hand, D41 to D45, synthetic rows on Alphabet's filed FY2025 lines, corrected twice the same day (a float digit, E-1's score date); `check_4_5` and `blocked_on_ledger`, sixteen cases, sighted BLOCKED at clarification_needed where out_of_scope was predicted; the loader's prediction rows; the pure scorer with `READS` beside the formulas; the ledger node, reading figures only for a figure prediction whose date has come; the rendering; the nineteenth golden line, at its sighted baseline and then at intent `ledger` with LedgerAgent on two identical runs, as predicted; the runner 15/16, 4.5 PASS on four open predictions; the first live record Part 14 A's row for the day; the two `marketable_securities` fields out of the block. Decision 58 taken with the shape: the ledger is its own intent. Entries added: the sighting prediction that missed; the reported figure without a currency; what W-2 needs before its predictions are scored; what the 4.5 check cannot see until 2027; two ledger metrics with no formula; a return-on-capital prediction and the rate the node does not state; a figure across two filings. Resolved: the 17th's close; the BLOCKED reason's wording; decision 48's item 6 in its trigger line.
+Last updated 18 September (twenty-fifth session), on branch `research`, cut at 0e1c1ad, the tip of `score`, the trunk not yet having merged it. The shape of the research agent, cases 4.3 and 4.4, and the first of it that landed cleanly, in seven commits before this one, the reference first: the entry carried from the last session, measured and not copied, seven tests red on a scored ledger where the brief named four; Part 15 by hand, D47 to D50, the reading record, a model's proposal as a direction and never a number, the prediction frame on Alphabet's filed FY2025 lines, the threshold the last filed figure cut toward the side that holds; `check_4_4` and `check_4_3` with their probes, eighteen cases, each exercised offline on a passing block and on broken ones and then sighted BLOCKED, 4.4 at clarification_needed with no prediction made, 4.3 at out_of_scope as predicted; the scorer's lookup of a reported figure as its own function, one path for the verdict and the threshold; `portfolio_tool/proposals.py`, the frame, pure, 23 tests; `portfolio_tool/reading.py`, the record's validation, pure, 19 tests, each seen failing without the module and against wrong versions with bytecode off. Nothing reaches the graph; no model is called; no file of mine is written. Loops at session start: pytest 1304, the CLI on the allocation question, the golden set with zero diff on nineteen lines, the runner 15/16, no price and no filing fetched, the macro rows rewritten. Decisions 59, 60, 61, 62, 66 and 67 taken with the shape; 63, 64, 65, 68 and 69 opened and pending. Entries added, twelve: the seven tests on the committed ledger; the shape and its decisions; what the gate needs; a weight in a research question; no segment figure in the stored facts; what the reading does not read; what the two checks cannot see; the two sightings; the loader and `author`; two weak frame tests; the regime line and `macro_data`; three stale statements. Resolved: none.
+
+Previously: 18 September (twenty-fourth session), on branch `score`, cut from `baseline-v1` at 264aa7a. Case 4.5 into the graph, in eighteen commits with two items carried from the last session and decision 48's item 6, the reference first: Part 9 C's row for the 17th, six of six, and the candidate closes test pinning it; the runner's `blocked_on_screen` wording; Part 14, prediction scoring by hand, D41 to D45, synthetic rows on Alphabet's filed FY2025 lines, corrected twice the same day (a float digit, E-1's score date); `check_4_5` and `blocked_on_ledger`, sixteen cases, sighted BLOCKED at clarification_needed where out_of_scope was predicted; the loader's prediction rows; the pure scorer with `READS` beside the formulas; the ledger node, reading figures only for a figure prediction whose date has come; the rendering; the nineteenth golden line, at its sighted baseline and then at intent `ledger` with LedgerAgent on two identical runs, as predicted; the runner 15/16, 4.5 PASS on four open predictions; the first live record Part 14 A's row for the day; the two `marketable_securities` fields out of the block. Decision 58 taken with the shape: the ledger is its own intent. Entries added: the sighting prediction that missed; the reported figure without a currency; what W-2 needs before its predictions are scored; what the 4.5 check cannot see until 2027; two ledger metrics with no formula; a return-on-capital prediction and the rate the node does not state; a figure across two filings. Resolved: the 17th's close; the BLOCKED reason's wording; decision 48's item 6 in its trigger line.
 
 Previously: 17 September (twenty-second session), on branch `range`, cut from `baseline-v1` at 7edc7f9. Part 11, the valuation range, by hand before any pipeline, and item 7's first half, in ten commits, the reference first: D37 to D40, a discounted cash flow over the latest filed year's free cash flow run once at each of two stated growth rates, the low end the low rate and the high end the high rate, five assumptions each carried with the clause or entry that states it, net debt as PHI-3.1 computes it, a record with no filed figure and six conditions that raise; Alphabet FY2025 129.39 to 205.62 per share and Apple FY2025 140.10 to 224.18 on synthetic assumptions; `shares_outstanding` a field of the block, the filer's year-end count, the unit `shares` not a currency, the yield reading the year's count; `quant/valuation.py` held to Part 11; the three investor assumptions on PHI-4.1, corrected from PHI-4.3 the day the Part was written because a statement carries no number, the sentence in `docs/PHILOSOPHY.md` and the values in `philosophy.toml` on the owner's word; W-1's growth pair in `docs/WATCHLIST.md` and `watchlist.toml`. Nothing reaches the graph. Runner 13/14 once, 4.1 BLOCKED at the same stop; golden set run twice, the first run's first line a transient router error, the second zero diff; no live fetch. Entries added: the golden loop discards a transient error's text; what the node needs to publish a range; a price for a candidate not held (decision 57, the owner's to number); the runner's 4.2 check will be blind to the arithmetic; a count under another unit; JPMorgan's fixture without the count. Resolved: `shares_history` has no source column, the count being a filed fact with its provenance. Decision 56 stays pending.
 ---
@@ -4876,6 +4878,202 @@ The experiment showed one more thing. `predictions.status` reads a
 written score as scored whatever the as-of, so a test that pins the date
 before a score's `scored_on` reads a state that never existed. Live, the
 as-of is today and the state cannot arise.
+
+### The shape of the research agent: decisions 59 to 69
+
+**Trigger:** pending decisions 63, 64, 65, 68 and 69; the next session of Order 4 reads this entry first.
+
+Logged 18 September (twenty-fifth session). The shape of cases 4.3 and
+4.4 was brought in plain words and taken with one yes. Taken with it:
+**59**, a model's proposal on an assumption of mine is a direction from a
+closed set and never a number, and the range is computed from my five
+numbers only (Part 15 D48, closing Part 11 E's open item); **60**, a
+prediction the system proposes has the model choosing what to test and
+the pipeline every number, the threshold the last filed year's figure
+(D49); **61**, I enter it by hand, the row marked `author = "system"`,
+and the system writes neither file (D50), the sentence on authorship in
+`docs/WATCHLIST.md` waiting for my word; **62**, the gate is a graph
+node on the one edge into the synthesizer, keyed on the judgement record
+and not a plan step, and the formatter prints no outcome without a gate
+block for the same ticker and weight; **66**, one intent, `research`,
+with a parameter `asks` set by extraction from closed patterns,
+`position` or `thesis`, as a discriminator row whose terminal is the
+research agent, which requires the screen; **67**, the reading and the
+judgement run on the stronger model already named in `agents/config.py`,
+as a second constant beside the active one, the router unchanged, the
+model id kept in the record and the answer saying "the model's reading".
+Pending: **63**, where a candidate's asset class, sector and instrument
+type are stated; **64**, how a candidate's purchase is funded in the
+gate's check; **65**, where the weight is stated, my recommendation the
+watchlist entry; **68**, the rule that composes case 4.3's outcome from
+the screen, my entry condition, the gate and the model's view of the
+thesis, its truth table mine to read in the next Part; **69**, whether
+4.3 passes on a prediction proposed and not entered, which `check_4_3`
+accepts today, or only on one I have entered, benchmark.md's words being
+"entered in the ledger". Rejected with the shape: a growth pair from the
+model and a second range beside mine; the model choosing a threshold or
+a weight; the formatter or the model deciding the outcome; a new intent;
+a parameter the model sets; one research answer carrying everything; a
+table in the database for the system's predictions; the gate as a plan
+step; a gate that checks the concentration clauses alone. The order
+taken: 4.4's path first, and "should I buy" opened only when the gate
+can check, so 3.2, the out-of-scope text, the registry and the Siemens
+few-shot stand until then.
+
+### What the gate needs that the candidate's row lacks
+
+**Trigger:** pending decisions 63, 64 and 65; the Part that computes the gate's check by hand.
+
+Logged 18 September (twenty-fifth session). GOOGL's `assets` row
+carries a name and a currency and NULL for asset class, sector and
+instrument type, by decision 57. A check of a new position at a stated
+weight needs all three: IPS-4.2 counts directly held shares only, so the
+instrument type; IPS-4.3 the sector; the bands of section 3 the asset
+class, and beside it a statement of how the purchase is funded, from
+cash, from new money or from a sale, which IPS-5.2 leaves undecided and
+nobody has stated. `compliance.refuse` checks a weight in one unnamed
+position against IPS-4.1 and IPS-4.2 alone, and is not the gate: on 18
+September Equity stood at 69.63% against IPS-3.1's 65%, so a gate that
+checked the two concentration clauses would call 6% clear while the
+purchase deepened a breach the portfolio check already reports. The
+gate therefore raises on each blank, naming it, and case 4.3 reads
+BLOCKED on it by decision, the way 4.1 does on D36. Not filled: a
+sector from the SIC code is a mapping nobody wrote down, and a default
+class is a wrong answer with a plausible face.
+
+### A weight in a research question is refused by the validator
+
+**Trigger:** pending decision 65.
+
+Logged 18 September (twenty-fifth session). Extraction reads 0.06 as
+`hypothetical_weight` from "Should I buy GOOGL at 6%?", and
+`RouterDecision.validate_compliance` rejects that parameter under any
+intent but compliance, so the question errors whatever the router says.
+Measured on extraction alone; the router was not run on it. If decision
+65 lets a question state the weight, the validator's rule changes with
+it; if the weight is the watchlist entry's alone, the question should
+say which weight it was checked at and why the one typed was not read.
+
+### The stored facts carry no segment figure
+
+**Trigger:** 2027-03-01, W-1.2's due date; or the first reading of Alphabet's Item 7.
+
+Logged 18 September (twenty-fifth session). Alphabet's 513 stored tags
+include none naming a segment: the company facts document carries
+consolidated lines only, and `OperatingIncomeLoss` for FY2025 has three
+rows, the three years of the consolidated statement. W-1.2, the cloud
+segment profitable at the operating level, cannot be settled from
+structured data by anyone; it is an event prediction scored by hand
+against the segment note (Part 14 D44), and the reading of Item 7 is
+the only place the system will ever meet the figure, inside a quote.
+
+### The reading reads three items of the annual report and nothing else
+
+**Trigger:** a case or a prediction that needs a quarter, an 8-K, a transcript or news.
+
+Logged 18 September (twenty-fifth session). Part 15 D47 reads Item 1,
+Item 1A and Item 7 of the latest 10-K. Not read: Item 8 and its notes,
+the structured reader's job for figures and nobody's for prose; the
+10-Q, so a reading is up to a year old by the next annual report; the
+8-K, transcripts and news, which DIRECTION.md lists as sources. A filer
+with no 10-K, a 20-F filer for one, is refused naming the form. What is
+not built yet at all: the fourth EDGAR request, the filing's primary
+document; the tables for the text and the readings, a migration; the
+sectioner, to be designed against a real document; the model call.
+
+### What the two new checks cannot see
+
+**Trigger:** the commit that makes 4.4 answerable, for the first live reading; the commit that makes 4.3 answerable, for the rest.
+
+Logged 18 September (twenty-fifth session). `check_4_4` cannot see
+whether a quote is in the filing, the document never being in the
+block, which `tests/test_reading.py` holds; whether a summary is
+faithful to its quote, which nothing holds, a true quote under a wrong
+sentence passing every rule, and for which the first live reading is
+read by hand against the 10-K before it is believed; a number written
+in words in a claim, which the digit rule misses; whether a value is
+the filed figure, pytest's against Part 15 C; whether the prediction
+tests the thesis or comes true, the ledger's a year on; and that no
+file was written, which `git status` after a run shows. `check_4_3`
+cannot see the rule that composes the outcome beyond one invariant, an
+entry supported only with both checks clear and my entry condition met
+(decision 68); the gate's arithmetic; or who stated the weight beyond an
+id being printed. Its shared helper `_not_from_the_ips` says "the
+question is about the philosophy" when 4.4's answer cites an IPS
+clause: the assertion is right for 4.4 and the wording is 4.1's.
+
+### The two sightings, the baselines for the routing hypothesis
+
+**Trigger:** the routing commit of decision 66.
+
+Logged 18 September (twenty-fifth session). Sighted with `--case` alone
+before any capability. 4.3, "Should I buy GOOGL?": `out_of_scope`, plan
+empty, as predicted from the golden line on Nvidia. 4.4, "What has to be
+true in a year for my GOOGL thesis to be right?": `clarification_needed`,
+plan empty, the model's own clarification, extraction asking nothing
+back; no prediction was made, by last session's rule. Extraction reads
+`1Y` from "in a year" on 4.4's prompt, a period the research path reads
+and does not use. The golden line for 4.4 is written at this baseline
+before the routing commit, and the commit's prediction starts from it.
+
+### The loader reads no `author`, so a system row cannot be told from mine
+
+**Trigger:** the first prediction of the system's I enter; my sentence on authorship in `docs/WATCHLIST.md` (decision 61).
+
+Logged 18 September (twenty-fifth session). Part 15 D50 marks a row the
+system proposed with `author = "system"`. `portfolio_tool/watchlist.py`
+reads no such key and `tests/test_watchlist.py` refuses any key beyond
+the score's four, so the row the answer will print does not load today.
+Until it does, Part 15 F9 has no code and no test: the frame cannot see
+that the ledger already carries its proposal and would propose it again
+under the next id. The change is the loader's field, the document
+test's key, the sentence in the document, and F9's row in
+`tests/test_proposals.py`, in that order. One thing to know on the day:
+a year from `made_on` can fall before the period's report is filed, and
+the prediction is then due and unscored with that reason (Part 14 F3),
+never wrong.
+
+### Two of the frame's tests are weaker than their names
+
+**Trigger:** the first proposal on a third metric, `return_on_invested_capital` or `net_debt_to_ebitda`.
+
+Logged 18 September (twenty-fifth session).
+`test_a_metric_without_a_sentence_row_stops` passes on either of two
+stops, the missing figure or the missing sentence row, since no block
+was built on which `net_debt_to_ebitda` computes; the branch that says a
+metric has no sentence row in Part 15 is pinned by nothing of its own.
+`test_nothing_is_written` watches `open` and nothing else. And a stop on
+a missing figure reuses the scorer's words, "the prediction is not
+scored", for a prediction that was never made; it names the figure and
+the year correctly. Each is fixed with the row the third metric brings.
+
+### The golden set's regime line rewrites `macro_data` on every run
+
+**Trigger:** pending decision 51.
+
+Logged 18 September (twenty-fifth session). "What is the current market
+regime?" runs the macro agent, whose update has no interval: every
+golden run asks the price provider for thirty days of VIX and the
+yields and upserts them, so the count stands still while `created_at`
+moves on every current-series row. Seen on this session's run, 206 rows
+before and after, the stamp moving from 03:39 to 14:55 UTC. The
+twenty-fourth session's handoff said no row was written by any loop;
+the rows stamped 03:39 on the 18th say one was. Run inside trading
+hours the request could return an intraday value for the day and store
+it as a daily one; this run stored none. Not fixed: macro is one of the
+four intents outside the benchmark roster, and whether it stays is
+decision 51.
+
+### Three statements gone stale, none of them mine to fix silently
+
+**Trigger:** the next edit of `watchlist.toml`, which is mine, the first score or the first system row; and my word on Part 11.
+
+Logged 18 September (twenty-fifth session). `watchlist.toml`'s header
+and `tests/test_watchlist.py`'s docstring both say the prediction rows
+are read by nothing yet; they have been read by the loader for the
+ledger node since the twenty-fourth session. Part 11's D38 writes "D46"
+where it means pending decision 46, the tax rate on PHI-2.1; no D46
+exists, and Part 15 numbers from D47 and says why.
 
 ### JPMorgan's fixture carries no share count
 
