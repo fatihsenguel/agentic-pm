@@ -4819,6 +4819,64 @@ them (Part 14 F, "no row has two vintages"). No row covers it because no
 stored fact shows it. When it happens the verdict wants a source per
 field, a change to the `Filing` record and its row here and in Part 14.
 
+### Seven tests pin the committed ledger as none scored, and go red on the first score
+
+**Trigger:** the first score I write into `watchlist.toml`.
+
+Logged 18 September (twenty-fifth session), carried from the
+twenty-fourth. Seven tests, counting the three rows of the three-dates
+test, read the committed `watchlist.toml` and pin it as four predictions,
+none scored. They go red by design on the day I write the first score.
+Measured, not argued: the suite over a scratch copy of the tree with one
+score written under W-2.1, `scored_on` 2027-02-02, went from 1304 passed
+to 7 failed and 1297 passed; the repository's file was not touched. A red
+suite on that day is the ledger having changed and not a defect, and no
+test is loosened ahead of it. What each should then pin:
+
+- `tests/test_watchlist_predictions_loader.py::test_the_committed_file_has_four_predictions_in_document_order`:
+  red at "none is scored today". It keeps what a prediction never
+  changes, the ids, the candidates and each row's stated fields, and pins
+  beside them the ids that carry a score with the four fields as I wrote
+  them, updated by hand with each score.
+- `tests/test_predictions.py::test_the_committed_ledger_at_three_dates`,
+  three rows: red at the statuses, W-2.1 scored where Part 14 A says open
+  or due. Part 14 A is the ledger as it stood on 18 September and stays
+  as written; the test then reads Part 14 A's four rows from a fixture
+  file and not from the committed one.
+- `tests/test_ledger_node.py::test_today_four_open_and_nothing_fetched`
+  and `::test_the_result_is_published_under_the_agent_too`: red on an
+  error and not on a count. The node reads figures for every figure
+  prediction that is not open, a scored one included, so with the date
+  pinned at 2026-09-18 it asks the stand-in provider for ADBE, which the
+  stand-in's ticker file lacks. What the first pins, that an open
+  prediction fetches nothing, moves onto a four-open ledger in a
+  temporary file, the way the node's other tests write theirs; the second
+  needs only a ledger that loads, and reads the same file.
+- `tests/test_ledger_formatter.py::test_four_open_with_their_due_dates_and_the_count`:
+  red at the count line, which then reads 1 scored, 0 due, 3 open. The
+  same move: the four-open rendering over a temporary ledger.
+
+Two of the formatter's three committed-ledger tests stay green, and
+should: `test_the_committed_ledger_passes_the_runners_4_5`, since
+`check_4_5` reads the file itself and expects the scored record, and
+`test_the_stated_figures_print_as_the_document_writes_them`, since a
+stated figure prints whatever the status. The first is the one test that
+keeps reading the committed file: it is the runner's check over the
+ledger as it is.
+
+What stays green and should not: `tests/test_watchlist.py` holds a score
+in `watchlist.toml` to its shape, four fields, dated on or after the due
+date, right or wrong, and does not hold it to `docs/WATCHLIST.md`. The
+scratch copy's document carried no score and the test passed, so a score
+written into one file and not the other is seen by nothing. The check to
+add on that day: every score in the config is in the document with the
+same outcome, source, date and result.
+
+The experiment showed one more thing. `predictions.status` reads a
+written score as scored whatever the as-of, so a test that pins the date
+before a score's `scored_on` reads a state that never existed. Live, the
+as-of is today and the state cannot arise.
+
 ### JPMorgan's fixture carries no share count
 
 **Trigger:** the next read of JPMorgan's company facts for any field.
