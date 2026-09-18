@@ -125,9 +125,9 @@ Q: What is GOOGL worth? | pid=3
   errors: 0
 
 Q: How have my predictions done? | pid=3
-  intent: clarification_needed
-  plan:   []
+  intent: ledger
+  plan:   ['LedgerAgent']
   period: None
-  agents_run: []
+  agents_run: ['LedgerAgent']
   errors: 0
 
