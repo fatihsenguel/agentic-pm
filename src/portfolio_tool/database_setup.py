@@ -235,6 +235,56 @@ class TickerCik(Base):
     def __repr__(self):
         return f"<TickerCik(ticker='{self.ticker}', cik={self.cik}, pulled_at={self.pulled_at})>"
 
+class FiledDocument(Base):
+    """
+    One filing's primary document as text (expected_values.md Part 16, D51),
+    one row per accession, written once: an accession never changes, so
+    there is no interval and no pull date.
+
+    `text` is the whole document under D51, not its sections: the sectioner
+    runs over it at read time, so a change to the sectioner needs no fetch.
+    It is read by the sectioner and never published. `source` is the
+    provider's name, the source a reading record states (Part 15 D47).
+
+    The filer, the form and the filed date are not stored: the filing is
+    named by the accession on filed_facts, and a second copy could disagree
+    with the first. The file's name has no consumer once the text is here.
+    Every column is required and defaulted nowhere: a row is written only
+    after a fetch has returned and the text has been extracted.
+    """
+    __tablename__ = 'filed_documents'
+    accn = Column(String(20), primary_key=True)
+    text = Column(Text, nullable=False)
+    source = Column(String(50), nullable=False)
+
+    def __repr__(self):
+        return f"<FiledDocument(accn='{self.accn}', {len(self.text or '')} characters)>"
+
+class DocumentReading(Base):
+    """
+    One reading of one section of a stored document, as the model supplied
+    it (expected_values.md Part 15, D47): the cache, one row per accession,
+    section, model and prompt version.
+
+    `claims` is JSON text, the one to twelve entries of claim, quote and
+    uncertainty that passed `reading.record`. They are read and written
+    whole, and on a hit they go through `reading.record` again against the
+    stored section, so a cached reading is held to the rule a fresh one is.
+    `model` is the id the record keeps (decision 67). A reading that was
+    refused leaves no row. When it was made and what it cost are not
+    stored; nothing consumes them.
+    """
+    __tablename__ = 'document_readings'
+    accn = Column(String(20), ForeignKey('filed_documents.accn'), primary_key=True)
+    section = Column(String(10), primary_key=True)
+    model = Column(String(100), primary_key=True)
+    prompt_version = Column(String(64), primary_key=True)
+    claims = Column(Text, nullable=False)
+
+    def __repr__(self):
+        return (f"<DocumentReading(accn='{self.accn}', section='{self.section}', "
+                f"model='{self.model}')>")
+
 class FxFetchMetadata(Base):
     """
     The rate fetch's cache record, one row per (base, quote).
