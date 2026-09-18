@@ -2001,7 +2001,10 @@ scored. The reported figure and its source are section B's.
 The record for S-1 (D45): status scored by the filing, not recorded;
 reported 402,836,000,000 as filed, in the block's currency USD; result
 right; form 10-K, filed 2026-02-05, source EDGAR. S-6's reported figure is
-the ratio, 0.5965231508603997 as a float, as a finding carries a metric.
+the ratio, 0.5965231508603998 as a float, as a finding carries a metric.
+*Corrected 2026-09-18, the day this Part was written: the float was first
+written ending 997 without being computed; the float nearest the 28-digit
+quotient ends 998, computed by hand with Python's float of the Decimal.*
 
 ### D. Event predictions
 
