@@ -1201,15 +1201,16 @@ def _screening(state):
 
 
 def blocked_on_screen(state):
-    """The philosophy check exists as a pure module and no intent reaches it
-    (decision 29). Until a node publishes the block the case is blocked;
-    the reason names what the router did with the question so the record
-    says whether the gap is the node or the routing."""
+    """The philosophy check node publishes the block when the routing
+    reaches it. A state without the block is a question that did not
+    reach the check, and the case is blocked on that; the reason names what
+    the router did with the question so the record says whether the gap is
+    the node or the routing."""
     if _screening(state):
         return None
     plan = (state.get("router_decision") or {}).get("execution_order") or []
     reason = (f"no screening block in shared_data (intent {_intent(state)!r}, plan {plan}); "
-              "the philosophy check is not in the graph (decision 29)")
+              "the question did not reach the philosophy check")
     errors = state.get("errors") or []
     if errors:
         reason += f"; errors: {errors}"
