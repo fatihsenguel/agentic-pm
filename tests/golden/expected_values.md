@@ -521,6 +521,7 @@ row and passing through no cache. Both as printed are the record.
 
 | Date | Exchange | Provider | Difference | Verdict |
 |---|---|---|---|---|
+| 2026-09-17 | 347.33 | 347.33 | 0.00 | agrees |
 | 2026-09-16 | 342.87 | 342.87 | 0.00 | agrees |
 | 2026-09-15 | 344.98 | 344.98 | 0.00 | agrees |
 | 2026-09-14 | 349.39 | 349.39 | 0.00 | agrees |
@@ -531,11 +532,19 @@ Five of five. The exchange prints volume to the share and the library to
 the hundred (18,928,860 against 18,928,900 on the 16th); the close is the
 figure a valuation reads and the only one this row checks.
 
+*Added 2026-09-18.* The 17th's row, six of six. Asked at about 22:30 UTC
+on the 17th the exchange's table stopped at the 16th; asked again at about
+02:00 UTC on the 18th it carried the 17th, 347.33. The provider's figure on
+this row is the close the node stored on the first live run of case 4.2,
+through the price provider, not a call from the shell: the row that was
+stated as the last close before the table could be asked, now checked.
+
 **What C settles.** The first close the system stores for GOOGL, the last
 close before 2026-09-17, is defended when it equals 342.87 on 2026-09-16
-with its source on the row. The ticker is the one the question names,
-not the CIK's other classes: GOOG's print is a different figure and
-would need its own row (Part 13 E item 7, second half).
+with its source on the row; the 17th's, 347.33, since the row above. The
+ticker is the one the question names, not the CIK's other classes: GOOG's
+print is a different figure and would need its own row (Part 13 E item 7,
+second half).
 
 **What C does not cover.** A refetch after Alphabet's next ex-dividend
 date: B is the falsifier for that and the provider's call has not changed
