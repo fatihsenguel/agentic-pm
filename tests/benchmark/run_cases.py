@@ -1,7 +1,7 @@
 """
-Benchmark case runner. Prints n/17 against docs/benchmark.md Part 3.
+Benchmark case runner. Prints n/18 against docs/benchmark.md Part 3.
 
-Not part of pytest. Seventeen live queries cost API calls and about two minutes, so
+Not part of pytest. Eighteen live queries cost API calls and about two minutes, so
 this is the fourth loop - pytest, CLI, golden set, runner - not a thing bolted
 onto pytest. Each of the four has a blind spot the others do not.
 
@@ -40,7 +40,7 @@ STATUSES
   FAIL     the system answered, and the answer was wrong or incomplete
   BLOCKED  a capability this case needs does not exist yet
 
-BLOCKED is not a pass. The headline number is passes out of seventeen.
+BLOCKED is not a pass. The headline number is passes out of eighteen.
 
 Blocked cases probe for the capability rather than declaring themselves blocked,
 so they unblock automatically when it arrives. A case that unblocks while its
@@ -1614,7 +1614,7 @@ def check_4_2(state):
     arithmetic"). What holds the ends is tests/test_valuation.py against
     Part 11 C. The seam between them, the node assembling the block and
     the assumptions from live rows, is what this check runs and pytest
-    does not, and n/17 says nothing about the range being right.
+    does not, and n/18 says nothing about the range being right.
 
     Asserted on the record: a low end below a high end, both positive; the
     as-of; the fiscal year read with its end and filed dates, a year the
@@ -1926,14 +1926,15 @@ def _research(state):
 
 def _watchlist_entry(ticker):
     """The candidate in watchlist.toml under a ticker, read here with tomli
-    and not through the loader: its id, its thesis, and its prediction rows
-    by id. None when the file has no such candidate."""
+    and not through the loader: its id, its thesis, its entry condition and
+    its prediction rows by id. None when the file has no such candidate."""
     import tomli
     with open(LEDGER_PATH, "rb") as f:
         raw = tomli.load(f)
     for candidate in raw.get("candidate") or []:
         if candidate.get("ticker") == ticker:
             return {"id": candidate["id"], "thesis": candidate.get("thesis"),
+                    "entry_condition": candidate.get("entry_condition") or {},
                     "predictions": {p["id"]: p for p in candidate.get("prediction") or []}}
     return None
 
@@ -2176,12 +2177,24 @@ def check_4_4(state):
     only `git status` after a run shows.
     """
     fails = _ran_clean(state)
-    block = _research(state)
-    if not block:
+    if not _research(state):
         return fails + ["no research in shared_data"]
     entry = _watchlist_entry(WATCHLIST_TICKER)
     if entry is None:
         return fails + [f"watchlist.toml has no candidate under {WATCHLIST_TICKER}"]
+    common, _ = _research_invariants(state, entry)
+    fails += common
+    fails += _not_from_the_ips(state)
+    fails += _no_recommendation(state, WATCHLIST_TICKER)
+    return fails
+
+
+def _research_invariants(state, entry):
+    """What 4.3 and 4.4 share, and the claims by id: the subject and its
+    entry, the as-of, the thesis as the file states it, the readings, the
+    proposed predictions, and no forecast of a price."""
+    fails = []
+    block = _research(state)
     answer = _answer(state)
 
     subject = block.get("subject") or {}
@@ -2204,13 +2217,197 @@ def check_4_4(state):
     forecast = PRICE_FORECAST.search(answer)
     if forecast:
         fails.append(f"answer forecasts a price: {forecast.group(0)!r}")
-    fails += _not_from_the_ips(state)
-    fails += _no_recommendation(state, WATCHLIST_TICKER)
+    return fails, claims
+
+
+# ---------------------------------------------------------------------------
+# Level 4: the recommendation and the gate (benchmark.md, case 4.3)
+# ---------------------------------------------------------------------------
+
+# What is decided and asserted here: the gate publishes its own block,
+# `shared_data["gate"]`, for the ticker and the stated weight, its findings
+# in the compliance finding's shape (decision 62); the judgement is a view
+# of the thesis from a closed set with claims as its reasons (the shape of
+# 18 September); the entry condition is the file's, and a valuation
+# condition is met when the screen's finding on its clause passes
+# (docs/WATCHLIST.md). What is not decided and so not asserted: the rule
+# that composes the outcome (decision 68), where the weight and the
+# candidate's asset class, sector and instrument type are stated (63, 65),
+# and how the purchase is funded (64). Of the outcome this check holds the
+# one thing no rule may break: it supports an entry only with both policy
+# checks complete and clear and my entry condition met.
+THESIS_VIEWS = {"stands", "strained", "no_view"}
+GATE_CLEAR = {"ok", "exempt"}
+
+
+def _gate(state):
+    return _shared(state).get("gate") or {}
+
+
+def blocked_on_recommendation(state):
+    """4.3 needs the research block with a judgement in it and the gate's
+    block beside it. A policy check that stopped is a decision working and
+    not a defect, and the case stays blocked on it the way 4.1 does: the
+    screen on Alphabet's FY2021 (decision 48), the gate on what the
+    candidate's row and the watchlist entry do not yet state (decisions
+    63, 64 and 65)."""
+    reason = blocked_on_research(state)
+    if reason is not None:
+        return reason
+    if not _research(state).get("judgement"):
+        return ("the research block carries no judgement; the question was not read as one "
+                f"about a position (asks {_research(state).get('asks')!r})")
+    if not _gate(state):
+        return ("no gate block in shared_data; an answer that implies a position passes "
+                "the IPS check before it is shown (DIRECTION.md invariant 2)")
+    stops = []
+    screen_stop = _screening(state).get("stopped")
+    if screen_stop:
+        stops.append(f"the philosophy check stopped on {screen_stop.get('clause')}: "
+                     f"{screen_stop.get('reason')} (decision 48)")
+    gate_stop = _gate(state).get("stopped")
+    if gate_stop:
+        stops.append(f"the gate stopped: {gate_stop.get('reason')} (decisions 63, 64, 65)")
+    return "; ".join(stops) or None
+
+
+def check_4_3(state):
+    """"Should I buy X?" passes when the answer is a judgement marked as
+    judgement, with its reasons and its uncertainty as fields; the
+    philosophy check by clause and the IPS check at a stated weight, both
+    attached; a thesis, an entry condition and at least one dated
+    prediction; and no price target (benchmark.md Level 4).
+
+    Asserted: everything 4.4 asserts of the subject, the thesis, the
+    readings and the predictions; the screening block's invariants, every
+    finding's PHI id in the answer; the gate's block for the same ticker,
+    a weight in (0, 1] with the id of whatever states it, findings on IPS
+    clauses in the compliance statuses, every IPS id, the weight and its
+    source in the answer; the judgement a view of the thesis from the
+    closed set, its reasons claims of the readings, an uncertainty, and
+    the answer calling it a judgement; the entry condition the file's, a
+    valuation condition met exactly when the screen's finding on its
+    clause passes; and the outcome supporting an entry only when the
+    screen has no stop and no failed or excluded finding, the gate has no
+    stop and every finding clear, and the entry condition is met.
+
+    What this check cannot see: the rule that composes the outcome beyond
+    that one invariant (decision 68, not taken); whether the gate's
+    arithmetic is right, which is pytest's against its own Part once the
+    Part exists; who stated the weight, beyond an id being printed;
+    whether the judgement is any good, which is the ledger's; and
+    everything 4.4's check cannot see.
+    """
+    fails = _ran_clean(state)
+    block = _research(state)
+    if not block:
+        return fails + ["no research in shared_data"]
+    entry = _watchlist_entry(WATCHLIST_TICKER)
+    if entry is None:
+        return fails + [f"watchlist.toml has no candidate under {WATCHLIST_TICKER}"]
+    answer = _answer(state)
+    common, claims = _research_invariants(state, entry)
+    fails += common
+
+    # The philosophy check, attached by clause.
+    screen = _screening(state)
+    if not screen:
+        fails.append("no screening block; the philosophy check is not attached")
+    else:
+        fails += _screen_block_invariants(state, WATCHLIST_TICKER)
+        for f in screen.get("findings") or []:
+            if f.get("clause") not in answer:
+                fails.append(f"finding on {f.get('clause')} and the id never reaches the answer")
+
+    # The IPS check at a stated weight, attached by clause.
+    gate = _gate(state)
+    weight = gate.get("weight")
+    if not gate:
+        fails.append("no gate block; the IPS check is not attached")
+    else:
+        if gate.get("ticker") != WATCHLIST_TICKER:
+            fails.append(f"the gate checked {gate.get('ticker')!r}, not {WATCHLIST_TICKER}")
+        if isinstance(weight, bool) or not isinstance(weight, (int, float)) or not 0 < weight <= 1:
+            fails.append(f"gate weight {weight!r} is not a fraction in (0, 1]")
+        elif f"{weight:.2%}" not in answer:
+            fails.append(f"the weight {weight:.2%} never reaches the answer")
+        source = gate.get("weight_source")
+        if not source:
+            fails.append("the gate's weight names nothing that states it; a weight nobody "
+                         "stated is a number from nowhere")
+        elif str(source) not in answer:
+            fails.append(f"the weight is stated on {source!r}, which never reaches the answer")
+        findings = gate.get("findings") or []
+        if not findings and not gate.get("stopped"):
+            fails.append("the gate carries no finding and no stop")
+        for f in findings:
+            where = f"gate finding {f.get('clause')}"
+            if not CLAUSE_ID.fullmatch(str(f.get("clause"))):
+                fails.append(f"{where}: not an IPS clause id")
+            elif f["clause"] not in answer:
+                fails.append(f"{where}: the id never reaches the answer")
+            if f.get("status") not in COMPLIANCE_STATUSES:
+                fails.append(f"{where}: status {f.get('status')!r} not in "
+                             f"{sorted(COMPLIANCE_STATUSES)}")
+
+    # The judgement, marked as judgement, its reasons and uncertainty fields.
+    judgement = block.get("judgement") or {}
+    view = judgement.get("thesis_view")
+    if view not in THESIS_VIEWS:
+        fails.append(f"thesis view {view!r} is not one of {sorted(THESIS_VIEWS)}")
+    elif view not in answer:
+        fails.append(f"the thesis view {view!r} never reaches the answer")
+    if judgement.get("uncertainty") not in UNCERTAINTIES:
+        fails.append(f"the judgement's uncertainty {judgement.get('uncertainty')!r} is not one "
+                     f"of {sorted(UNCERTAINTIES)}")
+    reasons = judgement.get("reasons") or []
+    if view in THESIS_VIEWS - {"no_view"} and not reasons:
+        fails.append("the judgement gives no reasons")
+    for cid in reasons:
+        if cid not in claims:
+            fails.append(f"the judgement's reason {cid!r} is not a claim of any reading")
+    if "judgement" not in answer.lower():
+        fails.append("the answer does not call the judgement a judgement")
+
+    # The entry condition: the file's, and a valuation condition is the
+    # screen's finding on its clause.
+    stated = entry["entry_condition"]
+    condition = block.get("entry_condition") or {}
+    for key in ("kind", "clause"):
+        if stated.get(key) != condition.get(key):
+            fails.append(f"entry condition {key} {condition.get(key)!r}; watchlist.toml "
+                         f"states {stated.get(key)!r}")
+    met = condition.get("met")
+    if stated.get("kind") == "valuation":
+        on_clause = [f for f in (screen.get("findings") or [])
+                     if f.get("clause") == stated.get("clause")]
+        expected = (on_clause[0].get("status") == "pass") if on_clause else None
+        if met is not expected:
+            fails.append(f"entry condition met is {met!r}; the screen's finding on "
+                         f"{stated.get('clause')} makes it {expected!r}")
+
+    # The one invariant on the outcome (DIRECTION.md: a recommendation
+    # without both checks is generic advice).
+    outcome = block.get("outcome") or {}
+    supports = outcome.get("supports_entry")
+    if not isinstance(supports, bool):
+        fails.append(f"outcome supports_entry is {supports!r}, not a yes or a no")
+    elif supports:
+        screen_clear = (bool(screen) and not screen.get("stopped") and all(
+            f.get("status") == "pass" for f in screen.get("findings") or []))
+        gate_clear = (bool(gate) and not gate.get("stopped") and bool(gate.get("findings"))
+                      and all(f.get("status") in GATE_CLEAR for f in gate["findings"]))
+        if not (screen_clear and gate_clear and met is True):
+            fails.append("the outcome supports an entry while "
+                         + ", ".join(w for w, ok in (("the philosophy check is not clear", screen_clear),
+                                                     ("the gate is not clear", gate_clear),
+                                                     ("the entry condition is not met", met is True))
+                                     if not ok))
     return fails
 
 
 # ---------------------------------------------------------------------------
-# The seventeen cases
+# The eighteen cases
 # ---------------------------------------------------------------------------
 
 CASES = [
@@ -2241,6 +2438,8 @@ CASES = [
      blocked_on_screen_figures, check_4_1),
     ("4.2", f"What is {WATCHLIST_TICKER} worth?", BENCHMARK_PORTFOLIO,
      blocked_on_range, check_4_2),
+    ("4.3", f"Should I buy {WATCHLIST_TICKER}?", BENCHMARK_PORTFOLIO,
+     blocked_on_recommendation, check_4_3),
     ("4.4", f"What has to be true in a year for my {WATCHLIST_TICKER} thesis to be right?",
      BENCHMARK_PORTFOLIO, blocked_on_research, check_4_4),
     ("4.5", "How have my predictions done?", BENCHMARK_PORTFOLIO,
@@ -2282,7 +2481,7 @@ def run_case(case_id, prompt, portfolio_id, blocked_probe, check):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run the benchmark cases and print n/17")
+    parser = argparse.ArgumentParser(description="Run the benchmark cases and print n/18")
     parser.add_argument("--case", help="run one case only, e.g. 1.1")
     args = parser.parse_args()
 
