@@ -1,7 +1,7 @@
 """
-Benchmark case runner. Prints n/15 against docs/benchmark.md Part 3.
+Benchmark case runner. Prints n/16 against docs/benchmark.md Part 3.
 
-Not part of pytest. Fifteen live queries cost API calls and about two minutes, so
+Not part of pytest. Sixteen live queries cost API calls and about two minutes, so
 this is the fourth loop - pytest, CLI, golden set, runner - not a thing bolted
 onto pytest. Each of the four has a blind spot the others do not.
 
@@ -40,7 +40,7 @@ STATUSES
   FAIL     the system answered, and the answer was wrong or incomplete
   BLOCKED  a capability this case needs does not exist yet
 
-BLOCKED is not a pass. The headline number is passes out of fifteen.
+BLOCKED is not a pass. The headline number is passes out of sixteen.
 
 Blocked cases probe for the capability rather than declaring themselves blocked,
 so they unblock automatically when it arrives. A case that unblocks while its
@@ -1614,7 +1614,7 @@ def check_4_2(state):
     arithmetic"). What holds the ends is tests/test_valuation.py against
     Part 11 C. The seam between them, the node assembling the block and
     the assumptions from live rows, is what this check runs and pytest
-    does not, and n/15 says nothing about the range being right.
+    does not, and n/16 says nothing about the range being right.
 
     Asserted on the record: a low end below a high end, both positive; the
     as-of; the fiscal year read with its end and filed dates, a year the
@@ -1727,7 +1727,170 @@ def check_4_2(state):
 
 
 # ---------------------------------------------------------------------------
-# The fifteen cases
+# Level 4: the prediction ledger (benchmark.md, case 4.5; Part 14)
+# ---------------------------------------------------------------------------
+
+# The ledger the check holds the answer to, read here with tomli and not
+# through the loader, so that a loader that drops a row is caught by a
+# count it did not produce: "the count is the ledger's, not the model's".
+LEDGER_PATH = "watchlist.toml"
+PREDICTION_STATUSES = {"open", "due", "scored"}
+RESULTS = {"right", "wrong"}
+SCORE_KEYS = ("outcome", "source", "scored_on", "result")
+
+
+def _ledger(state):
+    return _shared(state).get("ledger") or {}
+
+
+def _ledger_file():
+    """Every prediction in watchlist.toml by id: its candidate, its due
+    date as a string and whether the ledger carries its score."""
+    import tomli
+    with open(LEDGER_PATH, "rb") as f:
+        raw = tomli.load(f)
+    out = {}
+    for candidate in raw.get("candidate") or []:
+        for p in candidate.get("prediction") or []:
+            out[p["id"]] = {"candidate": candidate["id"], "due": str(p["due"]),
+                            "scored": all(k in p for k in SCORE_KEYS)}
+    return out
+
+
+def blocked_on_ledger(state):
+    """4.5 needs the ledger read into shared_data. Until a node publishes it
+    the case is blocked on that, not failed; the reason names what the
+    router did with the question, so the first sighting records the
+    routing the way 4.2's did."""
+    if _ledger(state):
+        return None
+    plan = (state.get("router_decision") or {}).get("execution_order") or []
+    reason = (f"no ledger block in shared_data (intent {_intent(state)!r}, plan {plan}); "
+              "the question did not reach the ledger")
+    errors = state.get("errors") or []
+    if errors:
+        reason += f"; errors: {errors}"
+    return reason
+
+
+def check_4_5(state):
+    """"How have my predictions done?" passes when every prediction in the
+    ledger is in the answer with its due date; every prediction whose due
+    date is on or before the as-of (D43) carries a score, the ledger's
+    written one or the filing's verdict with the reported figure and its
+    filing as the source (D44, D45), or a stated reason it could not be
+    scored, and that reaches the answer; every open one says so; the
+    count is the file's; and no price is forecast (benchmark.md Level 4).
+
+    What this check cannot see: whether a filing's verdict is right,
+    which pytest holds to Part 14 C; whether the reader's figure is the
+    right filed one, Part 12's; and, until the first due date in February
+    2027, any due prediction at all. Its due branch runs today only in
+    pytest over hand-built blocks, through the formatter tests that
+    import this module. It reads watchlist.toml itself, so a count the
+    node or the loader got wrong is a count this check did not.
+    """
+    fails = _ran_clean(state)
+    block = _ledger(state)
+    if not block:
+        return fails + ["no ledger in shared_data"]
+    answer = _answer(state)
+    as_of = block.get("as_of")
+    fails += _date_reaches_answer(state, as_of, "ledger.as_of")
+
+    file = _ledger_file()
+    records = block.get("records")
+    if not isinstance(records, list):
+        return fails + ["ledger block carries no records list"]
+    by_id = {r.get("id"): r for r in records}
+    if sorted(by_id) != sorted(file):
+        fails.append(f"ledger records are {sorted(by_id)}; watchlist.toml has "
+                     f"{sorted(file)}. The count is the file's.")
+
+    summary = block.get("summary") or {}
+    counted = {"predictions": len(records),
+               "scored": sum(1 for r in records if r.get("status") == "scored"),
+               "due": sum(1 for r in records if r.get("status") == "due"),
+               "open": sum(1 for r in records if r.get("status") == "open")}
+    for key, n in counted.items():
+        if summary.get(key) != n:
+            fails.append(f"summary {key} is {summary.get(key)!r}; the records count {n}")
+    if summary.get("predictions") != len(file):
+        fails.append(f"summary counts {summary.get('predictions')!r} predictions; "
+                     f"watchlist.toml has {len(file)}")
+    if f"{len(file)} predictions" not in answer:
+        fails.append(f"the ledger's count, {len(file)} predictions, never reaches the answer")
+
+    for pid, entry in sorted(file.items()):
+        record = by_id.get(pid)
+        if record is None:
+            continue
+        where = f"{pid}"
+        if pid not in answer:
+            fails.append(f"{where} never reaches the answer; none is silently unscored")
+        due = record.get("due")
+        if str(due) != entry["due"]:
+            fails.append(f"{where}: due {due!r} in the block, {entry['due']} in the file")
+        elif entry["due"] not in answer:
+            fails.append(f"{where}: due date {entry['due']} never reaches the answer")
+        if record.get("candidate") != entry["candidate"]:
+            fails.append(f"{where}: attached to {record.get('candidate')!r}, the file says "
+                         f"{entry['candidate']}")
+        status = record.get("status")
+        if status not in PREDICTION_STATUSES:
+            fails.append(f"{where}: status {status!r} is not one of {sorted(PREDICTION_STATUSES)}")
+            continue
+        expected = "scored" if entry["scored"] else ("open" if entry["due"] > str(as_of) else "due")
+        if status != expected:
+            fails.append(f"{where}: status {status!r}; due {entry['due']} as of {as_of} with "
+                         f"{'a' if entry['scored'] else 'no'} written score is {expected!r} (D43)")
+        if status == "open":
+            if record.get("filing") or record.get("unscored"):
+                fails.append(f"{where}: open and yet scored or given a reason; nothing is "
+                             "scored on a date that has not come (D43)")
+            continue
+        if status == "scored":
+            score = record.get("score") or {}
+            missing = [k for k in SCORE_KEYS if not score.get(k)]
+            if missing:
+                fails.append(f"{where}: scored and the score lacks {missing}")
+                continue
+            if score["result"] not in RESULTS:
+                fails.append(f"{where}: result {score['result']!r} is not right or wrong")
+            for k in ("result", "source"):
+                if str(score[k]) not in answer:
+                    fails.append(f"{where}: the written {k} {score[k]!r} never reaches the answer")
+            continue
+        # due: the filing's verdict or a stated reason, and never both absent
+        filing, reason = record.get("filing"), record.get("unscored")
+        if filing:
+            missing = [k for k in ("reported", "result", "form", "filed", "source")
+                       if filing.get(k) in (None, "")]
+            if missing:
+                fails.append(f"{where}: the filing's verdict lacks {missing}")
+                continue
+            if filing["result"] not in RESULTS:
+                fails.append(f"{where}: filing result {filing['result']!r} is not right or wrong")
+            for k in ("result", "form", "source"):
+                if str(filing[k]) not in answer:
+                    fails.append(f"{where}: the filing's {k} {filing[k]!r} never reaches the answer")
+            fails += _date_reaches_answer(state, filing.get("filed"), f"{where}.filing.filed")
+        elif reason:
+            if str(reason) not in answer:
+                fails.append(f"{where}: due and unscored, and the reason never reaches the "
+                             f"answer: {reason!r}")
+        else:
+            fails.append(f"{where}: due, no score, no filing's verdict and no reason: "
+                         "silently unscored")
+
+    forecast = PRICE_FORECAST.search(answer)
+    if forecast:
+        fails.append(f"answer forecasts a price: {forecast.group(0)!r}")
+    return fails
+
+
+# ---------------------------------------------------------------------------
+# The sixteen cases
 # ---------------------------------------------------------------------------
 
 CASES = [
@@ -1758,6 +1921,8 @@ CASES = [
      blocked_on_screen_figures, check_4_1),
     ("4.2", f"What is {WATCHLIST_TICKER} worth?", BENCHMARK_PORTFOLIO,
      blocked_on_range, check_4_2),
+    ("4.5", "How have my predictions done?", BENCHMARK_PORTFOLIO,
+     blocked_on_ledger, check_4_5),
     ("4.6", f"Does {BANK_TICKER} clear my philosophy?", BENCHMARK_PORTFOLIO,
      blocked_on_screen, check_4_6),
 ]
@@ -1795,7 +1960,7 @@ def run_case(case_id, prompt, portfolio_id, blocked_probe, check):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run the benchmark cases and print n/15")
+    parser = argparse.ArgumentParser(description="Run the benchmark cases and print n/16")
     parser.add_argument("--case", help="run one case only, e.g. 1.1")
     args = parser.parse_args()
 
