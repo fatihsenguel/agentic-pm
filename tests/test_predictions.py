@@ -59,7 +59,7 @@ def event(pid="E-2", due=dt.date(2026, 3, 1), score=None):
 E1_SCORE = Score(outcome="the FY2025 annual report's segment note shows the cloud segment "
                          "with positive operating income for the full year",
                  source=f"10-K {ACCN} filed 2026-02-05, segment note",
-                 scored_on=dt.date(2026, 2, 6), result="right")
+                 scored_on=dt.date(2026, 3, 2), result="right")
 
 
 @pytest.fixture

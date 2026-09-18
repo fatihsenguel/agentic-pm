@@ -2010,14 +2010,18 @@ quotient ends 998, computed by hand with Python's float of the Decimal.*
 
 | id | shape | as of | status | what is reported |
 |---|---|---|---|---|
-| E-1 | event, due 2026-03-01, the four score fields written: outcome "the FY2025 annual report's segment note shows the cloud segment with positive operating income for the full year", source "10-K 0001652044-26-000018 filed 2026-02-05, segment note", scored_on 2026-02-06, result right | 2026-09-18 | scored | the four fields as written; nothing computed, nothing checked against a figure |
+| E-1 | event, due 2026-03-01, the four score fields written: outcome "the FY2025 annual report's segment note shows the cloud segment with positive operating income for the full year", source "10-K 0001652044-26-000018 filed 2026-02-05, segment note", scored_on 2026-03-02, result right | 2026-09-18 | scored | the four fields as written; nothing computed, nothing checked against a figure |
 | E-2 | event, due 2026-03-01, no score written | 2026-09-18 | due | due since 2026-03-01, awaiting the outcome, which is mine to write; listed, never skipped, never right |
 | E-3 | event, due 2027-03-01, no score written (W-1.2's shape) | 2026-09-18 | open | open, due 2027-03-01 |
 
 E-1's outcome text is a stand-in for the shape and not a claim about
 Alphabet's segment note; a real written score carries what I read, and no
 figure is invented here for one. The scorer copies the fields and computes
-nothing.
+nothing. *Corrected 2026-09-18, the day this Part was written: E-1's
+scored_on was first written 2026-02-06, before its due date, which the
+ledger's rule refuses (`tests/test_watchlist.py`, a score is dated on or
+after the due date); a prediction is scored when its date comes, not when
+the report is filed.*
 
 ### E. Falsifier rows
 
