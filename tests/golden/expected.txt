@@ -124,3 +124,10 @@ Q: What is GOOGL worth? | pid=3
   agents_run: ['ScreeningAgent']
   errors: 0
 
+Q: How have my predictions done? | pid=3
+  intent: clarification_needed
+  plan:   []
+  period: None
+  agents_run: []
+  errors: 0
+
