@@ -1,6 +1,8 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 18 September (twenty-fifth session), on branch `research`, cut at 0e1c1ad, the tip of `score`, the trunk not yet having merged it. The shape of the research agent, cases 4.3 and 4.4, and the first of it that landed cleanly, in seven commits before this one, the reference first: the entry carried from the last session, measured and not copied, seven tests red on a scored ledger where the brief named four; Part 15 by hand, D47 to D50, the reading record, a model's proposal as a direction and never a number, the prediction frame on Alphabet's filed FY2025 lines, the threshold the last filed figure cut toward the side that holds; `check_4_4` and `check_4_3` with their probes, eighteen cases, each exercised offline on a passing block and on broken ones and then sighted BLOCKED, 4.4 at clarification_needed with no prediction made, 4.3 at out_of_scope as predicted; the scorer's lookup of a reported figure as its own function, one path for the verdict and the threshold; `portfolio_tool/proposals.py`, the frame, pure, 23 tests; `portfolio_tool/reading.py`, the record's validation, pure, 19 tests, each seen failing without the module and against wrong versions with bytecode off. Nothing reaches the graph; no model is called; no file of mine is written. Loops at session start: pytest 1304, the CLI on the allocation question, the golden set with zero diff on nineteen lines, the runner 15/16, no price and no filing fetched, the macro rows rewritten. Decisions 59, 60, 61, 62, 66 and 67 taken with the shape; 63, 64, 65, 68 and 69 opened and pending. Entries added, twelve: the seven tests on the committed ledger; the shape and its decisions; what the gate needs; a weight in a research question; no segment figure in the stored facts; what the reading does not read; what the two checks cannot see; the two sightings; the loader and `author`; two weak frame tests; the regime line and `macro_data`; three stale statements. Resolved: none.
+Last updated 19 September (twenty-sixth session), on branch `reader`, cut from `baseline-v1` at b8a0faf. The reading tool, the first half of case 4.4's path, in fourteen commits before this one, the reference first each time: the fourth EDGAR request looked at before anything was designed on it, Alphabet's FY2025 10-K fetched once and measured whole; Part 16, D51 to D57, the document's text, the sectioner's rule of two runs of headings, the page furniture kept, which filing is read and where its document is, the reader's call and cache; the migration for `filed_documents` and `document_readings`, run by the owner; the extractor, the provider's two methods, the store, the sectioner, the model's client and the reader, each seen failing without its module and against one wrong version per rule with bytecode off; one fix to a test committed in the session that passed by file order; `claude-sonnet-5` confirmed on the key and found to refuse a temperature, the brief's "temperature zero" superseded on that evidence; one live reading of Item 1, accepted by the code and read by hand. Nothing reaches the graph. Loops at session start: pytest 1346, the CLI, the golden set with zero diff, the runner's first full run of eighteen cases 15/18. Decisions opened and closed: none; the pending list stands at sixteen. Entries added, nine: the live reading read by hand; the archive's bytes; a reading not repeatable; the router's switch and the temperature; 4.4's routing on the full run; what a golden run writes; tests deleting rows they did not write; what the reading does not reach; `docs/workflow.md`. Resolved: none.
+
+Previously: 18 September (twenty-fifth session), on branch `research`, cut at 0e1c1ad, the tip of `score`, the trunk not yet having merged it. The shape of the research agent, cases 4.3 and 4.4, and the first of it that landed cleanly, in seven commits before this one, the reference first: the entry carried from the last session, measured and not copied, seven tests red on a scored ledger where the brief named four; Part 15 by hand, D47 to D50, the reading record, a model's proposal as a direction and never a number, the prediction frame on Alphabet's filed FY2025 lines, the threshold the last filed figure cut toward the side that holds; `check_4_4` and `check_4_3` with their probes, eighteen cases, each exercised offline on a passing block and on broken ones and then sighted BLOCKED, 4.4 at clarification_needed with no prediction made, 4.3 at out_of_scope as predicted; the scorer's lookup of a reported figure as its own function, one path for the verdict and the threshold; `portfolio_tool/proposals.py`, the frame, pure, 23 tests; `portfolio_tool/reading.py`, the record's validation, pure, 19 tests, each seen failing without the module and against wrong versions with bytecode off. Nothing reaches the graph; no model is called; no file of mine is written. Loops at session start: pytest 1304, the CLI on the allocation question, the golden set with zero diff on nineteen lines, the runner 15/16, no price and no filing fetched, the macro rows rewritten. Decisions 59, 60, 61, 62, 66 and 67 taken with the shape; 63, 64, 65, 68 and 69 opened and pending. Entries added, twelve: the seven tests on the committed ledger; the shape and its decisions; what the gate needs; a weight in a research question; no segment figure in the stored facts; what the reading does not read; what the two checks cannot see; the two sightings; the loader and `author`; two weak frame tests; the regime line and `macro_data`; three stale statements. Resolved: none.
 
 Previously: 18 September (twenty-fourth session), on branch `score`, cut from `baseline-v1` at 264aa7a. Case 4.5 into the graph, in eighteen commits with two items carried from the last session and decision 48's item 6, the reference first: Part 9 C's row for the 17th, six of six, and the candidate closes test pinning it; the runner's `blocked_on_screen` wording; Part 14, prediction scoring by hand, D41 to D45, synthetic rows on Alphabet's filed FY2025 lines, corrected twice the same day (a float digit, E-1's score date); `check_4_5` and `blocked_on_ledger`, sixteen cases, sighted BLOCKED at clarification_needed where out_of_scope was predicted; the loader's prediction rows; the pure scorer with `READS` beside the formulas; the ledger node, reading figures only for a figure prediction whose date has come; the rendering; the nineteenth golden line, at its sighted baseline and then at intent `ledger` with LedgerAgent on two identical runs, as predicted; the runner 15/16, 4.5 PASS on four open predictions; the first live record Part 14 A's row for the day; the two `marketable_securities` fields out of the block. Decision 58 taken with the shape: the ledger is its own intent. Entries added: the sighting prediction that missed; the reported figure without a currency; what W-2 needs before its predictions are scored; what the 4.5 check cannot see until 2027; two ledger metrics with no formula; a return-on-capital prediction and the rate the node does not state; a figure across two filings. Resolved: the 17th's close; the BLOCKED reason's wording; decision 48's item 6 in its trigger line.
 
@@ -5074,6 +5076,153 @@ are read by nothing yet; they have been read by the loader for the
 ledger node since the twenty-fourth session. Part 11's D38 writes "D46"
 where it means pending decision 46, the tax rate on PHI-2.1; no D46
 exists, and Part 15 numbers from D47 and says why.
+
+### The first live reading, read by hand: accepted by the code, seven of twelve claims faithful
+
+**Trigger:** the next prompt version for any section; the research node's first reading shown in an answer.
+
+Logged 19 September (twenty-sixth session). Item 1 of Alphabet's FY2025
+10-K, accession 0001652044-26-000018, read by `claude-sonnet-5` at 01:20
+UTC, request `req_011CfBvJ5DJnGsSmAnJrsSD2`: 7,744 tokens in, 1,465 out,
+15.6 seconds, $0.0301 at $2 and $10 a million, `end_turn`, one text block.
+`reading.record` accepted all twelve claims: every quote found once in the
+section, none across a page break, no digit in a claim. Read by hand
+against the stored section, each quote in its line:
+
+- **Faithful to its quote:** 1.2 (advertising across search, video and the
+  network), 1.4 (cloud from consumption fees and subscriptions), 1.5 (Other
+  Bets from autonomous transport and internet services), 1.10 (regulation
+  could raise costs and restrict practices), 1.12 (partners stay for the
+  advertiser base, line 73's third bullet).
+- **Saying more than its quote, marked `stated`:** 1.1 adds the centralised
+  AI research, which is the next sentence of the paragraph, not the quote;
+  1.3 names app sales and devices, which are the next two bullets, the
+  quote holding only subscriptions; 1.7 lists the markets and says users
+  and advertisers could switch, where the quote is the sentence that ends
+  in a colon before the list.
+- **Faithful, and labelled `stated` where the quote implies it:** 1.8 and
+  1.9. Line 73 says competing "depends on attracting and retaining" users
+  and advertisers, and the quotes are its bullets; "users could stop
+  using... if" follows from them but is not said in so many words, which
+  is `inferred` by the prompt's own definition.
+- **Beyond its quote, marked `inferred`:** 1.6 adds "continual
+  innovation" and "advanced AI", from line 73 above its quote, and uses
+  the same quote as 1.8.
+- **A number in words:** 1.1, "two reporting segments", against the
+  prompt's rule. Part 15 E said the digit rule does not see it; here it is.
+- 1.11, `inferred`, "relies heavily" on AI to attract cloud customers,
+  from a sentence that says the company offers accelerators: a stretch,
+  honestly marked.
+
+What this shows: the code holds what it was built to hold, the quote's
+presence and the digit; it does not hold that the quote supports the
+claim, and `stated` is the model's word, not a check. Nothing is changed
+for it: a prompt edit is a hypothesis, and the reading is not in any
+answer yet. Stored: one `filed_documents` row, one `document_readings`
+row.
+
+### The archive's bytes change between pulls; the text did not
+
+**Trigger:** a reference that pins a fetched document by its bytes.
+
+Logged 19 September (twenty-sixth session). The primary document of
+0001652044-26-000018 pulled at 22:03 UTC on the 18th hashed
+`8a74f902...`; pulled again at 01:20 UTC on the 19th, the same length,
+2,616,613 bytes, hashed `fa46733f...`. The text under D51 was the same
+343,344 characters, character for character. The second pull's bytes were
+not kept, so where they differ is not shown; the `script` element the
+site appends, whose path Part 16 already doubted, is the likely place and
+is not confirmed. Part 16's hash pins one pull, not the document. The
+fetch took 0.24 seconds against `_get`'s 30.
+
+### A reading is not repeatable, and the cache is what hides it
+
+**Trigger:** the first reading made twice of one section; the research node's first commit.
+
+Logged 19 September (twenty-sixth session). `claude-sonnet-5` refuses a
+temperature (Part 16 J), so two readings of one section can differ.
+The cache serves the first one, under accession, section, model id and
+prompt version, and nothing shows between runs: how many requests a
+reading took before one was accepted, since a refused one leaves no row;
+when it was made and what it cost, which are not stored; and whether the
+model behind the same id has changed, since the id is the key. A reading
+that would now be refused is refused on its next read (D57), which is the
+one thing the cache cannot hide.
+
+### The router's stronger-model switch sends a temperature the model refuses
+
+**Trigger:** the router's `use_stronger_model` switch turned on, or `ACTIVE_LLM_CONFIG` set to `ANTHROPIC_SONNET`.
+
+Logged 19 September (twenty-sixth session). `smart_router.py:109` builds
+the stronger model with `temperature=0.0`, and `get_llm` passes
+`ANTHROPIC_SONNET.temperature`, 0.1. `claude-sonnet-5` answered a
+temperature of 0 with HTTP 400, "`temperature` is deprecated for this
+model", request `req_011CfBt8U9S1pHjZB9vzuf4M`. Either path fails on
+every call. The reader sends none and reads only the constant's `model`
+and key; the constant's temperature is read by nothing that works.
+
+### 4.4 routed out_of_scope on the first full run of eighteen cases
+
+**Trigger:** the golden line for 4.4.
+
+Logged 19 September (twenty-sixth session). "What has to be true in a
+year for my GOOGL thesis to be right?" was sighted at
+clarification_needed on the 18th, alone, and at out_of_scope on the
+first full run at 21:51 UTC the same day, the prompt and the router
+unchanged. The handoff's next step names clarification_needed as the
+line's sighted baseline; one sighting each way is no baseline. The line
+is sighted at least twice before it is written.
+
+### What a golden run writes, beyond the macro rows
+
+**Trigger:** pending decision 51.
+
+Logged 19 September (twenty-sixth session). Beside `macro_data`'s
+rewritten stamps, the regime line's three provider calls each add a row to
+`api_call_logs` and move the day's counter in `api_quotas`: 2,411 to
+2,414 rows and 34 to 37 on the 18th's run. The handoff's account of what a
+paid loop writes named neither table.
+
+### Tests delete rows they did not write from the suite's copy
+
+**Trigger:** the next test that reads a stored fact, filer or ticker from the suite's copy.
+
+Logged 19 September (twenty-sixth session). `test_screening_node.py`
+deletes Alphabet's and JPMorgan's facts, filer rows and the whole ticker
+table from the copy; `test_filed_facts_fetch.py` deletes Apple's facts. A
+test that reads those rows passes only when its file sorts first:
+`test_filed_documents.py` did, committed in this session at d9b93b0, and
+failed 13 of 19 run after the two, fixed at 9415561 by writing its own
+rows under CIKs no filer has. No other test is known to read them; none
+was searched for.
+
+### What the reading does not reach, and what the text loses
+
+**Trigger:** the first proposed prediction whose reasons need a segment figure, a table's column or a note; the second filer's document.
+
+Logged 19 September (twenty-sixth session). The three items are read
+and nothing else (D47): Item 7A, market risk, 7,985 characters, and Item
+8, the statements and their notes, 130,405, are not. W-1.2 and Part 15's
+P-4 are about the cloud segment's operating result, which Item 7 may
+state and Item 8's segment note does; the stored facts carry no segment
+figure (its own entry). What the stored text loses against the filing is
+Part 16 E: a table as lines of cells with its columns named only above,
+footnotes cut from their cells, emphasis, the two images, the exhibits.
+The sectioner found all three items of Alphabet's document by rule;
+what it cannot find in another filer's is unknown until one is looked at
+(Part 16 F), and a section that says only "incorporated by reference"
+passes as a short one.
+
+### `docs/workflow.md` is a pasted conversational reply
+
+**Trigger:** the session the owner wants for the console glyphs.
+
+Logged 19 September (twenty-sixth session). The file opens "Excellent
+question! ... Let me give you a comprehensive workflow guide" and carries
+emoji in its headers; it breaks the rule that nothing reads as written by
+a tool. It predates the rule and the handoff marks it stale. Whether it is
+deleted or rewritten is the owner's; this entry says only that it is
+there.
 
 ### JPMorgan's fixture carries no share count
 
