@@ -132,9 +132,9 @@ Q: How have my predictions done? | pid=3
   errors: 0
 
 Q: What has to be true in a year for my GOOGL thesis to be right? | pid=3
-  intent: out_of_scope
-  plan:   []
+  intent: research
+  plan:   ['ScreeningAgent', 'ResearchAgent']
   period: 1Y
-  agents_run: []
+  agents_run: ['ResearchAgent', 'ScreeningAgent']
   errors: 0
 
