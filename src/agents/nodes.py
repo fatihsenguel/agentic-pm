@@ -3011,6 +3011,92 @@ def _format_ledger_response(sub_results: Dict) -> List[str]:
     return lines
 
 
+def _proposed_row(p: Dict) -> List[str]:
+    """A proposed prediction as a row of watchlist.toml, the way Part 15 C
+    writes it, for me to enter by hand or not at all (D50). The fields are
+    the record's, printed as TOML writes them."""
+    row = ["[[candidate.prediction]]", f'id = "{p.get("id")}"', f"made_on = {p.get('made_on')}",
+           f"due = {p.get('due')}", f'kind = "{p.get("kind")}"']
+    if p.get("kind") == "figure":
+        row += [f'metric = "{p.get("metric")}"', f'bound = "{p.get("bound")}"',
+                f"value = {p.get('value')}", f'period = "{p.get("period")}"']
+    row += [f'author = "{p.get("author")}"', f'statement = """{p.get("statement")}"""']
+    return row
+
+
+def _format_thesis_response(sub_results: Dict) -> List[str]:
+    """Format the research block for a thesis question (case 4.4; Part 15
+    D47 to D50 and F; decision 67). Prints the thesis as the watchlist
+    states it; every reading with its form, accession, section, fiscal year,
+    filed date and source, each claim on one line with its id and its
+    uncertainty and its quote beneath it, marked as the model's reading;
+    every section not read with its reason; and the proposed prediction
+    with its dates, its statement, its value's filing, the claims it rests
+    on, and the row and the sentence I would enter, marked proposed and
+    not entered, or the reason none was proposed. A percent is presentation
+    of the record's value; nothing is computed here. No price, no
+    recommendation, and no IPS clause: a thesis question implies no
+    position."""
+    result = sub_results.get("ResearchAgent", {})
+    if not result.get("success"):
+        return ["Research not done", "", result.get("error", "unknown error")]
+    block = result.get("research") or {}
+    subject = block.get("subject") or {}
+    thesis = block.get("thesis") or {}
+    models = block.get("models") or {}
+    cid = thesis.get("candidate")
+    lines = [
+        f"**THESIS: {subject.get('ticker')}** ({cid}), as of {block.get('as_of')}",
+        "",
+        f"  {str(thesis.get('text', '')).strip()}",
+        "",
+        f"What has to be true for {cid}'s thesis to have been right, read against "
+        f"{subject.get('name')}'s latest annual report. Each claim is the model's reading "
+        f"({models.get('reading')}) of one section, with the passage it rests on quoted from "
+        "the filing; `stated` means the passage says it in so many words, `inferred` that "
+        "it is read across the section.",
+    ]
+    for r in block.get("readings") or []:
+        lines += ["", f"**{r.get('section')}** of the {r.get('form')} for {r.get('fiscal_year')}, "
+                      f"accession {r.get('accn')}, filed {r.get('filed')}, source "
+                      f"{r.get('source')}:"]
+        for c in r.get("claims") or []:
+            lines += [f"  [{c.get('id')}] ({c.get('uncertainty')}) {c.get('claim')}",
+                      f"      \"{c.get('quote')}\""]
+    for entry in block.get("not_read") or []:
+        lines += ["", f"**{entry.get('section')}** not read: {entry.get('reason')}"]
+
+    predictions = block.get("predictions") or []
+    if not predictions:
+        lines += ["", "**No prediction proposed.**", f"  {block.get('proposal_stopped')}"]
+    for p in predictions:
+        lines += ["", f"**{p.get('id')}**, proposed, not entered. Made {p.get('made_on')}, "
+                      f"due {p.get('due')}; chosen by the model ({models.get('proposal')}), "
+                      "every number in it the pipeline's.",
+                  f"  {p.get('statement')}"]
+        if p.get("kind") == "figure":
+            source = p.get("source") or {}
+            bound = "at least" if p.get("bound") == "min" else "at most"
+            lines.append(f"  The threshold, {p.get('metric')} {bound} "
+                         f"{_stated_figure(p.get('metric'), p.get('value'))} for "
+                         f"{p.get('period')}, is the last filed year's figure: the "
+                         f"{source.get('form')} accession {source.get('accn')}, filed "
+                         f"{source.get('filed')}, source {source.get('source')}.")
+        lines.append(f"  It rests on {', '.join(p.get('reasons') or [])} above.")
+        lines += ["", "  The row for watchlist.toml, if I enter it:", ""]
+        lines += [f"    {line}" for line in _proposed_row(p)]
+        lines += ["", "  The sentence for docs/WATCHLIST.md:", "",
+                  f"    **{p.get('id')}** {p.get('statement')}"]
+    lines += [
+        "",
+        "**Not done:** nothing was entered in the ledger or written to the watchlist; a "
+        "proposed prediction is entered by hand or not at all. No position is implied, so "
+        "the investment policy was not consulted. No recommendation, and no price is "
+        "forecast.",
+    ]
+    return lines
+
+
 def _format_optimization_response(sub_results: Dict) -> List[str]:
     """Format optimization results, without the allocation itself.
 
