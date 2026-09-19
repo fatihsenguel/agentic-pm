@@ -131,3 +131,10 @@ Q: How have my predictions done? | pid=3
   agents_run: ['LedgerAgent']
   errors: 0
 
+Q: What has to be true in a year for my GOOGL thesis to be right? | pid=3
+  intent: out_of_scope
+  plan:   []
+  period: 1Y
+  agents_run: []
+  errors: 0
+
