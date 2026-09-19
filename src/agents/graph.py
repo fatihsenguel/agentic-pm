@@ -20,6 +20,7 @@ from .nodes import (
     backtest_agent_node,
     screening_agent_node,
     ledger_agent_node,
+    research_agent_node,
     synthesizer_node,
 )
 
@@ -45,6 +46,7 @@ AGENT_NODES = {
     "ComplianceAgent": compliance_agent_node,
     "ScreeningAgent": screening_agent_node,
     "LedgerAgent": ledger_agent_node,
+    "ResearchAgent": research_agent_node,
 }
 
 if set(AGENT_NODES) != set(AGENTS):

@@ -36,6 +36,9 @@ ROWS = [
     # Part 11; the ticker is extraction's (decision 29).
     ("research", {"tickers": ["JPM"]}, [S]),
     ("research", {}, [S]),
+    # A thesis question reads the filing after the screen (decision 66); the
+    # value is extraction's.
+    ("research", {"tickers": ["GOOGL"], "asks": "thesis"}, [S, "ResearchAgent"]),
     ("ledger", {}, ["LedgerAgent"]),
     ("clarification_needed", {}, []),
     ("out_of_scope", {}, []),

@@ -2427,6 +2427,8 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             lines.extend(_format_out_of_scope_response())
         elif intent == "compliance":
             lines.extend(_format_compliance_response(decision, sub_results))
+        elif intent == "research" and "ResearchAgent" in sub_results:
+            lines.extend(_format_thesis_response(sub_results))
         elif intent == "research":
             lines.extend(_format_research_response(sub_results))
         elif intent == "ledger":

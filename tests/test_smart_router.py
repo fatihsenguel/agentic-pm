@@ -229,14 +229,16 @@ class TestDependencies:
         """Each entry is a raise verified at the node: PortfolioAnalysisAgent
         on missing holdings, OptimizationAgent on missing returns and
         covariance, BacktestAgent on missing optimal_weights, RebalanceAgent
-        on missing prices. The rebalance target is not an entry (KNOWN_GAPS:
-        the target is the IPS's, never the optimiser's)."""
+        on missing prices; ResearchAgent on a missing screening block. The
+        rebalance target is not an entry (KNOWN_GAPS: the target is the
+        IPS's, never the optimiser's)."""
         assert REQUIRES == {
             "PortfolioAnalysisAgent": ("DataAgent",),
             "OptimizationAgent": ("DataAgent",),
             "BacktestAgent": ("DataAgent", "OptimizationAgent"),
             "RebalanceAgent": ("DataAgent",),
             "ComplianceAgent": ("PortfolioAnalysisAgent",),
+            "ResearchAgent": ("ScreeningAgent",),
         }
 
     def test_plans_the_nodes_would_raise_on_are_rejected(self):

@@ -27,7 +27,7 @@ INTENTS: Dict[str, str] = {
     'backtest': 'User wants historical simulation',
     'data_fetch': 'User wants raw price data or metrics',
     'risk_analysis': 'User wants risk metrics (VaR, volatility, drawdown)',
-    'research': 'User asks whether one named company clears their investment philosophy, or how it screens against the philosophy\'s criteria (return on capital, margins, balance sheet, price against value). The philosophy is not the Investment Policy Statement: a question naming the philosophy is research even when the company is held, and compliance is only for the IPS and the portfolio. The company is screened clause by clause on its filed figures; no recommendation is made. It also covers what one named company is worth: the answer is a valuation range the pipeline computes from the owner\'s stated assumptions, never a forecast of a price, so a question about a company\'s worth or value is research, not out_of_scope.',
+    'research': 'User asks whether one named company clears their investment philosophy, or how it screens against the philosophy\'s criteria (return on capital, margins, balance sheet, price against value). The philosophy is not the Investment Policy Statement: a question naming the philosophy is research even when the company is held, and compliance is only for the IPS and the portfolio. The company is screened clause by clause on its filed figures; no recommendation is made. It also covers what one named company is worth: the answer is a valuation range the pipeline computes from the owner\'s stated assumptions, never a forecast of a price, so a question about a company\'s worth or value is research, not out_of_scope. It also covers what has to be true for the owner\'s thesis on a company on their watchlist to be right: the company\'s latest annual report is read and one dated prediction about the business is proposed for the owner to enter or not, never a price and never a recommendation, so a question about the owner\'s thesis is research, not out_of_scope.',
     'ledger': 'User asks how their predictions have done, which predictions are due, scored or still open, or what the prediction ledger says: the ledger is read as of today and every prediction is listed with its due date and its status, a due one with what the company reported against it. No company is named in such a question and no judgement is made; a question about one named company is research, above.',
     'compliance': 'User asks about their Investment Policy Statement: whether the portfolio complies with it or breaks a rule, whether a position is too big, what would have to change to be within its limits, whether a proposed weight in one position is allowed, or what the policy says about a topic',
     'clarification_needed': 'Request is in scope but too vague to plan, need to ask user',
@@ -61,6 +61,7 @@ AGENTS: Dict[str, str] = {
     "ComplianceAgent": "Checks an EXISTING portfolio against the owner's Investment Policy Statement: every clause with a numeric limit, breach or headroom per clause with the distance to the limit, citing clause ids. Needs DataAgent and PortfolioAnalysisAgent first.",
     "ScreeningAgent": "Screens ONE named company against the owner's investment philosophy on its filed figures from EDGAR: one finding per numeric clause, pass or fail with the distance, citing PHI ids; a bank or insurer is excluded on its SIC code before any figure is read. Needs no other agent.",
     "LedgerAgent": "Reads the owner's prediction ledger as of today: every prediction with its due date and its status, open, due or scored; a due figure prediction's verdict from the company's filing; the counts the ledger's. Names no company. Needs no other agent.",
+    "ResearchAgent": "Reads the latest annual report of ONE company on the owner's watchlist, the business, the risks and management's discussion, into claims each with its quote, and proposes one dated prediction that tests the owner's thesis on it, every number in it the pipeline's, for the owner to enter or not. Needs ScreeningAgent first.",
 }
 
 
@@ -91,12 +92,14 @@ AgentName = Enum(
 # target is not an entry on the optimiser: the target is the IPS's to state
 # (KNOWN_GAPS, "Rebalance has no target allocation source"). ComplianceAgent's
 # two portfolio-free modes skip its entry: TERMINAL marks those rows unclosed.
+# ResearchAgent on a missing screening block (decision 66).
 REQUIRES: Dict[str, Tuple[str, ...]] = {
     "PortfolioAnalysisAgent": ("DataAgent",),
     "OptimizationAgent": ("DataAgent",),
     "BacktestAgent": ("DataAgent", "OptimizationAgent"),
     "RebalanceAgent": ("DataAgent",),
     "ComplianceAgent": ("PortfolioAnalysisAgent",),
+    "ResearchAgent": ("ScreeningAgent",),
 }
 
 _named_in_requires = set(REQUIRES) | {n for needs in REQUIRES.values() for n in needs}
@@ -197,7 +200,7 @@ TERMINAL: Dict[str, Dict[str, Tuple[Optional[str], bool]]] = {
         "hypothetical_weight": ("ComplianceAgent", False),
         "policy_topic": ("ComplianceAgent", False),
     },
-    "research": {"": ("ScreeningAgent", True)},
+    "research": {"": ("ScreeningAgent", True), "asks": ("ResearchAgent", True)},
     "ledger": {"": ("LedgerAgent", True)},
     "clarification_needed": {"": (None, True)},
     "out_of_scope": {"": (None, True)},

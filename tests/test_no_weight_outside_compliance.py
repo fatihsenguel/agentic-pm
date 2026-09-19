@@ -41,6 +41,7 @@ DISCRIMINATORS = {
     "measure": "allocation",
     "hypothetical_weight": 0.05,
     "policy_topic": "cash",
+    "asks": "thesis",
 }
 
 PROPOSED_WEIGHTS = {"SPY": 0.55, "TLT": 0.27, "GLD": 0.18}
