@@ -58,6 +58,14 @@ QUERIES = [
     # pins what the registry's row moves. Routed to the ledger it runs the
     # node live: today nothing is due and nothing is fetched.
     ("How have my predictions done?", 3),
+    # The thesis question (case 4.4, Part 15, decision 66), on the
+    # watchlist's first candidate. Added 19 September at out_of_scope,
+    # where four of five sightings found it, the fifth clarification_needed;
+    # the line pins what the routing of decision 66 moves. Routed to the
+    # research agent it runs the screen and the research node live: a
+    # section not yet read is one request to the stronger model, cached
+    # after, and the proposal is one request on every run.
+    ("What has to be true in a year for my GOOGL thesis to be right?", 3),
 ]
 
 
