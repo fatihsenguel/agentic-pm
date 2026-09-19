@@ -2337,7 +2337,9 @@ nothing: it says sentences are cut, and roughly how often.
 - **F1: the table of contents is not the body (D52).** The first line
   reading `Item 1A.` is line 87 and what follows it is `Risk Factors`,
   `9`, `Item 1B.`. A sectioner taking the first match returns two lines.
-  The section starts at 262.
+  The section starts at 262. *Corrected 2026-09-19: three lines, `Item
+  1A.`, `Risk Factors` and `9`, the heading line counted as section B
+  counts it; "two" left the heading out.*
 - **F2: a section ends at the next heading, whichever it is (D52).** Item
   7 is 52,391 characters, to Item 7A. A sectioner that ends Item 7 at Item
   8 returns 60,377.
@@ -2480,3 +2482,32 @@ the three 10-Ks, the only rows of 1,013 whose form names a 10-K.
 The stored facts name the same three 10-Ks with the same filed dates, and
 a fourth, 0001652044-23-000016, filed 2023-02-03, which `recent` no longer
 holds: asked for, it is D55's refusal.
+
+### I. The falsifier rows on the fixture
+
+Added 2026-09-19, before the sectioner's tests: section D's rows as they
+fall on the fixture of section G, whose text's line numbers they use. A
+section is returned whole, its heading line first; its length counts the
+heading line and one newline between lines, as section B does.
+
+| row | on the fixture |
+|---|---|
+| the three sections | Item 1, lines 91 to 96, 6 lines, 1,485 characters, its last line `Alphabet Inc.`, the furniture before `ITEM 1A.`; Item 1A, 97 to 104, 8 lines, 1,745 characters; Item 7, 146 to 160, 15 lines, 1,601 characters |
+| F1 | the first line reading `Item 1A.` is 15; to the next heading, `Item 1B.` at 18, is three lines: `Item 1A.`, `Risk Factors`, `9` |
+| F2 | Item 7 to `ITEM 8.` instead of `ITEM 7A.` is 2,029 characters |
+| F3 | `Item 1A` is written four times: two headings, and two in running text, neither at the start of a line. Neither of the two carries a period after the item, and no line of the fixture, nor of the fetched document (section D's F3 and D52's measure), starts with `Item` without one, so the start of the line and the period are each held on the fixture with one line added inside Item 1A, after line 100: |
+| F3, a heading's shape inside a line | `Our results are discussed in Item 7. Management's Discussion and Analysis.`: not a heading; Item 1A is 9 lines and 1,820 characters, that line among them, and Item 7 is unchanged. Read as a heading, it is a third run and the document is refused |
+| F3, `Item` at the start without the period | `Item 7 describes these results.`: not a heading; Item 1A is 9 lines and 1,777 characters, and Item 7 is unchanged. Read as a heading, it is a third run and the document is refused |
+| F4 | a pattern requiring whitespace or the line's end after the period finds 23 lines in the first run and 2 in the second: the runs differ and the document is refused |
+| F5 | with the second run written `Item`, Item 1A is 1,745 characters as before, every line after the heading unchanged |
+| F6, one run | lines 12 to 83 removed, the contents' items: refused, one run |
+| F6, three runs | the line `Item 1A. Risk Factors above describes these.` put before line 150: refused, three runs |
+| F6, the body's `ITEM 7.` removed | refused, the runs differ in Item 7 |
+| F6, Item 7 last | every heading after Item 7 removed from both runs: refused, nothing ends it |
+| F6, nothing beneath | lines 147 to 160 removed: refused, a heading with no line beneath it |
+| an item absent from both runs | every line starting `Item 7.` or `ITEM 7.` removed: refused, no heading for Item 7 |
+| F8 | the sectioner returns 85,181 characters for Item 1A on the fetched document and 1,745 on the fixture: the whole of it |
+
+On the fetched document the sectioner returns section B's three counts,
+23,802, 85,181 and 52,391 characters, checked once by hand; the tests hold
+the fixture's.
