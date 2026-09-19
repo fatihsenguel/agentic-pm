@@ -290,6 +290,23 @@ seven claims of twelve: a quote's presence is checked, and whether the
 quote supports the claim is not. Nothing of it is in the graph, and
 none of the three cases moves.
 
+**Status note, 19 September 2026 (twenty-seventh session).** 4.4 passes:
+the runner prints 16/18, 4.1 blocked at PHI-2.1 as before and 4.3 at
+out_of_scope, where 3.2 still holds it until the gate can check. "What
+has to be true in a year for my X thesis to be right?" now routes to the
+philosophy check and then the research agent, which reads the latest
+10-K's Items 1, 1A and 7 into claims with quotes and asks the stronger
+model for one prediction, the model choosing a figure the pipeline can
+write or an event, and the pipeline every number: on Alphabet, a gross
+margin for fiscal 2026 of at least FY2025's 59.65%, dated a year on,
+proposed and not entered. What the pass does not say: Items 1A and 7
+were refused on every request measured, most often on a quote running
+past the record's cap of 300 characters, so the answer rests on Item 1
+alone and says the other two were not read and why (decision 70); and
+the claims the prediction cites are about where revenue comes from, not
+about margins, which nothing checks. A pass here is a well-formed
+answer, and the prediction is not in the ledger until I enter it.
+
 **References before code, none computed yet.** Part 10 of
 `expected_values.md`: the synthetic candidate's typed figures over the
 stated years and every philosophy clause's verdict and distance by hand, for
