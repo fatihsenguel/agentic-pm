@@ -3,12 +3,13 @@ The watchlist as config: docs/WATCHLIST.md and watchlist.toml, the
 candidates I want to own and, for each, the growth I assume for its
 valuation range (Part 11 D38).
 
-What this reads: each candidate's id, ticker, name, currency and status,
-its valuation table, `growth_low` and `growth_high`, both or neither, and
-its prediction rows (case 4.5, Part 14): id, made_on, due, kind and
+What this reads: each candidate's id, ticker, name, currency and status;
+its thesis, as written, for the research agent (case 4.4, PHI-6.1); its
+valuation table, `growth_low` and `growth_high`, both or neither; and its
+prediction rows (case 4.5, Part 14): id, made_on, due, kind and
 statement; a figure prediction's metric, bound, value and period; and the
-score I wrote, all four fields or none. What it leaves alone: the thesis,
-the entry condition, added_on and the philosophy check, read by nothing.
+score I wrote, all four fields or none. What it leaves alone: the entry
+condition, added_on and the philosophy check, read by nothing.
 The metric's vocabulary is the scorer's (D42): any name loads here and the
 scorer stops on one it has no formula for.
 
@@ -37,7 +38,7 @@ __all__ = ["Candidate", "Prediction", "Score", "Watchlist", "WatchlistError",
 CANDIDATE_ID = re.compile(r"^W-\d+$")
 PREDICTION_ID = re.compile(r"^(W-\d+)\.\d+$")
 STATUSES = ("active", "closed")
-_HEADER = ("id", "ticker", "name", "currency", "status")
+_HEADER = ("id", "ticker", "name", "currency", "status", "thesis")
 # A prediction row (docs/WATCHLIST.md; Part 14 D45): the five every row
 # carries, the four a figure carries, the four a written score carries.
 _PREDICTION = ("id", "made_on", "due", "kind", "statement")
@@ -89,6 +90,7 @@ class Candidate:
     name: str
     currency: str
     status: str
+    thesis: str
     growth: Optional[Mapping[str, float]] = None
     predictions: Tuple[Prediction, ...] = ()
 
@@ -157,7 +159,7 @@ def _parse_candidate(entry: Mapping[str, Any], n: int) -> Candidate:
                if not isinstance(entry.get(k), str) or not entry[k].strip()]
     if missing:
         raise WatchlistError(f"{where} lacks {missing}; every candidate has an id, a ticker, "
-                             "a name, a currency and a status.")
+                             "a name, a currency, a status and a thesis (PHI-6.1).")
     cid = entry["id"]
     where = cid
     if not CANDIDATE_ID.match(cid):
@@ -190,7 +192,8 @@ def _parse_candidate(entry: Mapping[str, Any], n: int) -> Candidate:
     predictions = tuple(_parse_prediction(row, cid, n) for n, row in enumerate(rows, start=1))
 
     return Candidate(id=cid, ticker=entry["ticker"], name=entry["name"],
-                     currency=entry["currency"], status=entry["status"], growth=growth,
+                     currency=entry["currency"], status=entry["status"],
+                     thesis=entry["thesis"], growth=growth,
                      predictions=predictions)
 
 

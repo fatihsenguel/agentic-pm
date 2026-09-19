@@ -6,8 +6,9 @@ test_watchlist.py.
 What the loader reads (Part 11 D38): each candidate's id, ticker, name,
 currency and status, and its valuation table, the growth I assume for it
 as a low and a high; since case 4.5 the prediction rows too, held in
-test_watchlist_predictions_loader.py. What it leaves alone: the thesis,
-the entry condition and added_on, read by nothing. What it refuses: a
+test_watchlist_predictions_loader.py; since case 4.4 the thesis, as
+written, for the research agent. What it leaves alone: the entry
+condition and added_on, read by nothing. What it refuses: a
 missing file with no default, a top-level key nothing reads, a candidate
 lacking a field, two candidates with one id or one ticker, a valuation
 table that is not exactly the two ends as fractions. The order of the two
@@ -152,7 +153,7 @@ def test_no_candidates_is_refused(load, watchlist):
         load('# empty\n')
 
 
-@pytest.mark.parametrize("field", ["id", "ticker", "name", "currency", "status"])
+@pytest.mark.parametrize("field", ["id", "ticker", "name", "currency", "status", "thesis"])
 def test_a_candidate_lacking_a_field_is_refused_naming_it(load, watchlist, field):
     text = "\n".join(line for line in W1.splitlines() if not line.startswith(f"{field} = "))
     with pytest.raises(watchlist.WatchlistError, match=rf"lacks \['{field}'\]"):
@@ -207,9 +208,32 @@ def test_the_order_of_the_ends_is_the_ranges_rule_not_the_loaders(load):
 
 def test_the_prediction_rows_are_read_and_the_rest_left_alone(load):
     """The scorer's rows (case 4.5, Part 14) are read since the twenty-fourth
-    session, held in test_watchlist_predictions_loader.py; the thesis, the
-    entry condition and added_on are still read by nothing."""
+    session, held in test_watchlist_predictions_loader.py; the entry
+    condition and added_on are still read by nothing."""
     wl = load(W1)
     assert [p.id for p in wl.candidates["W-1"].predictions] == ["W-1.1"]
-    for field in ("thesis", "entry_condition", "added_on"):
+    for field in ("entry_condition", "added_on"):
         assert not hasattr(wl.candidates["W-1"], field), field
+
+
+# --- the thesis ----------------------------------------------------------------
+
+def test_the_committed_theses_are_the_files_word_for_word(watchlist):
+    """The research agent attaches a prediction to the thesis as I wrote
+    it, and case 4.4's check compares the two word for word (PHI-6.1)."""
+    import tomli
+    with open(ROOT / "watchlist.toml", "rb") as f:
+        raw = {c["id"]: c["thesis"] for c in tomli.load(f)["candidate"]}
+    wl = watchlist.load_watchlist("watchlist.toml")
+    assert {cid: c.thesis for cid, c in wl.candidates.items()} == raw
+
+
+def test_a_thesis_is_kept_as_written(load):
+    wl = load(W1.replace('thesis = "A thesis."', 'thesis = """\n  A thesis.  \n"""'))
+    assert wl.candidates["W-1"].thesis == "  A thesis.  \n"
+
+
+@pytest.mark.parametrize("value", ['""', '"   "', "12"], ids=["empty", "whitespace", "a number"])
+def test_a_thesis_that_is_no_sentence_is_refused(load, watchlist, value):
+    with pytest.raises(watchlist.WatchlistError, match=r"lacks \['thesis'\].*a thesis \(PHI-6.1\)"):
+        load(W1.replace('thesis = "A thesis."', f"thesis = {value}"))

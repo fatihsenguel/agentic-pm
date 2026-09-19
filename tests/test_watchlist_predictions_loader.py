@@ -6,10 +6,11 @@ file-to-document tests are in test_watchlist.py.
 What the loader reads now: each candidate's predictions in document order,
 each with its id, made_on, due, kind and statement; a figure prediction's
 metric, bound, value and period; and, where the ledger carries one, the
-score I wrote, its four fields. What it still leaves alone: the thesis,
-the entry condition, added_on and the philosophy check, which nothing
-consumes. What it refuses: a kind other than figure or event, a figure
-lacking any of its four keys or an event carrying one, a bound other than
+score I wrote, its four fields. What it still leaves alone: the entry
+condition, added_on and the philosophy check, which nothing consumes; the
+thesis is read since case 4.4, held in test_watchlist_loader.py. What it
+refuses: a kind other than figure or event, a figure lacking any of its
+four keys or an event carrying one, a bound other than
 min or max, a period not FYnnnn, a value that is not a number, a score
 with some of its four fields, a result other than right or wrong, a
 scored_on before the due date, an id not W-n.m under W-n, an id twice, a
@@ -103,7 +104,7 @@ def test_the_committed_file_has_four_predictions_in_document_order(watchlist):
 
 def test_what_the_loader_still_leaves_alone(watchlist):
     wl = watchlist.load_watchlist("watchlist.toml")
-    for field in ("thesis", "entry_condition", "added_on", "philosophy_check"):
+    for field in ("entry_condition", "added_on", "philosophy_check"):
         assert not hasattr(wl.candidates["W-1"], field), field
 
 

@@ -171,6 +171,7 @@ ticker = "GOOGL"
 name = "Alphabet"
 currency = "USD"
 status = "active"
+thesis = "A thesis."
 '''
 
 

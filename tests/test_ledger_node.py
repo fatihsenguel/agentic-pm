@@ -45,6 +45,7 @@ ticker = "GOOGL"
 name = "Alphabet"
 currency = "USD"
 status = "active"
+thesis = "A thesis."
 
 [[candidate.prediction]]
 id = "W-1.1"

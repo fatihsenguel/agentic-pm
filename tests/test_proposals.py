@@ -36,7 +36,7 @@ def candidate(rows=2):
                    due=dt.date(2027, 3, 1), kind="event", statement="Something.")
         for n in range(1, rows + 1))
     return Candidate(id="W-1", ticker="GOOGL", name="Alphabet", currency="USD",
-                     status="active", predictions=taken)
+                     status="active", thesis="A thesis.", predictions=taken)
 
 
 def figure(metric="gross_margin", bound="min", **extra):
