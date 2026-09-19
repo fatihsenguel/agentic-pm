@@ -100,7 +100,18 @@ def test_the_prompts_are_the_sections_read_and_share_their_rules():
     assert tuple(reader.PROMPTS) == reading.SECTIONS
     assert all(prompt.startswith(reader.COMMON) for prompt in reader.PROMPTS.values())
     assert len(set(reader.PROMPTS.values())) == 3
-    assert "300 characters" in reader.COMMON and "twelve claims" in reader.COMMON
+    assert "twelve claims" in reader.COMMON
+
+
+def test_the_prompt_asks_for_less_than_the_record_allows():
+    """The first live readings of Items 1A and 7 quoted past the cap in
+    every request (KNOWN_GAPS); the prompt states a shorter limit and one
+    sentence for a longer passage, and the record's cap stays Part 15
+    D47's."""
+    assert "at most 250 characters long" in reader.COMMON
+    assert "quote the one sentence that says it" in reader.COMMON
+    assert "300" not in reader.COMMON
+    assert reading.QUOTE_CAP == 300
 
 
 def test_the_schema_is_the_record_s_three_fields():
