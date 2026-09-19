@@ -105,10 +105,12 @@ def test_the_prompts_are_the_sections_read_and_share_their_rules():
 
 def test_the_prompt_asks_for_less_than_the_record_allows():
     """The first live readings of Items 1A and 7 quoted past the cap in
-    every request (KNOWN_GAPS); the prompt states a shorter limit and one
+    every request, under a limit stated in characters and under a shorter
+    one (KNOWN_GAPS); the prompt states the limit in words and one
     sentence for a longer passage, and the record's cap stays Part 15
     D47's."""
-    assert "at most 250 characters long" in reader.COMMON
+    assert "at most thirty words long" in reader.COMMON
+    assert "characters" not in reader.COMMON
     assert "quote the one sentence that says it" in reader.COMMON
     assert "300" not in reader.COMMON
     assert reading.QUOTE_CAP == 300

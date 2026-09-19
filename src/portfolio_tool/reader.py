@@ -44,7 +44,7 @@ written in words: no amount, percentage, year, date or count. Where a figure \
 matters, it belongs in the quote.
 
 quote: a passage copied from the section exactly, character for character, \
-that supports the claim, at most 250 characters long; where the passage that \
+that supports the claim, at most thirty words long; where the passage that \
 supports it is longer, quote the one sentence that says it. Take it from within \
 one paragraph. Do not join text from two paragraphs, do not shorten it with an \
 ellipsis, and do not change case, spelling or punctuation. A page number, the \
