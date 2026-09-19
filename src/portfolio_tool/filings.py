@@ -37,20 +37,40 @@ dropped leaves with it. `cik_for` resolves a ticker through that table,
 fetching first when it is stale or empty, and raises on a ticker the file
 does not list: never asked is not the same as EDGAR listing no filer.
 `pulled_at` is on the same clock as the other two records.
+
+A filing's document (filed_documents): the text of one accession's primary
+document, stored once and under no interval, since an accession never
+changes (expected_values.md Part 16). `latest_annual_report` names the
+filing to read off the stored facts (D54): the latest 10-K filed by a date,
+refused when a 10-K/A follows it. `stored_document` returns the stored row
+without asking the provider, and otherwise asks for the accession's row in
+the recent listing, holds its form and filed date to the facts', asks for
+the document, extracts its text and stores it (D55, D51). Anything that
+fails on the way leaves no row, so the next call asks again. The text is
+read from the row by the sectioner; it is returned to no agent and
+published nowhere.
 """
 
 import datetime as dt
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Dict, Optional, Tuple
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from portfolio_tool import filing_text
 from portfolio_tool.data_manager import load_config
-from portfolio_tool.database_setup import FiledFact, FiledFetchMetadata, Filer, TickerCik
+from portfolio_tool.database_setup import (
+    FiledDocument, FiledFact, FiledFetchMetadata, Filer, TickerCik,
+)
+from portfolio_tool.providers.edgar import ARCHIVE_NAME
 
 
 INTERVAL_KEY = "filings_fetch_interval_days"
+# D54: the form that is read, and the form that refuses when it follows.
+ANNUAL_REPORT = "10-K"
+AMENDMENT = "10-K/A"
 
 
 class FiledFactsError(Exception):
@@ -172,3 +192,89 @@ def cik_for(session: Session, provider, ticker: str) -> int:
             "no CIK to ask EDGAR about. A company is screened by the filings it made."
         )
     return row.cik
+
+
+@dataclass(frozen=True)
+class AnnualReport:
+    """The filing a reading reads, as the stored facts name it (D54)."""
+    accn: str
+    form: str
+    filed: dt.date
+
+
+def _filings_in_facts(session: Session, cik: int, *criteria):
+    return session.query(FiledFact.accn, FiledFact.form, FiledFact.filed).filter(
+        FiledFact.cik == cik, *criteria).distinct().all()
+
+
+def latest_annual_report(session: Session, cik: int, as_of: dt.date) -> AnnualReport:
+    """`cik`'s latest 10-K filed by `as_of`, read off the stored facts (D54).
+    Fetches nothing. Raises FiledFactsError when the facts name no 10-K, two
+    filed on one day, or a 10-K/A filed on or after the latest one."""
+    listed = _filings_in_facts(session, cik, FiledFact.filed <= as_of,
+                               FiledFact.form.in_((ANNUAL_REPORT, AMENDMENT)))
+    reports = [row for row in listed if row.form == ANNUAL_REPORT]
+    if not reports:
+        raise FiledFactsError(
+            f"CIK {cik}: the stored facts name no {ANNUAL_REPORT} filed by {as_of}. A filer "
+            f"with no {ANNUAL_REPORT} is not read; no other form is."
+        )
+    filed = max(row.filed for row in reports)
+    latest = sorted(row.accn for row in reports if row.filed == filed)
+    if len(latest) > 1:
+        raise FiledFactsError(
+            f"CIK {cik}: the stored facts name {len(latest)} {ANNUAL_REPORT} filings filed on "
+            f"{filed}, {' and '.join(latest)}; which is the latest is not decided, and "
+            "neither is read."
+        )
+    amended = sorted((row.filed, row.accn) for row in listed
+                     if row.form == AMENDMENT and row.filed >= filed)
+    if amended:
+        when, accn = amended[-1]
+        raise FiledFactsError(
+            f"CIK {cik}: {AMENDMENT} {accn}, filed {when}, follows the latest "
+            f"{ANNUAL_REPORT}, {latest[0]}, filed {filed}. Which text stands is not "
+            "decided, and neither is read."
+        )
+    return AnnualReport(accn=latest[0], form=ANNUAL_REPORT, filed=filed)
+
+
+def stored_document(session: Session, provider, cik: int, accn: str) -> FiledDocument:
+    """The stored text of `accn`'s primary document, fetched and stored on
+    the first call and never again (D55). The row's text is the sectioner's
+    to read and nobody's to publish."""
+    row = session.get(FiledDocument, accn)
+    if row is not None:
+        return row
+
+    known = {(form, filed) for _, form, filed in
+             _filings_in_facts(session, cik, FiledFact.accn == accn)}
+    if not known:
+        raise FiledFactsError(
+            f"CIK {cik}: no stored fact carries accession {accn}. A document is fetched "
+            "for a filing the facts name, and for no other."
+        )
+    if len(known) > 1:
+        raise FiledFactsError(
+            f"CIK {cik}: the stored facts give accession {accn} as {sorted(known)}; one "
+            "filing has one form and one date."
+        )
+    form, filed = known.pop()
+
+    listed = provider.filing(cik, accn)
+    if (listed.form, listed.filed) != (form, filed):
+        raise FiledFactsError(
+            f"CIK {cik}: accession {accn} is a {form} filed {filed} in the stored facts and "
+            f"a {listed.form} filed {listed.filed} in the submissions document. Two EDGAR "
+            "documents disagree about one filing; its document is not fetched."
+        )
+
+    text = filing_text.text_of(provider.document(cik, accn, listed.primary_document))
+    if not text:
+        raise FiledFactsError(f"CIK {cik}: the document of accession {accn} yields no text; "
+                              "nothing is stored.")
+
+    row = FiledDocument(accn=accn, text=text, source=ARCHIVE_NAME)
+    session.add(row)
+    session.commit()
+    return row
