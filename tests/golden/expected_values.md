@@ -2278,6 +2278,12 @@ line breaks part of it:
 | S-6 | `{"prediction": {"kind": "figure", "metric": "revenue", "bound": "min", "reasons": ["1.9"]}}` | refused: 1.9 is no claim of the readings |
 | S-7 | the answer stops on `max_tokens` | refused, and no second request |
 
+*Added 2026-09-19 with the proposer: a thesis that is empty or only
+whitespace, and readings that carry no claim, refuse before any request,
+since the message cannot be written without them; the thesis is sent
+without the whitespace at its ends, which a thesis written in a
+multi-line string carries.*
+
 What this does not cover: whether the prediction tests the thesis, which
 the ledger says a year on; whether two runs propose the same prediction,
 which nothing makes them do.
