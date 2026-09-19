@@ -274,6 +274,22 @@ at PHI-2.1 as it does for 4.1. The runner prints n/18; the last full run
 was 15/16 at the start of the session, before the two cases were added,
 and the two were run alone.
 
+**Status note, 19 September 2026 (twenty-sixth session).** The first full
+run of the eighteen cases printed 15/18: 4.1 blocked at PHI-2.1 as
+before, 4.3 blocked at out_of_scope, and 4.4 blocked at out_of_scope,
+where its sighting alone the day before had been clarification_needed.
+Beneath 4.4 there is now a reading tool, held to Part 16 of
+`expected_values.md`, computed by hand from Alphabet's FY2025 10-K
+before any code: the latest annual report named off the stored facts,
+its document fetched once and kept as text, Items 1, 1A and 7 found by
+one rule over the whole document, and each read by the stronger model
+into claims with quotes, the record refusing a quote the section does
+not hold or a digit in a claim. One live reading of Item 1 was accepted
+by that record and, read by hand against the document, was faithful in
+seven claims of twelve: a quote's presence is checked, and whether the
+quote supports the claim is not. Nothing of it is in the graph, and
+none of the three cases moves.
+
 **References before code, none computed yet.** Part 10 of
 `expected_values.md`: the synthetic candidate's typed figures over the
 stated years and every philosophy clause's verdict and distance by hand, for
