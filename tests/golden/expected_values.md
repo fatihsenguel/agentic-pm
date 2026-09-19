@@ -2242,6 +2242,46 @@ P-1 as the row the answer prints, the next free id under W-1 being W-1.3:
 - The gate and the outcome of case 4.3: the next Part.
 - The workbook. No sheet, like Parts 11, 12 G and 14.
 
+### F. The proposer's call
+
+Added 2026-09-19, before the proposer. Decision D58, taken 2026-09-19.
+D49 says what a model supplies for one proposal and left open how many it
+supplies and which metrics it is offered; the frame, built to D49, stops
+at the first proposal it cannot frame and has sentence rows for two of the
+four metrics the scorer computes. Offered a metric the frame cannot write,
+the model would sink the answer on some runs and not others, and nothing
+about a proposal is cached (D50).
+
+| # | Decision | Choice |
+|---|---|---|
+| D58 | What does the model propose, and what is the call? | **Exactly one prediction per answer, a figure or an event. A figure's metric is one the frame has a sentence row for, `revenue` or `gross_margin`, the list read from the frame so the vocabulary lives once, and its bound `min` or `max`; an event is in words; the reasons are claim ids.** One request to the model `ANTHROPIC_SONNET` names, with no temperature and `max_tokens` 16,000, as D56: the system prompt is fixed; the one user message is the thesis as `watchlist.toml` states it and, for each claim of the readings in the order read, its id, its uncertainty, its sentence and its quote; nothing else, not the question, not the candidate's name or id, not its predictions. The answer is JSON held by the API's structured output to one object, `prediction`, which is one of two shapes: `kind` `figure` with `metric`, `bound` and `reasons`, or `kind` `event` with `event` and `reasons`, nothing else in either. An answer that stops for any reason but `end_turn`, whose text is not JSON, or whose object is not `prediction` holding one object, is refused. What is supplied goes through `proposals.frame` as a list of one, and a frame that refuses it refuses the answer's prediction: no second request, no other metric, nothing stored. Rejected: the four metrics the scorer computes, two of which the frame cannot write, so the answer fails at random; one to three predictions, where one bad pick refuses the rest and three is a number nobody has a reason for; keeping the proposals that frame and dropping the one that does not, which is repair; caching what the model supplied, a store of the system's predictions that D50 rejects. |
+
+The user message for a stand-in thesis and two claims, as sent, with the
+line breaks part of it:
+
+    Thesis:
+    The business sells subscriptions customers keep renewing.
+
+    Claims:
+    [1.1] (stated) The business is subscription software that customers keep renewing.
+    Quote: "Customers renew because their work lives in the files."
+    [7.2] (inferred) Renewals and subscription revenue are described together.
+    Quote: "lives in the files. Revenue from subscriptions"
+
+| id | the model answers | result |
+|---|---|---|
+| S-1 | `{"prediction": {"kind": "figure", "metric": "gross_margin", "bound": "min", "reasons": ["1.1"]}}` | framed; for W-1 as of 2026-09-18 on Part 14 B's block, P-1 of section C under W-1.3 |
+| S-2 | `{"prediction": {"kind": "event", "event": "the cloud segment profitable at the operating level for the full year", "reasons": ["7.2"]}}` | framed; P-4 of section C under W-1.3 |
+| S-3 | `{"prediction": {"kind": "figure", "metric": "return_on_invested_capital", "bound": "min", "reasons": ["1.1"]}}` | refused: not a metric offered; the schema's list is `revenue` and `gross_margin` |
+| S-4 | `{"prediction": [two objects]}` | refused: not one object |
+| S-5 | `{"prediction": {"kind": "figure", "metric": "revenue", "bound": "min", "value": 420, "reasons": ["1.1"]}}` | refused: a value from the model (D49, F1) |
+| S-6 | `{"prediction": {"kind": "figure", "metric": "revenue", "bound": "min", "reasons": ["1.9"]}}` | refused: 1.9 is no claim of the readings |
+| S-7 | the answer stops on `max_tokens` | refused, and no second request |
+
+What this does not cover: whether the prediction tests the thesis, which
+the ledger says a year on; whether two runs propose the same prediction,
+which nothing makes them do.
+
 ## Part 16 — A filing's document and its sections
 
 Recorded 2026-09-19 by hand from one fetched document, before any provider
