@@ -36,7 +36,8 @@ from portfolio_tool.predictions import SCORABLE, PredictionError, reported_figur
 from portfolio_tool.quant.fundamentals import METRICS, years_filed_by
 from portfolio_tool.watchlist import Candidate
 
-__all__ = ["Proposed", "ProposalError", "SYSTEM", "PROPOSED", "frame", "one_year_later"]
+__all__ = ["Proposed", "ProposalError", "SYSTEM", "PROPOSED", "WRITTEN", "frame",
+           "one_year_later"]
 
 SYSTEM = "system"
 PROPOSED = "proposed"
@@ -52,6 +53,8 @@ RATIO_PLACES = Decimal("0.0001")
 # The sentence rows Part 15 C carries: the words for the metric and how its
 # value prints. A metric without a row stops until its row is written.
 _WORDS = {"revenue": "revenue", "gross_margin": "a gross margin"}
+# The metrics a model is offered: the ones a sentence can be written for (D58).
+WRITTEN = tuple(_WORDS)
 _MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August",
            "September", "October", "November", "December")
 _DIGIT = re.compile(r"\d")
