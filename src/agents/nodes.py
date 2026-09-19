@@ -1687,6 +1687,198 @@ async def ledger_agent_node(state: AgentState) -> Dict[str, Any]:
 
 
 # =============================================================================
+# RESEARCH AGENT NODE - a thesis read against the filing (case 4.4)
+# =============================================================================
+
+def reading_model():
+    """The model a section is read by (decision 67). A function so that a
+    test stands in a model that answers from the record."""
+    from agents.reading_model import reading_model as model
+    return model()
+
+
+def proposal_model():
+    """The model a prediction is proposed by (decision 67, D58). A function
+    so that a test stands in a model that answers from the record."""
+    from agents.proposal_model import proposal_model as model
+    return model()
+
+
+async def research_agent_node(state: AgentState) -> Dict[str, Any]:
+    """
+    Research Agent node - what has to be true for a candidate's thesis to
+    have been right, read against the latest annual report (case 4.4;
+    decisions 60, 66 and 67; Part 15 D47 to D50 and F, D58; Part 16).
+
+    Answers `asks` = "thesis" and nothing else; "position" is case 4.3,
+    whose gate is not built. Requires the screen (decision 66): the subject,
+    its CIK, the as-of and the figures' source are the screening block's,
+    so the two answer on one clock and one filer. The screen's verdict does
+    not stop this node: a thesis question asks for none.
+
+    The calls, in order: the watchlist entry for the ticker, its thesis as
+    written; the reader for Item 1, Item 1A and Item 7 through the EDGAR
+    provider and the reading model; the figures the screen stored, read
+    back with filed_years_for and fetching nothing; one proposal through
+    the proposer and the frame.
+
+    A refusal about the filing or its document puts every section not yet
+    read in `not_read` with that reason, and nothing more is asked; a
+    refusal about one section puts that section there and the next is read.
+    A proposal refused is `proposal_stopped`, beside an empty list. Nothing
+    is retried, and anything else is this node's error.
+
+    Publishes `shared_data["research"]`, the shape tests/benchmark/run_cases.py
+    holds it to: what was asked, the subject with its candidate id, the
+    as-of, the thesis with its candidate, the two models' ids, the readings
+    as records, the sections not read with their reasons, the proposed
+    predictions and `proposal_stopped`. No section text beyond a claim's
+    quote and no filed figure beyond a proposal's value. Nothing is written
+    to the watchlist or the ledger; the synthesizer formats.
+    """
+    tracer = get_tracer()
+    agent_ctx = None
+
+    try:
+        if tracer and hasattr(tracer, "get_current_request"):
+            req = tracer.get_current_request()
+            if req:
+                agent_ctx = req.trace_agent("ResearchAgent")
+                agent_ctx.__enter__()
+    except Exception as e:
+        logger.warning(f"Tracing failed in ResearchAgent (ignoring): {e}")
+
+    print("\n" + "=" * 80)
+    print("RESEARCH AGENT - A thesis read against the latest annual report")
+    print("=" * 80)
+
+    session = None
+    try:
+        from contextlib import nullcontext
+
+        import requests
+
+        from agents.proposal_model import ProposalModelError
+        from agents.reading_model import ReadingModelError
+        from portfolio_tool import proposer, reader
+        from portfolio_tool.database_setup import get_session
+        from portfolio_tool.filed_figures import FiledFiguresError, filed_years_for
+        from portfolio_tool.filing_text import FilingTextError
+        from portfolio_tool.filings import FiledFactsError
+        from portfolio_tool.proposals import ProposalError
+        from portfolio_tool.providers.edgar import EdgarError
+        from portfolio_tool.reading import SECTIONS, ReadingError
+        from portfolio_tool.sections import SectionError
+        from portfolio_tool.watchlist import load_watchlist
+
+        # Refusals about the filing or its document: every section would
+        # meet the same one, so it is met once.
+        filing_refused = (FiledFactsError, EdgarError, FilingTextError, requests.RequestException)
+        # Refusals about one section: the next section is still read.
+        section_refused = (SectionError, ReadingModelError, ReadingError)
+
+        params = (state.get("router_decision") or {}).get("parameters") or {}
+        asks = params.get("asks")
+        if asks == "position":
+            raise DataCalculationError(
+                "Whether to buy a candidate (case 4.3) needs the compliance gate, which is not "
+                "built; this node answers what has to be true for a thesis to be right.")
+        if asks != "thesis":
+            raise DataCalculationError(
+                f"The research agent is asked {asks!r}; it answers 'thesis', what has to be "
+                "true for a candidate's thesis to be right.")
+
+        screening = (state.get("shared_data") or {}).get("screening")
+        if not screening:
+            raise DataCalculationError(
+                "No screening block in shared_data: the research agent requires the screen "
+                "(decision 66), whose subject, filer and as-of it answers on.")
+        subject = screening["subject"]
+        ticker, cik = subject["ticker"], subject["cik"]
+        as_of = dt.date.fromisoformat(screening["as_of"])
+
+        candidate = load_watchlist(WATCHLIST_PATH).by_ticker(ticker)
+        print(f"  {ticker}: {candidate.id}, CIK {cik}, as of {as_of}")
+
+        provider = edgar_provider()
+        readings_model = reading_model()
+        session = get_session()
+
+        readings, not_read, filing_stopped = [], [], False
+        for n, section in enumerate(SECTIONS):
+            with (agent_ctx.trace_tool("read_section") if agent_ctx else nullcontext()) as tool_ctx:
+                if tool_ctx:
+                    tool_ctx.set_input({"cik": cik, "section": section, "as_of": as_of.isoformat()})
+                try:
+                    record = reader.read(session, provider, readings_model, cik, as_of, section)
+                    readings.append(record)
+                    print(f"  {section}: {len(record.claims)} claims")
+                except filing_refused as e:
+                    session.rollback()
+                    not_read += [{"section": s, "reason": str(e)} for s in SECTIONS[n:]]
+                    filing_stopped = True
+                    print(f"  the filing was not read: {e}")
+                except section_refused as e:
+                    session.rollback()
+                    not_read.append({"section": section, "reason": str(e)})
+                    print(f"  {section} not read: {e}")
+                if tool_ctx:
+                    tool_ctx.set_output({"read": [r.section for r in readings],
+                                         "not_read": [r["section"] for r in not_read]})
+            if filing_stopped:
+                break
+
+        propose_model = proposal_model()
+        predictions, proposal_stopped = [], None
+        with (agent_ctx.trace_tool("propose_prediction") if agent_ctx else nullcontext()) as tool_ctx:
+            if tool_ctx:
+                tool_ctx.set_input({"candidate": candidate.id, "readings": len(readings)})
+            try:
+                block = filed_years_for(session, cik, as_of)
+                block["source"] = screening["source"]
+                proposed = proposer.propose(propose_model, candidate, candidate.thesis, readings,
+                                            block, as_of)
+                predictions = [_plain(proposed)]
+                print(f"  proposed {proposed.id}: {proposed.statement}")
+            except (ProposalError, ProposalModelError, FiledFiguresError) as e:
+                proposal_stopped = str(e)
+                print(f"  no prediction proposed: {e}")
+            if tool_ctx:
+                tool_ctx.set_output({"predictions": len(predictions), "stopped": proposal_stopped})
+
+        research = {
+            "asks": asks,
+            "subject": {"ticker": ticker, "cik": cik, "name": subject.get("name"),
+                        "candidate": candidate.id},
+            "as_of": as_of.isoformat(),
+            "thesis": {"candidate": candidate.id, "text": candidate.thesis},
+            "models": {"reading": readings_model.id, "proposal": propose_model.id},
+            "readings": _plain(readings),
+            "not_read": not_read,
+            "predictions": predictions,
+            "proposal_stopped": proposal_stopped,
+        }
+        out = {"success": True, "agent_name": "ResearchAgent", "research": research}
+        return {
+            **mark_agent_complete(state, "ResearchAgent", out),
+            "shared_data": {**state.get("shared_data", {}), "research": research},
+        }
+
+    except Exception as e:
+        if session is not None:
+            session.rollback()
+        return {
+            **mark_agent_complete(state, "ResearchAgent", {"success": False, "error": str(e)}),
+            **add_error(state, f"ResearchAgent: {str(e)}"),
+        }
+    finally:
+        if session is not None:
+            session.close()
+        if agent_ctx:
+            agent_ctx.__exit__(None, None, None)
+
+
+# =============================================================================
 # FIXED: OPTIMIZATION AGENT NODE
 # =============================================================================
 
