@@ -1,6 +1,8 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 19 September (twenty-sixth session), on branch `reader`, cut from `baseline-v1` at b8a0faf. The reading tool, the first half of case 4.4's path, in fourteen commits before this one, the reference first each time: the fourth EDGAR request looked at before anything was designed on it, Alphabet's FY2025 10-K fetched once and measured whole; Part 16, D51 to D57, the document's text, the sectioner's rule of two runs of headings, the page furniture kept, which filing is read and where its document is, the reader's call and cache; the migration for `filed_documents` and `document_readings`, run by the owner; the extractor, the provider's two methods, the store, the sectioner, the model's client and the reader, each seen failing without its module and against one wrong version per rule with bytecode off; one fix to a test committed in the session that passed by file order; `claude-sonnet-5` confirmed on the key and found to refuse a temperature, the brief's "temperature zero" superseded on that evidence; one live reading of Item 1, accepted by the code and read by hand. Nothing reaches the graph. Loops at session start: pytest 1346, the CLI, the golden set with zero diff, the runner's first full run of eighteen cases 15/18. Decisions opened and closed: none; the pending list stands at sixteen. Entries added, nine: the live reading read by hand; the archive's bytes; a reading not repeatable; the router's switch and the temperature; 4.4's routing on the full run; what a golden run writes; tests deleting rows they did not write; what the reading does not reach; `docs/workflow.md`. Resolved: none.
+Last updated 19 September (twenty-seventh session), on branch `thesis`, cut from `baseline-v1` at 9c8e882. The rest of case 4.4's path, in thirteen commits before this one, the reference first: Part 15 F, D58, one prediction per answer on a metric the frame can write, and the refusals before the request; the proposer and its model behind a seam; the watchlist loader reading each thesis as written; the research node, unbound; the thesis answer's rendering, unwired, held by `check_4_4`; the twentieth golden line at out_of_scope; the extraction rule for `asks`, "thesis" only; two wordings of the reading prompt for the quote cap, each a hypothesis with its prediction, both missed on Items 1A and 7 and stopped; the routing commit, its prediction held on all twenty lines on two identical runs, and the golden line moved. Each test seen failing without its module and against one wrong version per rule with bytecode off. Live: nine reading requests on their own, the seven of Items 1A and 7 all refused, the two of Item 1 accepted, stored and read by hand; one proposal on its own, read by hand; the runner 16/18, 4.4 PASS for the first time on Item 1's claims alone; the CLI on the thesis question, read by hand. Loops at session start: pytest 1524, the CLI, the golden set with zero diff, the runner 15/18. Decisions opened: 70, the quote cap against this filer's sentences; closed: none; the pending list stands at seventeen. Entries added, six: decision 70; the live readings of Items 1A and 7; a refused section asked for again on every run; the proposals' reasons; a field the check finds on another line; macro rows on a new trading day. Dated lines on six whose triggers fired, two of them resolved for 4.4: the sightings, and 4.4's routing on the full run.
+
+Previously: 19 September (twenty-sixth session), on branch `reader`, cut from `baseline-v1` at b8a0faf. The reading tool, the first half of case 4.4's path, in fourteen commits before this one, the reference first each time: the fourth EDGAR request looked at before anything was designed on it, Alphabet's FY2025 10-K fetched once and measured whole; Part 16, D51 to D57, the document's text, the sectioner's rule of two runs of headings, the page furniture kept, which filing is read and where its document is, the reader's call and cache; the migration for `filed_documents` and `document_readings`, run by the owner; the extractor, the provider's two methods, the store, the sectioner, the model's client and the reader, each seen failing without its module and against one wrong version per rule with bytecode off; one fix to a test committed in the session that passed by file order; `claude-sonnet-5` confirmed on the key and found to refuse a temperature, the brief's "temperature zero" superseded on that evidence; one live reading of Item 1, accepted by the code and read by hand. Nothing reaches the graph. Loops at session start: pytest 1346, the CLI, the golden set with zero diff, the runner's first full run of eighteen cases 15/18. Decisions opened and closed: none; the pending list stands at sixteen. Entries added, nine: the live reading read by hand; the archive's bytes; a reading not repeatable; the router's switch and the temperature; 4.4's routing on the full run; what a golden run writes; tests deleting rows they did not write; what the reading does not reach; `docs/workflow.md`. Resolved: none.
 
 Previously: 18 September (twenty-fifth session), on branch `research`, cut at 0e1c1ad, the tip of `score`, the trunk not yet having merged it. The shape of the research agent, cases 4.3 and 4.4, and the first of it that landed cleanly, in seven commits before this one, the reference first: the entry carried from the last session, measured and not copied, seven tests red on a scored ledger where the brief named four; Part 15 by hand, D47 to D50, the reading record, a model's proposal as a direction and never a number, the prediction frame on Alphabet's filed FY2025 lines, the threshold the last filed figure cut toward the side that holds; `check_4_4` and `check_4_3` with their probes, eighteen cases, each exercised offline on a passing block and on broken ones and then sighted BLOCKED, 4.4 at clarification_needed with no prediction made, 4.3 at out_of_scope as predicted; the scorer's lookup of a reported figure as its own function, one path for the verdict and the threshold; `portfolio_tool/proposals.py`, the frame, pure, 23 tests; `portfolio_tool/reading.py`, the record's validation, pure, 19 tests, each seen failing without the module and against wrong versions with bytecode off. Nothing reaches the graph; no model is called; no file of mine is written. Loops at session start: pytest 1304, the CLI on the allocation question, the golden set with zero diff on nineteen lines, the runner 15/16, no price and no filing fetched, the macro rows rewritten. Decisions 59, 60, 61, 62, 66 and 67 taken with the shape; 63, 64, 65, 68 and 69 opened and pending. Entries added, twelve: the seven tests on the committed ledger; the shape and its decisions; what the gate needs; a weight in a research question; no segment figure in the stored facts; what the reading does not read; what the two checks cannot see; the two sightings; the loader and `author`; two weak frame tests; the regime line and `macro_data`; three stale statements. Resolved: none.
 
@@ -4969,6 +4971,12 @@ structured data by anyone; it is an event prediction scored by hand
 against the segment note (Part 14 D44), and the reading of Item 7 is
 the only place the system will ever meet the figure, inside a quote.
 
+*19 September (twenty-seventh session), the Item 7 trigger fired.* The
+first live reading of Item 7, refused on the cap and read by hand, quoted
+Cloud's operating income as "increased $7.8 billion from 2024 to 2025",
+a change and not the year's level. W-1.2 is still settled by hand against
+the segment note in Item 8, which is not read. The date trigger stands.
+
 ### The reading reads three items of the annual report and nothing else
 
 **Trigger:** a case or a prediction that needs a quarter, an 8-K, a transcript or news.
@@ -5004,6 +5012,14 @@ id being printed. Its shared helper `_not_from_the_ips` says "the
 question is about the philosophy" when 4.4's answer cites an IPS
 clause: the assertion is right for 4.4 and the wording is 4.1's.
 
+*19 September (twenty-seventh session), the 4.4 trigger fired.* 4.4 is
+answerable since f5f855c and passes on the runner. The first live
+readings were read by hand against the 10-K ("The live readings of Items
+1A and 7, beside Item 1's"), and a live answer line by line; what the
+check could not see there has its own entries ("The first live proposals
+cite claims that do not support them", "A field `check_4_4` finds on
+another line"). The 4.3 trigger stands.
+
 ### The two sightings, the baselines for the routing hypothesis
 
 **Trigger:** the routing commit of decision 66.
@@ -5017,6 +5033,12 @@ back; no prediction was made, by last session's rule. Extraction reads
 `1Y` from "in a year" on 4.4's prompt, a period the research path reads
 and does not use. The golden line for 4.4 is written at this baseline
 before the routing commit, and the commit's prediction starts from it.
+
+*Resolved for 4.4, 19 September (twenty-seventh session).* Sighted
+twice more alone, both out_of_scope; the golden line written at
+out_of_scope (e9b6022); the routing commit's prediction held on all
+twenty lines on two identical runs (f5f855c, 90486b5). 4.3's sighting
+stands for its own routing commit.
 
 ### The loader reads no `author`, so a system row cannot be told from mine
 
@@ -5121,6 +5143,13 @@ for it: a prompt edit is a hypothesis, and the reading is not in any
 answer yet. Stored: one `filed_documents` row, one `document_readings`
 row.
 
+*19 September (twenty-seventh session), both triggers fired.* Two new
+prompt versions read Item 1 again, each accepted and stored and each
+read by hand: the same three faults recurred ("The live readings of
+Items 1A and 7, beside Item 1's"). The version the node serves, and the
+live answer printed, is 068134c's. This row is kept and read by
+nothing.
+
 ### The archive's bytes change between pulls; the text did not
 
 **Trigger:** a reference that pins a fetched document by its bytes.
@@ -5149,6 +5178,13 @@ model behind the same id has changed, since the id is the key. A reading
 that would now be refused is refused on its next read (D57), which is the
 one thing the cache cannot hide.
 
+*19 September (twenty-seventh session), both triggers fired.* Item 1 has
+been read three times under three prompt versions, and the three
+readings differ claim by claim while making the same three mistakes.
+Items 1A and 7 were refused differently from request to request (cap,
+page break, digit), which the cache cannot hide since a refused reading
+leaves no row ("A refused section is asked for again on every run").
+
 ### The router's stronger-model switch sends a temperature the model refuses
 
 **Trigger:** the router's `use_stronger_model` switch turned on, or `ACTIVE_LLM_CONFIG` set to `ANTHROPIC_SONNET`.
@@ -5172,6 +5208,10 @@ first full run at 21:51 UTC the same day, the prompt and the router
 unchanged. The handoff's next step names clarification_needed as the
 line's sighted baseline; one sighting each way is no baseline. The line
 is sighted at least twice before it is written.
+
+*Resolved 19 September (twenty-seventh session).* Two more sightings
+alone, both out_of_scope, four of five in all; the line written at
+out_of_scope on one golden run (e9b6022).
 
 ### What a golden run writes, beyond the macro rows
 
@@ -5223,6 +5263,129 @@ emoji in its headers; it breaks the rule that nothing reads as written by
 a tool. It predates the rule and the handoff marks it stale. Whether it is
 deleted or rewritten is the owner's; this entry says only that it is
 there.
+
+### The quote cap against this filer's sentences: decision 70
+
+**Trigger:** pending decision 70.
+
+Logged 19 September (twenty-seventh session). Opened as decision 70 on
+the owner's word. Part 15 D47 caps a quote at 300 characters and refuses
+the whole reading when one claim breaks it. Items 1A and 7 of Alphabet's
+FY2025 10-K were asked for seven times on their own in the session, under
+three wordings of the prompt, and refused every time: on the cap six
+times and on a quote across a page break once; the CLI's thesis question
+afterwards refused them on a page break and on a digit in a claim. A
+diagnostic with no request, on the stored text and the four raw answers
+still kept, separated two causes. The filing writes long sentences: 64 of Item 1A's
+444 sentences are over 300 characters, the longest 1,150, against 15 of
+Item 7's 484 and 9 of Item 1's 174. And the model quotes on sentence
+boundaries whatever limit it is told: of six quotes over the cap, three
+were one whole sentence longer than 300 (341, and Item 7's liquidity
+sentence at 330, twice), two were two whole sentences joined (308, 301),
+one was cut from inside a sentence of 342 and still ran 326. A claim that
+rests on such a sentence cannot be quoted whole under D47. What the
+decision chooses between, none recommended yet: the prompt telling the
+model it may quote a shorter run of words from inside a sentence, a new
+hypothesis with its own prediction; D47's cap measured against this
+filer's sentences, a change to the reference; or the refusal standing and
+Items 1A and 7 unread. Rejected already: cutting a long quote in code,
+which is repair. Until it is taken, a thesis answer reads Item 1 alone.
+
+### The live readings of Items 1A and 7, beside Item 1's
+
+**Trigger:** pending decision 70; the next prompt version for any section.
+
+Logged 19 September (twenty-seventh session). Every request to
+`claude-sonnet-5`, no temperature, the answer's text kept for all but the
+first. Under the prompt of a9412ea, stating 300 characters: Item 1A
+`req_011CfC81qR3bXRzSXwKiGQqC`, 24,780 tokens in, 1,628 out, $0.0658,
+refused on a quote of 342, the answer not kept; Item 1A
+`req_011CfC86ULRJJPSYzujb555d`, $0.0673, refused on 303 and holding 321;
+Item 7 `req_011CfC8E2B2mvERqMCVYWnax`, 17,660 in, 1,569 out, $0.0510,
+refused on 301 and holding 330. Under c953d04, 250 characters: Item 1
+held, accepted, stored; Item 1A missed, 308 and 341; Item 7 missed, 301
+and 330; thirteen quotes of thirty-six over 250. Under 068134c, thirty
+words: Item 1 held, accepted, stored; Item 1A missed, 326, and refused on
+a quote across a page break, Part 16's F7 met live; Item 7 missed, 330;
+fourteen quotes of thirty-five over thirty words. Two misses on each of
+Items 1A and 7 stopped the hypothesis, and no third wording was tried. The
+prompt stays at 068134c's.
+
+Read by hand against the stored section. Item 1A under the first prompt,
+the second request: three claims of twelve faithful to their quote, three
+faithful at the core with a detail from the paragraph, five saying more
+than their quote under `stated` (1A.10's quote is only "International
+revenues accounted for approximately 52%" for a claim about currency and
+geopolitics), one getting the filing wrong (the search remedies called
+"structural"); all twelve `stated`; one a claim about the share's price,
+the filing's own risk sentence. Item 7 under the first prompt: nine of
+twelve faithful, one saying more, one saying more of a table row with no
+year on it, one naming Waymo's "valuation-based" charge "stock-based";
+all `stated`. Item 1 under the second and the third prompt: seven of
+twelve faithful and five of twelve, the same three faults as the first
+reading each time (app sales and devices beside a quote holding only
+subscriptions; the list after a colon; "two" segments, a number in words).
+Items read in the order of their faithfulness: Item 7, Item 1, Item 1A.
+Nothing of the prompts is changed for faithfulness; that is a hypothesis
+of its own.
+
+### A refused section is asked for again on every run
+
+**Trigger:** pending decision 70; the next golden run or runner run.
+
+Logged 19 September (twenty-seventh session). A refused reading leaves no
+row (D57), so since the routing commit, f5f855c, every golden run, runner
+run and CLI question on a thesis asks for Items 1A and 7 again and
+proposes again, about $0.12 a run by the measured requests; the golden
+script and the runner record none of it. The refusal is a new draw each
+time: the CLI's run refused Item 1A on a quote across a page break and
+Item 7 on a digit in a claim, where the runs before refused both on the
+cap. Case 4.4 passes on Item 1's claims with the two printed as not read
+and their reasons; a run on which Item 1's cached reading stopped passing
+would fail it.
+
+### The first live proposals cite claims that do not support them
+
+**Trigger:** the next prompt version of the proposer; the commit that makes 4.3 answerable.
+
+Logged 19 September (twenty-seventh session). Three live proposals, the
+first on its own (`req_011CfCrVSL9t6qqvuxKaCcYy`, 2,424 tokens in, 214 out,
+$0.0070), the others inside the runner's and the CLI's 4.4, all over Item
+1's claims alone. Each chose `gross_margin`, `min`; the frame wrote W-1.3,
+at least 59.65% for FY2026, the value FY2025's 0.596523 cut down, Part 15
+C's P-1 recomputed from the stored figures. It tests one leg of W-1's
+thesis, that capital spending does no lasting damage to margins; it cannot
+test the cloud margin catching up, no segment figure being offered. The
+reasons it cites, 1.2, 1.4, 1.7 and 1.8 on the CLI's run, are about where
+revenue comes from and AI in the products; none says anything about a
+margin, Item 1 saying nothing about one. Item 7, which does, is the
+section not read. The frame holds that a reason is a claim of the
+readings; nothing holds that it supports the prediction.
+
+### A field `check_4_4` finds on another line
+
+**Trigger:** the next change to the thesis rendering.
+
+Logged 19 September (twenty-seventh session). The check asks that each
+reading's accession, filed date and source, and each proposal's dates and
+statement, reach the answer somewhere. Five wrong versions of the
+rendering dropped one of them from its own line and passed the check,
+since the threshold's line and the row print the same accession, date and
+statement; `tests/test_thesis_formatter.py` holds each line whole since
+4e2b472. The rendering also prints a refused section's reason as the code
+raised it, "Item 7, claim 8: a digit in the claim; a figure appears only
+inside a quote, where it is the filing's": accurate, and written for the
+code rather than for me.
+
+### A golden run adds macro rows when a trading day has closed
+
+**Trigger:** pending decision 51.
+
+Logged 19 September (twenty-seventh session). The regime line's entry
+says the count stands still while the stamps move. It holds only when no
+trading day has closed since the last run: the session's first golden
+run, at 03:07 UTC on the 19th, added VIX, TNX_10Y and IRX_3M for
+2026-09-18, 206 to 209, which was predicted as no change and missed.
 
 ### JPMorgan's fixture carries no share count
 
