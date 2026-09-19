@@ -2511,3 +2511,24 @@ heading line and one newline between lines, as section B does.
 On the fetched document the sectioner returns section B's three counts,
 23,802, 85,181 and 52,391 characters, checked once by hand; the tests hold
 the fixture's.
+
+### J. The reader: the call and the cache
+
+Added 2026-09-19, before the reader. Decisions D56 and D57. Decision 67
+names the model; on 2026-09-19 at 00:51 UTC one request to
+`claude-sonnet-5` with a temperature of 0 was refused, HTTP 400, "`temperature`
+is deprecated for this model", request `req_011CfBt8U9S1pHjZB9vzuf4M`, and
+the same request without one answered, `end_turn`, 17 tokens in and 4 out,
+request `req_011CfBt8WZ3UeKfVTZ5akGic`. The brief's "temperature zero" is
+superseded for this model on that evidence (decided 2026-09-19): nothing
+makes a reading repeatable, and the cache is what holds one still.
+
+| # | Decision | Choice |
+|---|---|---|
+| D56 | What is the call? | **One request per section read, to the model `ANTHROPIC_SONNET` names in `agents/config.py`, with no temperature: the system prompt is the section's fixed prompt, the one user message is the section's text as the sectioner returns it, and the answer is JSON held to a schema by the API's structured output: one object, `claims`, a list of objects each with `claim`, `quote` and `uncertainty`, the last one of `stated` and `inferred`, nothing else.** The question asked is never in the request, and nothing but the section is. `max_tokens` is 16,000. An answer that stops for any reason but `end_turn`, whose text is not JSON, or whose object is not that shape, is refused and nothing is stored; the API's own refusal of a request, a section above the model's input size among them, is raised as it comes, naming the section, and no size is checked beforehand. What the model supplies then goes through `reading.record` against the section's text (Part 15 D47): a claim that fails refuses the whole reading. The filing named on the record is D54's, its `fiscal_year` the `fy` of the stored facts under that accession, `FY2025` for Alphabet, and a report under which the facts carry more than one `fy` is refused before anything is fetched; its `source` is the stored document's. Rejected: a temperature, which the model refuses; `claude-sonnet-4-6` for its temperature, an older model chosen for one parameter; the question in the prompt, which would make a reading depend on how it was asked; asking for JSON in prose and parsing what comes, when the API can hold the shape. |
+| D57 | What is cached? | **One reading per accession, section, model id and prompt version, in `document_readings`, the claims as the model supplied them, written only after `reading.record` accepts them. The prompt version is the SHA-256, in hex, of the section's prompt followed by the schema as JSON with its keys sorted, so a change to either is a new version and a new reading.** A reading found under the key is not asked for again; its claims go through `reading.record` against the section as it is now, and a stored reading that no longer passes is refused, not asked for again and not deleted. A refused reading and a failed call leave no row. Rejected: a version number kept by hand, which a changed prompt can forget to move; caching the record rather than what was supplied, which would skip the check on a hit; a time or a cost on the row, which nothing consumes. |
+
+What this does not cover, and nothing here holds: whether a claim is
+faithful to its quote, and whether a reading says what matters in the
+section. The first live reading is read by hand against the document
+(Part 15 E).
