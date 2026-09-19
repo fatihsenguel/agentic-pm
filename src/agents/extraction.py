@@ -42,6 +42,12 @@ replaces, missed the other way into "the policy contains nothing on this"
 for a question about a position (the prompt shrink's golden diff,
 8 September). A weight in the message is the third mode, above.
 
+What a research question asks (decision 66). The word "thesis" or
+"theses" in the message asks what has to be true for a candidate's thesis
+to be right: `asks` is "thesis". Nothing else sets it, and the model never
+does. Whether to buy a candidate, the other value decision 66 names, comes
+with case 4.3 and its gate.
+
 Conversation memory, as a rule here and not as context for a model. When
 extraction asks back it leaves a record - kind, token, candidate, the
 message - and the next turn's reply is resolved against that record before
@@ -77,6 +83,8 @@ class Extraction:
     # The record of the clarification, when one was asked and a rule exists
     # to resolve a reply against it: kind, token, candidate, message.
     pending: Optional[Dict[str, str]] = None
+    # What a research question asks (decision 66): "thesis", or None.
+    asks: Optional[str] = None
 
 
 _KNOWN = {t for t in KNOWN_ETFS | KNOWN_STOCKS if len(t) >= 2}
@@ -131,6 +139,8 @@ _POLICY_SAYS = re.compile(
 )
 _VOL_WINDOW = 25  # characters either side of a percentage in which "vol" makes it a cap
 
+_THESIS = re.compile(r"\bthes(?:is|es)\b", re.IGNORECASE)
+
 
 def extract(message: str, held_tickers: Sequence[str], periods: Iterable[str]) -> Extraction:
     """Extract what the message states, or the question to ask back.
@@ -161,6 +171,7 @@ def extract(message: str, held_tickers: Sequence[str], periods: Iterable[str]) -
         clarification=clarification,
         policy_lookup=_POLICY_SAYS.search(message) is not None,
         pending=pending if ticker_question else None,
+        asks="thesis" if _THESIS.search(message) else None,
     )
 
 

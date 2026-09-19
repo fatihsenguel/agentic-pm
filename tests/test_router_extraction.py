@@ -8,7 +8,8 @@ tickers, period, volatility cap and hypothetical weight in the decision are
 extraction's, whatever the model emitted, on the first attempt and on a
 repair; a clarification from extraction is returned without calling the
 model; the policy topic, when the model sets it, carries the user's own
-words and not the model's paraphrase.
+words and not the model's paraphrase; what a research question asks is
+extraction's, and takes no value but "thesis".
 """
 
 import json
@@ -117,6 +118,36 @@ async def test_the_lookup_is_extractions_and_carries_the_users_words(router):
     decision, _ = await router.route("Is AAPL too concentrated?", portfolio_id=3)
     assert decision.parameters.policy_topic is None
     assert decision.execution_order == list(COMPLIANCE)
+
+
+async def test_what_a_research_question_asks_is_extractions(router):
+    """The model's `asks` is not read (decision 66): the word in the message
+    sets it and nothing else does. It is carried under any intent and read
+    by none but research, so a thesis question the router refuses still
+    validates."""
+    router._llm = _FakeLLM(_json("out_of_scope", ()))
+    decision, validation = await router.route(
+        "What has to be true in a year for my GOOGL thesis to be right?", portfolio_id=3)
+    assert decision.parameters.asks == "thesis"
+    assert decision.execution_order == []
+    assert validation.errors == []
+
+    router._llm = _FakeLLM(_json("research", ("ScreeningAgent",), asks="thesis"))
+    decision, _ = await router.route("What is GOOGL worth?", portfolio_id=3)
+    assert decision.parameters.asks is None
+    assert decision.execution_order == ["ScreeningAgent"]
+
+
+def test_asks_takes_thesis_and_nothing_else():
+    """"position" is the other value decision 66 names, and it comes with
+    case 4.3: a value nothing consumes is not in the schema."""
+    from pydantic import ValidationError
+
+    from agents.schemas import ExtractedParameters
+    assert ExtractedParameters(asks="thesis").asks == "thesis"
+    for value in ("position", "Thesis", ""):
+        with pytest.raises(ValidationError):
+            ExtractedParameters(asks=value)
 
 
 async def test_a_portfolio_check_carries_no_mode(router):

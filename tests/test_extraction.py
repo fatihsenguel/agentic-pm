@@ -171,6 +171,42 @@ def test_a_question_about_the_portfolio_is_not_a_lookup(message):
     assert extract(message, P3, PERIODS).policy_lookup is False
 
 
+# --- what a research question asks (decision 66) --------------------------------
+
+THESIS = [
+    "What has to be true in a year for my GOOGL thesis to be right?",   # 4.4
+    "Is my Adobe thesis still intact?",
+    "THESIS check on GOOGL",
+    "Which of my theses have failed?",
+]
+NO_THESIS = [
+    "What is GOOGL worth?",                    # 4.2
+    "Does GOOGL clear my philosophy?",         # 4.1
+    "Should I buy GOOGL?",                     # 4.3, whose value comes with its gate
+    "How have my predictions done?",           # 4.5
+    "Is the hypothesis behind my AAPL position sound?",
+    "A synthesis of my portfolio, please",
+    "How are these positions doing?",
+]
+
+
+@pytest.mark.parametrize("message", THESIS, ids=[m[:40] for m in THESIS])
+def test_the_word_thesis_asks_thesis(message):
+    assert extract(message, P3, PERIODS).asks == "thesis"
+
+
+@pytest.mark.parametrize("message", NO_THESIS, ids=[m[:40] for m in NO_THESIS])
+def test_no_other_message_asks_anything(message):
+    """A word that holds "thesis" inside it is not the word."""
+    assert extract(message, P3, PERIODS).asks is None
+
+
+@pytest.mark.parametrize("message, held", [(row[0], row[1]) for row in CLEAN],
+                         ids=[row[0][:40] for row in CLEAN])
+def test_no_message_in_the_table_asks_anything(message, held):
+    assert extract(message, held, PERIODS).asks is None
+
+
 # --- the record of a clarification, and the reply resolved against it --------
 
 PENDING = {"kind": "unknown_ticker", "token": "APPL", "candidate": "AAPL",

@@ -155,6 +155,12 @@ class ExtractedParameters(BaseModel):
     hypothetical_weight: Optional[float] = Field(default=None, gt=0, le=1.0)
     policy_topic: Optional[str] = Field(default=None)
 
+    # What a research question asks (decision 66), set by extraction from a
+    # closed pattern and never by the model: "thesis", what has to be true
+    # for a candidate's thesis to be right. Read by nothing outside
+    # research; "position" comes with case 4.3.
+    asks: Optional[Literal["thesis"]] = Field(default=None)
+
     @field_validator('tickers')
     @classmethod
     def validate_tickers(cls, v: List[str]) -> List[str]:

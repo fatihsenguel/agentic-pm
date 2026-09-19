@@ -455,7 +455,8 @@ def _with_extraction(raw: Dict[str, Any], extraction: Extraction, user_message: 
     compliance node matches the owner's topic vocabulary against. The
     model's flag missed into a lookup for questions about a position, and a
     paraphrased value would match a clause the user did not ask about
-    (KNOWN_GAPS, runner 3.4 and the prompt shrink, 8 September).
+    (KNOWN_GAPS, runner 3.4 and the prompt shrink, 8 September). What a
+    research question asks is extraction's too (decision 66).
     """
     parameters = dict(raw.get("parameters") or {})
     parameters["tickers"] = list(extraction.tickers)
@@ -463,6 +464,7 @@ def _with_extraction(raw: Dict[str, Any], extraction: Extraction, user_message: 
     parameters["max_volatility"] = extraction.max_volatility
     parameters["hypothetical_weight"] = extraction.hypothetical_weight
     parameters["policy_topic"] = user_message if extraction.policy_lookup else None
+    parameters["asks"] = extraction.asks
     out = {**raw, "parameters": parameters}
     # The record of a clarification and the resolution are the router's own,
     # from extraction; the model writes neither.
