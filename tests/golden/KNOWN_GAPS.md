@@ -5959,3 +5959,133 @@ that got tangled with it during the 4 September sitting.
 
 Decide it when someone asks for a quarter, with a real case in hand. Nothing
 built now makes that decision easier, and choosing today means choosing blind.
+
+### The gate is built: decisions 71, 72 and 73, and what the first runs showed
+
+**Trigger:** the commit that gives case 4.3 the rest of its answer.
+
+Logged 20 September (twenty-ninth session), the session that built the
+gate. What landed: `watchlist.toml` states each candidate's asset class,
+sector and instrument type and, for W-1, the weight; the loader reads
+them and refuses a candidate missing one, `position_weight` raising for a
+candidate that states no weight; **Part 17** computes the check by hand at
+6% and at 15%; `portfolio_tool/gate.py` builds the portfolio as it would
+be and hands it to `compliance.check`, so Part 7 and Part 17 are one piece
+of clause arithmetic; `gate_node` sits on the edge into the synthesizer
+and is in neither `AGENTS` nor `AGENT_NODES`; `require_gate` refuses an
+outcome without a block for the same ticker and weight; `check_4_3` asks
+for a prediction entered in the ledger; `asks` gains "position" with its
+pattern and its row; and "should I buy X" is research.
+
+**Three decisions taken with the owner's word, numbered here and his to
+renumber.** **71**: IPS-5.3's **first** limb is computed and its second is
+not. The first is a guardrail - a purchase that leaves a breached limit
+breached fails it. The second, "then to whichever asset class is furthest
+below the middle of its band", is an allocation preference, and enforcing
+it would block a purchase for being a worse use of the next dollar rather
+than for breaking a limit: a recommendation with the force of a refusal,
+on a portfolio that is otherwise compliant. `Gate.first_limb_binds` is
+False when nothing was breached, and whoever prints the block says the
+clause is half-applied. Rejected: computing both and blocking on the
+second, an unexercised rule deciding future purchases silently; raising
+when the first limb does not bind, which misapplies "raise, do not repair"
+- that rule is about missing data, and here nothing is missing but a
+decision - and which would break the gate exactly when the portfolio came
+back inside its limits. **72**: a terminal-table key may name a parameter
+and a value, `asks=position`, tried before the key naming the parameter
+alone, and a row's terminal may be a tuple closed over each name once. A
+thesis question implies no position and reads no allocation; a position
+question is checked against the allocation PortfolioAnalysisAgent
+published. Rejected: a second intent (66 turned it down); ResearchAgent
+requiring the portfolio agents, which moves 4.4's plan and makes a thesis
+question compute an allocation it never reads; the gate computing the
+allocation itself. **73**: the screening node refuses a ticker on no
+watchlist entry when `asks` is "position", before its first EDGAR call.
+Narrowed to the position question because 4.6 screens JPM, which is held
+and is on no entry.
+
+**What the runs showed.** The golden set moved one line of twenty, twice
+identically, exactly as predicted: "Should I buy Nvidia?" from
+`out_of_scope` with an empty plan to `research` with the four-agent plan,
+all four run, errors 2. The runner is 16/18: 3.2 passes on its new prompt,
+a price forecast, sighted for the first time; 4.1 is blocked at PHI-2.1 as
+before; **4.3 is blocked at a new place**, routing and screening and then
+stopping at the research node, which refuses because its half of the
+answer - the model's view, the weight, the entry condition and the outcome
+- is not built.
+
+### A buy question about a company on no entry arrives shaped as an error
+
+**Trigger:** the next change to how the synthesizer renders a failed run; the commit that gives 4.3 the rest of its answer.
+
+Logged 20 September (twenty-ninth session), from the golden runs. "Should
+I buy Nvidia?" used to be refused with the scope-boundary sentence. It is
+now research, and Nvidia is on no watchlist entry, so the screen refuses
+it - correctly, and before any EDGAR call (decision 73) - and the research
+agent then finds no screening block. What reaches the reader is the
+synthesizer's "Some issues occurred during analysis" followed by two error
+lines. **The refusal is right and says exactly why; its shape is wrong.**
+A question the system cannot answer should read as a refusal, not as a
+failure.
+
+Beside it: **`DataAgent` and `PortfolioAnalysisAgent` both ran** for that
+question, fetching nothing and computing an allocation that nothing then
+used. The plan is derived from the intent before anything knows whether
+the company is a candidate, and the watchlist check that would have
+stopped it lives in the screen, which runs third. Cheap here, every
+holding being inside its price interval, and not free in general.
+
+Neither is fixed here. The first is a rendering decision and the second
+would mean deriving a plan from something extraction cannot see.
+
+### IPS-2.1 would pass an instrument the policy forbids
+
+**Trigger:** a candidate whose instrument type is neither a share nor a fund.
+
+Logged 20 September (twenty-ninth session), named in Part 17 G when the
+gate was computed by hand. IPS-2.1 says the portfolio holds only
+exchange-listed equities and exchange-traded funds, plus cash. It is a
+statement clause, so the checker produces no finding for it and the gate
+computes none (Part 17 D60). A candidate whose `instrument_type` were an
+option or a bond would be **passed** by the gate on section 2 while
+section 3 and section 4 checked it happily. Both candidates on the
+watchlist are shares, so nothing is wrong today and nothing is invented to
+cover it. Making IPS-2.1 computable means a new clause type and is a
+decision, not a fix.
+
+The gate does raise on an asset class no band clause names, which catches
+the other half of the same shape: a class the policy states no limit for
+is not reported as clear.
+
+### check_4_3 holds one row of decision 68's sixteen
+
+**Trigger:** the commit that composes case 4.3's outcome.
+
+Logged 20 September (twenty-ninth session). Decision 68's truth table is
+sixteen rows, written out in Part 17 H: the outcome supports an entry only
+when the screen is clear, the gate is clear, my entry condition is met and
+the model's view of the thesis stands; every other row supports none and
+names each input that did not permit. **`check_4_3` asserts one of those
+rows** - the one no rule may break, that an entry is not supported unless
+all four permit - and nothing here holds the other fifteen. A run that
+named the wrong grounds, or named none, would pass the runner.
+
+The Part is the reference; the check is not the place to reproduce it.
+What is missing is a pytest harness over the composition itself, and it
+comes with the code that composes it.
+
+### The golden set has no line for a buy question about a candidate
+
+**Trigger:** the commit that gives case 4.3 the rest of its answer.
+
+Logged 20 September (twenty-ninth session). Line 11 of the golden set is
+"Should I buy Nvidia?", which now exercises the **refusal** branch: a
+company on no entry, screened and stopped. Nothing in the golden set pins
+the routing of a buy question about a company that *is* a candidate -
+`asks="position"`, the four-agent plan, the screen and the research agent
+both reached. The runner's 4.3 covers it and the golden set does not, so a
+routing change that broke only the candidate path would show up in one
+loop of the four.
+
+A line for it is a new case and wants sighting before its golden line is
+written.
