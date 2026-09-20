@@ -1,7 +1,7 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 19 to 20 September 2026 (twenty-eighth session), begun 19 September at 16:25 UTC. Regenerated at its end.
-**Branch:** `cap`, cut from `baseline-v1` at 3ce7dab on the owner's yes, the branch the brief named not existing. **`baseline-v1` is the trunk** and stood at 3ce7dab when the session began; `thesis` is merged into it. Each session branch is merged into the trunk with `--ff-only` when the loops are green; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count 3ce7dab..HEAD` — 9 with this file: the reference, the code, the record, benchmark.md, this file regenerated, and then, after one live request that decision 70 made answerable, the record again, this file, benchmark.md's dated correction and this line. **Not merged and not pushed**: the owner merges and pushes; `origin`'s push URL is `no_push`.
+**Branch:** `cap`, cut from `baseline-v1` at 3ce7dab on the owner's yes, the branch the brief named not existing. **`baseline-v1` is the trunk** and stood at 3ce7dab when the session began; `thesis` is merged into it. Each session branch is merged into the trunk with `--ff-only` when the loops are green; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count 3ce7dab..HEAD` — 9 with this file: the reference, the code, the record, benchmark.md, this file regenerated, and then, after one live request that decision 70 made answerable, the record again, this file, benchmark.md's dated correction and this line. The owner merged and pushed that branch, and a second, **`values`**, was cut from the trunk after it for three commits: the candidates' classifications as the owner stated them, the sentence for `docs/WATCHLIST.md`, and this file. The owner merges and pushes; `origin`'s push URL is `no_push`.
 
 **State:** pytest **1650 passed, 6 xfailed**, up from 1646 by 4. **Golden set: twenty lines, one run, zero diff.** **Runner 16/18, one run**: 4.1 BLOCKED at PHI-2.1 naming D36, 4.3 BLOCKED at out_of_scope, 4.4 PASS. **The CLI once**, the allocation question, which fetched nothing: the price interval had not run out, against the brief's reading of it. **Decision 70 is taken and built**: the record caps a reading's quoted text at 3,600 characters a section and no longer caps a single quote, the reference first. **Decisions 63, 64, 65, 68 and 69 are taken and nothing of them is built**; the gate's Part comes next. **All three sections are read for the first time**: Item 1A was stored by one of the two paid loops, and Item 7 was accepted on one request made after the cap changed, the 330-character sentence that had been refused twice now quoted whole. Both were read by hand. **Order 4 is not done. Left: the gate and 4.3, then the full test before anything of Order 5.**
 
@@ -496,15 +496,27 @@ so.
 - **f562351** the record again: Item 7's entry, two dated lines, the
   header's counts.
 
+**After the merge, on `values`.** The owner stated both candidates'
+classifications — Alphabet Equity, Communication Services, share; Adobe
+Equity, Technology, share — and **7c1402d** put them on the record where
+the gate's session reads them. **0c94f04** wrote them into
+`docs/WATCHLIST.md` on the owner's word for the sentence: a preamble
+paragraph saying what the IPS check reads and why the three are mine to
+state, and a `Classification.` line under each candidate. **9648f0f**
+noted in the record that the document half had landed. `watchlist.toml`
+is deliberately untouched: nothing reads those fields until the loader
+does, and a value nothing consumes is not stored. **Nothing holds the
+document's classification to anything** until that loader's test, so a
+typo in it would go unnoticed today.
+
 **Spent on Sonnet:** about $0.12 on each of the two paid loops, the last
 runs at the old cost, and about $0.051 on the Item 7 request, that one an
 estimate. A run from here asks for no reading and proposes once, about
 $0.007.
 
 **Not done, on purpose.** The gate's Part, node and check and everything
-of 4.3; the watchlist's new fields and their sentence, which need the
-owner's word and come with the gate; Adobe's asset class, sector and
-instrument type, unstated; the loader's `author` and Part 15 F9; the seven emoji headers; decisions 51, 52 and
+of 4.3; `watchlist.toml`'s three fields and the loader that reads them,
+which come with the gate; the loader's `author` and Part 15 F9; the seven emoji headers; decisions 51, 52 and
 54; the currency; the philosophy topic lookup; the CIK confirmation;
 formulas for `operating_margin` and `free_cash_flow`; any change to the
 reading or the proposal prompts for faithfulness.
@@ -585,9 +597,9 @@ about margins available to cite, which the first ones did not.
 ## 7. Next steps, in order
 
 **1. The gate and 4.3**, every decision it waited on now taken (§5). In
-order: the watchlist's new fields, the sentence for `docs/WATCHLIST.md`
-brought for my word first and Adobe's three values asked for, then
-`watchlist.toml` and the loader; the Part that computes a candidate at a
+order: `watchlist.toml`'s three fields per candidate, the loader that
+reads them and refuses a candidate missing one, and the test that holds
+the config's words to the sentence `docs/WATCHLIST.md` already carries; the Part that computes a candidate at a
 stated weight by hand, with decision 68's truth table and decision 64's
 funding; the gate node and the test that no outcome prints without its
 block; `check_4_3`'s prediction requirement rewritten to decision 69;
