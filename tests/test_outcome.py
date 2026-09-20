@@ -12,15 +12,17 @@ code's own output.
 
 Beyond the table: an input that is absent does not permit and is named,
 which is the not-established case and is the live one on Alphabet; the
-statuses the screen and the gate are judged by are the words their own
-modules define; `exempt` is clear and `breach` is not; the view can only
-take away; and `grounds` is empty exactly when an entry is supported.
+gate's own verdict is read and not derived here, since `Gate.permits` is
+decision 68's rule and `tests/test_gate.py` holds it; the screen has no
+such field and is derived, by the statuses the screen itself defines; the
+view can only take away; and `grounds` is empty exactly when an entry is
+supported.
 """
 
 import pytest
 
 from portfolio_tool import outcome
-from portfolio_tool.compliance import BREACH, EXEMPT, OK, REFUSED
+from portfolio_tool.compliance import BREACH, EXEMPT, OK
 from portfolio_tool.entry import EntryCondition
 from portfolio_tool.screening import EXCLUDED, FAIL, PASS
 from portfolio_tool.thesis_view import ThesisView
@@ -37,9 +39,11 @@ def screen(clear=True):
 
 def gate(clear=True):
     """A gate block that permits, or one that fails IPS-3.1 the way this
-    portfolio's does at every weight."""
+    portfolio's does at every weight. `permits` is the gate's own verdict
+    and is what this module reads; the findings are here because a real
+    block carries them and the formatter prints them."""
     statuses = [OK, EXEMPT] if clear else [OK, BREACH]
-    return {"ticker": "GOOGL", "weight": 0.06,
+    return {"ticker": "GOOGL", "weight": 0.06, "permits": clear,
             "findings": [{"clause": f"IPS-3.{n}", "status": s}
                          for n, s in enumerate(statuses, start=1)]}
 
@@ -159,15 +163,24 @@ def test_stands_is_the_one_view_that_permits():
 
 # --- the statuses each policy check is judged by -------------------------------
 
-@pytest.mark.parametrize("status, clear", [(OK, True), (EXEMPT, True), (BREACH, False),
-                                           (REFUSED, False)])
-def test_a_gate_finding_is_clear_on_ok_and_exempt_and_on_nothing_else(status, clear):
-    """`exempt` is clear and is not `ok`: IPS-4.2 was applied to a fund and
-    does not attribute it to an issuer (Part 17 E)."""
-    block = {"findings": [{"clause": "IPS-4.1", "status": status}]}
-    result = outcome.compose(screen(), block, condition(), view())
-    assert result.supports_entry is clear
-    assert outcome.GATE_CLEAR == (OK, EXEMPT)
+@pytest.mark.parametrize("permits, clear", [(True, True), (False, False), (None, False),
+                                            ("yes", False)],
+                         ids=["true", "false", "none", "a string"])
+def test_the_gates_own_verdict_decides(permits, clear):
+    """`Gate.permits` is decision 68's rule over the gate's findings -
+    every finding ok or exempt - and `tests/test_gate.py` holds it. This
+    module reads the verdict; anything but True does not permit."""
+    block = {**gate(), "permits": permits}
+    assert outcome.compose(screen(), block, condition(), view()).supports_entry is clear
+
+
+def test_the_verdict_is_read_and_not_derived_from_the_findings():
+    """A block whose findings breach while `permits` is true cannot occur -
+    the gate computes one from the other. The test exists to say which
+    field decides, so that a version deriving the verdict here, a second
+    implementation of one rule, fails."""
+    block = {**gate(clear=False), "permits": True}
+    assert outcome.compose(screen(), block, condition(), view()).supports_entry is True
 
 
 @pytest.mark.parametrize("status, clear", [(PASS, True), (FAIL, False), (EXCLUDED, False)])
@@ -207,11 +220,11 @@ def test_a_screen_with_no_finding_does_not_permit(block):
 
 @pytest.mark.parametrize("block", [{"findings": []}, {"findings": None}, {}],
                          ids=["empty", "none", "absent"])
-def test_a_gate_with_no_finding_does_not_permit(block):
-    """The gate's own rule, and `check_4_3`'s: a gate that ran and found
-    nothing is no policy any clause allows (Part 17 D60). A gate that
-    could not run publishes no block at all and the guard stops the answer
-    before this is reached."""
+def test_a_gate_block_that_states_no_verdict_does_not_permit(block):
+    """A block with no `permits` is not a gate that ran: a gate that could
+    not run publishes no block at all and the guard stops the answer
+    before this is reached (decision 62). `check_4_3` asks separately that
+    a block carry findings, which is Part 17 D60's rule."""
     assert outcome.compose(screen(), block, condition(), view()).grounds == ("gate",)
 
 

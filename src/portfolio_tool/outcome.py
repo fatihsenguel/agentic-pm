@@ -22,24 +22,31 @@ short-circuiting: every input is judged whatever the first of them says,
 so row 13's grounds name the gate as well as the screen and the answer
 carries both policy checks' findings.
 
-The screen and the gate are judged by the rule `tests/benchmark/run_cases.py`
-asserts, so the check and the code agree by rule and not by luck, with one
-difference named here: a screen with no stop and no finding permits under
-the check, because `all()` over nothing is true, and does not permit here.
-A screen that computed no finding established nothing, and an input that
-established nothing never grants an entry. The difference cannot make the
-case fail, since it can only withhold one.
+**The gate's verdict is read, not recomputed.** `Gate.permits` is
+decision 68's rule over the gate's own findings and `gate_node` publishes
+it as `permits`; this module consumes it. `tests/benchmark/run_cases.py`
+derives the same thing from the findings, which makes the check an
+independent cross-check of the block rather than a second implementation
+inside the pipeline.
+
+The screen has no such field: nothing publishes whether it is clear, so
+it is derived here, in the one place that asks. It is derived by the rule
+`check_4_3` asserts, with one difference named here: a screen with no
+stop and no finding permits under the check, because `all()` over nothing
+is true, and does not permit here. A screen that computed no finding
+established nothing, and an input that established nothing never grants
+an entry. The difference cannot make the case fail, since it can only
+withhold one.
 """
 
 from dataclasses import dataclass
 from typing import Any, Mapping, Optional, Sequence, Tuple
 
-from portfolio_tool.compliance import EXEMPT, OK
 from portfolio_tool.entry import EntryCondition
 from portfolio_tool.screening import PASS
 from portfolio_tool.thesis_view import ThesisView
 
-__all__ = ["Outcome", "GROUNDS", "STANDS", "GATE_CLEAR", "compose"]
+__all__ = ["Outcome", "GROUNDS", "STANDS", "compose"]
 
 # The four inputs, in the order Part 17 H's columns stand and the grounds
 # are listed.
@@ -50,9 +57,6 @@ THESIS_VIEW = "thesis_view"
 GROUNDS = (SCREEN, GATE, ENTRY_CONDITION, THESIS_VIEW)
 # The one view that permits (decision 68).
 STANDS = "stands"
-# A gate finding that does not stand in the way. `exempt` is not `ok`: the
-# clause was applied and does not attribute the holding (Part 17 E).
-GATE_CLEAR = (OK, EXEMPT)
 
 
 @dataclass(frozen=True)
@@ -73,12 +77,13 @@ def _screen_permits(screen: Optional[Mapping[str, Any]]) -> bool:
 
 
 def _gate_permits(gate: Optional[Mapping[str, Any]]) -> bool:
-    if not isinstance(gate, Mapping):
-        return False
-    findings = gate.get("findings")
-    if not isinstance(findings, Sequence) or not findings:
-        return False
-    return all(isinstance(f, Mapping) and f.get("status") in GATE_CLEAR for f in findings)
+    """The gate's own verdict, read and not recomputed. `Gate.permits` is
+    decision 68's rule over the gate's findings - every finding ok or
+    exempt - `gate_node` publishes it on the block, and
+    `tests/test_gate.py` holds it. Deriving it again here would be a
+    second implementation of one rule, and the first version of this
+    module did exactly that."""
+    return isinstance(gate, Mapping) and gate.get("permits") is True
 
 
 def _condition_permits(condition: Optional[EntryCondition]) -> bool:
