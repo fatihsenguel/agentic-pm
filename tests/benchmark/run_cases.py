@@ -2231,12 +2231,20 @@ def _research_invariants(state, entry):
 # of the thesis from a closed set with claims as its reasons (the shape of
 # 18 September); the entry condition is the file's, and a valuation
 # condition is met when the screen's finding on its clause passes
-# (docs/WATCHLIST.md). What is not decided and so not asserted: the rule
-# that composes the outcome (decision 68), where the weight and the
-# candidate's asset class, sector and instrument type are stated (63, 65),
-# and how the purchase is funded (64). Of the outcome this check holds the
-# one thing no rule may break: it supports an entry only with both policy
-# checks complete and clear and my entry condition met.
+# (docs/WATCHLIST.md); and at least one prediction entered in the ledger
+# under the candidate is cited by id (decision 69).
+#
+# Decisions 63, 64, 65, 68 and 69 were taken on 20 September and the
+# paragraph that stood here called them open. What each one settled: the
+# candidate's asset class, sector and instrument type are stated on the
+# watchlist entry and the weight with them, so the gate's `weight_source`
+# names that entry; the purchase is funded by new money on top, which is
+# the gate's arithmetic and not this check's; the outcome's truth table is
+# Part 17 H's sixteen rows. **This check still holds one row of that
+# table** - the one no rule may break, that an entry is supported only
+# with both policy checks complete and clear and my entry condition met.
+# The other fifteen are held by nothing here, and a run that got one of
+# them wrong would pass.
 THESIS_VIEWS = {"stands", "strained", "no_view"}
 GATE_CLEAR = {"ok", "exempt"}
 
@@ -2248,10 +2256,17 @@ def _gate(state):
 def blocked_on_recommendation(state):
     """4.3 needs the research block with a judgement in it and the gate's
     block beside it. A policy check that stopped is a decision working and
-    not a defect, and the case stays blocked on it the way 4.1 does: the
-    screen on Alphabet's FY2021 (decision 48), the gate on what the
-    candidate's row and the watchlist entry do not yet state (decisions
-    63, 64 and 65)."""
+    not a defect, and the case stays blocked on it the way 4.1 does: on
+    this portfolio the screen stops at PHI-2.1 on Alphabet's FY2021
+    (decision 48), and the gate finds IPS-3.1 breached at every weight,
+    equity standing above its ceiling before any purchase (Part 17 D).
+
+    Reread 20 September, the gate being built: **the gate has no `stopped`
+    key**. A gate that cannot run publishes no block at all, so that the
+    guard refuses the answer rather than reading a stop out of a block
+    that says nothing; the branch that looked for one was asking about a
+    shape that does not exist. The reasons naming decisions 63, 64 and 65
+    as unstated went with it - the entry states all four now."""
     reason = blocked_on_research(state)
     if reason is not None:
         return reason
@@ -2260,16 +2275,13 @@ def blocked_on_recommendation(state):
                 f"about a position (asks {_research(state).get('asks')!r})")
     if not _gate(state):
         return ("no gate block in shared_data; an answer that implies a position passes "
-                "the IPS check before it is shown (DIRECTION.md invariant 2)")
-    stops = []
+                "the IPS check before it is shown (DIRECTION.md invariant 2), and a gate "
+                "that could not run publishes nothing")
     screen_stop = _screening(state).get("stopped")
     if screen_stop:
-        stops.append(f"the philosophy check stopped on {screen_stop.get('clause')}: "
-                     f"{screen_stop.get('reason')} (decision 48)")
-    gate_stop = _gate(state).get("stopped")
-    if gate_stop:
-        stops.append(f"the gate stopped: {gate_stop.get('reason')} (decisions 63, 64, 65)")
-    return "; ".join(stops) or None
+        return (f"the philosophy check stopped on {screen_stop.get('clause')}: "
+                f"{screen_stop.get('reason')} (decision 48)")
+    return None
 
 
 def check_4_3(state):
@@ -2277,27 +2289,30 @@ def check_4_3(state):
     judgement, with its reasons and its uncertainty as fields; the
     philosophy check by clause and the IPS check at a stated weight, both
     attached; a thesis, an entry condition and at least one dated
-    prediction; and no price target (benchmark.md Level 4).
+    prediction **entered in the ledger**; and no price target
+    (benchmark.md Level 4, decision 69).
 
     Asserted: everything 4.4 asserts of the subject, the thesis, the
-    readings and the predictions; the screening block's invariants, every
+    readings and the proposals; the screening block's invariants, every
     finding's PHI id in the answer; the gate's block for the same ticker,
     a weight in (0, 1] with the id of whatever states it, findings on IPS
     clauses in the compliance statuses, every IPS id, the weight and its
-    source in the answer; the judgement a view of the thesis from the
-    closed set, its reasons claims of the readings, an uncertainty, and
-    the answer calling it a judgement; the entry condition the file's, a
-    valuation condition met exactly when the screen's finding on its
+    source in the answer; at least one of the candidate's entered
+    prediction ids in the answer; the judgement a view of the thesis from
+    the closed set, its reasons claims of the readings, an uncertainty,
+    and the answer calling it a judgement; the entry condition the file's,
+    a valuation condition met exactly when the screen's finding on its
     clause passes; and the outcome supporting an entry only when the
-    screen has no stop and no failed or excluded finding, the gate has no
-    stop and every finding clear, and the entry condition is met.
+    screen has no stop and no failed or excluded finding, every gate
+    finding is clear, and the entry condition is met.
 
-    What this check cannot see: the rule that composes the outcome beyond
-    that one invariant (decision 68, not taken); whether the gate's
-    arithmetic is right, which is pytest's against its own Part once the
-    Part exists; who stated the weight, beyond an id being printed;
-    whether the judgement is any good, which is the ledger's; and
-    everything 4.4's check cannot see.
+    What this check cannot see: fifteen of the sixteen rows of decision
+    68's truth table, of which it holds the one no rule may break (Part 17
+    H); whether the gate's arithmetic is right, which is pytest's against
+    Part 17; who stated the weight, beyond an id being printed; whether
+    the entered prediction it finds has anything to do with the thesis the
+    answer argues; whether the judgement is any good, which is the
+    ledger's; and everything 4.4's check cannot see.
     """
     fails = _ran_clean(state)
     block = _research(state)
@@ -2339,8 +2354,12 @@ def check_4_3(state):
         elif str(source) not in answer:
             fails.append(f"the weight is stated on {source!r}, which never reaches the answer")
         findings = gate.get("findings") or []
-        if not findings and not gate.get("stopped"):
-            fails.append("the gate carries no finding and no stop")
+        if not findings:
+            # A gate that could not run publishes no block at all, so a
+            # block with no finding is a gate that ran and found nothing,
+            # which no policy allows: every clause has a finding or is
+            # named as not computed (Part 17 D60).
+            fails.append("the gate's block carries no finding")
         for f in findings:
             where = f"gate finding {f.get('clause')}"
             if not CLAUSE_ID.fullmatch(str(f.get("clause"))):
@@ -2350,6 +2369,21 @@ def check_4_3(state):
             if f.get("status") not in COMPLIANCE_STATUSES:
                 fails.append(f"{where}: status {f.get('status')!r} not in "
                              f"{sorted(COMPLIANCE_STATUSES)}")
+
+    # Decision 69: at least one prediction entered in the ledger under the
+    # candidate, mine or the system's, cited by id. A proposal made in the
+    # same run is printed beside it and marked proposed and not entered,
+    # which _proposed_predictions holds; the block's `predictions` list is
+    # the proposals alone, so an entered row is found in the file and
+    # looked for in the answer. A proposal does not satisfy the case:
+    # benchmark.md's words are "entered in the ledger", and the ledger is
+    # this level's eval set. W-1.1 and W-1.2 satisfy it today.
+    cited = sorted(pid for pid in entry["predictions"] if pid in answer)
+    if not cited:
+        fails.append(
+            f"no prediction entered in the ledger under {entry['id']} is cited by id; "
+            f"watchlist.toml carries {sorted(entry['predictions'])} and none reaches the "
+            "answer. A prediction proposed in this run is not an entry (decision 69)")
 
     # The judgement, marked as judgement, its reasons and uncertainty fields.
     judgement = block.get("judgement") or {}
@@ -2396,7 +2430,7 @@ def check_4_3(state):
     elif supports:
         screen_clear = (bool(screen) and not screen.get("stopped") and all(
             f.get("status") == "pass" for f in screen.get("findings") or []))
-        gate_clear = (bool(gate) and not gate.get("stopped") and bool(gate.get("findings"))
+        gate_clear = (bool(gate) and bool(gate.get("findings"))
                       and all(f.get("status") in GATE_CLEAR for f in gate["findings"]))
         if not (screen_clear and gate_clear and met is True):
             fails.append("the outcome supports an entry while "
