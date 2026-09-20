@@ -8,7 +8,8 @@ currency and status, and its valuation table, the growth I assume for it
 as a low and a high; since case 4.5 the prediction rows too, held in
 test_watchlist_predictions_loader.py; since case 4.4 the thesis, as
 written, for the research agent; and, for the gate, its asset class,
-sector and instrument type (decision 63). What it leaves alone: the entry
+sector and instrument type (decision 63) and the weight it states, if it
+states one (decisions 64 and 65). What it leaves alone: the entry
 condition and added_on, read by nothing. What it refuses: a
 missing file with no default, a top-level key nothing reads, a candidate
 lacking a field, two candidates with one id or one ticker, a valuation
@@ -225,6 +226,53 @@ def test_the_prediction_rows_are_read_and_the_rest_left_alone(load):
     assert [p.id for p in wl.candidates["W-1"].predictions] == ["W-1.1"]
     for field in ("entry_condition", "added_on"):
         assert not hasattr(wl.candidates["W-1"], field), field
+
+
+# --- the weight -------------------------------------------------------------------
+
+def test_the_committed_weight_is_w1s_and_w2_states_none(watchlist):
+    """Decisions 64 and 65: W-1 states 6% and W-2 states nothing, the
+    growth pair's shape. A weight is a size I decided, not a fact about
+    the instrument, so a candidate without one is a candidate and not an
+    error."""
+    wl = watchlist.load_watchlist("watchlist.toml")
+    assert wl.candidates["W-1"].weight == 0.06
+    assert wl.candidates["W-2"].weight is None
+
+
+def test_position_weight_carries_the_entry_as_source(watchlist):
+    wl = watchlist.load_watchlist("watchlist.toml")
+    assert watchlist.position_weight(wl, "GOOGL") == {"value": 0.06, "source": "W-1"}
+
+
+def test_a_candidate_stating_no_weight_stops_naming_it(watchlist):
+    wl = watchlist.load_watchlist("watchlist.toml")
+    with pytest.raises(watchlist.WatchlistError, match=r"W-2 \(ADBE\) states no weight"):
+        watchlist.position_weight(wl, "ADBE")
+
+
+def test_a_ticker_not_on_the_list_has_no_weight(watchlist):
+    wl = watchlist.load_watchlist("watchlist.toml")
+    with pytest.raises(watchlist.WatchlistError, match="JPM is not on the watchlist"):
+        watchlist.position_weight(wl, "JPM")
+
+
+@pytest.mark.parametrize("value", ['"0.06"', "true", "6", "0.0", "1.0", "1.5", "-0.06"],
+                         ids=["a string", "a bool", "a percentage", "zero", "one",
+                              "above one", "negative"])
+def test_a_weight_that_is_no_fraction_is_refused(load, watchlist, value):
+    """Strictly inside (0, 1). Zero is not a position, and at 1 decision
+    64's funding asks for an infinite amount of new money. Zero and one
+    are written as floats: as TOML integers the type check would refuse
+    them first and neither bound would be exercised."""
+    with pytest.raises(watchlist.WatchlistError,
+                       match=r"weight = .* is not a fraction above 0 and below 1"):
+        load(W1.replace('thesis = "A thesis."', f'thesis = "A thesis."\nweight = {value}'))
+
+
+def test_a_weight_is_read_onto_the_candidate(load):
+    wl = load(W1.replace('thesis = "A thesis."', 'thesis = "A thesis."\nweight = 0.15'))
+    assert wl.candidates["W-1"].weight == 0.15
 
 
 # --- the classification ----------------------------------------------------------

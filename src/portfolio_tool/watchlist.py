@@ -7,7 +7,8 @@ What this reads: each candidate's id, ticker, name, currency and status;
 its asset class, sector and instrument type, the three the IPS check reads
 about the instrument itself (decision 63); its thesis, as written, for the
 research agent (case 4.4, PHI-6.1); its valuation table, `growth_low` and
-`growth_high`, both or neither; and its prediction rows (case 4.5, Part
+`growth_high`, both or neither; the weight it states, if it states one
+(decisions 64 and 65); and its prediction rows (case 4.5, Part
 14): id, made_on, due, kind and statement; a figure prediction's metric,
 bound, value and period; and the score I wrote, all four fields or none.
 What it leaves alone: the entry condition, added_on and the philosophy
@@ -36,7 +37,7 @@ import tomli
 from portfolio_tool.clauses import resolve_path
 
 __all__ = ["Candidate", "Prediction", "Score", "Watchlist", "WatchlistError",
-           "load_watchlist", "growth_pair", "predictions",
+           "load_watchlist", "growth_pair", "position_weight", "predictions",
            "CANDIDATE_ID", "PREDICTION_ID", "STATUSES", "KINDS", "BOUNDS", "RESULTS"]
 
 CANDIDATE_ID = re.compile(r"^W-\d+$")
@@ -105,6 +106,7 @@ class Candidate:
     status: str
     thesis: str
     growth: Optional[Mapping[str, float]] = None
+    weight: Optional[float] = None
     predictions: Tuple[Prediction, ...] = ()
 
 
@@ -202,6 +204,22 @@ def _parse_candidate(entry: Mapping[str, Any], n: int) -> Candidate:
                                      "12% is written 0.12.")
         growth = MappingProxyType({key: table[key] for key in GROWTH})
 
+    weight = None
+    if "weight" in entry:
+        value = entry["weight"]
+        # A number, and strictly inside (0, 1): a purchase of nothing is
+        # not a position, and at a weight of 1 the funding decision 64
+        # states - new money on top - asks for an infinite amount,
+        # w x T / (1 - w). The type check is what refuses a string
+        # cleanly; whether it admits integers is moot, since no integer
+        # lies strictly inside (0, 1), and it is `_is_number` so that this
+        # file states the idea once.
+        if not _is_number(value) or not 0 < value < 1:
+            raise WatchlistError(f"{where}: weight = {value!r} is not a fraction above 0 and "
+                                 "below 1; 6% is written 0.06, and a weight of 1 would be "
+                                 "the whole portfolio after a purchase funded by new money.")
+        weight = value
+
     rows = entry.get("prediction", [])
     if not isinstance(rows, list):
         raise WatchlistError(f"{where}: prediction is not a list of [[candidate.prediction]] rows.")
@@ -211,7 +229,7 @@ def _parse_candidate(entry: Mapping[str, Any], n: int) -> Candidate:
                      currency=entry["currency"], asset_class=entry["asset_class"],
                      sector=entry["sector"], instrument_type=entry["instrument_type"],
                      status=entry["status"], thesis=entry["thesis"], growth=growth,
-                     predictions=predictions)
+                     weight=weight, predictions=predictions)
 
 
 def _is_number(value: Any) -> bool:
@@ -317,3 +335,17 @@ def growth_pair(watchlist: Watchlist, ticker: str) -> Dict[str, Dict[str, object
                              "a candidate under a valuation condition states the growth I "
                              "assume for it, and until it does it has no range.")
     return {key: {"value": candidate.growth[key], "source": candidate.id} for key in GROWTH}
+
+
+def position_weight(watchlist: Watchlist, ticker: str) -> Dict[str, object]:
+    """The weight the candidate with `ticker` states, as its value and the
+    entry's id as its source - what the gate publishes as `weight` and
+    `weight_source` (decision 65). A candidate that states none raises
+    naming it: the size of a position is mine to decide, and a candidate I
+    have not decided a size for has no check at a weight."""
+    candidate = watchlist.by_ticker(ticker)
+    if candidate.weight is None:
+        raise WatchlistError(f"{candidate.id} ({ticker}) states no weight; the IPS check at a "
+                             "stated weight reads the weight from the entry, and a candidate "
+                             "states one when I have decided the size and not before.")
+    return {"value": candidate.weight, "source": candidate.id}
