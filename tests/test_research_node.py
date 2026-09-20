@@ -1,12 +1,13 @@
 """
 research_agent_node over a synthetic state: what it publishes, what it
-asks for and in what order, and what it refuses (case 4.4; decisions 60,
-66 and 67; expected_values.md Part 15 D47 to D50 and F, Part 16).
+asks for and in what order, and what it refuses (cases 4.3 and 4.4;
+decisions 60, 61, 65, 66, 67 and 68; expected_values.md Part 15 D47 to
+D50, F and G, Part 16, Part 17).
 
 No LLM, no network. The filings provider is test_screening_node's
 stand-in, answering from the record, given the two methods the store asks,
-the listing's row and tests/golden/edgar_document_goog_excerpt.htm. Both
-models are stand-ins that record what they are sent. Runs against
+the listing's row and tests/golden/edgar_document_goog_excerpt.htm. All
+three models are stand-ins that record what they are sent. Runs against
 conftest's copy of the database: Alphabet's facts are written through the
 store from the fixture's rows, and its stored document and readings are
 removed, before and after each test, so every row read here is one this
@@ -14,9 +15,18 @@ file wrote.
 
 What the node decides:
 
-  - it answers `asks` = "thesis" and nothing else; "position" is refused
-    as not built; it requires the screening block and answers on its
-    subject, filer, as-of and source; the screen's stop does not stop it
+  - it answers `asks` "thesis" and "position" and nothing else; it
+    requires the screening block and answers on its subject, filer, as-of
+    and source; the screen's stop does not stop it
+  - a position question adds the weight and its source, my entry
+    condition and the model's view, and **no outcome**: the gate holds
+    the fourth input and composes it after this node
+  - a thesis question adds none of them and pays for no view
+  - the entry condition follows the screen's finding on its clause, and
+    is not established when the screen reported none
+  - the view's request carries the proposer's message and its own prompt;
+    a view or a condition refused is recorded and the answer stands, and
+    a candidate stating no weight is the node's error
   - the thesis is the watchlist's, word for word
   - Items 1, 1A and 7 are read in order, one request each, and cached; the
     proposal is asked once with the proposer's message over those readings
@@ -61,6 +71,12 @@ CLAIMS = {
                 "uncertainty": "stated"}],
 }
 FIGURE = {"kind": "figure", "metric": "gross_margin", "bound": "min", "reasons": ["1A.2"]}
+VIEW = {"thesis_view": "stands", "reasons": ["1A.2"], "uncertainty": "inferred"}
+# What a position question adds (case 4.3, Part 15 G, Part 17).
+POSITION_KEYS = {"weight", "weight_source", "entry_condition", "entry_condition_stopped",
+                 "judgement", "view_stopped"}
+PASSES = {"clause": "PHI-4.1", "type": "margin_of_safety", "subject": "GOOGL",
+          "status": "pass", "distance": -0.1}
 
 
 class Reader:
@@ -93,6 +109,23 @@ class Proposer:
 
     def propose(self, prompt, schema, text):
         self.asked.append((prompt, schema, text))
+        return dict(self.answer)
+
+
+class Viewer:
+    """Answers one fixed view of the thesis and records every request."""
+
+    id = "stand-in-viewer"
+
+    def __init__(self, answer=VIEW, error=None):
+        self.answer = answer
+        self.error = error
+        self.asked = []
+
+    def view(self, prompt, schema, text):
+        self.asked.append((prompt, schema, text))
+        if self.error is not None:
+            raise self.error
         return dict(self.answer)
 
 
@@ -137,9 +170,10 @@ def edgar(provider):
 
 @pytest.fixture
 def models(monkeypatch):
-    chosen = {"reader": Reader(), "proposer": Proposer()}
+    chosen = {"reader": Reader(), "proposer": Proposer(), "viewer": Viewer()}
     monkeypatch.setattr(nodes, "reading_model", lambda: chosen["reader"])
     monkeypatch.setattr(nodes, "proposal_model", lambda: chosen["proposer"])
+    monkeypatch.setattr(nodes, "view_model", lambda: chosen["viewer"])
     return chosen
 
 
@@ -294,12 +328,14 @@ async def test_a_proposal_refused_is_published_as_stopped(edgar, models):
     assert len(research["readings"]) == 3 and len(models["proposer"].asked) == 1
 
 
-@pytest.mark.parametrize("asks, reason", [("position", "what is missing is this node's half"),
-                                          (None, "it answers 'thesis'")])
-async def test_anything_but_a_thesis_question_is_refused(edgar, models, asks, reason):
+@pytest.mark.parametrize("asks", [None, "", "value", "sell"])
+async def test_anything_but_the_two_asks_is_refused(edgar, models, asks):
+    """Decision 66: extraction sets `asks` from a closed pattern, and the
+    node answers the two it names. "position" left this list when case
+    4.3's half was built; its own tests are below."""
     out = await nodes.research_agent_node(state(asks=asks))
     assert "research" not in out.get("shared_data", {})
-    assert reason in out["errors"][-1]
+    assert "it answers thesis and position" in out["errors"][-1]
     assert models["reader"].requests == [] and edgar.calls == []
 
 
@@ -339,3 +375,142 @@ async def test_nothing_is_opened_for_writing(edgar, models, monkeypatch):
     monkeypatch.setattr(builtins, "open", recording)
     await nodes.research_agent_node(state())
     assert [m for m in modes if set(m[1]) & set("wax+")] == []
+
+
+# --- a position question: case 4.3's three inputs ---------------------------------
+
+async def test_a_position_question_adds_the_three_and_no_outcome(edgar, models):
+    """The block is the thesis question's plus the weight and its source,
+    the entry condition and the judgement, each with its stop. **No
+    outcome**: the gate holds the fourth input and composes it after this
+    node (decision 68)."""
+    out = await nodes.research_agent_node(state(asks="position"))
+    assert not out.get("errors")
+    research = _research(out)
+    assert set(research) == BLOCK_KEYS | POSITION_KEYS
+    assert research["asks"] == "position"
+    assert "outcome" not in research
+
+
+async def test_a_thesis_question_adds_none_of_them_and_asks_no_view(edgar, models):
+    """A thesis question implies no position, so it neither carries the
+    fields nor pays for the view's request."""
+    research = _research(await nodes.research_agent_node(state()))
+    assert set(research) & POSITION_KEYS == set()
+    assert models["viewer"].asked == []
+
+
+async def test_the_weight_and_its_source_are_the_entrys(edgar, models):
+    """Decision 65, and the same function the gate reads them with, so
+    require_gate holds the two equal."""
+    research = _research(await nodes.research_agent_node(state(asks="position")))
+    assert research["weight"] == 0.06
+    assert research["weight_source"] == "W-1"
+
+
+async def test_a_candidate_stating_no_weight_is_the_nodes_error(edgar, models, monkeypatch,
+                                                                tmp_path):
+    """A position question about a candidate whose size I have not decided
+    cannot be answered: the weight is mine to state and nothing defaults
+    it (decision 65)."""
+    path = tmp_path / "watchlist.toml"
+    path.write_text('[[candidate]]\nid = "W-1"\nticker = "GOOGL"\nname = "Alphabet"\n'
+                    'currency = "USD"\nasset_class = "Equity"\n'
+                    'sector = "Communication Services"\ninstrument_type = "share"\n'
+                    'status = "active"\nthesis = "A thesis."\n'
+                    '\n[candidate.entry_condition]\nkind = "valuation"\n'
+                    'clause = "PHI-4.1"\n')
+    monkeypatch.setattr(nodes, "WATCHLIST_PATH", str(path))
+    out = await nodes.research_agent_node(state(asks="position"))
+    assert "research" not in out.get("shared_data", {})
+    assert "states no weight" in out["errors"][-1]
+
+
+# --- the entry condition ----------------------------------------------------------
+
+async def test_a_stopped_screen_leaves_the_condition_not_established(edgar, models):
+    """The live shape on Alphabet: the screen stops at PHI-2.1 and reports
+    a finding on no clause, so there is no verdict on PHI-4.1 to read
+    (Part 17 I's note). None, and not False."""
+    research = _research(await nodes.research_agent_node(state(asks="position")))
+    assert research["entry_condition"] == {"kind": "valuation", "clause": "PHI-4.1",
+                                           "met": None}
+    assert research["entry_condition_stopped"] is None
+
+
+@pytest.mark.parametrize("status, met", [("pass", True), ("fail", False)])
+async def test_the_condition_follows_the_screens_finding_on_its_clause(edgar, models,
+                                                                       status, met):
+    screen = screened(stopped=None, findings=[{**PASSES, "status": status}])
+    research = _research(await nodes.research_agent_node(state(asks="position",
+                                                              screening=screen)))
+    assert research["entry_condition"]["met"] is met
+
+
+async def test_an_event_condition_is_stopped_and_the_answer_stands(edgar, models,
+                                                                   monkeypatch, tmp_path):
+    """The stop is recorded, not raised: the rest of the answer holds and
+    the outcome reads the condition as not permitting."""
+    path = tmp_path / "watchlist.toml"
+    path.write_text('[[candidate]]\nid = "W-1"\nticker = "GOOGL"\nname = "Alphabet"\n'
+                    'currency = "USD"\nasset_class = "Equity"\n'
+                    'sector = "Communication Services"\ninstrument_type = "share"\n'
+                    'status = "active"\nthesis = "A thesis."\nweight = 0.06\n'
+                    '\n[candidate.entry_condition]\nkind = "event"\n'
+                    'event = "the cloud segment turns a full-year profit"\n')
+    monkeypatch.setattr(nodes, "WATCHLIST_PATH", str(path))
+    out = await nodes.research_agent_node(state(asks="position"))
+    assert not out.get("errors")
+    research = _research(out)
+    assert research["entry_condition"] is None
+    assert "'event' is not one this reads" in research["entry_condition_stopped"]
+    assert research["judgement"] == VIEW
+
+
+# --- the model's view -------------------------------------------------------------
+
+async def test_the_view_is_the_models_and_is_asked_once(edgar, models):
+    research = _research(await nodes.research_agent_node(state(asks="position")))
+    assert research["judgement"] == VIEW
+    assert research["view_stopped"] is None
+    assert len(models["viewer"].asked) == 1
+    assert research["models"] == {"reading": "stand-in-reader",
+                                  "proposal": "stand-in-proposer",
+                                  "view": "stand-in-viewer"}
+
+
+async def test_the_view_and_the_proposal_are_sent_one_message(edgar, models):
+    """Both requests carry `proposer.message` over the same thesis and the
+    same claims, so the view and the prediction rest on one string."""
+    await nodes.research_agent_node(state(asks="position"))
+    assert models["viewer"].asked[0][2] == models["proposer"].asked[0][2]
+    assert models["viewer"].asked[0][0] != models["proposer"].asked[0][0]
+
+
+async def test_a_refused_view_is_stopped_and_the_answer_stands(edgar, models):
+    """Part 15 G: a view that could not be built leaves `view_stopped`
+    beside no view; the answer prints and says what it could not
+    establish, and check_4_3 reads the case as blocked."""
+    models["viewer"] = Viewer(answer={"thesis_view": "holds", "reasons": [],
+                                      "uncertainty": "stated"})
+    out = await nodes.research_agent_node(state(asks="position"))
+    assert not out.get("errors")
+    research = _research(out)
+    assert research["judgement"] is None
+    assert "'holds' is not one of" in research["view_stopped"]
+    assert research["predictions"] != []
+
+
+async def test_the_models_own_refusal_is_recorded_and_not_raised(edgar, models):
+    from agents.view_model import ViewModelError
+    models["viewer"] = Viewer(error=ViewModelError("the model stopped on 'max_tokens'"))
+    out = await nodes.research_agent_node(state(asks="position"))
+    assert not out.get("errors")
+    assert "max_tokens" in _research(out)["view_stopped"]
+
+
+async def test_a_reason_that_is_no_claim_of_the_readings_refuses_the_view(edgar, models):
+    models["viewer"] = Viewer(answer={**VIEW, "reasons": ["9.9"]})
+    research = _research(await nodes.research_agent_node(state(asks="position")))
+    assert research["judgement"] is None
+    assert "'9.9' is no claim" in research["view_stopped"]

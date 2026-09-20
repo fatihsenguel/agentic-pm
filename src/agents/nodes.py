@@ -1722,16 +1722,108 @@ def proposal_model():
     return model()
 
 
+def view_model():
+    """The model the view of a thesis is given by (decision 67, D61). Its
+    own request and not the proposal's, so a refused view does not sink a
+    prediction and case 4.4 does not depend on a field it never reads. A
+    function so that a test stands in a model that answers from the
+    record."""
+    from agents.view_model import view_model as model
+    return model()
+
+
+# What a research question asks (decision 66), set by extraction from a
+# closed pattern and never by the model.
+THESIS = "thesis"
+POSITION = "position"
+ASKS = (THESIS, POSITION)
+
+
+def _position(candidate, readings, screening, models, agent_ctx):
+    """What a position question adds to the research block beyond a thesis
+    question's (case 4.3; decisions 61, 65 and 68; Part 15 G, Part 17).
+
+    Three of decision 68's four inputs; the fourth is the gate's, which
+    runs after this node, and the outcome is composed there from all four.
+
+    - **The weight and its source**, read by `watchlist.position_weight`,
+      the same function the gate reads them with, so the two cannot
+      disagree and `require_gate` holds them equal. A candidate that
+      states no weight raises and the answer refuses: the size is mine to
+      decide and one I have not decided has no check (decision 65).
+    - **My entry condition** against the screen's finding on its clause.
+      `met` is None when the screen reported no finding on it, which is
+      what a stopped screen looks like and is the live case on Alphabet
+      (Part 17 I's note). An `event` condition stops, and the stop is
+      recorded rather than raised: the rest of the answer stands and the
+      outcome reads the condition as not permitting.
+    - **The model's view of the thesis**, one paid request of its own over
+      the same message the proposal used. A refusal is recorded as
+      `view_stopped` beside no view, the shape a refused proposal has
+      (Part 15 G): the answer prints and says what it could not establish,
+      and `check_4_3` reads the case as blocked, since a well-formed
+      answer carries the view.
+    """
+    from contextlib import nullcontext
+
+    from portfolio_tool import entry, thesis_view
+    from portfolio_tool.entry import EntryError
+    from portfolio_tool.thesis_view import ThesisViewError
+    from portfolio_tool.watchlist import load_watchlist, position_weight
+
+    from agents.view_model import ViewModelError
+
+    stated = position_weight(load_watchlist(WATCHLIST_PATH), candidate.ticker)
+    print(f"  at {stated['value']:.2%}, stated by {stated['source']}")
+
+    condition, condition_stopped = None, None
+    try:
+        condition = entry.read(candidate.entry_condition, screening.get("findings") or [])
+        print(f"  {condition.clause}: met {condition.met}")
+    except EntryError as e:
+        condition_stopped = str(e)
+        print(f"  the entry condition was not read: {e}")
+
+    view_m = view_model()
+    view, view_stopped = None, None
+    with (agent_ctx.trace_tool("view_thesis") if agent_ctx else nullcontext()) as tool_ctx:
+        if tool_ctx:
+            tool_ctx.set_input({"candidate": candidate.id, "readings": len(readings)})
+        try:
+            view = thesis_view.ask(view_m, candidate.thesis, readings)
+            print(f"  the thesis {view.thesis_view}, {view.uncertainty}, on "
+                  f"{', '.join(view.reasons) or 'no claim'}")
+        except (ThesisViewError, ViewModelError) as e:
+            view_stopped = str(e)
+            print(f"  no view of the thesis: {e}")
+        if tool_ctx:
+            tool_ctx.set_output({"view": view.thesis_view if view else None,
+                                 "stopped": view_stopped})
+
+    return {
+        "weight": stated["value"],
+        "weight_source": stated["source"],
+        "entry_condition": _plain(condition) if condition is not None else None,
+        "entry_condition_stopped": condition_stopped,
+        "judgement": _plain(view) if view is not None else None,
+        "view_stopped": view_stopped,
+        "models": {**models, "view": view_m.id},
+    }
+
+
 async def research_agent_node(state: AgentState) -> Dict[str, Any]:
     """
     Research Agent node - what has to be true for a candidate's thesis to
-    have been right, read against the latest annual report (case 4.4;
-    decisions 60, 66 and 67; Part 15 D47 to D50 and F, D58; Part 16).
+    have been right, read against the latest annual report (case 4.4), and
+    whether to buy it (case 4.3); decisions 60, 61, 65, 66, 67 and 68;
+    Part 15 D47 to D50, F and G; Part 16; Part 17.
 
-    Answers `asks` = "thesis" and nothing else; "position" is case 4.3,
-    whose gate is built and whose half of the answer - the model's view,
-    the weight, the entry condition and the outcome - is not. It refuses
-    that question rather than answering part of it.
+    Answers `asks` "thesis" and "position" and nothing else. A thesis
+    question and a position question share the subject, the thesis, the
+    readings and the proposal; a position question adds the weight and its
+    source, my entry condition and the model's view, which `_position`
+    reads. The outcome decision 68 composes from those three and the gate
+    is the gate node's, which runs after this one.
 
     Requires the screen (decision 66): the subject,
     its CIK, the as-of and the figures' source are the screening block's,
@@ -1742,21 +1834,30 @@ async def research_agent_node(state: AgentState) -> Dict[str, Any]:
     written; the reader for Item 1, Item 1A and Item 7 through the EDGAR
     provider and the reading model; the figures the screen stored, read
     back with filed_years_for and fetching nothing; one proposal through
-    the proposer and the frame.
+    the proposer and the frame; and, for a position question only, one
+    view through the view model.
 
     A refusal about the filing or its document puts every section not yet
     read in `not_read` with that reason, and nothing more is asked; a
     refusal about one section puts that section there and the next is read.
-    A proposal refused is `proposal_stopped`, beside an empty list. Nothing
-    is retried, and anything else is this node's error.
+    A proposal refused is `proposal_stopped`, beside an empty list; a view
+    refused is `view_stopped` and an entry condition not read is
+    `entry_condition_stopped`, each beside no record. Nothing is retried,
+    and anything else is this node's error - a candidate that states no
+    weight among them, since a position question about one cannot be
+    answered at a weight nobody stated.
 
     Publishes `shared_data["research"]`, the shape tests/benchmark/run_cases.py
     holds it to: what was asked, the subject with its candidate id, the
-    as-of, the thesis with its candidate, the two models' ids, the readings
+    as-of, the thesis with its candidate, the models' ids, the readings
     as records, the sections not read with their reasons, the proposed
-    predictions and `proposal_stopped`. No section text beyond a claim's
-    quote and no filed figure beyond a proposal's value. Nothing is written
-    to the watchlist or the ledger; the synthesizer formats.
+    predictions and `proposal_stopped`; and for a position question the
+    weight and its source, the entry condition and the judgement, each
+    with its stop. No section text beyond a claim's quote and no filed
+    figure beyond a proposal's value. **No outcome**: that is composed in
+    the gate node, which runs after this one and holds the fourth input.
+    Nothing is written to the watchlist or the ledger; the synthesizer
+    formats.
     """
     tracer = get_tracer()
     agent_ctx = None
@@ -1801,18 +1902,10 @@ async def research_agent_node(state: AgentState) -> Dict[str, Any]:
 
         params = (state.get("router_decision") or {}).get("parameters") or {}
         asks = params.get("asks")
-        if asks == "position":
+        if asks not in ASKS:
             raise DataCalculationError(
-                "Whether to buy a candidate (case 4.3) is not answered yet. The gate is built "
-                "and is on the edge into the synthesizer, and what is missing is this node's "
-                "half: the model's view of the thesis, the weight the answer is about, my "
-                "entry condition read against the screen, and the outcome composed from the "
-                "four (decision 68). This node answers what has to be true for a thesis to "
-                "be right.")
-        if asks != "thesis":
-            raise DataCalculationError(
-                f"The research agent is asked {asks!r}; it answers 'thesis', what has to be "
-                "true for a candidate's thesis to be right.")
+                f"The research agent is asked {asks!r}; it answers {' and '.join(ASKS)} "
+                "(decision 66).")
 
         screening = (state.get("shared_data") or {}).get("screening")
         if not screening:
@@ -1884,6 +1977,10 @@ async def research_agent_node(state: AgentState) -> Dict[str, Any]:
             "predictions": predictions,
             "proposal_stopped": proposal_stopped,
         }
+
+        if asks == POSITION:
+            research.update(_position(candidate, readings, screening,
+                                      research["models"], agent_ctx))
         out = {"success": True, "agent_name": "ResearchAgent", "research": research}
         return {
             **mark_agent_complete(state, "ResearchAgent", out),
