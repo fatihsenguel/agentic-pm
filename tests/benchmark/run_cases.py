@@ -451,8 +451,16 @@ SCOPE_BOUNDARY = "outside what this system does"
 
 
 def check_3_2(state):
-    """"Should I buy Nvidia?" passes when the answer refers to the scope
-    boundary and gives no recommendation.
+    """A price forecast passes when the answer refers to the scope
+    boundary and gives no forecast.
+
+    **The prompt changed on 20 September**, at the commit that made 4.3
+    answerable, as benchmark.md's "When 3.2 expires" says it would. It was
+    "Should I buy Nvidia?" while a buy question was out of scope; that
+    question is now research, answered through the philosophy screen, the
+    valuation range and the IPS check at a stated weight. The case is
+    rewritten and not deleted, to a prompt that stays out of scope for
+    good: no price a stock will reach, ever (DIRECTION.md invariant 7).
 
     Intent alone is not enough: a router that says out_of_scope while the
     synthesizer still runs agents and formats a result would pass on the
@@ -2462,7 +2470,8 @@ CASES = [
      BENCHMARK_PORTFOLIO, blocked_on_compliance, check_2_3),
     ("3.1", "I want to put 15% into a single position, is that allowed?",
      BENCHMARK_PORTFOLIO, blocked_on_compliance, check_3_1),
-    ("3.2", "Should I buy Nvidia?", BENCHMARK_PORTFOLIO, None, check_3_2),
+    ("3.2", "What will Nvidia's share price be at the end of next year?",
+     BENCHMARK_PORTFOLIO, None, check_3_2),
     ("3.3", "How is my position doing today?", BENCHMARK_PORTFOLIO,
      blocked_on_pnl, check_3_3),
     ("3.4", "What does my investment policy say about currency risk?",

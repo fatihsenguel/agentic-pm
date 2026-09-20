@@ -98,8 +98,12 @@ User: "Portfolio"
 → intent: "clarification_needed", clarification_question: "Was möchten Sie mit Ihrem Portfolio tun? Optimieren, analysieren, oder rebalancen?"
 
 User: "Lohnt es sich, jetzt in Siemens einzusteigen?"
+→ intent: "research", confidence: 0.9
+   Reasoning: Asks whether to buy one named company. That is answered through the philosophy screen, the valuation range and the policy check at the weight written down - not as an opinion and not as a price target.
+
+User: "Soll ich meine Siemens-Position verkaufen?"
 → intent: "out_of_scope", confidence: 0.95
-   Reasoning: Asks whether to own a security; the system makes no such judgement.
+   Reasoning: Whether to sell something already owned is a judgement the system does not make.
 
 User: "Darf ich 20% in eine einzelne Aktie stecken?" (active portfolio)
 → intent: "compliance", confidence: 0.9

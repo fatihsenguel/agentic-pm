@@ -1411,6 +1411,24 @@ async def screening_agent_node(state: AgentState) -> Dict[str, Any]:
             )
         ticker = tickers[0]
 
+        # A position question is about a candidate I wrote down: the gate
+        # checks it at the weight that entry states, and the research
+        # agent reads it against that entry's thesis. A company that is on
+        # no entry has neither, so the refusal belongs here, before the
+        # first call to EDGAR - the screen would otherwise fetch a filer's
+        # submissions and facts to discover what the watchlist says in a
+        # lookup. A philosophy check is not narrowed this way: case 4.6
+        # screens JPM, which is held and is on no entry.
+        if params.get("asks") == "position":
+            try:
+                load_watchlist(WATCHLIST_PATH).by_ticker(ticker)
+            except WatchlistError as e:
+                raise DataCalculationError(
+                    f"{ticker} is not a candidate on the watchlist, so there is no entry "
+                    "stating a weight to check it at and no thesis to read it against. "
+                    f"Whether to buy it is not answered here.\n{e}"
+                )
+
         philosophy = load_philosophy(PHILOSOPHY_PATH)
         print(f"  philosophy: {philosophy.path}")
         provider = edgar_provider()
