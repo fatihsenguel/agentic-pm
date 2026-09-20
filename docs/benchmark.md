@@ -356,6 +356,46 @@ the last session's Item 7 answer made. What a pass means does not change:
 it is a well-formed answer, and whether a quote supports its claim is
 still checked by nothing.*
 
+**Status note, 20 September 2026 (twenty-ninth session).** Still 16/18, and
+two of the eighteen are not the same two questions they were. **3.2 passes
+on a new prompt**, a price forecast, sighted for the first time on this
+run: the case it used to be, "Should I buy Nvidia?", is a question the
+system now answers, so the case was rewritten rather than deleted and
+tests a boundary that will not move again (Part 2). **4.3 is blocked at a
+new place.** It stopped at `out_of_scope` for four sessions; it now routes
+to research, derives the plan `['DataAgent', 'PortfolioAnalysisAgent',
+'ScreeningAgent', 'ResearchAgent']`, screens Alphabet, and stops at the
+research agent, whose half of the answer is not built - the model's view
+of the thesis, the weight the answer is about, my entry condition read
+against the screen, and the outcome composed from the four (decision 68).
+The refusal says which of those is missing.
+
+**The gate is built**, which is what moved both. `portfolio_tool/gate.py`
+applies the IPS to the portfolio as it would be with the candidate bought
+at the weight its watchlist entry states, funded by new money on top
+(decision 64), and it is not a second checker: it builds the allocation
+and hands it to `compliance.check`, so Part 7 and Part 17 of
+`expected_values.md` are reproduced by one piece of clause arithmetic.
+Part 17 computes that check by hand at 6% and at 15%, before the module.
+`gate_node` is a node and not an agent - absent from the roster, so the
+router can neither plan it nor route around it - and sits on the one edge
+into the synthesizer (decision 62); no answer that implies a position
+reaches me without its block for the same ticker and weight.
+
+**What 4.3 will say when it is answerable, and what is not a defect.** On
+this portfolio equity is 69.61% against IPS-3.1's 65% ceiling before any
+purchase, and new money into equity only raises it, so **the gate fails
+IPS-3.1 at every weight above zero** and IPS-5.3 with it. The screen stops
+at PHI-2.1 on Alphabet's FY2021 by decision 48, as 4.1 does. 4.3 may
+therefore read BLOCKED with the gate built and working. A blocked case
+with the right reason is the right answer; no figure is filled and no
+clause softened to move it.
+
+**What a Level 4 pass still does not mean.** n/18 counts well-formed
+answers. Nothing here says the gate's arithmetic is right - that is
+pytest's, against Part 17 - and nothing says a judgement is any good,
+which is the ledger's and waits for 1 February 2027.
+
 **References before code, none computed yet.** Part 10 of
 `expected_values.md`: the synthetic candidate's typed figures over the
 stated years and every philosophy clause's verdict and distance by hand, for
