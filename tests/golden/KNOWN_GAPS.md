@@ -1,6 +1,8 @@
 # Known gaps (not bugs — unbuilt features, plus open decisions and why obvious fixes are wrong)
 
-Last updated 19 September (twenty-seventh session), on branch `thesis`, cut from `baseline-v1` at 9c8e882. The rest of case 4.4's path, in thirteen commits before this one, the reference first: Part 15 F, D58, one prediction per answer on a metric the frame can write, and the refusals before the request; the proposer and its model behind a seam; the watchlist loader reading each thesis as written; the research node, unbound; the thesis answer's rendering, unwired, held by `check_4_4`; the twentieth golden line at out_of_scope; the extraction rule for `asks`, "thesis" only; two wordings of the reading prompt for the quote cap, each a hypothesis with its prediction, both missed on Items 1A and 7 and stopped; the routing commit, its prediction held on all twenty lines on two identical runs, and the golden line moved. Each test seen failing without its module and against one wrong version per rule with bytecode off. Live: nine reading requests on their own, the seven of Items 1A and 7 all refused, the two of Item 1 accepted, stored and read by hand; one proposal on its own, read by hand; the runner 16/18, 4.4 PASS for the first time on Item 1's claims alone; the CLI on the thesis question, read by hand. Loops at session start: pytest 1524, the CLI, the golden set with zero diff, the runner 15/18. Decisions opened: 70, the quote cap against this filer's sentences; closed: none; the pending list stands at seventeen. Entries added, six: decision 70; the live readings of Items 1A and 7; a refused section asked for again on every run; the proposals' reasons; a field the check finds on another line; macro rows on a new trading day. Dated lines on six whose triggers fired, two of them resolved for 4.4: the sightings, and 4.4's routing on the full run.
+Last updated 20 September (twenty-eighth session), on branch `cap`, cut from `baseline-v1` at 3ce7dab, the session begun 19 September at 16:25 UTC. Decision 70 and the five the gate waits on, and nothing else: no Part, node or check of the gate, and no code of case 4.3. Two commits before this one, the reference first: Part 15 D47 changed, dated, so that the cap is on a reading's quoted text and not on a quote, 3,600 characters together; then `reading.record`, the runner's check and their tests, one test replaced and five added, each seen failing without its module and against ten wrong versions with bytecode off, pytest 1646 to 1650. Loops at session start: pytest 1646, the CLI on the allocation question fetching nothing, its interval not yet run out against the brief's reading of it; the golden set once, twenty lines, zero diff; the runner once, 16/18, 4.1 blocked at PHI-2.1 and 4.3 at out_of_scope. The two paid loops wrote no price row and no filing row, held the macro count at 209 as predicted, and between them stored the first accepted reading of Item 1A, read by hand. Decisions taken: 70, 63, 64, 65, 68 and 69, six closed, none opened; the pending list stands at eleven. Entries added, three: the accepted Item 1A reading; what a run does not record about a reading; an equity candidate against IPS-3.1 on this portfolio. Dated lines on four whose triggers fired: the quote cap, taken; the live readings; the refused section asked for again; the shape of the research agent, five of its pending decisions closed.
+
+Previously: 19 September (twenty-seventh session), on branch `thesis`, cut from `baseline-v1` at 9c8e882. The rest of case 4.4's path, in thirteen commits before this one, the reference first: Part 15 F, D58, one prediction per answer on a metric the frame can write, and the refusals before the request; the proposer and its model behind a seam; the watchlist loader reading each thesis as written; the research node, unbound; the thesis answer's rendering, unwired, held by `check_4_4`; the twentieth golden line at out_of_scope; the extraction rule for `asks`, "thesis" only; two wordings of the reading prompt for the quote cap, each a hypothesis with its prediction, both missed on Items 1A and 7 and stopped; the routing commit, its prediction held on all twenty lines on two identical runs, and the golden line moved. Each test seen failing without its module and against one wrong version per rule with bytecode off. Live: nine reading requests on their own, the seven of Items 1A and 7 all refused, the two of Item 1 accepted, stored and read by hand; one proposal on its own, read by hand; the runner 16/18, 4.4 PASS for the first time on Item 1's claims alone; the CLI on the thesis question, read by hand. Loops at session start: pytest 1524, the CLI, the golden set with zero diff, the runner 15/18. Decisions opened: 70, the quote cap against this filer's sentences; closed: none; the pending list stands at seventeen. Entries added, six: decision 70; the live readings of Items 1A and 7; a refused section asked for again on every run; the proposals' reasons; a field the check finds on another line; macro rows on a new trading day. Dated lines on six whose triggers fired, two of them resolved for 4.4: the sightings, and 4.4's routing on the full run.
 
 Previously: 19 September (twenty-sixth session), on branch `reader`, cut from `baseline-v1` at b8a0faf. The reading tool, the first half of case 4.4's path, in fourteen commits before this one, the reference first each time: the fourth EDGAR request looked at before anything was designed on it, Alphabet's FY2025 10-K fetched once and measured whole; Part 16, D51 to D57, the document's text, the sectioner's rule of two runs of headings, the page furniture kept, which filing is read and where its document is, the reader's call and cache; the migration for `filed_documents` and `document_readings`, run by the owner; the extractor, the provider's two methods, the store, the sectioner, the model's client and the reader, each seen failing without its module and against one wrong version per rule with bytecode off; one fix to a test committed in the session that passed by file order; `claude-sonnet-5` confirmed on the key and found to refuse a temperature, the brief's "temperature zero" superseded on that evidence; one live reading of Item 1, accepted by the code and read by hand. Nothing reaches the graph. Loops at session start: pytest 1346, the CLI, the golden set with zero diff, the runner's first full run of eighteen cases 15/18. Decisions opened and closed: none; the pending list stands at sixteen. Entries added, nine: the live reading read by hand; the archive's bytes; a reading not repeatable; the router's switch and the temperature; 4.4's routing on the full run; what a golden run writes; tests deleting rows they did not write; what the reading does not reach; `docs/workflow.md`. Resolved: none.
 
@@ -4924,6 +4926,52 @@ taken: 4.4's path first, and "should I buy" opened only when the gate
 can check, so 3.2, the out-of-scope text, the registry and the Siemens
 few-shot stand until then.
 
+**63, 64, 65, 68 and 69 taken 20 September (twenty-eighth session)**, each
+brought on its own with its options and its rejected alternatives, and
+none of them built: the gate's Part comes in the next session.
+**63**: the watchlist entry states a candidate's asset class, sector and
+instrument type, in `docs/WATCHLIST.md` and derived into
+`watchlist.toml` beside the thesis and the growth pair, and a candidate
+missing one is refused before the gate runs; Alphabet's sector is
+Communication Services, the owner's word, which keeps it out of the
+Technology bucket that is already past IPS-4.3. Rejected: the `assets`
+row, blank for GOOGL today and otherwise filled from the price
+provider's company info, so a third party's taxonomy would decide an IPS
+clause, in untracked state a reseed rewrites; a SIC-to-sector mapping,
+a taxonomy bridge measured on one filer; a default asset class.
+**64**: the purchase is funded by new money on top of the portfolio, the
+stated weight being the candidate's share of the grown total. Rejected:
+cash on hand, where a 3.79% balance against IPS-3.5's 3% floor caps any
+purchase at 0.79% and the answer is about the cash balance rather than
+the candidate; a sale, which IPS-5.2 leaves to the owner; both side by
+side, two verdicts in one answer. IPS-5.3 becomes a finding of its own
+under this funding, and on this portfolio it fails.
+**65**: the weight is stated by the watchlist entry, and the gate cites
+the entry as its `weight_source`. Case 4.3's prompt carries no
+percentage, so a weight read from the question cannot answer it;
+allowing `hypothetical_weight` under intent research, which the
+`RouterDecision` validator refuses today, is left for its own decision
+when a case asks.
+**68**: the outcome supports an entry only when all four permit — the
+screen with every clause passing, the gate with every finding ok or
+exempt, the entry condition met, and the model's view of the thesis
+`stands`. Anything else supports no entry and the grounds name each
+input that did not permit, with a stop worded as not established rather
+than as a no. The model's view can only ever take away. Rejected: a
+third value beside the boolean, which `check_4_3` does not ask for; the
+view printed but never blocking, which would let a verdict and its own
+reasons contradict each other; partial credit; short-circuiting, since
+both policy checks belong in the answer whatever the first says.
+**69**: 4.3 passes on at least one prediction entered in the ledger under
+the candidate, mine or the system's, cited by id, with a proposal made in
+the same run printed beside it and marked proposed and not entered.
+W-1.1 and W-1.2 satisfy it today. Rejected: a proposed prediction
+satisfying it, which reads benchmark.md's "entered in the ledger" as
+"shown in the answer" when the ledger is the eval set; requiring a row
+whose author is the system, which leaves the runner red until the owner
+types one and collides with D50's F9. `check_4_3`'s prediction
+requirement is rewritten with the gate's commit.
+
 ### What the gate needs that the candidate's row lacks
 
 **Trigger:** pending decisions 63, 64 and 65; the Part that computes the gate's check by hand.
@@ -5264,6 +5312,71 @@ a tool. It predates the rule and the handoff marks it stale. Whether it is
 deleted or rewritten is the owner's; this entry says only that it is
 there.
 
+### The first accepted reading of Item 1A, read by hand
+
+**Trigger:** the next prompt version for Item 1A; the next reading of it that is accepted.
+
+Logged 20 September (twenty-eighth session). One of the session's two
+paid loops, the golden set or the runner, was answered for Item 1A within
+the cap and the reading was stored: `document_readings` 3 rows to 4,
+Item 1A under prompt version `903e89b123b5`, 068134c's wording, twelve
+claims, the longest quote 297 characters. It is the first Item 1A reading
+ever accepted; every request measured before it was refused. The section
+is now served from the cache on every run, and case 4.4 rests on Items 1
+and 1A.
+
+Read by hand against the stored section, each quote found once, with its
+whole paragraph: three claims faithful to their quote, 1A.5, 1A.8 and
+1A.11; six faithful at the core with a detail that stands in the
+paragraph and not in the quote, 1A.2, 1A.3, 1A.4, 1A.7, 1A.10 and 1A.12;
+two saying more than their quote under `stated`, 1A.1, whose competitors
+and ad formats are in neither the quote nor its paragraph, and 1A.6,
+whose quote is about the advertising-technology remedies alone while the
+claim covers search and the app store; and one stretch marked
+`inferred`, 1A.9, whose quote is only "International revenues accounted
+for approximately 52% of consolidated revenues in 2025" for a claim about
+currency, trade barriers and geopolitics. 1A.11 is again a claim about
+the share's price, and it is the filing's own risk sentence. The faults
+are the same shapes the twenty-seventh session read on Item 1 and on the
+refused Item 1A answers; the prompts are unchanged, and changing them for
+faithfulness is a hypothesis of its own.
+
+### What a run does not record about a reading
+
+**Trigger:** the next change to the runner's output or to `document_readings`.
+
+Logged 20 September (twenty-eighth session), from trying to say which
+loop asked for the reading above and failing. Two things are not
+recorded. The runner prints a case's verdict and its blocked reason and
+never the answer, so which sections a run read, and the reasons printed
+for those it did not, cannot be read off a runner run; the golden set
+prints five routing fields and less. And `document_readings` carries
+accession, section, model and prompt version and no time, D57 having
+rejected a time or a cost on the row as something nothing consumes, so a
+stored reading does not say which run stored it. Both are the cost of
+decisions taken, not defects; they are written down because the session
+spent a request's worth of reasoning on the question and could not
+answer it.
+
+### An equity candidate fails IPS-3.1 at any weight on this portfolio
+
+**Trigger:** the gate's Part, and the first gate run on a candidate.
+
+Logged 20 September (twenty-eighth session), measured while decision 64
+was brought. Portfolio 3 priced as of 2026-09-18: total 408,447.50,
+equity 284,332.50, 69.61% against IPS-3.1's ceiling of 65%. Under
+decision 64's funding, new money on top, equity's share only rises with
+an equity purchase, so the gate fails IPS-3.1 at every weight above zero
+and the outcome supports no entry whatever the other clauses say. Cash
+funding gives the same direction and adds a second failure: cash is
+15,500.00, 3.79%, and IPS-3.5's floor of 3% is 12,253.43, so only
+3,246.57, 0.79% of the portfolio, could be spent at all. Technology is
+116,604.00, 28.55%, already past IPS-4.3's 25%, which is why decision
+63 states Alphabet's sector as Communication Services rather than
+letting it fall into the breached bucket. None of this is a defect: it
+is the policy answering, and it is written down so that the gate's first
+run is not read as a bug.
+
 ### The quote cap against this filer's sentences: decision 70
 
 **Trigger:** pending decision 70.
@@ -5290,6 +5403,24 @@ hypothesis with its own prediction; D47's cap measured against this
 filer's sentences, a change to the reference; or the refusal standing and
 Items 1A and 7 unread. Rejected already: cutting a long quote in code,
 which is repair. Until it is taken, a thesis answer reads Item 1 alone.
+
+**Taken 20 September (twenty-eighth session).** The cap is on a reading's
+quoted text and not on a quote: the quotes of one reading, counted once
+their whitespace collapses, hold at most 3,600 characters together,
+twelve times the 300 the reference already bounded a section by, and a
+quote has no cap of its own. The reference first, dated, in fdea842;
+`reading.record`, the runner's check and their tests in 7a42330, each
+test seen failing against ten wrong versions and without its module.
+Rejected with it: the prompt telling the model it may quote a shorter run
+from inside a sentence, which would be a third wording after two misses
+and, sitting in the text every section's prompt shares, would move all
+three prompt versions and cost every stored reading; a cap on a quote
+raised to a number measured on this filer's sentences. **Two things it
+does not settle.** The prompt still tells the model "at most thirty
+words", which the record no longer holds it to; changing it is a
+hypothesis of its own. And Item 7 has not been asked for since: its
+refusals on the cap, 330 and 301 characters, would now be accepted,
+while its refusals on a page break and on a digit in a claim would not.
 
 ### The live readings of Items 1A and 7, beside Item 1's
 
@@ -5329,6 +5460,13 @@ Items read in the order of their faithfulness: Item 7, Item 1, Item 1A.
 Nothing of the prompts is changed for faithfulness; that is a hypothesis
 of its own.
 
+**20 September (twenty-eighth session).** "Refused every time" no longer
+holds for Item 1A: one of the session's two paid loops was answered
+within the cap under the same prompt, `903e89b123b5`, and the reading is
+stored and read by hand in its own entry. The refusal was a draw and not
+a rule; decision 70 was taken with that known, and the quote cap's entry
+above records what it decided.
+
 ### A refused section is asked for again on every run
 
 **Trigger:** pending decision 70; the next golden run or runner run.
@@ -5343,6 +5481,12 @@ Item 7 on a digit in a claim, where the runs before refused both on the
 cap. Case 4.4 passes on Item 1's claims with the two printed as not read
 and their reasons; a run on which Item 1's cached reading stopped passing
 would fail it.
+
+**20 September (twenty-eighth session).** Item 1A is now cached, so a run
+asks for Item 7 alone and proposes once: about $0.058 by the measured
+requests, down from about $0.12. Item 7 is still asked for on every run
+and still refused, and decision 70's change to the cap has not been put
+to it.
 
 ### The first live proposals cite claims that do not support them
 
