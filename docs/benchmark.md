@@ -326,6 +326,17 @@ whether a prediction proposed and not entered satisfies the case. None of
 the gate is built and 4.3 stays blocked; 3.2 and Part 2 stand until the
 commit that makes 4.3 answerable.
 
+*Corrected the same day, after the note was written: Item 7 was asked for
+once under the new cap and accepted on the first draw, so all three
+sections are read and cached and 4.4 rests on all of them. The sentence
+above, that Item 7 is unread and asked for again on every run, described
+the state when the note was committed. Read by hand, Item 7's twelve
+claims are eight faithful, three faithful at their core, and one that
+calls Waymo's valuation-based charge "stock-based", the same substitution
+the last session's Item 7 answer made. What a pass means does not change:
+it is a well-formed answer, and whether a quote supports its claim is
+still checked by nothing.*
+
 **References before code, none computed yet.** Part 10 of
 `expected_values.md`: the synthetic candidate's typed figures over the
 stated years and every philosophy clause's verdict and distance by hand, for
