@@ -24,6 +24,13 @@
 # checked (docs/WATCHLIST.md). The words are mine, not a data provider's; a
 # word the IPS has no band for stops the check that reads it, not this file.
 #
+# `weight` is the share of the portfolio after the purchase that I would
+# take if the entry condition were met, a fraction, 6% written 0.06
+# (decisions 64 and 65). It is optional the way the growth pair is: a
+# candidate states one when I have decided the size, and until it does it
+# has no IPS check at a weight. Nothing here is a view about whether the
+# policy allows it; the check says that.
+#
 # No metric here depends on the price (DIRECTION.md invariant 7).
 # portfolio_tool/watchlist.py reads the candidates and their growth pairs;
 # the prediction rows are read by nothing yet (case 4.5).
@@ -40,6 +47,7 @@ instrument_type = "share"
 added_on = 2026-09-10
 status = "active"
 thesis = """Search and YouTube are the advertising businesses that keep growing through every cycle, the cloud segment is now profitable and taking share, and the company funds its own capital spending from operating cash flow with no debt to speak of. The thesis is that the advertising businesses keep their margins while the cloud segment's margin catches up, and that the capital spending on data centres shows in cloud revenue rather than in lasting margin damage."""
+weight = 0.06
 
 [candidate.entry_condition]
 kind = "valuation"

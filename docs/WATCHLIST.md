@@ -45,6 +45,16 @@ instrument type decides whether IPS-4.2 attributes the position to an
 issuer at all. A candidate that does not state all three is not checked,
 and nothing fills a blank with a default.
 
+**The weight.** A candidate may also state the weight I would take if its
+entry condition were met: its share of the portfolio *after* the purchase,
+the purchase being funded by new money on top of what I already hold
+rather than out of cash or by a sale. The IPS check at a stated weight
+reads it and cites the entry as its source. A candidate states a weight
+when I have decided the size and not before; until it does it has no IPS
+check, the way a candidate that states no growth has no valuation range.
+The weight is mine to decide and the check's to refuse; that it is written
+here is not a view about whether the policy allows it.
+
 **The philosophy check.** The check exists in Order 4. Until then each
 candidate is on the list on its thesis alone, marked not yet checked, and the
 first run of the check writes the record.
@@ -66,6 +76,8 @@ capital spending on data centres shows in cloud revenue rather than in
 lasting margin damage.
 
 **Entry condition.** Valuation: PHI-4.1 met against the current range.
+
+**Weight.** 6% of the portfolio after the purchase.
 
 **Valuation assumptions.** Free cash flow growth of 6% to 12% a year over
 the horizon.

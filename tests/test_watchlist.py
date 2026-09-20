@@ -40,11 +40,17 @@ DOC_VALUATION = re.compile(
 # percentages are read as fractions.
 DOC_CLASSIFICATION = re.compile(r"\*\*Classification\.\*\*\s+(.*?)(?:\n\s*\n|\Z)", re.S)
 INSTRUMENT_WORDS = {"a directly held share": "share", "a fund": "fund"}
+# Decisions 64 and 65: the share of the portfolio after the purchase that I
+# would take, in the document's words, "6% of the portfolio after the
+# purchase", read as a fraction the way the growth line's ends are.
+DOC_WEIGHT = re.compile(
+    r"\*\*Weight\.\*\*\s+(\d+(?:\.\d+)?)% of the portfolio after the purchase")
 
 CANDIDATE_KEYS = {"id", "ticker", "name", "currency", "asset_class", "sector",
                   "instrument_type", "added_on", "thesis",
                   "entry_condition", "status", "prediction"}
-CANDIDATE_OPTIONAL = {"philosophy_check", "closed_on", "closed_reason", "valuation"}
+CANDIDATE_OPTIONAL = {"philosophy_check", "closed_on", "closed_reason", "valuation",
+                      "weight"}
 VALUATION_KEYS = {"growth_low", "growth_high"}
 ENTRY_KINDS = {"valuation", "event"}
 STATUSES = {"active", "closed"}
@@ -77,6 +83,7 @@ def _document():
         thesis = DOC_THESIS.search(body)
         valuation = DOC_VALUATION.search(body)
         classification = DOC_CLASSIFICATION.search(body)
+        weight = DOC_WEIGHT.search(body)
         sections[m.group(1)] = {
             "thesis": _squash(thesis.group(1)) if thesis else None,
             "predictions": {p.group(1): _squash(p.group(2)) for p in DOC_PREDICTION.finditer(body)},
@@ -84,6 +91,7 @@ def _document():
             "valuation": ({"growth_low": int(valuation.group(1)) / 100,
                            "growth_high": int(valuation.group(2)) / 100} if valuation else None),
             "classification": (_parts(classification.group(1)) if classification else None),
+            "weight": (float(weight.group(1)) / 100 if weight else None),
         }
     return sections
 
@@ -199,6 +207,26 @@ def test_classification_is_the_documents(candidates):
         assert instrument in INSTRUMENT_WORDS, (cid, instrument)
         assert entry["instrument_type"] == INSTRUMENT_WORDS[instrument], (
             cid, entry["instrument_type"], instrument)
+
+
+def test_the_weight_is_the_documents(candidates):
+    """Decisions 64 and 65: the weight a candidate states is its share of
+    the portfolio after a purchase funded by new money, and the config's
+    fraction is the document's percentage. It is optional the way the
+    growth pair is: a candidate that states none in the document states
+    none here, and W-1 states one while W-2 does not."""
+    doc = _document()
+    stated = 0
+    for cid, entry in candidates.items():
+        if "weight" not in entry:
+            assert doc[cid]["weight"] is None, f"{cid}: the document states a weight the config lacks"
+            continue
+        value = entry["weight"]
+        assert isinstance(value, float) and not isinstance(value, bool), cid
+        assert 0 < value < 1, (cid, value)
+        assert doc[cid]["weight"] == value, (cid, doc[cid]["weight"], value)
+        stated += 1
+    assert stated == 1, "W-1 states its weight and W-2 does not"
 
 
 def test_prediction_shape(candidates):
