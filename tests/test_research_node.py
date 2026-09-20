@@ -292,7 +292,7 @@ async def test_a_proposal_refused_is_published_as_stopped(edgar, models):
     assert len(research["readings"]) == 3 and len(models["proposer"].asked) == 1
 
 
-@pytest.mark.parametrize("asks, reason", [("position", "gate, which is not built"),
+@pytest.mark.parametrize("asks, reason", [("position", "what is missing is this node's half"),
                                           (None, "it answers 'thesis'")])
 async def test_anything_but_a_thesis_question_is_refused(edgar, models, asks, reason):
     out = await nodes.research_agent_node(state(asks=asks))

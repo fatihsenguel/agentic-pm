@@ -1729,7 +1729,11 @@ async def research_agent_node(state: AgentState) -> Dict[str, Any]:
     decisions 60, 66 and 67; Part 15 D47 to D50 and F, D58; Part 16).
 
     Answers `asks` = "thesis" and nothing else; "position" is case 4.3,
-    whose gate is not built. Requires the screen (decision 66): the subject,
+    whose gate is built and whose half of the answer - the model's view,
+    the weight, the entry condition and the outcome - is not. It refuses
+    that question rather than answering part of it.
+
+    Requires the screen (decision 66): the subject,
     its CIK, the as-of and the figures' source are the screening block's,
     so the two answer on one clock and one filer. The screen's verdict does
     not stop this node: a thesis question asks for none.
@@ -1799,8 +1803,12 @@ async def research_agent_node(state: AgentState) -> Dict[str, Any]:
         asks = params.get("asks")
         if asks == "position":
             raise DataCalculationError(
-                "Whether to buy a candidate (case 4.3) needs the compliance gate, which is not "
-                "built; this node answers what has to be true for a thesis to be right.")
+                "Whether to buy a candidate (case 4.3) is not answered yet. The gate is built "
+                "and is on the edge into the synthesizer, and what is missing is this node's "
+                "half: the model's view of the thesis, the weight the answer is about, my "
+                "entry condition read against the screen, and the outcome composed from the "
+                "four (decision 68). This node answers what has to be true for a thesis to "
+                "be right.")
         if asks != "thesis":
             raise DataCalculationError(
                 f"The research agent is asked {asks!r}; it answers 'thesis', what has to be "
