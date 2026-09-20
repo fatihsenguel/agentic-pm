@@ -2586,3 +2586,319 @@ What this does not cover, and nothing here holds: whether a claim is
 faithful to its quote, and whether a reading says what matters in the
 section. The first live reading is read by hand against the document
 (Part 15 E).
+
+---
+
+## Part 17 — The gate: a candidate at a stated weight
+
+Computed **2026-09-20 by hand, before the gate node exists**, from the
+settled closes of **2026-09-18**, the closes `daily_prices` holds and the
+ones the CLI reported that morning. Decisions 63, 64, 65 and 68 are taken
+and this Part computes what they imply; what they leave open is D59 and
+D60 below.
+
+### A. What the gate is asked, and what it is not
+
+Case 4.3 needs an IPS check of a **new position at a stated weight**,
+beside the philosophy screen. Two things that already exist answer
+different questions and are not this: the compliance node checks the
+portfolio **as it stands**, and `compliance.refuse` checks a weight in one
+unnamed position against IPS-4.1 and IPS-4.2 **alone**, which on this
+portfolio would call 6% clear while the purchase deepened a breach that
+IPS-3.1 already reports.
+
+**The funding, decision 64.** The purchase is made with **new money on top
+of the portfolio**, so the stated weight `w` is the candidate's share of
+the grown total and both the money required and the new total follow from
+`w`:
+
+    M  = w x T / (1 - w)          T' = T + M = T / (1 - w)
+
+Nothing is sold; no existing holding's market value changes. Every
+existing figure therefore keeps its currency amount and loses share by one
+multiplication,
+
+    H / T'  =  (H / T) x (1 - w)
+
+and the candidate's own share is `w` exactly. That identity is the whole
+of the arithmetic below, and it is the first thing to check a
+disagreement against: every percentage in sections D and E is a Part 17 B
+percentage times (1 - w), or `w` itself.
+
+**The weight, decision 65,** is the watchlist entry's, and the gate cites
+the entry as its source. Case 4.3's prompt carries no percentage, so a
+weight read from the question cannot answer it. This Part computes at
+**6%** and at **15%**: 6% is the size W-1 states, and 15% is the weight
+benchmark case 3.1 already asks about and the weight at which the
+candidate's **own** concentration clauses fail, so the two tables differ
+in shape and not only in figures.
+
+**The denominator** is total portfolio value including cash (D2), taken
+after the purchase. Comparison is strict and unrounded (D9): a figure
+exactly at a limit passes. Distances follow Part 7: percentage points of
+total, and currency at unchanged total.
+
+**Every table below carries the figure before the purchase beside the
+figure after it.** A gate that blocks on any finding that is not ok or
+exempt (decision 68) will block on breaches the purchase did not cause,
+and the before column is what shows whether the purchase made a clause
+worse, better, or left it alone. Three rows here get better and one gets
+worse, and neither fact is visible without both columns.
+
+### B. The portfolio before the purchase
+
+Priced 2026-09-18. Quantities from portfolio 3's nine ledger rows, closes
+from `daily_prices`, class, instrument type and sector from `assets`.
+Total **T = 408,447.50**.
+
+| Ticker | Class | Type | Sector | Qty | Close | Market value | % of T |
+|---|---|---|---|---|---|---|---|
+| SPY | Equity | fund | — | 100 | 761.69 | 76,169.00 | 18.6484% |
+| AAPL | Equity | share | Technology | 200 | 336.13 | 67,226.00 | 16.4589% |
+| MSFT | Equity | share | Technology | 100 | 493.78 | 49,378.00 | 12.0892% |
+| TLT | Fixed Income | fund | — | 500 | 81.25 | 40,625.00 | 9.9462% |
+| JNJ | Equity | share | Healthcare | 150 | 269.99 | 40,498.50 | 9.9152% |
+| GLD | Commodity | fund | — | 100 | 401.17 | 40,117.00 | 9.8218% |
+| JPM | Equity | share | Financials | 100 | 349.67 | 34,967.00 | 8.5610% |
+| VNQ | Real Estate | fund | — | 300 | 92.91 | 27,873.00 | 6.8241% |
+| NEE | Equity | share | Utilities | 200 | 80.47 | 16,094.00 | 3.9403% |
+| | | | | | Cash | 15,500.00 | 3.7949% |
+| | | | | | **Total** | **408,447.50** | 100.0000% |
+
+Invested 392,947.50. By class: Equity **284,332.50** (69.6130%), Fixed
+Income 40,625.00 (9.9462%), Commodity 40,117.00 (9.8218%), Real Estate
+27,873.00 (6.8241%), Cash 15,500.00 (3.7949%). By sector over directly
+held shares: Technology **116,604.00** (28.5481%), Healthcare 40,498.50
+(9.9152%), Financials 34,967.00 (8.5610%), Utilities 16,094.00 (3.9403%),
+unsectored 184,784.00 (45.2406%).
+
+Two clauses are already breached before any purchase: **IPS-3.1**, Equity
+69.6130% against a 65% ceiling, and **IPS-4.3**, Technology 28.5481%
+against 25%. IPS-4.1 is breached on SPY, AAPL and MSFT and IPS-4.2 on
+AAPL and MSFT. These are the 09-18 closes and not Part 7's 09-02 closes,
+so the two Parts disagree on figures by design; Part 7 stays pinned.
+
+### C. The candidate and the purchase
+
+W-1, Alphabet, GOOGL. From `watchlist.toml` (decision 63): asset class
+**Equity**, sector **Communication Services**, instrument type **share**.
+The sector is one the portfolio does not hold, so the purchase opens a
+bucket rather than adding to the breached Technology one.
+
+| | w = 6% | w = 15% |
+|---|---|---|
+| New money M | 26,071.12 | 72,078.97 |
+| New total T' | 434,518.62 | 480,526.47 |
+| Position value | 26,071.12 | 72,078.97 |
+| Position share | 6.0000% | 15.0000% |
+| Scaling factor (1 - w) | 0.94 | 0.85 |
+
+**GOOGL's close is not used.** It is in the store — 349.54 on 2026-09-18 —
+and the gate has no use for it: under decision 64 the position's value
+follows from the weight and the grown total, and no IPS clause is about a
+share count. The close is the entry condition's business (PHI-4.1), not
+the gate's.
+
+### D. Section 3, the strategic bands
+
+| Clause | Class | % before | % at 6% | Status at 6% | Distance at 6% | % at 15% | Status at 15% | Distance at 15% |
+|---|---|---|---|---|---|---|---|---|
+| IPS-3.1 | Equity | 69.6130% | **71.4362%** | **breach, above max** | 6.4362 pp = 27,966.52 | **74.1710%** | **breach, above max** | 9.1710 pp = 44,069.26 |
+| IPS-3.2 | Fixed Income | 9.9462% | 9.3494% | ok | 1.3494 pp above min | 8.4543% | ok | 0.4543 pp above min |
+| IPS-3.3 | Commodity | 9.8218% | 9.2325% | ok | 5.7675 pp below max | 8.3486% | ok | 6.6514 pp below max |
+| IPS-3.4 | Real Estate | 6.8241% | 6.4147% | ok | 8.5853 pp below max | 5.8005% | ok | 9.1995 pp below max |
+| IPS-3.5 | Cash | 3.7949% | 3.5672% | ok | 0.5672 pp above min | 3.2256% | ok | 0.2256 pp above min |
+
+**IPS-3.1 fails at every weight, including zero.** Equity is above its
+ceiling before the purchase and an equity purchase funded by new money
+raises it: `(0.696130)(1 - w) + w` is increasing in `w`. There is no
+weight at which an equity candidate clears this clause on this portfolio,
+and the gate saying so is the policy answering, not a defect.
+
+**The floors tighten as the weight rises**, because their currency amounts
+are fixed while the denominator grows. Fixed income reaches its 8% floor
+at **w = 19.57%** and cash reaches its 3% floor at **w = 20.95%**. Neither
+binds at the two weights here, and both would at a large enough one: a
+purchase that breaches nothing of its own can still push two other classes
+through their minimums.
+
+### E. Section 4, concentration
+
+**IPS-4.1 — every holding, funds included, limit 12% of total**
+
+| Ticker | Value | % before | % at 6% | Status at 6% | % at 15% | Status at 15% |
+|---|---|---|---|---|---|---|
+| GOOGL | 26,071.12 / 72,078.97 | — | 6.0000% | ok | **15.0000%** | **breach**, 3.0000 pp = 14,415.79 |
+| SPY | 76,169.00 | 18.6484% | **17.5295%** | **breach**, 5.5295 pp = 24,026.77 | **15.8512%** | **breach**, 3.8512 pp = 18,505.82 |
+| AAPL | 67,226.00 | 16.4589% | **15.4714%** | **breach**, 3.4714 pp = 15,083.77 | **13.9901%** | **breach**, 1.9901 pp = 9,562.82 |
+| MSFT | 49,378.00 | 12.0892% | 11.3638% | **ok** | 10.2758% | ok |
+| TLT | 40,625.00 | 9.9462% | 9.3494% | ok | 8.4543% | ok |
+| JNJ | 40,498.50 | 9.9152% | 9.3203% | ok | 8.4279% | ok |
+| GLD | 40,117.00 | 9.8218% | 9.2325% | ok | 8.3486% | ok |
+| JPM | 34,967.00 | 8.5610% | 8.0473% | ok | 7.2768% | ok |
+| VNQ | 27,873.00 | 6.8241% | 6.4147% | ok | 5.8005% | ok |
+| NEE | 16,094.00 | 3.9403% | 3.7039% | ok | 3.3492% | ok |
+
+**MSFT crosses back inside its limit, bought nothing and sold nothing.**
+It is 12.0892% before and 11.3638% at a 6% purchase: the denominator grew
+and its share fell. It clears 12% at any weight above **w = 0.74%**. This
+is the clearest case for the before column — a run that printed only the
+after column would report MSFT as compliant with no visible reason, and a
+reader would be right to distrust it.
+
+**IPS-4.2 — directly held shares, limit 10% of total**
+
+| Ticker | % before | % at 6% | Status at 6% | % at 15% | Status at 15% |
+|---|---|---|---|---|---|
+| GOOGL | — | 6.0000% | ok | **15.0000%** | **breach**, 5.0000 pp = 24,026.32 |
+| AAPL | 16.4589% | **15.4714%** | **breach**, 5.4714 pp = 23,774.14 | **13.9901%** | **breach**, 3.9901 pp = 19,173.35 |
+| MSFT | 12.0892% | **11.3638%** | **breach**, 1.3638 pp = 5,926.14 | **10.2758%** | **breach**, 0.2758 pp = 1,325.35 |
+| JNJ | 9.9152% | 9.3203% | ok | 8.4279% | ok |
+| JPM | 8.5610% | 8.0473% | ok | 7.2768% | ok |
+| NEE | 3.9403% | 3.7039% | ok | 3.3492% | ok |
+| SPY, TLT, GLD, VNQ | | | exempt | | exempt |
+
+The four funds are **exempt**, not ok: IPS-4.2 counts exposure through
+directly held shares only and a diversified index fund is not attributed
+to its constituents. Exempt carries no arithmetic and is reported, so the
+clause is visibly applied to every holding (Part 7). The candidate is a
+share by decision 63 and is counted. MSFT clears this clause at
+**w = 17.28%**, above both weights here.
+
+**IPS-4.3 — sectors over directly held shares, limit 25% of total**
+
+| Sector | Value | % before | % at 6% | Status at 6% | % at 15% | Status at 15% |
+|---|---|---|---|---|---|---|
+| Technology | 116,604.00 | **28.5481%** | **26.8352%** | **breach**, 1.8352 pp = 7,974.35 | 24.2659% | **ok** |
+| Communication Services | 26,071.12 / 72,078.97 | — | 6.0000% | ok | 15.0000% | ok |
+| Healthcare | 40,498.50 | 9.9152% | 9.3203% | ok | 8.4279% | ok |
+| Financials | 34,967.00 | 8.5610% | 8.0473% | ok | 7.2768% | ok |
+| Utilities | 16,094.00 | 3.9403% | 3.7039% | ok | 3.3492% | ok |
+| (no sector) | 184,784.00 | 45.2406% | 42.5261% | reported, not counted | 38.4545% | reported, not counted |
+
+**The Technology breach clears at 15%, and clears at any weight above
+w = 12.43%.** Buying more equity, in a different sector, with new money,
+fixes a sector breach without a share being sold. This is the sharpest
+argument for what decision 68 rejected: a gate that checked the
+concentration clauses alone would report a 15% purchase as clearing
+IPS-4.3 and say nothing about Equity standing at 74.17% against a 65%
+ceiling. The clause that gets better and the clause that gets worse are
+the same purchase.
+
+### F. IPS-5.3, a finding of its own (decision 64)
+
+IPS-5.3: *"New money is allocated first to whatever restores a breached
+limit, then to whichever asset class is furthest below the middle of its
+band."* Under decision 64 the purchase **is** new money, so the clause
+applies directly to it and gets its own finding (D59).
+
+**First limb.** A limit is breached before the purchase — IPS-3.1, Equity
+above its maximum, and IPS-4.3, Technology. The money is allocated
+entirely to Equity, which restores neither: it deepens IPS-3.1. **Fail**,
+at both weights, on the whole amount: 26,071.12 at 6% and 72,078.97 at
+15%.
+
+**Second limb, for the record and not reached.** "The middle of its band"
+is computable only for a class with two ends, which is IPS-3.1 (40–65,
+middle 52.5%) and IPS-3.2 (8–30, middle 19%) alone; IPS-3.3 and IPS-3.4
+state a maximum only and IPS-3.5 a minimum only. Of the two, Equity is
+above its middle and Fixed Income is 9.05 pp below it, so the second limb
+would send new money to fixed income. It is not reached, the first limb
+having decided the finding.
+
+**A candidate the second limb would favour still fails the first**, while
+any limit is breached. On this portfolio that is every candidate of every
+class until IPS-3.1 and IPS-4.3 are inside their limits.
+
+### G. The clauses the gate does not compute
+
+| Clause | Why |
+|---|---|
+| IPS-1.1, IPS-1.2 | Statements of purpose and of what the portfolio is judged against. Nothing numeric. |
+| IPS-2.1, IPS-2.2 | Statements of what may be held and of margin. **IPS-2.1 is the one with a bearing on a new position** — see the gap below. |
+| IPS-5.1, IPS-5.2 | Statements about when the portfolio is checked and what a required change is. IPS-5.2's rule is already the distance convention every table above uses. |
+| IPS-6.1, IPS-6.2 | Statements about reviewing the policy and about drift. |
+
+**The gap, named and not filled.** IPS-2.1 says the portfolio holds only
+exchange-listed equities and exchange-traded funds, plus cash. A candidate
+whose instrument type were an option or a bond would be forbidden by it,
+and **the gate as computed here would pass that candidate**, IPS-2.1 being
+a statement clause and the instrument type reaching no check. Both
+candidates on the watchlist are shares, so nothing is wrong today and
+nothing is invented to cover it. Making IPS-2.1 computable means a new
+clause type and is a decision, not a fix.
+
+### H. Decision 68, the outcome, as rows
+
+Four inputs, each permitting or not: the **screen** (every philosophy
+clause passing), the **gate** (every finding ok or exempt), my **entry
+condition** (met), and the **model's view** of the thesis (`stands`). The
+outcome supports an entry only when all four permit. Anything else
+supports none, and the grounds name each input that did not permit. A stop
+is worded as not established, never as a no. The model's view can only
+take away.
+
+| # | Screen | Gate | Entry condition | Model's view | Outcome | Grounds |
+|---|---|---|---|---|---|---|
+| 1 | clear | clear | met | stands | **supports an entry** | — |
+| 2 | clear | clear | met | does not stand | supports none | the model's view |
+| 3 | clear | clear | not met | stands | supports none | the entry condition |
+| 4 | clear | clear | not met | does not stand | supports none | the entry condition, the model's view |
+| 5 | clear | fails | met | stands | supports none | the gate |
+| 6 | clear | fails | met | does not stand | supports none | the gate, the model's view |
+| 7 | clear | fails | not met | stands | supports none | the gate, the entry condition |
+| 8 | clear | fails | not met | does not stand | supports none | the gate, the entry condition, the model's view |
+| 9 | stops | clear | met | stands | supports none | the screen |
+| 10 | stops | clear | met | does not stand | supports none | the screen, the model's view |
+| 11 | stops | clear | not met | stands | supports none | the screen, the entry condition |
+| 12 | stops | clear | not met | does not stand | supports none | the screen, the entry condition, the model's view |
+| 13 | stops | fails | met | stands | supports none | the screen, the gate |
+| 14 | stops | fails | met | does not stand | supports none | the screen, the gate, the model's view |
+| 15 | stops | fails | not met | stands | supports none | the screen, the gate, the entry condition |
+| 16 | stops | fails | not met | does not stand | supports none | the screen, the gate, the entry condition, the model's view |
+
+One row of sixteen supports an entry. Every other row names what stopped
+it and the reader can see which of the four to look at. There is no
+partial credit, no third value beside the boolean, and no
+short-circuiting: both policy checks are in the answer whatever the first
+of them says, so that row 13 reports the gate's findings and not only the
+screen's stop.
+
+### I. The outcome on W-1 today
+
+| Input | Where it stands on 2026-09-20 | Permits? |
+|---|---|---|
+| Screen | Stops at PHI-2.1, `return_on_invested_capital` for FY2021 not in the figures; D36 keeps the lease-inclusive debt tag out, so the stop holds until Alphabet's FY2027 report moves the window (decision 48) | **no** |
+| Gate | Fails IPS-3.1 at both weights and IPS-5.3 at both; also IPS-4.1 and IPS-4.2 on the candidate itself at 15% | **no** |
+| Entry condition | PHI-4.1 pays at most the low end less 25%: the range is 129.39 to 205.62 on FY2025, so the entry price is **97.04** and the last close is **349.54**, 3.60 times it | **no** |
+| Model's view | Not produced; case 4.3 is not built | **not established** |
+
+**Row 15 of the table**, with the view not established rather than not
+standing: the outcome supports no entry, and the grounds name the screen,
+the gate and the entry condition. **This is the right answer and not a
+defect.** Case 4.3 reading BLOCKED after the gate is built, the screen
+stopping where 4.1's does, is the same right answer arriving at the
+runner. Nothing here is to be moved by filling a figure or softening a
+clause.
+
+### J. Decisions this Part takes
+
+| # | Decision | Choice |
+|---|---|---|
+| D59 | IPS-5.3 under decision 64's funding: what is its finding, and what distance does it carry? | **A finding of pass or fail with its grounds, and no distance.** The clause is a rule about where money goes, not a limit on a figure, so there is no amount that returns anything to a limit: the grounds name the class the money went to and the limits that were breached when it did. Rejected: the whole amount as a distance, which reads as "move 26,071.12" when the clause's remedy is to allocate it elsewhere entirely; no finding at all, leaving the one clause decision 64 makes directly applicable silent; a distance to the second limb's target class, which is not reached and would be arithmetic about a purchase nobody proposed. |
+| D60 | Which clauses does the gate compute a finding for? | **The four typed kinds — asset class band, instrument weight, issuer weight, sector weight — over the portfolio as it would be, plus IPS-5.3 by D59.** Every statement clause is listed and named as not computed, so "every clause" is visibly every clause (the shape Part 7's 2.2 answer uses). The gate checks the whole portfolio and not the candidate's own clauses alone: decision 68 rejected the narrow gate, and section E shows why in figures. Rejected: the candidate's rows only; the clauses the purchase changes only, which would hide MSFT crossing back inside IPS-4.1 and Technology clearing IPS-4.3; silently dropping the statement clauses. |
+
+### K. What this Part does not cover
+
+It computes no share count, so nothing here holds a number of shares
+against a price. It says nothing about whether the thesis is any good,
+which is the model's view and the ledger's to score. It does not decide
+where the weight is written down, only that the entry states it
+(decision 65); the field and its loader come with the gate's commit. It
+holds no answer text: what the gate publishes and how the synthesizer
+prints it are the node's and the formatter's, held by their own tests. And
+it is computed at two weights of mine, so a run at a third weight is
+checked by the identity in section A and not by a row here.
+
+No sheet in `expected_values.xlsx` covers Part 17, as none covers Parts
+9 C, 11, 14, 15 or 16. The workbook was not opened for this Part.
