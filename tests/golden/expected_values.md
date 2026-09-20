@@ -2296,6 +2296,106 @@ What this does not cover: whether the prediction tests the thesis, which
 the ledger says a year on; whether two runs propose the same prediction,
 which nothing makes them do.
 
+### G. The model's view of the thesis
+
+Added 2026-09-20 by hand, before the code that asks for it, in F's
+pattern: F settled the call D49 had left open, and this section settles
+the record decision 68 named and no Part holds. Decision D61. Nothing in
+it is arithmetic; it is rules over closed sets, like sections A and B.
+Nothing here is written into `docs/WATCHLIST.md` or `watchlist.toml`.
+
+**What is already the reference and is not repeated here.** The record's
+rules are section B's, the same fields over a different subject: a value
+from a closed set, reasons that are claim ids of the readings, and an
+uncertainty from `stated` and `inferred`. How the view enters case 4.3's
+outcome is Part 17 H's sixteen rows. What this section adds is the set's
+three members and what each of them means, which of them needs a reason,
+and the map from the three onto H's two columns.
+
+**What it does not settle.** Whether the view is a second request to the
+model or shares the proposal's, which is its own decision, the way D49
+left the call open until D58 closed it. Until that decision, F's S-rows
+describe the proposer's call as it is made.
+
+**"View" names two things in this repository and they are not related.**
+`portfolio_tool/gate.py` raises on a view it cannot build, which is the
+allocation the portfolio would have at a weight. The view here is the
+model's on a thesis. Nothing passes between them, and no rule of one
+applies to the other.
+
+| # | Decision | Choice |
+|---|---|---|
+| D61 | What is the model's view of the thesis, and what does each value mean? | **Three fields and no others: a value from the closed set `stands`, `strained`, `no_view`; its reasons as claim ids of the readings; and an uncertainty, `stated` or `inferred`.** `stands`: the claims it rests on support the thesis and none of them undercuts it — the only value that permits (decision 68). `strained`: a claim undercuts the thesis; the model read the sections and found pressure on it. `no_view`: the readings do not bear on the thesis either way. `stands` and `strained` each carry at least one claim id and `no_view` carries none, so a claim id beside `no_view` is refused. **The view carries no prose.** The value, the reasons and the uncertainty are the whole record; the claims cited carry the words, each with the quote its own rules already held, and the answer prints them. A record with a fourth field is refused. Rejected: a sentence from the model, which puts prose in the answer that nothing holds, duplicates the claims it would be citing, and is the only thing a digit rule would then be needed for; a fourth value or a degree, decision 68 having rejected a third value beside the boolean and `check_4_3` asking for one of three; a numeric confidence beside the uncertainty, a number from a model; `strained` without reasons, an adverse finding that names nothing, section B's V-3 over a different subject; `no_view` carrying reasons and the reasons ignored, which is repair — a reason is what a view rests on and `no_view` rests on nothing; collapsing `strained` and `no_view` into one value because they behave identically in H, when they take away for opposite reasons and which of the two is printed is the whole of what the reader learns from the view. |
+
+#### The three values
+
+| value | what it says | reasons | permits? |
+|---|---|---|---|
+| `stands` | the claims support the thesis and none undercuts it | at least one | **yes** |
+| `strained` | a claim undercuts the thesis | at least one | no |
+| `no_view` | the readings do not bear on the thesis either way | none | no |
+
+#### Rows, on section F's stand-in thesis and claims
+
+The thesis is F's, "The business sells subscriptions customers keep
+renewing", and the readings carry F's two claims, 1.1 and 7.2. Each row
+holds one rule and no other.
+
+| id | view | reasons | uncertainty | result |
+|---|---|---|---|---|
+| T-1 | stands | 1.1 | stated | accepted |
+| T-2 | strained | 7.2 | inferred | accepted |
+| T-3 | strained | 1.1, 7.2 | inferred | accepted: more than one reason |
+| T-4 | no_view | none | inferred | accepted: no view needs no reason (B's V-2) |
+| T-5 | stands | none | stated | refused: a view without a reason (B's V-3) |
+| T-6 | no_view | 1.1 | stated | refused: a reason beside no view |
+| T-7 | holds | 1.1 | stated | refused: `holds` is not a view (B's V-5) |
+| T-8 | stands | 1.9 | stated | refused: 1.9 is no claim of the readings (B's V-7) |
+| T-9 | stands | 1.1 | likely | refused: `likely` is not an uncertainty (A's R-7) |
+| T-10 | stands | 1.1 | stated, and a fourth field beside the three | refused: the record is three fields |
+
+#### The map onto Part 17 H
+
+H's column is "stands" or "does not stand", two values against this
+section's three, and the collapse is where the reader would otherwise
+guess.
+
+| the record says | H's column | the grounds say |
+|---|---|---|
+| `stands` | stands | nothing; the view permits |
+| `strained` | does not stand | the model's view: the thesis is strained |
+| `no_view` | does not stand | the model's view: no view |
+
+**A view that could not be built is none of the three.** A request that
+stops for any reason but `end_turn`, or a record refused by a row above,
+leaves `view_stopped` beside no value — the shape F gave
+`proposal_stopped`. The outcome is still composed, the view not
+permitting, and the grounds word it **not established**, which is
+decision 68's wording and the one Part 17 I uses for today, the code not
+being built. `check_4_3` asserts the value is one of the three, so such a
+run prints an honest answer and the case reads BLOCKED. **That is the one
+place where the answer is printable and the case does not pass**, and it
+is the right pair: the answer says what it could not establish, and a
+well-formed 4.3 answer carries the view.
+
+#### What this section does not cover
+
+- **Whether the view is any good** — whether `stands` was the right read
+  of the claims. Nothing here sees it. The ledger says a year on, and the
+  first live view is read by hand against the readings, as the first live
+  reading was.
+- **Whether the claims the view cites bear on the thesis.** The rows hold
+  that a reason is a claim of the readings and nothing holds that it
+  supports the view, which is the gap the proposals already have
+  (`KNOWN_GAPS.md`, the entry on the first live proposals).
+- **The call**: one request or the proposal's, its cost and its schema.
+- **The uncertainty on `no_view`**, which describes a reading that
+  produced no view rather than a claim, so nothing distinguishes the two
+  words there. `check_4_3` asks for one on every value.
+- **The answer text.** What the synthesizer prints is the formatter's,
+  held by its own tests.
+- **The workbook.** No sheet, as for Parts 11, 14, 15 and 16.
+
 ## Part 16 — A filing's document and its sections
 
 Recorded 2026-09-19 by hand from one fetched document, before any provider
