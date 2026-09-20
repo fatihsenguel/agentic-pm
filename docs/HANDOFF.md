@@ -1,9 +1,9 @@
 # AGENTIC_FINANCE — Session Handoff
 
-**Session date:** 19 September 2026 (twenty-seventh session), begun at 02:45 UTC and ended the same day. Regenerated at its end.
-**Branch:** `thesis`, cut from `baseline-v1` at 9c8e882 on the owner's yes. **`baseline-v1` is the trunk** and stood at 9c8e882 when the session began: it had merged `reader`, so the last handoff's "Not merged and not pushed" no longer held. Each session branch is merged into the trunk with `--ff-only` when the loops are green; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count 9c8e882..HEAD` — 16 with this file: Part 15 F in two commits, the proposer, the loader's thesis, the research node, the rendering, the golden line and its baseline, the extraction rule, two prompt wordings, the routing and its golden line, the record, benchmark.md, this file. **Not merged and not pushed**: the owner merges and pushes; `origin`'s push URL is `no_push`.
+**Session date:** 19 to 20 September 2026 (twenty-eighth session), begun 19 September at 16:25 UTC. Regenerated at its end.
+**Branch:** `cap`, cut from `baseline-v1` at 3ce7dab on the owner's yes, the branch the brief named not existing. **`baseline-v1` is the trunk** and stood at 3ce7dab when the session began; `thesis` is merged into it. Each session branch is merged into the trunk with `--ff-only` when the loops are green; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count 3ce7dab..HEAD` — 5 with this file: the reference, the code, the record, benchmark.md, this file. **Not merged and not pushed**: the owner merges and pushes; `origin`'s push URL is `no_push`.
 
-**State:** pytest **1646 passed, 6 xfailed**, up from 1524 by 122. **Golden set: twenty lines**, the twentieth the thesis question, at research with `['ScreeningAgent', 'ResearchAgent']` on two identical runs after the routing commit. **Runner 16/18**: **4.4 PASS for the first time**, 4.1 BLOCKED at PHI-2.1 naming D36, 4.3 BLOCKED at out_of_scope. **The CLI twice**, the allocation question and the thesis question, the second read by hand. **Case 4.4's path is in the graph**: the thesis question routes to the screen and the research node, which reads Items 1, 1A and 7 and proposes one prediction through the frame. **Items 1A and 7 are refused on every request measured**, most often on a quote past the record's cap, so the answer rests on Item 1 alone: decision 70, opened. **Order 4 is not done. Left: decision 70, the gate and 4.3, then the full test before anything of Order 5.**
+**State:** pytest **1650 passed, 6 xfailed**, up from 1646 by 4. **Golden set: twenty lines, one run, zero diff.** **Runner 16/18, one run**: 4.1 BLOCKED at PHI-2.1 naming D36, 4.3 BLOCKED at out_of_scope, 4.4 PASS. **The CLI once**, the allocation question, which fetched nothing: the price interval had not run out, against the brief's reading of it. **Decision 70 is taken and built**: the record caps a reading's quoted text at 3,600 characters a section and no longer caps a single quote, the reference first. **Decisions 63, 64, 65, 68 and 69 are taken and nothing of them is built**; the gate's Part comes next. **The first Item 1A reading ever accepted** was stored by one of the two paid loops and read by hand, so 4.4 now rests on Items 1 and 1A; Item 7 is still refused on every request measured. **Order 4 is not done. Left: the gate and 4.3, then the full test before anything of Order 5.**
 
 Written for whoever picks this up cold, myself included.
 
@@ -11,24 +11,16 @@ Written for whoever picks this up cold, myself included.
 **Check every claim here against the code before acting on it, including
 this file.** Sections whose claims were checked again this session and
 still hold are kept word for word; the rest is rewritten. Misses of my own
-this session, caught before or after landing: a new test file was written
-over the committed `tests/test_research_formatter.py`, its 20 tests gone
-until the suite's count gave it away, restored from HEAD and the new file
-renamed `tests/test_thesis_formatter.py` before any commit; the first
-pattern for `asks`, `theses?`, matched "these" and not "thesis", caught
-by the new tests; a command carried `git stash list` again and was
-denied, rerun without it; the macro count was predicted to stand still
-and rose from 206 to 209 on a new trading day; the first live request for
-Item 1A kept no raw answer, so its claims could not be read and a second
-request was made; one wrong version of the rendering was aimed at the
-ledger formatter's identical sentence and six wrong versions changed
-nothing, rewritten or answered with a stronger test; a tangled loop exit
-in the node rewritten before it was shown; a header counted seven
-reading requests where there were nine, and a status note said "nearly
-every" where every request measured was refused, both corrected before
-the commit; the harness withdrew the scratch directory mid-session,
-taking the scratch tree, the scripts and four raw answers with it, and
-`/tmp/thesis_session` stood in for it after.
+this session, caught before or after landing: the brief said the price
+interval had run out early on 20 September and it had not, the clock
+reading 19 September at 16:25 UTC, so the CLI fetched nothing and was said
+so before it ran; the brief's pending list of seventeen and CLAUDE.md's
+line of seventeen with sixteen numbers disagree, and the handoff's own
+quotation of that line, "16 on 18 September", was already stale; the first
+run of the wrong versions printed the colour codes instead of the failing
+tests' names and was rerun to name them; which of the two paid loops stored
+the Item 1A reading cannot be said, since nothing records it, and the
+entry says so rather than guessing.
 
 ---
 
@@ -36,15 +28,15 @@ taking the scratch tree, the scripts and four raw answers with it, and
 
 | File | What it is |
 |---|---|
-| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1, 2 and 3 are built. **Order 4 is in progress**: the bridge, the SIC code, the philosophy check node, the metric keys, the valuation range, prediction scoring, the research agent's shape, reference, checks and pure modules, the reading tool, and, this session, **the research agent in the graph for a thesis question**. Left in Order 4: decision 70, the gate and 4.3, then the full test. |
-| `docs/benchmark.md` | **The definition of done.** Levels 1 to 3: 12 cases, 12 pass. Level 4: 4.2, 4.4, 4.5 and 4.6 pass, 4.1 blocked by decision, 4.3 blocked on the gate that is not built (eight dated status notes under Level 4). n/18. Part 2 and the 3.2 row are untouched: their rewrite is at the commit that makes 4.3 answerable. |
-| `tests/benchmark/run_cases.py` | **The scoreboard.** Eighteen cases, unchanged this session. `check_4_4` passed on the live answer; its docstring and KNOWN_GAPS say what it cannot see, and a field it finds on another line is one of them. `check_4_3` and its probe hold `shared_data["gate"]` for the commit that makes 4.3 answerable. |
-| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. 144 lines start `**Trigger:**`, 107 reading something other than "none", counted by `grep -c '^\*\*Trigger:\*\*'`. New this session: six entries, and dated lines on six whose triggers fired, two resolved for 4.4. **The next session reads "The quote cap against this filer's sentences: decision 70" first.** |
-| `tests/golden/expected_values.md` | Hand-computed and transcribed reference, Parts 1 to 16. **New this session: Part 15 F**, D58, the proposer's call: one prediction per answer, a figure on a metric the frame writes or an event, the message and the answer's shape, rows S-1 to S-7, and the refusals before the request. Never update it to match code output. |
+| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1, 2 and 3 are built. **Order 4 is in progress**: the bridge, the SIC code, the philosophy check node, the metric keys, the valuation range, prediction scoring, the research agent's shape, reference, checks and pure modules, the reading tool, the research agent in the graph for a thesis question, and, this session, **decision 70 and the five the gate waits on**. Left in Order 4: the gate and 4.3, then the full test. |
+| `docs/benchmark.md` | **The definition of done.** Levels 1 to 3: 12 cases, 12 pass. Level 4: 4.2, 4.4, 4.5 and 4.6 pass, 4.1 blocked by decision, 4.3 blocked on the gate that is not built (nine dated status notes under Level 4, the ninth this session's). n/18. Part 2 and the 3.2 row are untouched: their rewrite is at the commit that makes 4.3 answerable. |
+| `tests/benchmark/run_cases.py` | **The scoreboard.** Eighteen cases. This session `_readings_invariants` changed with decision 70: `QUOTED_CAP` is 3,600 for a reading's quotes together and no single quote is capped. `check_4_4` passed on the live answer; its docstring and KNOWN_GAPS say what it cannot see, and a field it finds on another line is one of them. `check_4_3` and its probe hold `shared_data["gate"]` for the commit that makes 4.3 answerable; its prediction requirement is rewritten there, decision 69. |
+| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. 147 lines start `**Trigger:**`, counted by `grep -c '^\*\*Trigger:\*\*'`. New this session: three entries, and dated lines on four whose triggers fired, decisions 70, 63, 64, 65, 68 and 69 written into two of them. **The next session reads "The shape of the research agent: decisions 59 to 69" first**, for the five taken this session, and "What the gate needs that the candidate's row lacks" beside it. |
+| `tests/golden/expected_values.md` | Hand-computed and transcribed reference, Parts 1 to 16. **Changed this session: Part 15 D47 and section A**, dated, decision 70: the cap is on a reading's quoted text, 3,600 characters a section, and a quote has no cap of its own. Never update it to match code output. |
 | `tests/golden/expected_values.xlsx` | The workbook, eleven sheets, saved in Excel at c75b73b. Untouched this session; Parts 9 C, 11, 14, 15 and 16 have no sheet. |
 | `docs/IPS.md` | The policy, synthetic. Unchanged. |
 | `docs/PHILOSOPHY.md` | What is worth wanting, synthetic: seventeen clauses. Unchanged. PHI-6.1 now has a reader: every candidate's thesis is loaded and a candidate without one is refused. |
-| `docs/WATCHLIST.md` | Two synthetic candidates, four predictions due early 2027, none scored. Unchanged; no prediction of the system's is entered. The prediction rows and, since this session, the theses are read by `portfolio_tool/watchlist.py`. No score is written into it by the system, ever. |
+| `docs/WATCHLIST.md` | Two synthetic candidates, four predictions due early 2027, none scored. Unchanged; no prediction of the system's is entered. The prediction rows and, since the twenty-seventh session, the theses are read by `portfolio_tool/watchlist.py`. No score is written into it by the system, ever. |
 | `docs/PM-Assistant — Roadmap.md` | Stale; DIRECTION.md's Order supersedes it. |
 | `docs/workflow.md` | Stale, and a pasted conversational reply with emoji in its headers (KNOWN_GAPS). |
 
@@ -63,22 +55,22 @@ taking the scratch tree, the scripts and four raw answers with it, and
 `docs/DIRECTION.md` states it. A conversation with a strong model that calls
 deterministic pipelines as tools; a guarantee half that is tools and done,
 and a judgement half whose tools, the philosophy check, the valuation
-range, prediction scoring and, since this session, the research agent for
+range, prediction scoring and, since the twenty-seventh session, the research agent for
 a thesis, are in the graph with their references, and whose gate for a
 position is not. The router is scaffolding until the tool layer is
 complete. **No deadline. Correctness over speed. Scope creep is the risk.**
 
 ### Design principles
 
-- **Hot potato — agents never see raw data.** This session's form: the
+- **Hot potato — agents never see raw data.** The last session's form: the
   research node reads the figures the screen stored back from the
   database and publishes none; the screening block still carries dates
   and findings only. The proposal model sees the thesis and the claims
   with their quotes, never the section's text and never the question. The
   last sessions' forms stand: a filing's document is text in
   `filed_documents` returned to no agent; what leaves the reader is the
-  record, a quote at most 300 characters and at most twelve claims a
-  section.
+  record, at most twelve claims a section and, since decision 70, at most
+  3,600 characters of quotation in them together.
 - **No number from a model.** A claim's sentence carries no digit and a
   figure appears only inside a quote held to the stored section; a
   proposed prediction's metric is one of the two the frame writes, its
@@ -94,7 +86,7 @@ complete. **No deadline. Correctness over speed. Scope creep is the risk.**
   about the predictions names none and is the ledger (decision 58); a
   research question that names a thesis reads the filing after the screen
   (decision 66), `asks` set by extraction and never by the model.
-- **Raise, do not repair.** This session's form: a thesis or readings
+- **Raise, do not repair.** The last session's form: a thesis or readings
   missing refuse before any request; a model answer that is not one
   prediction of the schema's shapes is refused; a metric not offered
   refuses; a section refused is printed as not read with its reason and
@@ -120,7 +112,7 @@ complete. **No deadline. Correctness over speed. Scope creep is the risk.**
 - **The registry is the prompt.** A sentence describing a capability that
   now exists is allowed where a rule tuned to a case is not, and it is
   still a hypothesis: prediction in the commit, two runs, stop at the
-  second miss. This session's routing sentence held on all twenty lines.
+  second miss. The last session's routing sentence held on all twenty lines.
 - **A value nothing consumes is not stored.** `asks` takes "thesis" only;
   "position" comes with 4.3. A proposal is not cached, being the system's
   prediction and not a record (D50, D58).
@@ -129,16 +121,15 @@ complete. **No deadline. Correctness over speed. Scope creep is the risk.**
 
 - Every change starts as a written decision in plain words: what it is,
   what changes on a yes, the rejected alternatives, which loop sees it.
-  This session's shape was taken before it began; what the code forced
-  was brought one question at a time: how many predictions and which
-  metrics (D58), the node's seven points, `asks` as "thesis" only, the
-  prompt hypothesis, decision 70.
+  This session was decisions and one change: 70 with its three rejected
+  options, then 63, 64, 65, 68 and 69, each brought on its own with the
+  figures that decide it and each waiting for its own word.
 - **The check first, seen BLOCKED**; the Part before the code; the
   reference commit before the code commit each time, and a correction to
   the reference dated in its own commit.
 - **A paid loop says first what it will fetch and store, table by
   table**, read off the store and the clock, and says after what moved.
-  This session the CLI turned out to fetch prices too, and was said first.
+  This session the CLI turned out to fetch nothing, its interval not run out, and was said so first.
 - **A request to the outside is asked for before it is made**, one
   request or one set, and what it returns is kept whatever the code says.
 - **A claim in a brief is measured before it is written down.**
@@ -196,25 +187,25 @@ python tests/benchmark/run_cases.py
 python src/agents/cli.py --portfolio 3
 ```
 
-**1646 passed, 6 xfailed, 35 warnings, about 5 seconds.** Run at session
-start (1524) and after every commit.
+**1650 passed, 6 xfailed, 35 warnings, about 5 seconds.** Run at session
+start (1646) and after every commit. The four are decision 70's: one test
+replaced by two and four added.
 
 **Golden set: twenty lines, one pinned failure** ("Should I rebalance my
-portfolio?", errors 1). Four runs this session: at session start, zero
-diff on nineteen; with the twentieth line, which recorded it at
-out_of_scope; twice after the routing commit, identical, only the
-twentieth line moving, to research. **Each golden run now asks for Items
-1A and 7 and proposes once**, about $0.12 on Sonnet, recorded nowhere.
+portfolio?", errors 1). **One run this session, zero diff**, its stderr
+holding only the pinned line's error. **A golden run asks for the sections
+the cache lacks and proposes once**: Item 7 alone now that Item 1A is
+stored, about $0.058 on Sonnet by the measured requests, recorded nowhere.
 
-**The runner twice**: 15/18 at session start, then **16/18** after the
-routing, 4.4 PASS on Item 1's claims with Items 1A and 7 printed as not
-read, 4.1 BLOCKED naming D36, 4.3 BLOCKED at out_of_scope. `--case 4.4`
-twice before the routing: out_of_scope both times.
+**The runner once: 16/18**, 4.4 PASS, 4.1 BLOCKED naming D36, 4.3 BLOCKED
+at out_of_scope with intent `out_of_scope` and an empty plan. The runner
+prints no answer, so which sections that run read cannot be read off it
+(KNOWN_GAPS).
 
-**The CLI, twice.** The allocation question at session start: priced as
-of 2026-09-18, total 408,447.50 USD, Equity 69.61%, the five lines summing
-to the total; this run fetched the 18th's closes for the nine holdings,
-said first. The thesis question after the runner, read by hand (§4).
+**The CLI, once.** The allocation question: priced as of 2026-09-18, total
+408,447.50 USD, Equity 69.61%, the five lines summing to the total. It
+fetched nothing — the holdings' stamps were 19 September 02:51 UTC and the
+interval one day — and cost one Haiku call.
 
 **Level 4: 4 of 6 cases pass (4.2, 4.4, 4.5, 4.6); 4.1 blocked by
 decision; 4.3 blocked on the gate.** Read n/18 as a count of well-formed
@@ -225,12 +216,12 @@ scored: none is due before February 2027.
 ### Branches and tags
 
 `baseline-v1` is the trunk; sessions branch from its tip and merge back
-`--ff-only` when the loops are green. **The trunk stood at 9c8e882** at
-session start, `reader` merged into it. `thesis` is this session's branch,
+`--ff-only` when the loops are green. **The trunk stood at 3ce7dab** at
+session start, `thesis` merged into it. `cap` is this session's branch,
 cut there on the owner's yes, since the branch the brief named did not
-exist. `reader`, `research`, `score`, `publish`, `range`, `keys`, `node`,
-`filer`, `bridge`, `consolidate`, `selection`, `compliance` and
-`vocabulary` are merged and older. `wip/phase7-snapshot` holds rejected
+exist. `thesis`, `reader`, `research`, `score`, `publish`, `range`,
+`keys`, `node`, `filer`, `bridge`, `consolidate`, `selection`,
+`compliance` and `vocabulary` are merged and older. `wip/phase7-snapshot` holds rejected
 Compliance/IPS code. `wip/rag-early` and tag `rag-early-parked` hold the
 RAG code. `quant-inventory-parked` at 8d87455 holds the tree before the
 seventeenth session's quant deletions.
@@ -240,23 +231,28 @@ seventeenth session's quant deletions.
 `data/portfolio.db` is untracked runtime state. Alembic head
 **`2445c12e728c`**, 26 migrations, linear, all applied; no migration this
 session. No reseed. **What this session wrote:**
-- `daily_prices`: 6,999 to **7,009**, the 18 September close for the nine
-  holdings (the CLI, 02:51 UTC) and for GOOGL (the golden set's valuation
-  line, 03:07 UTC). Every holding's last fetch is 2026-09-19 02:51 UTC,
-  GOOGL's 03:07; **the price interval runs out on the 20th early UTC**.
-- `macro_data`: 206 to **209**, VIX, TNX_10Y and IRX_3M for 2026-09-18
-  added by the first golden run, the stamps rewritten on every run since.
-- `api_call_logs`: 2,414 to **2,436**; the 19th's `api_quotas` counter
-  at 22.
-- `document_readings`: 1 to **3 rows, all Item 1**, one per prompt
-  version: `1b2d86a8ba32` (the twenty-sixth session's), `ba9a7051eeca`
-  (c953d04's) and **`a64f51fde1eb` (068134c's, the one the node serves)**.
-  **No reading of Item 1A or Item 7 is stored**: every request was refused.
+- `daily_prices`: **7,009, unchanged**, the last close 2026-09-18. Every
+  holding's last fetch is still 2026-09-19 02:51 UTC and GOOGL's 03:07;
+  **the price interval ran out at those times on the 20th, so the next
+  paid loop or allocation question fetches the closes**.
+- `macro_data`: **209, unchanged**, as predicted: no trading day closed
+  between the runs. The stamps were rewritten, last at 2026-09-20 16:29
+  UTC by the golden run.
+- `api_call_logs`: 2,436 to **2,439**, the macro fetch of each paid loop;
+  the `api_quotas` counter for the 19th 22 to **25**.
+- `document_readings`: 3 to **4 rows**. Item 1 under `1b2d86a8ba32`,
+  `ba9a7051eeca` and **`a64f51fde1eb` (068134c's, the one the node
+  serves)**, and **Item 1A under `903e89b123b5`**, 068134c's wording for
+  that section, stored by one of the two paid loops and read by hand
+  (KNOWN_GAPS). **No reading of Item 7 is stored**: every request was
+  refused, and decision 70's change to the cap has not been put to it.
 
 Unchanged: `ticker_ciks` 10,422 rows as of 2026-09-16 01:33 UTC;
 `filers` three rows; `filed_facts` 28,787, Apple's 15,132 and Alphabet's
 13,655; `filed_fetch_metadata` two rows; `filed_documents` one row,
-Alphabet's FY2025 10-K; `assets` ten rows, GOOGL the tenth and not held;
+Alphabet's FY2025 10-K, 343,344 characters; `assets` ten rows, GOOGL the
+tenth and not held and its asset class, sector and instrument type all
+blank (decision 63 states them on the watchlist entry instead);
 `financial_statements` 65 and `shares_history` 947, neither a source.
 **The filings interval runs out on 22 and 23 September**: Apple's facts
 pulled 2026-09-15 22:17 UTC, its filer row 2026-09-16 00:03, the ticker
@@ -314,7 +310,7 @@ thesis, the two models' ids, readings, not_read, predictions and
 | The prediction frame; `WRITTEN`, the metrics it writes | `portfolio_tool/proposals.py`, `frame` | `tests/test_proposals.py`, to Part 15 C and D |
 | A document's text; a filing's row and document; the store; the sectioner | `filing_text.py`, `providers/edgar.py`, `filings.py`, `sections.py` | their tests, to Part 16 |
 | The reading model's client | `agents/reading_model.py`, `reading_model()` | `tests/test_reading_model.py`, to Part 16 D56 |
-| The reader, its prompts at **068134c's wording** (quotes "at most thirty words") | `portfolio_tool/reader.py` | `tests/test_reader.py`, 20, to Part 16 D56 and D57 |
+| The reader, its prompts at **068134c's wording** (quotes "at most thirty words", which the record no longer holds them to) | `portfolio_tool/reader.py` | `tests/test_reader.py`, 20, to Part 16 D56 and D57 |
 | **The proposal model's client** | `agents/proposal_model.py`, `ProposalModel`, `proposal_model()` | `tests/test_proposal_model.py`, 22, to Part 15 F |
 | **The proposer**: prompt, schema, message, one request, the frame | `portfolio_tool/proposer.py`, `propose`, `message`, `PROMPT`, `SCHEMA` | `tests/test_proposer.py`, 18, to Part 15 F |
 | **The loader's thesis** | `portfolio_tool/watchlist.py`, `Candidate.thesis` | `tests/test_watchlist_loader.py` |
@@ -323,13 +319,16 @@ thesis, the two models' ids, readings, not_read, predictions and
 | **`asks`** | `agents/extraction.py`, `schemas.ExtractedParameters.asks`, `smart_router._with_extraction` | `tests/test_extraction.py`, `tests/test_router_extraction.py` |
 | **The routing** | `schemas.AGENTS`, `REQUIRES`, `TERMINAL`, the registry's research sentence; `graph.AGENT_NODES` | `tests/test_derived_plans.py`, `tests/test_smart_router.py`, the golden line |
 
-**What the live answer shows** (the CLI, read by hand): Item 1's twelve
-claims under `a64f51fde1eb`, five faithful, two faithful at the core, two
+**What the live answers show** (read by hand): Item 1's twelve claims
+under `a64f51fde1eb`, five faithful, two faithful at the core, two
 stretches marked `inferred`, three saying more than their quote under
-`stated`; Items 1A and 7 not read, with the record's reasons; W-1.3, a
-gross margin for FY2026 of at least 59.65%, the value right, resting on
-claims that say nothing about margins. Part 15 F9 has no code: the loader
-reads no `author`.
+`stated`; and, this session, Item 1A's twelve under `903e89b123b5`, three
+faithful, six faithful at the core with a detail from the paragraph, two
+saying more than their quote under `stated` and one stretch marked
+`inferred` (KNOWN_GAPS). Item 7 is not read, with the record's reason.
+The proposal is W-1.3, a gross margin for FY2026 of at least 59.65%, the
+value right, resting on claims that say nothing about margins. Part 15 F9
+has no code: the loader reads no `author`.
 
 ---
 
@@ -357,8 +356,9 @@ reads no `author`.
 - **Measured costs on `claude-sonnet-5`, $2 and $10 a million:** Item 1 about
   7,770 tokens in, $0.030; Item 1A about 24,800, $0.066; Item 7 about
   17,680, $0.051; a proposal over Item 1's claims 2,424 in and 214 out,
-  $0.007. The golden script, the runner and the CLI record none of their
-  requests.
+  $0.007. With Items 1 and 1A cached, a paid loop asks for Item 7 and one
+  proposal, about $0.058. The golden script, the runner and the CLI record
+  none of their requests.
 - **The price provider** is `nodes.price_provider()`; **the models** are
   `nodes.reading_model()` and `nodes.proposal_model()`, the same pattern,
   each calling its `agents` module's function; the EDGAR provider is
@@ -402,15 +402,18 @@ reads no `author`.
   golden set's first line among them, asks the price provider and upserts
   `macro_data`, adding rows when a trading day has closed since.
 - **A scratch copy of the tree runs the suite against a changed file
-  without touching the repository.** The harness's scratch directory was
-  withdrawn mid-session; `/tmp/thesis_session` stood in for it. Build the
-  copy with `git archive HEAD src tests docs alembic config.toml ips.toml
-  philosophy.toml watchlist.toml pyproject.toml | tar -x -C <copy>`, copy
+  without touching the repository.** This session's copy was made from the
+  working tree, `cp -R src tests docs alembic config.toml ips.toml
+  philosophy.toml watchlist.toml pyproject.toml <copy>/`, because the
+  changes under test were not yet committed; from HEAD it is
+  `git archive HEAD src tests docs alembic config.toml ips.toml
+  philosophy.toml watchlist.toml pyproject.toml | tar -x -C <copy>`. Copy
   `data/portfolio.db` into `<copy>/data/`, then from inside it
   `DATABASE_URL=sqlite:///<copy>/data/portfolio.db USE_MOCK_QUOTA=True PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 <repo>/.venv/bin/python -m pytest -q -p no:cacheprovider <tests>`
-  after deleting its `__pycache__`. `/tmp/thesis_session` also holds the
-  raw answers of this session's live requests but the first three; it is
-  not committed and does not survive a restart.
+  after deleting its `__pycache__`. This session made no request of its
+  own, so no raw answer was kept outside the store; the claims of the
+  Item 1A reading the paid loops stored are in `document_readings` as the
+  model supplied them (D57).
 - **`nodes.utc_today()`** is the ledger node's clock; the screening node
   still reads the clock inline, and the research node reads the screen's
   as-of.
@@ -436,89 +439,91 @@ reads no `author`.
 
 ---
 
-## 4. What the twenty-seventh session did
+## 4. What the twenty-eighth session did
 
-`git log --oneline 9c8e882..HEAD`, sixteen commits with this file. The
-rest of case 4.4's path, the reference first each time, and the path into
-the graph.
+`git log --oneline 3ce7dab..HEAD`, five commits with this file. Six
+decisions and the one change one of them asked for. **No node, no check
+and no Part of the gate**, by the brief: those come next.
 
-**The loops, first.** `thesis` cut from the trunk at 9c8e882 on the
-owner's yes. pytest 1524. The CLI turned out to fetch prices, the
-interval having run out, and was said first and run on a yes. The golden
-set, zero diff on nineteen lines, one prediction of mine missed, the macro
-count rising on a new trading day; the runner, 15/18, 4.4 at out_of_scope.
+**The loops, first.** `cap` cut from the trunk at 3ce7dab on the owner's
+yes. pytest 1646. The CLI on the allocation question, said first to fetch
+nothing since the interval had not run out, and it fetched nothing. Then,
+on a yes and one after the other, the golden set once, twenty lines and
+zero diff, and the runner once, 16/18 — each predicted first, table by
+table, and each holding: no price row, no filing row, the macro count
+still 209.
+
+**What the paid loops left behind.** One of them was answered for Item 1A
+within the old cap, and the reading is stored: the first ever accepted for
+that section. It was read by hand against the stored section before
+anything was decided on it, quote by quote with the paragraph around each.
+Which of the two loops asked is not recorded anywhere, and the entry says
+so.
 
 **Under the yes, in order.**
-- **970fd66** Part 15 F, D58: one prediction per answer, a figure on a
-  metric the frame writes or an event, the call, rows S-1 to S-7.
-- **0085073** Part 15 F: the refusals before the request, dated.
-- **1fa6a3f** `agents/proposal_model.py` and `portfolio_tool/proposer.py`,
-  `proposals.WRITTEN`, 40 tests, 25 wrong versions, one test added when
-  one changed nothing.
-- **d1038e0** the loader reads each thesis as written; five test fixtures
-  gain a thesis line.
-- **e1629a6** the research node, unbound, 17 tests, 17 wrong versions, one
-  test added.
-- **4e2b472** the rendering, unwired, 8 tests through `check_4_4`, 19 wrong
-  versions, one rewritten and one test added for five that changed
-  nothing; the committed file it had overwritten restored first.
-- **d6052a8** the golden set's twentieth line, after two sightings alone.
-- **e9b6022** its baseline at out_of_scope, one golden run.
-- **61273df** extraction sets `asks` to "thesis", 49 tests, 8 wrong
-  versions.
-- **The first live readings of Items 1A and 7**, each said first: three
-  requests, all refused on the cap, $0.1841; read by hand; the answer of
-  the first not kept.
-- **c953d04** the prompt states 250 characters, a hypothesis with its
-  prediction; one request per section: Item 1 held, Items 1A and 7 missed.
-- **068134c** the second and last wording, thirty words; Item 1 held,
-  Items 1A and 7 missed again, and the hypothesis stopped. A diagnostic
-  with no request separated the filer's long sentences from the model's
-  habit of quoting whole ones; decision 70 opened on the owner's word.
-- **The first live proposal**, said first: gross margin at least 59.65%
-  for FY2026 as W-1.3, the value right, the reasons topical; $0.0070.
-- **f5f855c** the routing, a hypothesis with its prediction; **90486b5**
-  the golden line at research on two identical runs, the prediction held
-  on all twenty lines.
-- **The runner**, 16/18, 4.4 PASS; **the CLI** on the thesis question,
-  read by hand.
-- **e5ea4d7** the record: six entries, six dated lines, the header.
-- **0b2eaef** benchmark.md's status note.
+- **fdea842** Part 15 D47 and section A, dated: the cap is on a reading's
+  quoted text, 3,600 characters a section, not on a quote; the refusal
+  names the section and the total; the total is checked after each claim's
+  own rules. Decision 70, taken after its three options were brought with
+  the figures.
+- **7a42330** the code: `reading.record` drops the per-quote cap and adds
+  the total; the runner's `_readings_invariants` does the same; one test
+  replaced and five added, two touched. Each was seen failing against the
+  old code, then against ten wrong versions on a scratch copy with
+  bytecode off, and `test_reading.py` seen erroring without its module.
+  pytest 1646 to 1650.
+- **Decisions 63, 64, 65, 68 and 69**, each brought on its own with its
+  options, its recommendation, its rejected alternatives and the figures
+  that decide it, and each taken on its own word. §5 and KNOWN_GAPS carry
+  them.
+- **77d1e48** the record: three entries, four dated lines, the header.
+- **1a2d2e4** benchmark.md's status note.
 
-**Spent on Sonnet, measured:** nine reading requests and one proposal on
-their own, $0.4865; the golden runs, the runner and the CLI after the
-routing, about $0.12 each, estimated.
+**Spent on Sonnet, measured by the requests the loops make:** about $0.12
+on each of the two paid loops, the last runs at the old cost, since Item
+1A was asked for on both. A run from here asks for Item 7 alone, about
+$0.058.
 
-**Not done, on purpose.** The gate and everything of 4.3; decisions 63,
-64, 65, 68 and 69; decision 70; the loader's `author` and Part 15 F9; the
-seven emoji headers; decisions 51, 52 and 54; the currency; the
-philosophy topic lookup; the CIK confirmation; formulas for
-`operating_margin` and `free_cash_flow`; any change to the reading or the
-proposal prompts for faithfulness.
+**Not done, on purpose.** The gate's Part, node and check and everything
+of 4.3; the watchlist's new fields and their sentence, which need the
+owner's word and come with the gate; Adobe's asset class, sector and
+instrument type, unstated; Item 7 under the new cap; the loader's
+`author` and Part 15 F9; the seven emoji headers; decisions 51, 52 and
+54; the currency; the philosophy topic lookup; the CIK confirmation;
+formulas for `operating_margin` and `free_cash_flow`; any change to the
+reading or the proposal prompts for faithfulness.
 
 ---
 
 ## 5. Decisions taken, and decisions pending
 
-**Taken this session**, each with the owner's yes:
-- **D58** (Part 15 F): exactly one proposed prediction per answer; a
-  figure on a metric the frame writes, `revenue` or `gross_margin`, or an
-  event; the call and the answer's shape; nothing cached.
-- **The research node's shape**: the loader reads the thesis; the node
-  reads the screen's figures back from the database; the screen's stop
-  does not stop it; a refused proposal is `proposal_stopped`; a filing's
-  refusal leaves every section unread once, a section's refusal that
-  section; the two models named on the block; `asks` other than "thesis"
-  refused.
-- **`asks` takes "thesis" only**, set by the word; "position" with 4.3.
-- **The prompt hypothesis**, two wordings, both stopped.
+**Taken this session**, each with the owner's yes, each brought on its own:
+- **70**: the record caps a reading's quoted text at 3,600 characters a
+  section and caps no single quote. Built, the reference first.
+- **63**: the watchlist entry states a candidate's asset class, sector and
+  instrument type; a candidate missing one is refused before the gate
+  runs. **Alphabet's sector is Communication Services**, the owner's word.
+- **64**: the purchase is funded by new money on top of the portfolio, the
+  stated weight being the candidate's share of the grown total. IPS-5.3
+  becomes a finding of its own.
+- **65**: the weight is stated by the watchlist entry, which the gate
+  cites as its `weight_source`. A weight in the question is its own
+  decision, when a case asks.
+- **68**: the outcome supports an entry only when all four permit — the
+  screen clear, the gate clear, my entry condition met, the model's view
+  of the thesis `stands`; otherwise it supports none and the grounds name
+  each input that did not, a stop worded as not established. The model's
+  view can only take away.
+- **69**: 4.3 passes on a prediction **entered** in the ledger under the
+  candidate, mine or the system's, cited by id; a proposal made in the
+  same run is printed beside it, marked proposed and not entered.
 
 **Pending — decide before writing code.** Old numbers kept so KNOWN_GAPS
-references resolve. **Seventeen by count**: 70 opened, none closed.
-CLAUDE.md's line reads "The list stands at 16 on 18 September" with
-sixteen numbers and no longer matches; it is mine to change, to
-"The list stands at 17 on 19 September: 10, 12, 13, 16, 17, 22, 45, 48, 51,
-52, 54, 63, 64, 65, 68, 69 and 70". The cap is 25.
+references resolve. **Eleven by count**: six closed, none opened.
+CLAUDE.md's line reads "The list stands at 17 on 18 September" with
+sixteen numbers and no longer matches on either count; it is mine to
+change, to "The list stands at 11 on 20 September: 10, 12, 13, 16, 17, 22,
+45, 48, 51, 52 and 54". The cap is 25.
 
 10. A window return as a measure with a reference.
 12. The hypothetical mode's instrument type.
@@ -535,24 +540,7 @@ sixteen numbers and no longer matches; it is mine to change, to
 52. The Yahoo-fed tables: delete or keep.
 54. BaseAgent's tool loop and the three `AgentConfig` fields: delete, its
     own sitting.
-63. Where a candidate's asset class, sector and instrument type are
-    stated. The gate raises on each blank until then.
-64. How a candidate's purchase is funded in the gate's check: from cash,
-    from new money, from a sale. IPS-5.2 leaves it undecided.
-65. Where the weight is stated. Recommended: the watchlist entry, by me;
-    a weight in a research question is refused by the validator today.
-68. The rule that composes 4.3's outcome from the screen, my entry
-    condition, the gate and the model's view of the thesis. Its truth
-    table is mine to read in the next Part; `check_4_3` holds one
-    invariant of it and no more.
-69. Whether 4.3 passes on a prediction proposed and not entered, which
-    `check_4_3` accepts today, or only on one I have entered.
-70. **New.** The quote cap against this filer's sentences: the prompt
-    telling the model it may quote a shorter run from inside a sentence,
-    a new hypothesis; D47's cap measured against the filer's sentences, a
-    change to the reference; or the refusal standing and Items 1A and 7
-    unread. Cutting a quote in code is rejected. KNOWN_GAPS has the
-    figures.
+63, 64, 65, 68, 69 and 70 are closed this session; see the list above.
 
 - **The full test at the end of Order 4** (owner's, unchanged): when Order
   4's last commit lands, the project stops for a full test across both
@@ -571,37 +559,46 @@ cannot see: whether the range's ends are right (Part 11 C in pytest);
 whether a filing's verdict is right (Part 14 C in pytest); any due
 prediction until 2027; for 4.4, whether a quote supports its claim,
 whether the prediction's reasons support it, and a field the answer
-prints only on another line (KNOWN_GAPS). 4.4 passes on Item 1 alone while
-decision 70 stands open.
+prints only on another line (KNOWN_GAPS). 4.4 passes on Items 1 and 1A,
+Item 1A having been read for the first time this session; Item 7, the
+section that talks about margins, is still refused.
 
 ---
 
 ## 7. Next steps, in order
 
-**1. Decision 70**, read with its KNOWN_GAPS entry: how a claim resting on
-a sentence longer than the cap is read, before anything else of the
-research agent changes. A prompt change is a hypothesis with a
-prediction, two runs per section, stop at the second miss.
+**1. The gate and 4.3**, every decision it waited on now taken (§5). In
+order: the watchlist's new fields, the sentence for `docs/WATCHLIST.md`
+brought for my word first and Adobe's three values asked for, then
+`watchlist.toml` and the loader; the Part that computes a candidate at a
+stated weight by hand, with decision 68's truth table and decision 64's
+funding; the gate node and the test that no outcome prints without its
+block; `check_4_3`'s prediction requirement rewritten to decision 69;
+`asks` gaining "position" with its pattern and its row; the registry's
+sentences and the Siemens few-shot, a prompt hypothesis; 3.2 rewritten to
+a price forecast and the out-of-scope paragraph at that commit, Part 2 of
+benchmark.md in the next.
 
-**2. The gate and 4.3**, after decisions 63, 64, 65, 68 and 69: the Part
-that computes a candidate at a stated weight by hand, with the outcome's
-truth table; the gate node and the test that no outcome prints without
-its block; `asks` gaining "position" with its pattern and its row; the
-registry's sentences and the Siemens few-shot, a prompt hypothesis; 3.2
-rewritten to a price forecast and the out-of-scope paragraph at that
-commit, Part 2 of benchmark.md in the next.
+**On this portfolio the gate will fail IPS-3.1 at every weight**, equity
+being 69.61% against a 65% ceiling, and IPS-5.3 with it under decision
+64's funding (KNOWN_GAPS, with the figures). That is the policy answering
+and not a defect; the first run should not be read as one.
 
 **At the end of Order 4: the full test** (§5), before Order 5.
 
 ### Later, with reasons
 
-- **The trunk.** `git switch baseline-v1 && git merge --ff-only thesis`.
-- **CLAUDE.md's pending line**, mine to change to seventeen (§5).
-- **Every paid loop now costs Sonnet**: each golden run, runner run and
-  thesis question asks for Items 1A and 7 again and proposes once, about
-  $0.12, until decision 70 is taken.
-- **The next paid loop fetches prices after early on the 20th UTC**; the
-  filings interval runs out on 22 and 23 September.
+- **The trunk.** `git switch baseline-v1 && git merge --ff-only cap`.
+- **CLAUDE.md's pending line**, mine to change to eleven (§5).
+- **Every paid loop still costs Sonnet**: each golden run, runner run and
+  thesis question asks for Item 7 again and proposes once, about $0.058,
+  until Item 7 is read or stops being asked for.
+- **Item 7 under the new cap**: its refusals on 330 and 301 characters
+  would now be accepted, its refusals on a page break and on a digit in a
+  claim would not. One request, said first, read by hand.
+- **The next paid loop fetches the holdings' closes**: the interval ran
+  out at 02:51 UTC on 20 September, GOOGL's at 03:07. The filings interval
+  runs out on 22 and 23 September.
 - **The first score I write**: seven tests go red by design, and the
   document test does not see a score the document lacks (KNOWN_GAPS).
 - **The loader's `author`**, with my sentence in WATCHLIST.md, before the
@@ -631,6 +628,22 @@ commit, Part 2 of benchmark.md in the next.
 ---
 
 ## 8. Rules learned the hard way
+
+**A refusal that held on every measured draw is still a draw.** Items 1A
+and 7 were refused on every request the twenty-seventh session made, and
+one of this session's two paid loops was answered for Item 1A under the
+same prompt. Seven refusals are evidence about the odds, not a rule about
+the model.
+
+**A brief's claim about the clock is checked against the clock.** The
+brief said the price interval had run out early on 20 September; it was
+19 September at 16:25 UTC, the holdings' stamps were 02:51 that morning
+and the interval is one day, so the CLI fetched nothing.
+
+**What nothing records cannot be said afterwards.** Which of the two paid
+loops stored the accepted reading is unknowable: the runner prints no
+answer and `document_readings` carries no time. The entry says so instead
+of choosing the likelier one.
 
 **Look at a path before writing to it.** A new test file written under a
 name the suite already had replaced 20 committed tests without a word;
@@ -705,9 +718,9 @@ printf 'What has to be true in a year for my GOOGL thesis to be right?\n:q\n' | 
 grep -rn "SymbolName" src/ tests/ --include='*.py'
 git status --short
 
-# this session's commits: count from the branch's base, 9c8e882.
-git log --oneline 9c8e882..HEAD
-git rev-list --count 9c8e882..HEAD
+# this session's commits: count from the branch's base, 3ce7dab.
+git log --oneline 3ce7dab..HEAD
+git rev-list --count 3ce7dab..HEAD
 
 # by hand, from the project root, after a migration or a seed change:
 alembic upgrade head
@@ -730,7 +743,7 @@ PYTHONDONTWRITEBYTECODE=1 pytest -q -p no:cacheprovider tests/<file>.py
 lsof tests/golden/expected_values.xlsx
 
 # merge and push, by the owner only:
-git switch baseline-v1 && git merge --ff-only thesis
+git switch baseline-v1 && git merge --ff-only cap
 git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1
 ```
 ### The four loops
@@ -738,9 +751,9 @@ git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1
 | Loop | Cost | Answers |
 |---|---|---|
 | `pytest` | ~5s, no model calls | Do the components still work; does every reference Part reproduce; does each node fetch in order and publish its block; does each rendering pass the runner's check; does the reader send what D56 says and the proposer what D58 says |
-| CLI | ~3s and one Haiku call for most questions; **the thesis question ~45s and about $0.12 on Sonnet**; **fetches prices past their interval** | What it is actually doing: the plan, the parameters, the reasoning line, the answer text |
-| Golden set | ~2 min, **about $0.12 on Sonnet per run for the thesis line** and Haiku, **writes price rows past their interval, filed rows past theirs, and the macro rows, the call log and the quota counter on every run** | Did routing change anywhere (twenty lines, one pinned failure). Blind to parameters and answer text; stderr kept to a file |
-| Benchmark runner | ~2 min, **about $0.12 on Sonnet for 4.4** and Haiku, **writes price and filed rows past their intervals** | How many cases pass, n/18. Blind to the four intents outside the roster, to whether a range's ends are right, to any due prediction until 2027, and, for 4.4, to a quote's support for its claim, a prediction's support in its reasons, and a field printed only on another line |
+| CLI | ~3s and one Haiku call for most questions; **the thesis question ~45s and about $0.058 on Sonnet**; **fetches prices past their interval** | What it is actually doing: the plan, the parameters, the reasoning line, the answer text |
+| Golden set | ~2 min, **about $0.058 on Sonnet per run for the thesis line** and Haiku, **writes price rows past their interval, filed rows past theirs, a reading it is answered for, and the macro rows, the call log and the quota counter on every run** | Did routing change anywhere (twenty lines, one pinned failure). Blind to parameters and answer text; stderr kept to a file |
+| Benchmark runner | ~2 min, **about $0.058 on Sonnet for 4.4** and Haiku, **writes price and filed rows past their intervals, and a reading it is answered for** | How many cases pass, n/18. Blind to the four intents outside the roster, to whether a range's ends are right, to any due prediction until 2027, and, for 4.4, to a quote's support for its claim, a prediction's support in its reasons, a field printed only on another line, and which sections the run read at all |
 
 `golden set → change → golden set → decide → then update expected.txt, its own
 commit`. Prediction first, twice for a prompt change, stop at the second miss
