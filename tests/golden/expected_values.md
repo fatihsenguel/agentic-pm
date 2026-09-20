@@ -2981,6 +2981,25 @@ stopping where 4.1's does, is the same right answer arriving at the
 runner. Nothing here is to be moved by filling a figure or softening a
 clause.
 
+*Noted 2026-09-20, before the code that reads the entry condition: the
+row above computes where the entry condition stands as a fact, and the
+pipeline reports something narrower. The entry condition is read off the
+screen's finding on its clause, and **a screen that stopped reports a
+finding on no clause** (PHI-1.2, D25): `screening.screen` raises at
+PHI-2.1 and the node publishes `findings` empty, so there is no finding
+on PHI-4.1 to read. `margin_of_safety` is a clause the screen does
+compute, from the price and the range, when it reaches it; on this filer
+it does not reach it. So the field on the research block is **not
+established** rather than not met, and the grounds say so, decision 68
+wording a stop that way. The verdict in the third column is unchanged:
+not established does not permit, and the outcome is row 15 either way.
+The figures in the row stand — the entry price is 97.04 against a close
+of 349.54 — and they are what the answer would report once the screen
+reaches PHI-4.1. Computing the field from the range instead, which is on
+the block even when the screen stops, was rejected: it is a second
+arithmetic path for a clause the screen owns, and it reports a verdict
+PHI-1.2 says is not to be reported.*
+
 ### J. Decisions this Part takes
 
 | # | Decision | Choice |
