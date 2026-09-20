@@ -160,9 +160,12 @@ class ExtractedParameters(BaseModel):
 
     # What a research question asks (decision 66), set by extraction from a
     # closed pattern and never by the model: "thesis", what has to be true
-    # for a candidate's thesis to be right. Read by nothing outside
-    # research; "position" comes with case 4.3.
-    asks: Optional[Literal["thesis"]] = Field(default=None)
+    # for a candidate's thesis to be right, and "position", whether to own
+    # the company at the weight its entry states. Read by nothing outside
+    # research. The two take different plans - a position is checked by the
+    # gate against the published allocation and a thesis implies none - so
+    # TERMINAL discriminates on the value and not on the parameter alone.
+    asks: Optional[Literal["thesis", "position"]] = Field(default=None)
 
     @field_validator('tickers')
     @classmethod
@@ -188,7 +191,21 @@ class ExtractedParameters(BaseModel):
 # weight or a policy topic, which measure no portfolio and so are not closed
 # - ComplianceAgent runs alone. Every intent has a row: the model writes no
 # plan (combined, the last intent whose plan was the model's, is retired).
-TERMINAL: Dict[str, Dict[str, Tuple[Optional[str], bool]]] = {
+#
+# A key may name a parameter, which matches when it is set, or a parameter
+# and a value, `asks=position`, which matches only that value. Rows are
+# tried in order and the first match decides, so the narrower key is
+# written above the wider one. A parameter with two values that need two
+# plans is why: a thesis question implies no position and reads no
+# allocation, and a position question is checked by the gate against the
+# allocation PortfolioAnalysisAgent published, so the two cannot share a
+# plan and ResearchAgent cannot require the portfolio agents for both.
+#
+# A row's terminal may be a tuple, closed over each name in order with
+# each name once. That is how a question needs two things finished rather
+# than one: `asks=position` needs the portfolio computed and the company
+# screened and read, and neither requires the other.
+TERMINAL: Dict[str, Dict[str, Tuple[Any, bool]]] = {
     "optimization": {"": ("OptimizationAgent", True)},
     "macro_analysis": {"": ("MacroAgent", True)},
     "rebalancing": {"": ("RebalanceAgent", True)},
@@ -200,7 +217,11 @@ TERMINAL: Dict[str, Dict[str, Tuple[Optional[str], bool]]] = {
         "hypothetical_weight": ("ComplianceAgent", False),
         "policy_topic": ("ComplianceAgent", False),
     },
-    "research": {"": ("ScreeningAgent", True), "asks": ("ResearchAgent", True)},
+    "research": {
+        "": ("ScreeningAgent", True),
+        "asks=position": (("PortfolioAnalysisAgent", "ResearchAgent"), True),
+        "asks": ("ResearchAgent", True),
+    },
     "ledger": {"": ("LedgerAgent", True)},
     "clarification_needed": {"": (None, True)},
     "out_of_scope": {"": (None, True)},
@@ -211,12 +232,43 @@ if set(TERMINAL) != set(INTENTS):
         "intent registry and terminal table disagree: schemas.INTENTS has "
         f"{sorted(INTENTS)}, TERMINAL has {sorted(TERMINAL)}. An intent is added to both or to neither."
     )
-for _intent, _rows in TERMINAL.items():
-    for _key, (_terminal, _) in _rows.items():
-        if _key and _key not in ExtractedParameters.model_fields:
-            raise RuntimeError(f"TERMINAL[{_intent!r}] discriminates on {_key!r}, not a parameter")
-        if _terminal is not None and _terminal not in AGENTS:
-            raise RuntimeError(f"TERMINAL[{_intent!r}] names {_terminal!r}, not in the roster")
+def _key_parts(key: str) -> Tuple[str, Optional[str]]:
+    """A discriminator key as its parameter and, where it names one, the
+    value it matches. `asks` is the parameter set to anything; `asks=position`
+    is that parameter set to that value."""
+    name, sep, value = key.partition("=")
+    return name, (value if sep else None)
+
+
+def _terminals(terminal) -> Tuple[str, ...]:
+    """A row's terminal as a tuple, one name or several."""
+    if terminal is None:
+        return ()
+    return terminal if isinstance(terminal, tuple) else (terminal,)
+
+
+def validate_terminal(table: Mapping[str, Mapping[str, Tuple[Any, bool]]]) -> None:
+    """Every row of a terminal table: its key names a parameter and, where
+    it names a value, a value that is not empty; its terminal names agents
+    the roster has. Called on TERMINAL at import, so a table that cannot
+    route fails here rather than on the first live request, and taken as an
+    argument so that the checks can be shown working against a table that
+    breaks them."""
+    for intent, rows in table.items():
+        for key, (terminal, _closed) in rows.items():
+            name, value = _key_parts(key)
+            if name and name not in ExtractedParameters.model_fields:
+                raise RuntimeError(f"TERMINAL[{intent!r}] discriminates on {name!r}, "
+                                   "not a parameter")
+            if value is not None and not value:
+                raise RuntimeError(f"TERMINAL[{intent!r}] key {key!r} matches an empty value")
+            for agent in _terminals(terminal):
+                if agent not in AGENTS:
+                    raise RuntimeError(f"TERMINAL[{intent!r}] names {agent!r}, "
+                                       "not in the roster")
+
+
+validate_terminal(TERMINAL)
 
 
 def _closure(agent: str) -> List[str]:
@@ -232,9 +284,17 @@ def _closure(agent: str) -> List[str]:
 
 
 def _discriminator(intent: str, parameters: Mapping) -> str:
-    rows = TERMINAL[intent]
-    for key in rows:
-        if key and parameters.get(key) is not None:
+    """The first row whose key matches, in the order the table writes them,
+    so a key naming a value is written above the one naming the parameter
+    alone and decides before it."""
+    for key in TERMINAL[intent]:
+        if not key:
+            continue
+        name, value = _key_parts(key)
+        found = parameters.get(name)
+        if found is None:
+            continue
+        if value is None or found == value:
             return key
     return ""
 
@@ -247,16 +307,27 @@ def derive_plan(intent: str, parameters) -> List[str]:
     """
     parameters = parameters if isinstance(parameters, Mapping) else parameters.model_dump()
     terminal, closed = TERMINAL[intent][_discriminator(intent, parameters)]
-    if terminal is None:
+    names = _terminals(terminal)
+    if not names:
         return []
-    return _closure(terminal) if closed else [terminal]
+    if not closed:
+        return list(names)
+    plan: List[str] = []
+    for name in names:
+        for step in _closure(name):
+            if step not in plan:
+                plan.append(step)
+    return plan
 
 
 def _plan_qualifier(intent: str, parameters: Mapping) -> str:
     key = _discriminator(intent, parameters)
     if intent == "compliance":
         return f" for {key}" if key else " over the portfolio"
-    return f" with {key} {parameters.get(key)!r}" if key else ""
+    if not key:
+        return ""
+    name, _ = _key_parts(key)
+    return f" with {name} {parameters.get(name)!r}"
 
 
 class RouterDecision(BaseModel):

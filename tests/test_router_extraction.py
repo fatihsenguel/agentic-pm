@@ -138,14 +138,17 @@ async def test_what_a_research_question_asks_is_extractions(router):
     assert decision.execution_order == ["ScreeningAgent"]
 
 
-def test_asks_takes_thesis_and_nothing_else():
-    """"position" is the other value decision 66 names, and it comes with
-    case 4.3: a value nothing consumes is not in the schema."""
+def test_asks_takes_the_two_values_decision_66_names_and_nothing_else():
+    """Both are consumed now: "thesis" routes to the research agent alone
+    and "position" to the portfolio agents beside it, the gate checking the
+    answer that implies a position. Anything else is not a value of the
+    closed set extraction sets."""
     from pydantic import ValidationError
 
     from agents.schemas import ExtractedParameters
     assert ExtractedParameters(asks="thesis").asks == "thesis"
-    for value in ("position", "Thesis", ""):
+    assert ExtractedParameters(asks="position").asks == "position"
+    for value in ("Thesis", "Position", "buy", ""):
         with pytest.raises(ValidationError):
             ExtractedParameters(asks=value)
 

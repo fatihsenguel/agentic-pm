@@ -85,7 +85,14 @@ def test_the_checker_is_reachable_from_one_intent_only():
     planned_by = set()
     for intent, rows in TERMINAL.items():
         for key in rows:
-            parameters = {key: DISCRIMINATORS[key]} if key else {}
+            # A key names a parameter, or a parameter and the one value it
+            # matches: `asks=position` is set from the key itself, and a
+            # bare `asks` from the table above.
+            if not key:
+                parameters = {}
+            else:
+                name, sep, value = key.partition("=")
+                parameters = {name: value if sep else DISCRIMINATORS[name]}
             if "ComplianceAgent" in derive_plan(intent, parameters):
                 planned_by.add(intent)
     assert planned_by == {"compliance"}
