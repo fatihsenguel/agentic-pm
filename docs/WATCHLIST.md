@@ -36,6 +36,15 @@ condition states the growth I assume for it, a low and a high; until it
 does, the range cannot be computed and the condition cannot be met. An
 `event` condition names the event.
 
+**What the IPS check reads.** Each candidate states three things about the
+instrument itself: its asset class, its sector, and whether it is a
+directly held share or a fund. They are mine to state rather than a data
+provider's to supply: the asset class puts a new position into a band of
+section 3 of the IPS, the sector into the count IPS-4.3 limits, and the
+instrument type decides whether IPS-4.2 attributes the position to an
+issuer at all. A candidate that does not state all three is not checked,
+and nothing fills a blank with a default.
+
 **The philosophy check.** The check exists in Order 4. Until then each
 candidate is on the list on its thesis alone, marked not yet checked, and the
 first run of the check writes the record.
@@ -45,6 +54,8 @@ first run of the check writes the record.
 ## W-1 — Alphabet (GOOGL)
 
 Added 2026-09-10. Reporting currency USD. Active.
+
+**Classification.** Equity; Communication Services; a directly held share.
 
 **Thesis.** Search and YouTube are the advertising businesses that keep
 growing through every cycle, the cloud segment is now profitable and taking
@@ -70,6 +81,8 @@ the cloud segment profitable at the operating level for the full year.
 ## W-2 — Adobe (ADBE)
 
 Added 2026-09-10. Reporting currency USD. Active.
+
+**Classification.** Equity; Technology; a directly held share.
 
 **Thesis.** The creative and document businesses are subscriptions that
 customers renew because their work lives in the files, and the gross margin
