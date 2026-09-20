@@ -5004,6 +5004,12 @@ in the config yet: nothing reads them until the loader does, and a value
 nothing consumes is not stored. Decision 64 also answers the funding this
 entry calls unstated: new money on top of the portfolio.
 
+*The same day, the document half landed in 0c94f04: `docs/WATCHLIST.md`
+states both classifications and the paragraph that says a candidate
+missing one is not checked. `watchlist.toml` still does not, and nothing
+holds the document's words to the config until the loader's test comes
+with the gate.*
+
 ### A weight in a research question is refused by the validator
 
 **Trigger:** pending decision 65.
