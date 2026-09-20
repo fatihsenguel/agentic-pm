@@ -15,7 +15,7 @@ the other cases use a small held set that stands for no portfolio.
 
 import pytest
 
-from agents.extraction import extract, resolve
+from agents.extraction import _POSITION, extract, resolve
 
 
 PERIODS = ("1Y", "2Y", "3Y", "5Y", "10Y")
@@ -179,14 +179,35 @@ THESIS = [
     "THESIS check on GOOGL",
     "Which of my theses have failed?",
 ]
-NO_THESIS = [
+POSITION = [
+    "Should I buy GOOGL?",                     # 4.3
+    "Should I buy Adobe at the weight I wrote down?",
+    "should i own GOOGL",
+    "Given all that, should I buy it?",
+    # The pattern reads words and knows nothing of the portfolio. Whether
+    # the company is already held is the gate's to refuse, and it does,
+    # naming the position (tests/test_gate.py).
+    "Should I buy more of what I already hold?",
+]
+NOTHING = [
     "What is GOOGL worth?",                    # 4.2
     "Does GOOGL clear my philosophy?",         # 4.1
-    "Should I buy GOOGL?",                     # 4.3, whose value comes with its gate
     "How have my predictions done?",           # 4.5
     "Is the hypothesis behind my AAPL position sound?",
     "A synthesis of my portfolio, please",
     "How are these positions doing?",
+    # Judgements about a position already taken. No case asks for them and
+    # the gate checks a new position, so the pattern leaves them alone.
+    "Should I sell GOOGL?",
+    "Should I hold GOOGL?",
+    # Mechanics on holdings already chosen, which is not a position
+    # question and keeps its own intent (benchmark.md Part 2).
+    "Should I rebalance my portfolio?",
+    # The verb without the question. A pattern that looked for "buy" or
+    # "own" anywhere would read a question about a holding as a judgement
+    # about taking one, and send it through the gate.
+    "I already own GOOGL, how is it doing?",
+    "How is my buy-and-hold portfolio doing?",
 ]
 
 
@@ -195,16 +216,38 @@ def test_the_word_thesis_asks_thesis(message):
     assert extract(message, P3, PERIODS).asks == "thesis"
 
 
-@pytest.mark.parametrize("message", NO_THESIS, ids=[m[:40] for m in NO_THESIS])
+@pytest.mark.parametrize("message", POSITION, ids=[m[:40] for m in POSITION])
+def test_should_i_buy_or_own_asks_position(message):
+    """Decision 66's other value. The gate checks the answer before it is
+    shown, so the question that implies a position has to be legible to
+    extraction and never decided by the model."""
+    assert extract(message, P3, PERIODS).asks == "position"
+
+
+def test_a_message_asking_both_is_a_position_question():
+    """Whether to own it is what is being decided; the thesis is what that
+    decision argues about, and the answer carries the thesis either way."""
+    assert extract("Should I buy GOOGL, and does my thesis still hold?",
+                   P3, PERIODS).asks == "position"
+
+
+@pytest.mark.parametrize("message", NOTHING, ids=[m[:40] for m in NOTHING])
 def test_no_other_message_asks_anything(message):
-    """A word that holds "thesis" inside it is not the word."""
+    """A word that holds "thesis" inside it is not the word, and a verb
+    the pattern does not name is not the pattern."""
     assert extract(message, P3, PERIODS).asks is None
 
 
 @pytest.mark.parametrize("message, held", [(row[0], row[1]) for row in CLEAN],
                          ids=[row[0][:40] for row in CLEAN])
-def test_no_message_in_the_table_asks_anything(message, held):
-    assert extract(message, held, PERIODS).asks is None
+def test_only_the_buy_question_in_the_table_asks_anything(message, held):
+    """One row of the table asks a position question: "Should I buy
+    Nvidia?", benchmark 3.2. Extraction reads the words and says so; the
+    intent is the model's and keeps that question out of scope, so the
+    plan is empty and `asks` reaches nothing. When 3.2 is rewritten to a
+    price forecast this row goes with it."""
+    expected = "position" if _POSITION.search(message) else None
+    assert extract(message, held, PERIODS).asks == expected
 
 
 # --- the record of a clarification, and the reply resolved against it --------
