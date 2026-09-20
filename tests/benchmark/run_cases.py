@@ -1904,7 +1904,7 @@ def check_4_5(state):
 READING_FORM = "10-K"
 READING_SECTIONS = {"Item 1", "Item 1A", "Item 7"}
 UNCERTAINTIES = {"stated", "inferred"}
-QUOTE_CAP = 300
+QUOTED_CAP = 3600
 CLAIMS_CAP = 12
 ACCESSION = re.compile(r"\d{10}-\d{2}-\d{6}")
 DIGIT = re.compile(r"\d")
@@ -2013,12 +2013,13 @@ def _readings_invariants(state):
                              "inside a quote, where it is the filing's")
             if not quote.strip():
                 fails.append(f"{at}: no quote; a claim without its source is tone")
-            if len(quote) > QUOTE_CAP:
-                fails.append(f"{at}: a quote of {len(quote)} characters; the cap is {QUOTE_CAP} "
-                             "and a record is not the document")
             if c.get("uncertainty") not in UNCERTAINTIES:
                 fails.append(f"{at}: uncertainty {c.get('uncertainty')!r} is not one of "
                              f"{sorted(UNCERTAINTIES)}")
+        quoted = sum(len(c.get("quote") or "") for c in listed)
+        if quoted > QUOTED_CAP:
+            fails.append(f"{where}: its quotes hold {quoted:,} characters together; the cap "
+                         f"is {QUOTED_CAP:,} and a record is not the document")
     for entry in block.get("not_read") or []:
         if not entry.get("section") or not entry.get("reason"):
             fails.append(f"not_read entry {entry!r} lacks its section or its reason")

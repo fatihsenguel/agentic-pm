@@ -107,13 +107,13 @@ def test_the_prompt_asks_for_less_than_the_record_allows():
     """The first live readings of Items 1A and 7 quoted past the cap in
     every request, under a limit stated in characters and under a shorter
     one (KNOWN_GAPS); the prompt states the limit in words and one
-    sentence for a longer passage, and the record's cap stays Part 15
-    D47's."""
+    sentence for a longer passage, and the record's cap is Part 15 D47's,
+    on a reading's quoted text since decision 70."""
     assert "at most thirty words long" in reader.COMMON
     assert "characters" not in reader.COMMON
     assert "quote the one sentence that says it" in reader.COMMON
     assert "300" not in reader.COMMON
-    assert reading.QUOTE_CAP == 300
+    assert reading.QUOTED_CAP == 3600
 
 
 def test_the_schema_is_the_record_s_three_fields():
@@ -151,7 +151,7 @@ def test_the_record_carries_no_section_text_beyond_its_quotes(session):
     record = _read(session, Model())
     paragraph = _section().split("\n")[2]
     assert paragraph not in repr(record)
-    assert sum(len(c.quote) for c in record.claims) <= reading.QUOTE_CAP * reading.CLAIMS_CAP
+    assert sum(len(c.quote) for c in record.claims) <= reading.QUOTED_CAP
 
 
 # --- the cache ----------------------------------------------------------------

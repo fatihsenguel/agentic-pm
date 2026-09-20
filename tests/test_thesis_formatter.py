@@ -65,6 +65,23 @@ async def test_the_nodes_block_rendered_passes_the_runners_4_4(edgar, models):
     assert run_cases.check_4_4(answered) == []
 
 
+async def test_the_runner_caps_a_readings_quoted_text_and_not_a_quote(edgar, models):
+    """Decision 70, as the runner holds it: a quote of 301 characters
+    raises nothing, and a reading's quotes past 3,600 characters together
+    fail naming the section and the total."""
+    answered = await _answered()
+    reading = answered["shared_data"]["research"]["readings"][0]
+    claims = reading["claims"]
+    claims[0]["quote"] = "x" * 301
+    assert run_cases._readings_invariants(answered)[0] == []
+    claims[0]["quote"] = "x" * (3600 - sum(len(c["quote"]) for c in claims[1:]))
+    assert run_cases._readings_invariants(answered)[0] == []
+    claims[0]["quote"] += "x"
+    assert run_cases._readings_invariants(answered)[0] == [
+        f"reading {reading['section']!r}: its quotes hold 3,601 characters together; "
+        "the cap is 3,600 and a record is not the document"]
+
+
 async def test_each_heading_line_carries_its_own_fields(edgar, models):
     """The check asks that each field reach the answer somewhere; a line
     that loses its accession or its date can pass it on another line's.

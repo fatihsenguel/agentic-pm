@@ -13,11 +13,13 @@ What is held, by code and not by the model: the filing is a 10-K and the
 section one of Item 1, Item 1A and Item 7; a reading carries between one
 and twelve claims; a claim is one sentence with no digit in it, so a
 figure appears only inside a quote, where it is the filing's with its
-source; the quote is at most 300 characters and is a substring of the
-section once runs of whitespace on both sides collapse to one space,
-nothing else normalised, not case and not punctuation; the uncertainty is
-`stated` or `inferred`. The record keeps the quote in that collapsed form
-and numbers the claims itself, the section and the claim's place in it.
+source; the quote is a substring of the section once runs of whitespace
+on both sides collapse to one space, nothing else normalised, not case and
+not punctuation; the uncertainty is `stated` or `inferred`; and the quotes
+of one reading, counted collapsed, hold at most 3,600 characters together,
+a quote having no cap of its own (decision 70). The record keeps the quote
+in that collapsed form and numbers the claims itself, the section and the
+claim's place in it.
 
 One claim that fails refuses the whole reading with a ReadingError naming
 the claim and the reason. A failed claim is not dropped and the rest
@@ -30,12 +32,12 @@ from dataclasses import dataclass
 from typing import Any, Mapping, Sequence, Tuple
 
 __all__ = ["Claim", "Reading", "ReadingError", "FORM", "SECTIONS", "UNCERTAINTIES",
-           "QUOTE_CAP", "CLAIMS_CAP", "record"]
+           "QUOTED_CAP", "CLAIMS_CAP", "record"]
 
 FORM = "10-K"
 SECTIONS = ("Item 1", "Item 1A", "Item 7")
 UNCERTAINTIES = ("stated", "inferred")
-QUOTE_CAP = 300
+QUOTED_CAP = 3600
 CLAIMS_CAP = 12
 # What a model supplies for a claim. An id, a figure or a source from the
 # model is refused: the record numbers the claims and the filing is the
@@ -110,9 +112,6 @@ def record(filing: Mapping[str, Any], section: str, text: str,
         if not isinstance(quote, str) or not quote.strip():
             raise ReadingError(f"{where}: no quote; a claim without its source is tone.")
         quote = _collapsed(quote)
-        if len(quote) > QUOTE_CAP:
-            raise ReadingError(f"{where}: a quote of {len(quote)} characters; the cap is "
-                               f"{QUOTE_CAP}, and a record is not the document.")
         if quote not in body:
             raise ReadingError(f"{where}: the quote is not in the section: {quote!r}.")
         if entry.get("uncertainty") not in UNCERTAINTIES:
@@ -120,6 +119,11 @@ def record(filing: Mapping[str, Any], section: str, text: str,
                                f"of {', '.join(UNCERTAINTIES)}.")
         claims.append(Claim(id=f"{label}.{n}", claim=sentence.strip(), quote=quote,
                             uncertainty=entry["uncertainty"]))
+    # Checked after every claim's own rules: no one claim is at fault.
+    quoted = sum(len(c.quote) for c in claims)
+    if quoted > QUOTED_CAP:
+        raise ReadingError(f"{section}: the quotes hold {quoted:,} characters together; the "
+                           f"cap is {QUOTED_CAP:,}, and a record is not the document.")
     return Reading(form=filing["form"], accn=filing["accn"], filed=filing["filed"],
                    fiscal_year=filing["fiscal_year"], source=filing["source"],
                    section=section, claims=tuple(claims))

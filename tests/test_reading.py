@@ -99,11 +99,45 @@ def test_r_7_an_uncertainty_outside_the_set_refuses(reading, record):
 
 # --- the caps and the whole reading -------------------------------------------------------
 
-def test_a_quote_of_300_is_accepted_and_301_refused(reading, record):
-    text = "x" * 400
-    assert len(record([{**R1, "quote": "x" * 300}], text=text).claims[0].quote) == 300
-    with pytest.raises(reading.ReadingError, match="301 characters"):
-        record([{**R1, "quote": "x" * 301}], text=text)
+def test_a_quote_has_no_cap_of_its_own(record):
+    """Decision 70: a quote of 301 characters is accepted, and so is one
+    of 3,600 alone."""
+    text = "x" * 4000
+    assert len(record([{**R1, "quote": "x" * 301}], text=text).claims[0].quote) == 301
+    assert len(record([{**R1, "quote": "x" * 3600}], text=text).claims[0].quote) == 3600
+
+
+def test_quotes_of_3600_together_are_accepted_and_3601_refused(reading, record):
+    """The cap is on the reading's quoted text, and the refusal names the
+    section and the total, since no one claim is at fault."""
+    text = "x" * 4000
+    twelve = [{**R1, "quote": "x" * 300}] * 12
+    assert sum(len(c.quote) for c in record(twelve, text=text).claims) == 3600
+    over = twelve[:11] + [{**R1, "quote": "x" * 301}]
+    with pytest.raises(reading.ReadingError,
+                       match="^Item 7: the quotes hold 3,601 characters together"):
+        record(over, text=text)
+    with pytest.raises(reading.ReadingError, match="3,601 characters"):
+        record([{**R1, "quote": "x" * 1800}, {**R1, "quote": "x" * 1801}], text=text)
+
+
+def test_the_total_counts_a_quote_once_its_whitespace_collapses(reading, record):
+    """A quote with a line break and a run of spaces in it counts the one
+    space: 3,603 characters as supplied, 3,600 collapsed, accepted."""
+    text = "x" * 2000 + " " + "y" * 2000
+    quote = "x" * 1800 + "\n   " + "y" * 1799
+    assert len(quote) == 3603
+    assert len(record([{**R1, "quote": quote}], text=text).claims[0].quote) == 3600
+    with pytest.raises(reading.ReadingError, match="3,601 characters"):
+        record([{**R1, "quote": quote + "y"}], text=text)
+
+
+def test_a_claim_s_own_fault_is_named_before_the_total(reading, record):
+    """The total is checked once every claim has passed its own rules: a
+    reading over the cap that also holds R-4 is refused naming R-4."""
+    text = SECTION + "\n" + "x" * 4000
+    with pytest.raises(reading.ReadingError, match="claim 2: a digit"):
+        record([{**R1, "quote": "x" * 3601}, R4], text=text)
 
 
 def test_no_claims_and_thirteen_are_refused_and_twelve_is_not(reading, record):
@@ -151,7 +185,7 @@ def test_a_key_the_model_may_not_supply_is_refused(reading, record, extra):
 def test_the_section_text_is_not_in_the_record(record):
     out = record([R1, R2, R3])
     quoted = sum(len(c.quote) for c in out.claims)
-    assert quoted <= 12 * 300
+    assert quoted <= 3600
     assert all(len(c.quote) < len(SECTION) for c in out.claims)
     assert not hasattr(out, "text")
 
@@ -163,5 +197,5 @@ def test_the_vocabularies_are_the_runners(reading):
     import run_cases
     assert set(reading.SECTIONS) == run_cases.READING_SECTIONS
     assert set(reading.UNCERTAINTIES) == run_cases.UNCERTAINTIES
-    assert (reading.FORM, reading.QUOTE_CAP, reading.CLAIMS_CAP) == (
-        run_cases.READING_FORM, run_cases.QUOTE_CAP, run_cases.CLAIMS_CAP)
+    assert (reading.FORM, reading.QUOTED_CAP, reading.CLAIMS_CAP) == (
+        run_cases.READING_FORM, run_cases.QUOTED_CAP, run_cases.CLAIMS_CAP)
