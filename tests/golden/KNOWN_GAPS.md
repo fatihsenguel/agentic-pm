@@ -4993,6 +4993,17 @@ BLOCKED on it by decision, the way 4.1 does on D36. Not filled: a
 sector from the SIC code is a mapping nobody wrote down, and a default
 class is a wrong answer with a plausible face.
 
+**20 September (twenty-eighth session), the owner's words, to be written
+into `docs/WATCHLIST.md` and `watchlist.toml` at the commit whose loader
+reads them (decision 63).** W-1, Alphabet: Equity, Communication
+Services, share. W-2, Adobe: Equity, Technology, share. Alphabet's sector
+is not Technology, where AAPL and MSFT sit at 28.55% against IPS-4.3's
+25%, so the gate weighs it in a bucket of its own; Adobe's is, so a
+purchase of it is weighed against that breached bucket. The fields are not
+in the config yet: nothing reads them until the loader does, and a value
+nothing consumes is not stored. Decision 64 also answers the funding this
+entry calls unstated: new money on top of the portfolio.
+
 ### A weight in a research question is refused by the validator
 
 **Trigger:** pending decision 65.
