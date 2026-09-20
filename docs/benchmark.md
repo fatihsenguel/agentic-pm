@@ -307,6 +307,25 @@ the claims the prediction cites are about where revenue comes from, not
 about margins, which nothing checks. A pass here is a well-formed
 answer, and the prediction is not in the ledger until I enter it.
 
+**Status note, 20 September 2026 (twenty-eighth session).** No case moves:
+the runner printed 16/18 at session start, 4.1 blocked at PHI-2.1 and 4.3
+at out_of_scope, and nothing of the graph changed. Decision 70 is taken:
+the record's cap is on a reading's quoted text, 3,600 characters a
+section, and not on a single quote of 300, so a claim resting on one of
+this filer's long sentences can now be quoted whole. The note above says
+Items 1A and 7 were refused on every request measured; that held when it
+was written, and on one of this session's two paid loops Item 1A was
+answered within the old cap and is stored, read by hand and faithful in
+three claims of twelve with six faithful at their core. Case 4.4 now
+rests on Items 1 and 1A, with Item 7 unread and asked for again on every
+run. The five decisions case 4.3 waits on are taken and recorded in
+`tests/golden/KNOWN_GAPS.md`: where a candidate's asset class, sector and
+instrument type are stated, how a purchase is funded in the gate's check,
+where the weight is stated, the rule that composes the outcome, and
+whether a prediction proposed and not entered satisfies the case. None of
+the gate is built and 4.3 stays blocked; 3.2 and Part 2 stand until the
+commit that makes 4.3 answerable.
+
 **References before code, none computed yet.** Part 10 of
 `expected_values.md`: the synthetic candidate's typed figures over the
 stated years and every philosophy clause's verdict and distance by hand, for
