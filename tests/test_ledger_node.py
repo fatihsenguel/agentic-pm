@@ -50,6 +50,10 @@ instrument_type = "share"
 status = "active"
 thesis = "A thesis."
 
+[candidate.entry_condition]
+kind = "valuation"
+clause = "PHI-4.1"
+
 [[candidate.prediction]]
 id = "W-1.1"
 made_on = 2026-01-01

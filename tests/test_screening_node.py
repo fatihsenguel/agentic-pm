@@ -175,6 +175,10 @@ sector = "Communication Services"
 instrument_type = "share"
 status = "active"
 thesis = "A thesis."
+
+[candidate.entry_condition]
+kind = "valuation"
+clause = "PHI-4.1"
 '''
 
 

@@ -106,8 +106,10 @@ def test_the_committed_file_has_four_predictions_in_document_order(watchlist):
 
 
 def test_what_the_loader_still_leaves_alone(watchlist):
+    """The entry condition left this list when case 4.3 read it; it is
+    held in test_watchlist_loader.py."""
     wl = watchlist.load_watchlist("watchlist.toml")
-    for field in ("entry_condition", "added_on", "philosophy_check"):
+    for field in ("added_on", "philosophy_check"):
         assert not hasattr(wl.candidates["W-1"], field), field
 
 

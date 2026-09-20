@@ -6,17 +6,21 @@ valuation range (Part 11 D38).
 What this reads: each candidate's id, ticker, name, currency and status;
 its asset class, sector and instrument type, the three the IPS check reads
 about the instrument itself (decision 63); its thesis, as written, for the
-research agent (case 4.4, PHI-6.1); its valuation table, `growth_low` and
+research agent (case 4.4, PHI-6.1); its entry condition, the condition on
+which I would buy it, for case 4.3; its valuation table, `growth_low` and
 `growth_high`, both or neither; the weight it states, if it states one
 (decisions 64 and 65); and its prediction rows (case 4.5, Part
 14): id, made_on, due, kind and statement; a figure prediction's metric,
 bound, value and period; and the score I wrote, all four fields or none.
-What it leaves alone: the entry condition, added_on and the philosophy
-check, read by nothing.
+What it leaves alone: added_on and the philosophy check, read by nothing.
 The metric's vocabulary is the scorer's (D42): any name loads here and the
 scorer stops on one it has no formula for; the classification's three are
 the same, present or refused here and read against the IPS's own words by
 the check that sizes a position, so that neither vocabulary lives twice.
+The entry condition's kind is that shape again: the table is present or
+refused here and every value in it is a non-empty string, and
+`portfolio_tool/entry.py` stops on a kind it has no rule for and on a key
+that kind needs.
 
 Policy lives in config, not code. This module loads and validates; it
 computes nothing and defaults nothing: a missing file is an error, a
@@ -62,6 +66,13 @@ _PERIOD = re.compile(r"^FY\d{4}$")
 # The two ends the range reads from the entry (Part 11 D38); a table
 # stating anything else is stating something the range does not read.
 GROWTH = ("growth_low", "growth_high")
+# Every candidate states the condition on which I would buy it (PHI-6.1,
+# docs/WATCHLIST.md). What the table names depends on its kind - a clause
+# for a valuation condition, the event in words for an event one - so the
+# keys are not a fixed list here and the table is taken as stated. The
+# kind's vocabulary is the reader's, the shape D42 gave the metric.
+ENTRY_CONDITION = "entry_condition"
+ENTRY_KIND = "kind"
 
 
 class WatchlistError(Exception):
@@ -105,6 +116,7 @@ class Candidate:
     instrument_type: str
     status: str
     thesis: str
+    entry_condition: Mapping[str, str]
     growth: Optional[Mapping[str, float]] = None
     weight: Optional[float] = None
     predictions: Tuple[Prediction, ...] = ()
@@ -185,6 +197,22 @@ def _parse_candidate(entry: Mapping[str, Any], n: int) -> Candidate:
     if entry["status"] not in STATUSES:
         raise WatchlistError(f"{where}: status {entry['status']!r} is not active or closed.")
 
+    stated = entry.get(ENTRY_CONDITION)
+    if not isinstance(stated, Mapping):
+        raise WatchlistError(f"{where}: [candidate.entry_condition] is missing or is not a "
+                             "table; every candidate states the condition on which I would "
+                             "buy it, against the valuation range or as an event (PHI-6.1).")
+    if not isinstance(stated.get(ENTRY_KIND), str) or not stated[ENTRY_KIND].strip():
+        raise WatchlistError(f"{where}: entry_condition states no kind; a condition is stated "
+                             "against the valuation range or as an event, and the kind is "
+                             "what says which (docs/WATCHLIST.md).")
+    for key, value in sorted(stated.items()):
+        if not isinstance(value, str) or not value.strip():
+            raise WatchlistError(f"{where}: entry_condition {key} = {value!r} is not a "
+                                 "non-empty string; what the condition names is written in "
+                                 "words, and nothing here is computed.")
+    condition = MappingProxyType(dict(stated))
+
     growth = None
     if "valuation" in entry:
         table = entry["valuation"]
@@ -228,7 +256,8 @@ def _parse_candidate(entry: Mapping[str, Any], n: int) -> Candidate:
     return Candidate(id=cid, ticker=entry["ticker"], name=entry["name"],
                      currency=entry["currency"], asset_class=entry["asset_class"],
                      sector=entry["sector"], instrument_type=entry["instrument_type"],
-                     status=entry["status"], thesis=entry["thesis"], growth=growth,
+                     status=entry["status"], thesis=entry["thesis"],
+                     entry_condition=condition, growth=growth,
                      weight=weight, predictions=predictions)
 
 

@@ -9,8 +9,9 @@ as a low and a high; since case 4.5 the prediction rows too, held in
 test_watchlist_predictions_loader.py; since case 4.4 the thesis, as
 written, for the research agent; and, for the gate, its asset class,
 sector and instrument type (decision 63) and the weight it states, if it
-states one (decisions 64 and 65). What it leaves alone: the entry
-condition and added_on, read by nothing. What it refuses: a
+states one (decisions 64 and 65); since case 4.3 the entry condition,
+the condition on which I would buy it. What it leaves alone: added_on and
+the philosophy check, read by nothing. What it refuses: a
 missing file with no default, a top-level key nothing reads, a candidate
 lacking a field, two candidates with one id or one ticker, a valuation
 table that is not exactly the two ends as fractions. The order of the two
@@ -18,7 +19,10 @@ ends is the range's rule, not the loader's: quant/valuation.py raises on
 a reversed or equal pair, one place for that rule. The classification's
 words are the IPS check's rule in the same way: any non-empty string
 loads, and the check that sizes a position stops on a word it has no band
-for, so that vocabulary lives where it is read and not twice.
+for, so that vocabulary lives where it is read and not twice. The entry
+condition's kind is that shape a third time: the table is present or
+refused here and every value in it is a non-empty string, and what a
+kind requires beyond that is `portfolio_tool/entry.py`'s.
 
 `growth_pair` is what the node asks for: the two assumptions as the range
 reads them, each with the entry's id as its source. A candidate that
@@ -221,11 +225,11 @@ def test_the_order_of_the_ends_is_the_ranges_rule_not_the_loaders(load):
 def test_the_prediction_rows_are_read_and_the_rest_left_alone(load):
     """The scorer's rows (case 4.5, Part 14) are read since the twenty-fourth
     session, held in test_watchlist_predictions_loader.py; the entry
-    condition and added_on are still read by nothing."""
+    condition is read since case 4.3 and is held below; added_on is still
+    read by nothing."""
     wl = load(W1)
     assert [p.id for p in wl.candidates["W-1"].predictions] == ["W-1.1"]
-    for field in ("entry_condition", "added_on"):
-        assert not hasattr(wl.candidates["W-1"], field), field
+    assert not hasattr(wl.candidates["W-1"], "added_on")
 
 
 # --- the weight -------------------------------------------------------------------
@@ -273,6 +277,85 @@ def test_a_weight_that_is_no_fraction_is_refused(load, watchlist, value):
 def test_a_weight_is_read_onto_the_candidate(load):
     wl = load(W1.replace('thesis = "A thesis."', 'thesis = "A thesis."\nweight = 0.15'))
     assert wl.candidates["W-1"].weight == 0.15
+
+
+# --- the entry condition ----------------------------------------------------------
+
+CONDITION = '\n[candidate.entry_condition]\nkind = "valuation"\nclause = "PHI-4.1"\n'
+
+
+def test_the_committed_candidates_state_their_entry_condition(watchlist):
+    """PHI-6.1: every candidate carries one. Both state a valuation
+    condition on PHI-4.1, and the table is read as written."""
+    wl = watchlist.load_watchlist("watchlist.toml")
+    for cid in ("W-1", "W-2"):
+        assert dict(wl.candidates[cid].entry_condition) == {"kind": "valuation",
+                                                            "clause": "PHI-4.1"}
+
+
+def test_a_candidate_stating_no_entry_condition_is_refused(load, watchlist):
+    with pytest.raises(watchlist.WatchlistError,
+                       match=r"\[candidate.entry_condition\] is missing"):
+        load(W1.replace(CONDITION, "\n"))
+
+
+@pytest.mark.parametrize("text", ['entry_condition = "valuation"', "entry_condition = 3"],
+                         ids=["a string", "a number"])
+def test_an_entry_condition_that_is_not_a_table_is_refused(load, watchlist, text):
+    with pytest.raises(watchlist.WatchlistError, match="is not a table"):
+        load(W1.replace(CONDITION, f"\n{text}\n"))
+
+
+def test_an_entry_condition_stating_no_kind_is_refused(load, watchlist):
+    with pytest.raises(watchlist.WatchlistError, match="entry_condition states no kind"):
+        load(W1.replace(CONDITION,
+                        '\n[candidate.entry_condition]\nclause = "PHI-4.1"\n'))
+
+
+@pytest.mark.parametrize("kind", ['""', '"   "', "3", "true"],
+                         ids=["empty", "whitespace", "a number", "a bool"])
+def test_a_kind_that_is_not_a_word_is_refused(load, watchlist, kind):
+    with pytest.raises(watchlist.WatchlistError, match="entry_condition states no kind"):
+        load(W1.replace(CONDITION,
+                        f'\n[candidate.entry_condition]\nkind = {kind}\nclause = "PHI-4.1"\n'))
+
+
+@pytest.mark.parametrize("value", ['""', "3", "true", "2026-09-10"],
+                         ids=["empty", "a number", "a bool", "a date"])
+def test_a_value_beside_the_kind_that_is_not_a_word_is_refused(load, watchlist, value):
+    with pytest.raises(watchlist.WatchlistError,
+                       match=r"entry_condition clause = .* is not a non-empty string"):
+        load(W1.replace(CONDITION,
+                        f'\n[candidate.entry_condition]\nkind = "valuation"\n'
+                        f'clause = {value}\n'))
+
+
+def test_a_kind_the_reader_has_no_rule_for_still_loads(load):
+    """The kind's vocabulary is the reader's, not this file's, the shape
+    D42 gave the metric and decision 63 the classification: any word
+    loads and portfolio_tool/entry.py stops on one it has no rule for."""
+    wl = load(W1.replace(CONDITION,
+                         '\n[candidate.entry_condition]\nkind = "phase of the moon"\n'
+                         'omen = "a waxing crescent"\n'))
+    assert dict(wl.candidates["W-1"].entry_condition) == {"kind": "phase of the moon",
+                                                          "omen": "a waxing crescent"}
+
+
+def test_an_event_condition_loads_with_its_event(load):
+    wl = load(W1.replace(CONDITION,
+                         '\n[candidate.entry_condition]\nkind = "event"\n'
+                         'event = "the cloud segment reports a full year of operating profit"\n'))
+    assert dict(wl.candidates["W-1"].entry_condition) == {
+        "kind": "event",
+        "event": "the cloud segment reports a full year of operating profit"}
+
+
+def test_the_condition_read_onto_the_candidate_cannot_be_changed(load, watchlist):
+    """A mapping proxy, as the growth pair is: the loader hands out what
+    the file states and no caller edits it into something else."""
+    wl = load(W1)
+    with pytest.raises(TypeError):
+        wl.candidates["W-1"].entry_condition["clause"] = "PHI-4.2"
 
 
 # --- the classification ----------------------------------------------------------

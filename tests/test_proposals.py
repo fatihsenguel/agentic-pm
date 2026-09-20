@@ -38,6 +38,7 @@ def candidate(rows=2):
     return Candidate(id="W-1", ticker="GOOGL", name="Alphabet", currency="USD",
                      asset_class="Equity", sector="Communication Services",
                      instrument_type="share", status="active", thesis="A thesis.",
+                     entry_condition={"kind": "valuation", "clause": "PHI-4.1"},
                      predictions=taken)
 
 

@@ -196,7 +196,9 @@ async def test_a_thesis_is_published_as_written(edgar, models, monkeypatch, tmp_
     path.write_text('[[candidate]]\nid = "W-1"\nticker = "GOOGL"\nname = "Alphabet"\n'
                     'currency = "USD"\nasset_class = "Equity"\n'
                     'sector = "Communication Services"\ninstrument_type = "share"\n'
-                    'status = "active"\nthesis = """\n  A thesis.  \n"""\n')
+                    'status = "active"\nthesis = """\n  A thesis.  \n"""\n'
+                    '\n[candidate.entry_condition]\nkind = "valuation"\n'
+                    'clause = "PHI-4.1"\n')
     monkeypatch.setattr(nodes, "WATCHLIST_PATH", str(path))
     research = _research(await nodes.research_agent_node(state()))
     assert research["thesis"] == {"candidate": "W-1", "text": "  A thesis.  \n"}
