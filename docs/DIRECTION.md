@@ -131,8 +131,15 @@ the defect into extraction or derivation, or log it.**
    at X". A prediction is a statement about the business or the thesis with a
    date; a valuation is a range from stated assumptions. This is the line
    between judgement and a plausible-faced guess.
-8. **Scope is fixed by benchmark.md.** Security selection is out until Level 4
-   defines it. Until then "should I buy X" is refused, correctly.
+8. **Scope is fixed by benchmark.md.** Level 4 defines security selection, so
+   it is in scope — **through its checks and through nothing else**: the
+   philosophy screen clause by clause, the valuation range from my stated
+   assumptions, and the IPS gate on that position at the weight my watchlist
+   entry states, with a thesis, an entry condition and a dated prediction from
+   the ledger. "Should I buy X" is answered that way or not at all. A bare
+   opinion, a price or return forecast, whether to sell or hold what is
+   already owned, and finding candidates stay out, and not on a timetable: a
+   candidate reaches the watchlist because I put it there.
 
 ## Order
 
@@ -177,4 +184,10 @@ Level 4 exist, stop and ask. Otherwise follow the handoff.
 my workflow, with the philosophy document, the watchlist and the
 prediction ledger as its artifacts. Revised 10 September 2026: the personal
 policy, philosophy and portfolio moved from Order 2 to a new Order 6, the
-end; everything before it is built on synthetic artifacts.*
+end; everything before it is built on synthetic artifacts. Revised 20
+September 2026: invariant 8, the day the gate was built and "should I buy
+X" stopped being refused. Level 4 defines security selection, so the
+invariant now says what it is in scope through rather than that it is out
+until something defines it. The direction has not changed — this is the
+change it anticipated — and benchmark.md's Part 2 was rewritten the same
+day to match.*
