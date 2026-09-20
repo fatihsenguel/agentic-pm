@@ -1,9 +1,9 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 19 to 20 September 2026 (twenty-eighth session), begun 19 September at 16:25 UTC. Regenerated at its end.
-**Branch:** `cap`, cut from `baseline-v1` at 3ce7dab on the owner's yes, the branch the brief named not existing. **`baseline-v1` is the trunk** and stood at 3ce7dab when the session began; `thesis` is merged into it. Each session branch is merged into the trunk with `--ff-only` when the loops are green; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count 3ce7dab..HEAD` — 5 with this file: the reference, the code, the record, benchmark.md, this file. **Not merged and not pushed**: the owner merges and pushes; `origin`'s push URL is `no_push`.
+**Branch:** `cap`, cut from `baseline-v1` at 3ce7dab on the owner's yes, the branch the brief named not existing. **`baseline-v1` is the trunk** and stood at 3ce7dab when the session began; `thesis` is merged into it. Each session branch is merged into the trunk with `--ff-only` when the loops are green; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count 3ce7dab..HEAD` — 7 with this file: the reference, the code, the record, benchmark.md, this file regenerated, the record again after one live request, and this file corrected for what that request changed. **Not merged and not pushed**: the owner merges and pushes; `origin`'s push URL is `no_push`.
 
-**State:** pytest **1650 passed, 6 xfailed**, up from 1646 by 4. **Golden set: twenty lines, one run, zero diff.** **Runner 16/18, one run**: 4.1 BLOCKED at PHI-2.1 naming D36, 4.3 BLOCKED at out_of_scope, 4.4 PASS. **The CLI once**, the allocation question, which fetched nothing: the price interval had not run out, against the brief's reading of it. **Decision 70 is taken and built**: the record caps a reading's quoted text at 3,600 characters a section and no longer caps a single quote, the reference first. **Decisions 63, 64, 65, 68 and 69 are taken and nothing of them is built**; the gate's Part comes next. **The first Item 1A reading ever accepted** was stored by one of the two paid loops and read by hand, so 4.4 now rests on Items 1 and 1A; Item 7 is still refused on every request measured. **Order 4 is not done. Left: the gate and 4.3, then the full test before anything of Order 5.**
+**State:** pytest **1650 passed, 6 xfailed**, up from 1646 by 4. **Golden set: twenty lines, one run, zero diff.** **Runner 16/18, one run**: 4.1 BLOCKED at PHI-2.1 naming D36, 4.3 BLOCKED at out_of_scope, 4.4 PASS. **The CLI once**, the allocation question, which fetched nothing: the price interval had not run out, against the brief's reading of it. **Decision 70 is taken and built**: the record caps a reading's quoted text at 3,600 characters a section and no longer caps a single quote, the reference first. **Decisions 63, 64, 65, 68 and 69 are taken and nothing of them is built**; the gate's Part comes next. **All three sections are read for the first time**: Item 1A was stored by one of the two paid loops, and Item 7 was accepted on one request made after the cap changed, the 330-character sentence that had been refused twice now quoted whole. Both were read by hand. **Order 4 is not done. Left: the gate and 4.3, then the full test before anything of Order 5.**
 
 Written for whoever picks this up cold, myself included.
 
@@ -20,7 +20,9 @@ quotation of that line, "16 on 18 September", was already stale; the first
 run of the wrong versions printed the colour codes instead of the failing
 tests' names and was rerun to name them; which of the two paid loops stored
 the Item 1A reading cannot be said, since nothing records it, and the
-entry says so rather than guessing.
+entry says so rather than guessing; and the script that kept the Item 7
+answer kept the claims and not the token counts, so that request's cost
+is an estimate from an earlier measurement and not a measurement.
 
 ---
 
@@ -31,7 +33,7 @@ entry says so rather than guessing.
 | `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1, 2 and 3 are built. **Order 4 is in progress**: the bridge, the SIC code, the philosophy check node, the metric keys, the valuation range, prediction scoring, the research agent's shape, reference, checks and pure modules, the reading tool, the research agent in the graph for a thesis question, and, this session, **decision 70 and the five the gate waits on**. Left in Order 4: the gate and 4.3, then the full test. |
 | `docs/benchmark.md` | **The definition of done.** Levels 1 to 3: 12 cases, 12 pass. Level 4: 4.2, 4.4, 4.5 and 4.6 pass, 4.1 blocked by decision, 4.3 blocked on the gate that is not built (nine dated status notes under Level 4, the ninth this session's). n/18. Part 2 and the 3.2 row are untouched: their rewrite is at the commit that makes 4.3 answerable. |
 | `tests/benchmark/run_cases.py` | **The scoreboard.** Eighteen cases. This session `_readings_invariants` changed with decision 70: `QUOTED_CAP` is 3,600 for a reading's quotes together and no single quote is capped. `check_4_4` passed on the live answer; its docstring and KNOWN_GAPS say what it cannot see, and a field it finds on another line is one of them. `check_4_3` and its probe hold `shared_data["gate"]` for the commit that makes 4.3 answerable; its prediction requirement is rewritten there, decision 69. |
-| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. 147 lines start `**Trigger:**`, counted by `grep -c '^\*\*Trigger:\*\*'`. New this session: three entries, and dated lines on four whose triggers fired, decisions 70, 63, 64, 65, 68 and 69 written into two of them. **The next session reads "The shape of the research agent: decisions 59 to 69" first**, for the five taken this session, and "What the gate needs that the candidate's row lacks" beside it. |
+| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. 147 lines start `**Trigger:**`, counted by `grep -c '^\*\*Trigger:\*\*'`. New this session: four entries, and dated lines on five whose triggers fired, decisions 70, 63, 64, 65, 68 and 69 written into two of them. **The next session reads "The shape of the research agent: decisions 59 to 69" first**, for the five taken this session, and "What the gate needs that the candidate's row lacks" beside it. |
 | `tests/golden/expected_values.md` | Hand-computed and transcribed reference, Parts 1 to 16. **Changed this session: Part 15 D47 and section A**, dated, decision 70: the cap is on a reading's quoted text, 3,600 characters a section, and a quote has no cap of its own. Never update it to match code output. |
 | `tests/golden/expected_values.xlsx` | The workbook, eleven sheets, saved in Excel at c75b73b. Untouched this session; Parts 9 C, 11, 14, 15 and 16 have no sheet. |
 | `docs/IPS.md` | The policy, synthetic. Unchanged. |
@@ -194,8 +196,8 @@ replaced by two and four added.
 **Golden set: twenty lines, one pinned failure** ("Should I rebalance my
 portfolio?", errors 1). **One run this session, zero diff**, its stderr
 holding only the pinned line's error. **A golden run asks for the sections
-the cache lacks and proposes once**: Item 7 alone now that Item 1A is
-stored, about $0.058 on Sonnet by the measured requests, recorded nowhere.
+the cache lacks and proposes once**: no reading now that all three are
+stored, about $0.007 on Sonnet for the proposal, recorded nowhere.
 
 **The runner once: 16/18**, 4.4 PASS, 4.1 BLOCKED naming D36, 4.3 BLOCKED
 at out_of_scope with intent `out_of_scope` and an empty plan. The runner
@@ -240,12 +242,14 @@ session. No reseed. **What this session wrote:**
   UTC by the golden run.
 - `api_call_logs`: 2,436 to **2,439**, the macro fetch of each paid loop;
   the `api_quotas` counter for the 19th 22 to **25**.
-- `document_readings`: 3 to **4 rows**. Item 1 under `1b2d86a8ba32`,
+- `document_readings`: 3 to **5 rows**. Item 1 under `1b2d86a8ba32`,
   `ba9a7051eeca` and **`a64f51fde1eb` (068134c's, the one the node
-  serves)**, and **Item 1A under `903e89b123b5`**, 068134c's wording for
-  that section, stored by one of the two paid loops and read by hand
-  (KNOWN_GAPS). **No reading of Item 7 is stored**: every request was
-  refused, and decision 70's change to the cap has not been put to it.
+  serves)**; **Item 1A under `903e89b123b5`**, stored by one of the two
+  paid loops; and **Item 7 under `54b0dba223f4`**, stored by the one
+  request made after the cap changed, twelve claims and 2,554 characters
+  of quotation against the cap of 3,600. Each was read by hand
+  (KNOWN_GAPS). **All three sections the reader reads are now cached**,
+  so a thesis answer asks the model only for its proposal.
 
 Unchanged: `ticker_ciks` 10,422 rows as of 2026-09-16 01:33 UTC;
 `filers` three rows; `filed_facts` 28,787, Apple's 15,132 and Alphabet's
@@ -325,8 +329,10 @@ stretches marked `inferred`, three saying more than their quote under
 `stated`; and, this session, Item 1A's twelve under `903e89b123b5`, three
 faithful, six faithful at the core with a detail from the paragraph, two
 saying more than their quote under `stated` and one stretch marked
-`inferred` (KNOWN_GAPS). Item 7 is not read, with the record's reason.
-The proposal is W-1.3, a gross margin for FY2026 of at least 59.65%, the
+`inferred` (KNOWN_GAPS); and Item 7's twelve under `54b0dba223f4`, eight
+faithful, three faithful at the core and one getting the filing wrong,
+calling Waymo's valuation-based charge "stock-based" as the last
+session's Item 7 answer also did. The proposal is W-1.3, a gross margin for FY2026 of at least 59.65%, the
 value right, resting on claims that say nothing about margins. Part 15 F9
 has no code: the loader reads no `author`.
 
@@ -356,8 +362,8 @@ has no code: the loader reads no `author`.
 - **Measured costs on `claude-sonnet-5`, $2 and $10 a million:** Item 1 about
   7,770 tokens in, $0.030; Item 1A about 24,800, $0.066; Item 7 about
   17,680, $0.051; a proposal over Item 1's claims 2,424 in and 214 out,
-  $0.007. With Items 1 and 1A cached, a paid loop asks for Item 7 and one
-  proposal, about $0.058. The golden script, the runner and the CLI record
+  $0.007. With all three sections cached, a paid loop asks for one
+  proposal, about $0.007. The golden script, the runner and the CLI record
   none of their requests.
 - **The price provider** is `nodes.price_provider()`; **the models** are
   `nodes.reading_model()` and `nodes.proposal_model()`, the same pattern,
@@ -441,8 +447,9 @@ has no code: the loader reads no `author`.
 
 ## 4. What the twenty-eighth session did
 
-`git log --oneline 3ce7dab..HEAD`, five commits with this file. Six
-decisions and the one change one of them asked for. **No node, no check
+`git log --oneline 3ce7dab..HEAD`, seven commits with this file. Six
+decisions, the one change one of them asked for, and one live request
+that the change made answerable. **No node, no check
 and no Part of the gate**, by the brief: those come next.
 
 **The loops, first.** `cap` cut from the trunk at 3ce7dab on the owner's
@@ -478,17 +485,26 @@ so.
   them.
 - **77d1e48** the record: three entries, four dated lines, the header.
 - **1a2d2e4** benchmark.md's status note.
+- **d422d7f** this file, regenerated.
+- **One request for Item 7 under the new cap**, asked for and said first:
+  accepted on the first draw, twelve claims, 2,554 characters of
+  quotation against 3,600, the 330-character liquidity sentence that had
+  been refused twice now quoted whole, stored and read by hand. Under the
+  old per-quote cap the whole reading would have been refused and its
+  other eleven claims lost. About $0.051 by the earlier measurement; the
+  script kept the claims and not the token counts.
+- **f562351** the record again: Item 7's entry, two dated lines, the
+  header's counts.
 
-**Spent on Sonnet, measured by the requests the loops make:** about $0.12
-on each of the two paid loops, the last runs at the old cost, since Item
-1A was asked for on both. A run from here asks for Item 7 alone, about
-$0.058.
+**Spent on Sonnet:** about $0.12 on each of the two paid loops, the last
+runs at the old cost, and about $0.051 on the Item 7 request, that one an
+estimate. A run from here asks for no reading and proposes once, about
+$0.007.
 
 **Not done, on purpose.** The gate's Part, node and check and everything
 of 4.3; the watchlist's new fields and their sentence, which need the
 owner's word and come with the gate; Adobe's asset class, sector and
-instrument type, unstated; Item 7 under the new cap; the loader's
-`author` and Part 15 F9; the seven emoji headers; decisions 51, 52 and
+instrument type, unstated; the loader's `author` and Part 15 F9; the seven emoji headers; decisions 51, 52 and
 54; the currency; the philosophy topic lookup; the CIK confirmation;
 formulas for `operating_margin` and `free_cash_flow`; any change to the
 reading or the proposal prompts for faithfulness.
@@ -559,9 +575,10 @@ cannot see: whether the range's ends are right (Part 11 C in pytest);
 whether a filing's verdict is right (Part 14 C in pytest); any due
 prediction until 2027; for 4.4, whether a quote supports its claim,
 whether the prediction's reasons support it, and a field the answer
-prints only on another line (KNOWN_GAPS). 4.4 passes on Items 1 and 1A,
-Item 1A having been read for the first time this session; Item 7, the
-section that talks about margins, is still refused.
+prints only on another line (KNOWN_GAPS). 4.4 passes on all three sections,
+Items 1A and 7 having been read for the first time this session. Item 7
+is the section that talks about margins, so the next proposal has claims
+about margins available to cite, which the first ones did not.
 
 ---
 
@@ -590,12 +607,13 @@ and not a defect; the first run should not be read as one.
 
 - **The trunk.** `git switch baseline-v1 && git merge --ff-only cap`.
 - **CLAUDE.md's pending line**, mine to change to eleven (§5).
-- **Every paid loop still costs Sonnet**: each golden run, runner run and
-  thesis question asks for Item 7 again and proposes once, about $0.058,
-  until Item 7 is read or stops being asked for.
-- **Item 7 under the new cap**: its refusals on 330 and 301 characters
-  would now be accepted, its refusals on a page break and on a digit in a
-  claim would not. One request, said first, read by hand.
+- **Every paid loop still costs Sonnet**, less than before: each golden
+  run, runner run and thesis question proposes once over three cached
+  readings, about $0.007. A section whose stored reading stops passing the
+  record is asked for again on every run (D57).
+- **The next proposal can cite Item 7's claims**, which are about
+  margins; the first three proposals cited claims that say nothing about
+  one (KNOWN_GAPS). Whether it does is a thing to read, not to fix.
 - **The next paid loop fetches the holdings' closes**: the interval ran
   out at 02:51 UTC on 20 September, GOOGL's at 03:07. The filings interval
   runs out on 22 and 23 September.
@@ -634,6 +652,12 @@ and 7 were refused on every request the twenty-seventh session made, and
 one of this session's two paid loops was answered for Item 1A under the
 same prompt. Seven refusals are evidence about the odds, not a rule about
 the model.
+
+**A script that keeps the answer keeps what the answer cost.** The Item 7
+request was wrapped so that the claims survived a refusal; the token
+counts were not kept, so the one measurement the session could have taken
+of a reading under the new cap was lost and the cost is an older
+estimate.
 
 **A brief's claim about the clock is checked against the clock.** The
 brief said the price interval had run out early on 20 September; it was
@@ -751,9 +775,9 @@ git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1
 | Loop | Cost | Answers |
 |---|---|---|
 | `pytest` | ~5s, no model calls | Do the components still work; does every reference Part reproduce; does each node fetch in order and publish its block; does each rendering pass the runner's check; does the reader send what D56 says and the proposer what D58 says |
-| CLI | ~3s and one Haiku call for most questions; **the thesis question ~45s and about $0.058 on Sonnet**; **fetches prices past their interval** | What it is actually doing: the plan, the parameters, the reasoning line, the answer text |
-| Golden set | ~2 min, **about $0.058 on Sonnet per run for the thesis line** and Haiku, **writes price rows past their interval, filed rows past theirs, a reading it is answered for, and the macro rows, the call log and the quota counter on every run** | Did routing change anywhere (twenty lines, one pinned failure). Blind to parameters and answer text; stderr kept to a file |
-| Benchmark runner | ~2 min, **about $0.058 on Sonnet for 4.4** and Haiku, **writes price and filed rows past their intervals, and a reading it is answered for** | How many cases pass, n/18. Blind to the four intents outside the roster, to whether a range's ends are right, to any due prediction until 2027, and, for 4.4, to a quote's support for its claim, a prediction's support in its reasons, a field printed only on another line, and which sections the run read at all |
+| CLI | ~3s and one Haiku call for most questions; **the thesis question ~45s and about $0.007 on Sonnet**; **fetches prices past their interval** | What it is actually doing: the plan, the parameters, the reasoning line, the answer text |
+| Golden set | ~2 min, **about $0.007 on Sonnet per run for the thesis line** and Haiku, **writes price rows past their interval, filed rows past theirs, a reading it is answered for, and the macro rows, the call log and the quota counter on every run** | Did routing change anywhere (twenty lines, one pinned failure). Blind to parameters and answer text; stderr kept to a file |
+| Benchmark runner | ~2 min, **about $0.007 on Sonnet for 4.4** and Haiku, **writes price and filed rows past their intervals, and a reading it is answered for** | How many cases pass, n/18. Blind to the four intents outside the roster, to whether a range's ends are right, to any due prediction until 2027, and, for 4.4, to a quote's support for its claim, a prediction's support in its reasons, a field printed only on another line, and which sections the run read at all |
 
 `golden set → change → golden set → decide → then update expected.txt, its own
 commit`. Prediction first, twice for a prompt change, stop at the second miss
