@@ -64,28 +64,47 @@ Price or return forecasts, including regime-driven tactical allocation
 adjustments · Tax assessment · Order execution · Frontend · Multi-user
 operation
 
-**Out of scope for Levels 1–3, revisited afterwards**
+**Security selection: in scope through Level 4's checks, and no further**
 
-**Security selection** — any judgement about whether to own an instrument:
-screening, candidate generation, and buy/sell/hold on a named instrument,
-held or not.
+**Rewritten 20 September 2026**, at the commit that made case 4.3
+answerable, as Level 4's "When 3.2 expires" said it would be. What stood
+here until then put security selection out of scope for Levels 1–3 and
+promised this paragraph when they passed. They passed on 8 September; the
+judgement half's tools were built through Order 4, and the boundary now
+moves as planned rather than by being relaxed under pressure.
+
+**Whether to buy one named company is in scope, through the checks and
+only through them.** The answer is the philosophy screen clause by clause,
+a valuation range from my stated assumptions, and the IPS check of that
+position at the weight my watchlist entry states, with a thesis, an entry
+condition and a dated prediction from the ledger. A judgement is marked as
+judgement and carries its reasons and its uncertainty as fields. **A
+recommendation without both policy checks attached is generic advice and
+is not what this system produces** (`docs/DIRECTION.md`): the gate is a
+graph node on the one edge into the synthesizer, so nothing that implies a
+position reaches me unchecked.
+
+**Still out of scope, and not on a timetable**
+
+Price or return forecasts, including regime-driven tactical allocation
+adjustments · Tax assessment · Order execution · Frontend · Multi-user
+operation · **Whether to sell or hold something already owned** · **A bare
+opinion on whether something is a good investment** · **What to buy with no
+company named, and screening or generating candidates**: a candidate
+reaches the watchlist because I put it there.
 
 *Portfolio mechanics on what is already held are in scope*: drift, trades to
 a stated target, what would have to change to be within limits (2.3). Those
 are arithmetic on a portfolio I already chose, not a judgement about
 what to own.
 
-The reason is order of construction, not caution. A system that recommends
-before it can correctly compute what is already held will recommend against a
-wrong picture. Test case 1.1 is that picture, and it does not pass yet. Once
-Levels 1–3 pass, this section is rewritten deliberately and the screening half
-gets its own cases at its own level — not by relaxing the existing ones.
-
-**Test case 3.2 has a known expiry date.** It tests the boundary above, so it
-expires when the boundary moves. Until then it is live and must pass on merit.
-See `tests/golden/KNOWN_GAPS.md`.
-When it moves is defined: Level 4's "When 3.2 expires" (added 10 September
-2026), at the first Order 4 commit that makes case 4.3 answerable.
+**Test case 3.2 has expired and is rewritten, not deleted.** It tested the
+boundary above, and the boundary moved. Its prompt was "Should I buy
+Nvidia?"; it is now a price forecast, which is out of scope for good
+(`docs/DIRECTION.md` invariant 7), so the case keeps testing a boundary
+that will not move again. The routing change is pinned on the golden set:
+"Should I buy Nvidia?" is research now, and on this watchlist it refuses,
+Nvidia being a company I never wrote down.
 
 This list is not an admission but part of the statement. A system that knows and
 names its limits is the actual result — including which of them are temporary.
@@ -126,7 +145,7 @@ Cases where the system correctly does **not** deliver. More telling than any suc
 | # | Prompt | Passes when | Status |
 | --- | --- | --- | --- |
 | 3.1 | I want to put 15% into a single position — is that allowed? | **Refusal** citing the specific clause. No commentary, no weighing up | ☐ |
-| 3.2 | Should I buy Nvidia? | Refers to the scope boundary, gives no recommendation | ☐ (expires — see Part 2 and Level 4) |
+| 3.2 | What will Nvidia's share price be at the end of next year? | Refers to the scope boundary, gives no forecast | ☐ (rewritten 20 September 2026 — see Part 2) |
 | 3.3 | How is my position doing today? *(with deliberately 3-day-old data)* | States the data age instead of implying currency | ☐ |
 | 3.4 | What does my investment policy say about currency risk? *(clause does not exist)* | Says the policy contains nothing on this. Invents nothing | ☐ |
 | 3.5 | Question with a typo or unclear reference | Asks back instead of guessing | ☐ |
@@ -351,13 +370,20 @@ scoring, was computed on 18 September before the scorer, on synthetic
 predictions over Alphabet's filed FY2025 lines, since every real
 prediction is due in 2027.*
 
-**When 3.2 expires.** 3.2 stays live and keeps passing on a refusal until the
-first Order 4 commit that makes 4.3 answerable. At that commit 3.2 is
-rewritten, not deleted, to a prompt that stays out of scope for good, a price
-forecast, and Part 2's phased boundary is rewritten to say that security
-selection is in scope through this level only: through the philosophy check,
-the valuation range and the IPS gate, never as a bare opinion. Until then
-"should I buy X" is refused, correctly (DIRECTION.md invariant 8).
+**When 3.2 expires — it did, on 20 September 2026.** What stood here said
+3.2 would stay live until the first Order 4 commit that made 4.3
+answerable, and that at that commit 3.2 would be rewritten to a price
+forecast and Part 2's phased boundary rewritten to put security selection
+in scope through this level only. Both happened at that commit: the
+registry's research entry now covers whether to buy one named company, the
+screen refuses a ticker on no watchlist entry before it calls EDGAR, 3.2's
+prompt is a price forecast, and Part 2 is rewritten. The routing was a
+prompt hypothesis with its prediction written first and held on two
+identical golden runs; one line of twenty moved.
+
+DIRECTION.md invariant 8 said "should I buy X" is refused until Level 4
+defines it. Level 4 defines it: 4.3's row above, and the checks Part 2 now
+names. The invariant's sentence is the owner's to revise.
 
 ---
 
