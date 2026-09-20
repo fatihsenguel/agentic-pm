@@ -21,6 +21,8 @@ from .nodes import (
     screening_agent_node,
     ledger_agent_node,
     research_agent_node,
+    gate_node,
+    judgement_record,
     synthesizer_node,
 )
 
@@ -49,6 +51,11 @@ AGENT_NODES = {
     "ResearchAgent": research_agent_node,
 }
 
+# The gate is deliberately absent from both. It is a node and not an agent:
+# the router cannot plan it, cannot route around it and cannot be asked for
+# it, and it sits on the edge into the synthesizer instead (decision 62).
+GATE = "gate"
+
 if set(AGENT_NODES) != set(AGENTS):
     raise RuntimeError(
         "agent roster and node bindings disagree: "
@@ -70,10 +77,17 @@ def route_next_step(state: AgentState) -> str:
     without being forced into a rigid waterfall structure.
 
     Returns a key of the routing map built in build_graph: an agent name from
-    schemas.AGENTS, "synthesizer" or "end". LangGraph raises on anything else.
-    This used to be annotated as a Literal listing the agents by hand; with an
-    explicit path_map LangGraph never reads the annotation, so it was a copy
-    of the roster that checked nothing.
+    schemas.AGENTS, "gate", "synthesizer" or "end". LangGraph raises on
+    anything else. This used to be annotated as a Literal listing the agents
+    by hand; with an explicit path_map LangGraph never reads the annotation,
+    so it was a copy of the roster that checked nothing.
+
+    **The gate sits on the edge into the synthesizer** (decision 62). Where
+    the plan is finished and a judgement record is in shared_data, the run
+    goes to the gate and the gate goes to the synthesizer. It is not a plan
+    step, so no plan can leave it out and no router decision can skip it;
+    an answer that implies a position cannot reach the synthesizer without
+    passing it.
     """
     # 1. Early Exit (Clarification needed)
     if state.get("final_response") and not state.get("sub_results"):
@@ -81,17 +95,28 @@ def route_next_step(state: AgentState) -> str:
 
     # 2. Check if we are done (Plan is empty)
     if is_execution_complete(state):
-        return "synthesizer"
-    
+        return _gate_or_synthesizer(state)
+
     # 3. Get next agent from the plan
     next_agent = get_next_agent(state)
-    
+
     if not next_agent:
-        return "synthesizer"
-        
+        return _gate_or_synthesizer(state)
+
     # 4. Route to the agent
     # The return string must match the .add_node() name exactly
     return next_agent
+
+
+def _gate_or_synthesizer(state: AgentState) -> str:
+    """The one edge into the synthesizer, with the gate on it. A judgement
+    record that has not been gated goes to the gate; everything else, and a
+    judgement whose gate has already run, goes to the synthesizer. The gate
+    has a plain edge to the synthesizer, so this is never asked twice about
+    the same run and cannot loop."""
+    if judgement_record(state) is not None and not (state.get("shared_data") or {}).get(GATE):
+        return GATE
+    return "synthesizer"
 
 
 # =============================================================================
@@ -113,6 +138,9 @@ def build_graph() -> StateGraph:
     for name in AGENTS:
         graph.add_node(name, AGENT_NODES[name])
     
+    # The gate, on the edge into the synthesizer and not in the roster.
+    graph.add_node(GATE, gate_node)
+
     # Output Node
     graph.add_node("synthesizer", synthesizer_node)
     
@@ -124,6 +152,7 @@ def build_graph() -> StateGraph:
     # Map valid return values to nodes
     # This map is used by ALL nodes to determine where to go next
     routing_map = {name: name for name in AGENTS}
+    routing_map[GATE] = GATE
     routing_map["synthesizer"] = "synthesizer"
     routing_map["end"] = END
     
@@ -135,6 +164,10 @@ def build_graph() -> StateGraph:
     for node in AGENTS:
         graph.add_conditional_edges(node, route_next_step, routing_map)
     
+    # Gate -> Synthesizer, a plain edge and not a conditional one: the gate
+    # is passed once and what it found is the synthesizer's to print.
+    graph.add_edge(GATE, "synthesizer")
+
     # Synthesizer -> END
     graph.add_edge("synthesizer", END)
     

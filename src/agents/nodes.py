@@ -1879,6 +1879,148 @@ async def research_agent_node(state: AgentState) -> Dict[str, Any]:
 
 
 # =============================================================================
+# THE GATE
+# =============================================================================
+
+def judgement_record(state: AgentState) -> Optional[Dict[str, Any]]:
+    """The research block when it answers a question that implies a
+    position - decision 62's judgement record, what the gate is keyed on.
+
+    `asks` is set by extraction from a closed set (decision 66). "position"
+    is the value that makes a research answer a judgement about owning
+    something; "thesis" does not, a thesis question implying no position.
+    Nothing sets "position" until case 4.3 is answerable, so this returns
+    None on every question the system answers today.
+    """
+    research = (state.get("shared_data") or {}).get("research") or {}
+    return research if research.get("asks") == "position" else None
+
+
+async def gate_node(state: AgentState) -> Dict[str, Any]:
+    """The IPS applied to the candidate at its stated weight, on the one
+    edge into the synthesizer (decision 62).
+
+    Not an agent and not a plan step: it is not in `schemas.AGENTS`, the
+    router cannot plan it and cannot route around it, and every judgement
+    record passes through it on its way to the synthesizer. That is what
+    makes the compliance check a gate rather than a tool (DIRECTION.md
+    invariant 2).
+
+    Reads `shared_data` for its figures and the watchlist for its weight:
+    the allocation PortfolioAnalysisAgent published, the holdings summary
+    for each position's instrument type, the research block for which
+    company is being judged, and the candidate's entry for the weight and
+    the three classification words (decisions 63 and 65). Computes nothing
+    itself; `portfolio_tool.gate.gate` does, held to Part 17.
+
+    Publishes `shared_data["gate"]`: the ticker, the weight, the weight's
+    source, how the purchase is funded, the money and the two totals, and
+    the findings in the compliance finding's shape - those over the
+    portfolio as it would be, and those over the portfolio as it stands,
+    so the answer can say which way the purchase moved a clause.
+
+    A failure publishes no block and records the error. The formatter
+    refuses to print an outcome without one, so a gate that could not run
+    stops the answer rather than letting it through unchecked.
+    """
+    shared = state.get("shared_data", {})
+    block = judgement_record(state)
+
+    print("\n" + "=" * 80)
+    print("GATE - the IPS on a new position at its stated weight")
+    print("=" * 80)
+
+    try:
+        if block is None:
+            raise DataCalculationError(
+                "The gate ran with no judgement record in shared_data. It is keyed on one "
+                "(decision 62); reaching it without one means the routing sent it here, and "
+                "a gate that cannot say what it is checking checks nothing."
+            )
+
+        from dataclasses import asdict
+
+        from portfolio_tool.gate import GateError, gate as run_gate
+        from portfolio_tool.ips import load_ips
+        from portfolio_tool.watchlist import load_watchlist, position_weight
+
+        ticker = (block.get("subject") or {}).get("ticker")
+        if not ticker:
+            raise DataCalculationError(
+                "The judgement record names no ticker, so there is no candidate to check."
+            )
+
+        allocation = shared.get("allocation")
+        holdings = shared.get("holdings")
+        for key, value in (("allocation", allocation), ("holdings", holdings)):
+            if not value:
+                raise DataCalculationError(
+                    f"No {key} in shared_data.\n"
+                    "The gate checks the portfolio as it would be, which needs the portfolio "
+                    "as it is: DataAgent and PortfolioAnalysisAgent run before the question "
+                    "that implies a position."
+                )
+        base_currency = allocation.get("base_currency")
+        if not base_currency:
+            raise DataCalculationError(
+                "No base_currency on the allocation block. Every figure the gate reports is "
+                "in the portfolio's currency, and a figure with no currency is not a figure."
+            )
+
+        watchlist = load_watchlist(WATCHLIST_PATH)
+        candidate = watchlist.by_ticker(ticker)
+        stated = position_weight(watchlist, ticker)
+        ips = load_ips(load_portfolio_policy_path(state))
+        print(f"  policy: {ips.path}")
+        print(f"  {candidate.id} ({ticker}) at {stated['value']:.2%}, "
+              f"stated by {stated['source']}")
+
+        result = run_gate(ips, allocation,
+                          {h["ticker"]: h.get("instrument_type") for h in holdings},
+                          candidate, stated["value"], stated["source"])
+
+        by_status = {}
+        for finding in result.findings:
+            by_status[finding.status] = by_status.get(finding.status, 0) + 1
+        print(f"  funded by {result.funding}: {result.new_money:,.2f} {base_currency} on top "
+              f"of {result.total_before:,.2f}, total {result.total_after:,.2f}")
+        print("  findings: " + ", ".join(f"{k} {v}" for k, v in sorted(by_status.items())))
+        for finding in result.findings:
+            if finding.status == "breach":
+                where = (f"{finding.observed:>7.2%} vs {finding.limit:.0%} {finding.bound}"
+                         if finding.observed is not None else "the money went elsewhere")
+                print(f"    {finding.clause:<8} {finding.subject:<22} {where}")
+        print(f"  permits: {result.permits}")
+
+        gate_block = {
+            "ticker": result.ticker,
+            "weight": result.weight,
+            "weight_source": result.weight_source,
+            "funding": result.funding,
+            "asset_class": result.asset_class,
+            "sector": result.sector,
+            "instrument_type": result.instrument_type,
+            "new_money": result.new_money,
+            "total_before": result.total_before,
+            "total_after": result.total_after,
+            "base_currency": base_currency,
+            "as_of": allocation.get("as_of"),
+            "policy": {c.id: {"type": c.type, "text": c.text} for c in ips},
+            "statements": [{"clause": c.id, "text": c.text} for c in ips.statements],
+            "findings": [asdict(f) for f in result.findings],
+            "findings_before": [asdict(f) for f in result.findings_before],
+            "first_limb_binds": result.first_limb_binds,
+            "unrestored": [list(pair) for pair in result.unrestored],
+            "permits": result.permits,
+        }
+        return {"shared_data": {**shared, "gate": gate_block}}
+
+    except Exception as e:
+        print(f"  the gate did not run: {e}")
+        return add_error(state, f"Gate: {str(e)}")
+
+
+# =============================================================================
 # FIXED: OPTIMIZATION AGENT NODE
 # =============================================================================
 
