@@ -69,11 +69,11 @@ Q: help | pid=None
   errors: 0
 
 Q: Should I buy Nvidia? | pid=3
-  intent: out_of_scope
-  plan:   []
+  intent: research
+  plan:   ['DataAgent', 'PortfolioAnalysisAgent', 'ScreeningAgent', 'ResearchAgent']
   period: None
-  agents_run: []
-  errors: 0
+  agents_run: ['DataAgent', 'PortfolioAnalysisAgent', 'ResearchAgent', 'ScreeningAgent']
+  errors: 2
 
 Q: How much did AAPL gain today? | pid=3
   intent: clarification_needed
