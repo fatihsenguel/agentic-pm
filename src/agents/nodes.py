@@ -1896,6 +1896,44 @@ def judgement_record(state: AgentState) -> Optional[Dict[str, Any]]:
     return research if research.get("asks") == "position" else None
 
 
+def require_gate(shared: Dict[str, Any], block: Dict[str, Any]) -> Dict[str, Any]:
+    """The gate block for this judgement, or a raise (decision 62).
+
+    No outcome is printed without a gate block for the same ticker and the
+    same weight. The formatter calls this before it prints anything that
+    implies a position; an answer that reached the synthesizer with the
+    gate having failed has no block here and is refused rather than shown
+    with its policy check missing (DIRECTION.md invariant 2).
+
+    The weight is checked and not only the ticker because the gate's
+    verdict is a verdict at one weight: on this portfolio a candidate is
+    clear of IPS-4.1 at 6% and breaches it at 15%, so a block carried over
+    from another weight would attach the wrong findings to the answer.
+    """
+    gate_block = shared.get("gate")
+    ticker = (block.get("subject") or {}).get("ticker")
+    weight = block.get("weight")
+    if not gate_block:
+        raise DataCalculationError(
+            f"No gate block in shared_data for {ticker}. An answer that implies a position "
+            "is checked against the IPS before it is shown, and the check did not run or "
+            "did not finish. Nothing about a position is printed without it."
+        )
+    if weight is None:
+        raise DataCalculationError(
+            f"The judgement record for {ticker} states no weight, so there is nothing to "
+            "hold the gate's check to. The weight the answer is about and the weight the "
+            "gate checked are the same weight or the answer is not shown."
+        )
+    if gate_block.get("ticker") != ticker or gate_block.get("weight") != weight:
+        raise DataCalculationError(
+            f"The gate block is for {gate_block.get('ticker')} at "
+            f"{gate_block.get('weight')} and the answer is about {ticker} at {weight}. "
+            "A check of a different position is not this position's check."
+        )
+    return gate_block
+
+
 async def gate_node(state: AgentState) -> Dict[str, Any]:
     """The IPS applied to the candidate at its stated weight, on the one
     edge into the synthesizer (decision 62).
@@ -2570,6 +2608,12 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
         elif intent == "compliance":
             lines.extend(_format_compliance_response(decision, sub_results))
         elif intent == "research" and "ResearchAgent" in sub_results:
+            # Decision 62: nothing that implies a position is printed
+            # without the gate's block for the same ticker and weight. A
+            # thesis question implies none and passes straight through.
+            judgement = judgement_record(state)
+            if judgement is not None:
+                require_gate(state.get("shared_data") or {}, judgement)
             lines.extend(_format_thesis_response(sub_results))
         elif intent == "research":
             lines.extend(_format_research_response(sub_results))

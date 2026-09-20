@@ -1,15 +1,14 @@
 """
-The gate in the graph: the node and the edge it sits on (decision 62).
+The gate in the graph: the node, the edge it sits on, and the guard that
+stops an outcome printing without it (decision 62).
 
 The pure check is `portfolio_tool.gate`, held to Part 17 in test_gate.py;
 this file holds the seams. What it pins: that the node publishes the block
 with the figures the pure module computed and the weight the watchlist
 states; that a failure publishes no block at all rather than an empty one;
-and that the routing puts the gate on the edge into the synthesizer, that
-no plan can leave it out, and that it cannot loop.
-
-The guard that stops an outcome printing without a block comes with its
-own commit.
+that the routing puts the gate on the edge into the synthesizer, that no
+plan can leave it out, and that it cannot loop; and that the formatter
+refuses an outcome whose gate block is missing or is for another position.
 
 The allocation fixture is test_gate.py's, which is Part 17 B. The policy
 path is monkeypatched: which file a portfolio is checked against is the
@@ -193,5 +192,63 @@ def test_an_unfinished_plan_still_runs_its_agents_first(shared):
 def test_the_compiled_graph_holds_the_gate_and_its_edge():
     compiled = graph.create_agent_graph()
     assert graph.GATE in compiled.get_graph().nodes
+
+
+# --- the guard (decision 62) --------------------------------------------------------
+
+def test_the_guard_returns_the_block_when_the_position_matches():
+    block = {"ticker": "GOOGL", "weight": WEIGHT}
+    assert nodes.require_gate({"gate": block}, _judgement()) is block
+
+
+def test_no_outcome_without_a_gate_block():
+    with pytest.raises(nodes.DataCalculationError, match="No gate block in shared_data"):
+        nodes.require_gate({}, _judgement())
+
+
+def test_no_outcome_when_the_gate_checked_another_ticker():
+    shared = {"gate": {"ticker": "ADBE", "weight": WEIGHT}}
+    with pytest.raises(nodes.DataCalculationError, match="not this position's check"):
+        nodes.require_gate(shared, _judgement())
+
+
+def test_no_outcome_when_the_gate_checked_another_weight():
+    """The gate's verdict is a verdict at one weight: the candidate is
+    clear of IPS-4.1 at 6% and breaches it at 15% (Part 17 E), so a block
+    from another weight carries the wrong findings."""
+    shared = {"gate": {"ticker": "GOOGL", "weight": 0.15}}
+    with pytest.raises(nodes.DataCalculationError, match="not this position's check"):
+        nodes.require_gate(shared, _judgement())
+
+
+def test_no_outcome_when_the_judgement_states_no_weight():
+    """Nothing to hold the check to. This is also what stops case 4.3's
+    answer landing later without carrying the weight it was answered at."""
+    shared = {"gate": {"ticker": "GOOGL", "weight": WEIGHT}}
+    with pytest.raises(nodes.DataCalculationError, match="states no weight"):
+        nodes.require_gate(shared, _judgement(weight=None))
+
+
+async def test_the_synthesizer_refuses_a_position_answer_with_no_gate_block(shared):
+    """End to end over the seam: a judgement record reaches the synthesizer
+    with the gate having failed, and no answer about the position is
+    printed."""
+    shared.pop("allocation")
+    state = _state(shared)
+    state["router_decision"] = {"intent": "research", "parameters": {}}
+    state["sub_results"] = {"ResearchAgent": {"success": True, "research": {}}}
+    out = await nodes.synthesizer_node(state)
+    assert "No gate block in shared_data" in str(out)
+
+
+async def test_the_synthesizer_prints_a_thesis_answer_without_one(shared):
+    """A thesis question implies no position, so the guard does not apply
+    and the answer prints as it did before the gate existed."""
+    shared["research"]["asks"] = "thesis"
+    state = _state(shared)
+    state["router_decision"] = {"intent": "research", "parameters": {}}
+    state["sub_results"] = {"ResearchAgent": {"success": False, "error": "nothing to read"}}
+    out = await nodes.synthesizer_node(state)
+    assert "gate block" not in str(out)
 
 
