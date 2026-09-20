@@ -1,7 +1,7 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 20 September 2026 (twenty-ninth session), begun at 12:49 UTC. Regenerated at its end.
-**Branch:** `gate`, cut from `baseline-v1` at **641b492** on the owner's word, the branch not existing before. **`baseline-v1` is the trunk** and stood at 641b492 at session start, level with `origin/baseline-v1`. The previous session's branches `cap` and `values` are deleted and their commits are on the trunk; 641b492 landed on the trunk directly rather than through a branch. Each session branch is merged into the trunk with `--ff-only` when the loops are green; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count 641b492..HEAD` — 17, and 18 with this file. The owner merges and pushes; `origin`'s push URL is `no_push`.
+**Branch:** `gate`, cut from `baseline-v1` at **641b492** on the owner's word, the branch not existing before. **`baseline-v1` is the trunk** and stood at 641b492 at session start, level with `origin/baseline-v1`. The previous session's branches `cap` and `values` are deleted and their commits are on the trunk; 641b492 landed on the trunk directly rather than through a branch. Each session branch is merged into the trunk with `--ff-only` when the loops are green; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count 641b492..HEAD` — **21 with this file's correction**: 17 of the brief's work, this file regenerated, then DIRECTION.md's invariant 8 and the workbook on the owner's word, and the correction §4 names. The owner merges and pushes; `origin`'s push URL is `no_push`.
 
 **State:** pytest **1761 passed, 6 xfailed**, up from 1650 by 111. **Golden set: twenty lines, three runs** — one at session start with zero diff, then two for the prompt hypothesis, identical to each other, **one line of twenty moved exactly as predicted**; `expected.txt` updated on its own commit. **Runner 16/18, twice**: at session start 4.1 BLOCKED at PHI-2.1, 4.3 BLOCKED at out_of_scope, 4.4 PASS; at session end the same count with **two different cases** — 3.2 passing on a new prompt and 4.3 blocked at a new place. **The CLI once**, the allocation question, which fetched the holdings' closes, its interval having run out. **The gate is built**: Part 17, the pure module, the node on the edge into the synthesizer, the guard, and `asks` gaining "position" so that "should I buy X" reaches it. **Decisions 71, 72 and 73 taken**, each with a word, numbered here and the owner's to renumber. **Order 4 is not done. Left: the research node's half of case 4.3 — the model's view, the weight on the block, the entry condition and the outcome — then the full test before anything of Order 5.**
 
@@ -39,12 +39,12 @@ only while predicting the runner.
 
 | File | What it is |
 |---|---|
-| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1, 2 and 3 are built. **Order 4 is in progress**: the bridge, the SIC code, the philosophy check node, the metric keys, the valuation range, prediction scoring, the research agent's shape and its thesis answer, the reading tool, and, this session, **the gate: its Part, its module, its node, its guard and the routing that reaches it**. Left in Order 4: the research node's half of 4.3, then the full test. **Invariant 8 is stale in its tense** — it says "should I buy X" is refused until Level 4 defines it; Level 4 defines it and the refusal is gone. One dated sentence, the owner's. |
+| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1, 2 and 3 are built. **Order 4 is in progress**: the bridge, the SIC code, the philosophy check node, the metric keys, the valuation range, prediction scoring, the research agent's shape and its thesis answer, the reading tool, and, this session, **the gate: its Part, its module, its node, its guard and the routing that reaches it**. Left in Order 4: the research node's half of 4.3, then the full test. **Invariant 8 was revised at 5b4be76**, dated 20 September, on the owner's word: security selection is in scope through Level 4's checks and through nothing else, and what stays out is not on a timetable. The direction did not change; this was the change it anticipated. |
 | `docs/benchmark.md` | **The definition of done.** Levels 1 to 3: 12 cases, 12 pass, **3.2 on a new prompt** since this session. Level 4: 4.2, 4.4, 4.5 and 4.6 pass, 4.1 blocked by decision, 4.3 blocked at the research node. n/18. **Part 2 is rewritten**: security selection is in scope through Level 4's checks and no further, and what stays out has no timetable. Ten dated status notes under Level 4, the tenth this session's. |
 | `tests/golden/expected_values.md` | Hand-computed reference, Parts 1 to 17. **New this session: Part 17**, the gate's check of a candidate at a stated weight, computed by hand on the 09-18 closes before the module, with decisions D59 and D60. Never update it to match code output. |
 | `tests/benchmark/run_cases.py` | **The scoreboard.** Eighteen cases. This session: **3.2's prompt is a price forecast**, rewritten and not deleted; `check_4_3` asks for a prediction **entered** in the ledger (decision 69); its probe stopped looking for a `stopped` key the gate does not have; and the section header no longer calls decisions 63, 64, 65 and 68 open. `check_4_3` is exercised by `tests/test_check_4_3.py`, which is new because nothing ran it. |
 | `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. 153 lines start `**Trigger:**`, counted by `grep -c '^\*\*Trigger:\*\*'`. New this session: five entries. **The next session reads "The gate is built: decisions 71, 72 and 73, and what the first runs showed" first.** |
-| `tests/golden/expected_values.xlsx` | The workbook, eleven sheets, saved in Excel at c75b73b. Untouched this session and not opened; Parts 9 C, 11, 14, 15, 16 and **17** have no sheet. |
+| `tests/golden/expected_values.xlsx` | The workbook, eleven sheets, **saved in Excel at b07bc33**: the owner opened, saved and closed it at the end of this session. Checked against the commit before it through openpyxl — same sheets, same order, same dimensions, **zero cell differences**; Excel rewrote the zip container and the file is a byte smaller. Parts 9 C, 11, 14, 15, 16 and **17** have no sheet. |
 | `docs/IPS.md` | The policy, synthetic. Unchanged. |
 | `docs/PHILOSOPHY.md` | What is worth wanting, synthetic: seventeen clauses. Unchanged. |
 | `docs/WATCHLIST.md` | Two synthetic candidates, four predictions due early 2027, none scored. **Changed this session on the owner's word for the sentence: a paragraph on the weight, and a `Weight.` line under W-1, 6% of the portfolio after the purchase.** No score is written into it by the system, ever. |
@@ -444,6 +444,15 @@ table and each holding: no price row, no filing row, macro still 209.
   its old sentence having said the gate was not built.
 - **78d6f1a** the record: five entries, decisions 71, 72 and 73.
 - **ed2adc7** benchmark.md's status note.
+- **37b90fd** this file, regenerated.
+
+**After it, three commits the owner asked for**, which is why this file
+carries a correction below its own regeneration. **5b4be76** DIRECTION.md's
+invariant 8, revised and dated on his word. **b07bc33** the workbook, which
+he opened, saved and closed: its own commit, being a tracked binary, and
+zero cell differences. **This one**, correcting the four claims those two
+made false — the workbook row, the invariant-8 row, the next-steps line and
+the commit count.
 
 **The prompt hypothesis, in full.** Predicted before running: nineteen
 golden lines unchanged and line 11 moving to research with the four-agent
@@ -553,10 +562,9 @@ or soften a clause to move it.
 ### Later, with reasons
 
 - **The trunk.** `git switch baseline-v1 && git merge --ff-only gate`.
-- **DIRECTION.md invariant 8** says "should I buy X" is refused until
-  Level 4 defines it. It defines it. One dated sentence, the owner's.
 - **Decisions 71, 72 and 73's numbers** are mine to propose and the
   owner's to set; they appear in one KNOWN_GAPS entry and in §5 here.
+  Nothing depends on them but those two references.
 - **A buy question about a company on no entry reads as an error**, not as
   a refusal, and two agents compute a portfolio for it first (KNOWN_GAPS).
 - **The golden set pins only the refusal branch** of a buy question; no
