@@ -7,13 +7,17 @@ What the loader reads (Part 11 D38): each candidate's id, ticker, name,
 currency and status, and its valuation table, the growth I assume for it
 as a low and a high; since case 4.5 the prediction rows too, held in
 test_watchlist_predictions_loader.py; since case 4.4 the thesis, as
-written, for the research agent. What it leaves alone: the entry
+written, for the research agent; and, for the gate, its asset class,
+sector and instrument type (decision 63). What it leaves alone: the entry
 condition and added_on, read by nothing. What it refuses: a
 missing file with no default, a top-level key nothing reads, a candidate
 lacking a field, two candidates with one id or one ticker, a valuation
 table that is not exactly the two ends as fractions. The order of the two
 ends is the range's rule, not the loader's: quant/valuation.py raises on
-a reversed or equal pair, one place for that rule.
+a reversed or equal pair, one place for that rule. The classification's
+words are the IPS check's rule in the same way: any non-empty string
+loads, and the check that sizes a position stops on a word it has no band
+for, so that vocabulary lives where it is read and not twice.
 
 `growth_pair` is what the node asks for: the two assumptions as the range
 reads them, each with the entry's id as its source. A candidate that
@@ -37,6 +41,9 @@ id = "W-1"
 ticker = "GOOGL"
 name = "Alphabet"
 currency = "USD"
+asset_class = "Equity"
+sector = "Communication Services"
+instrument_type = "share"
 added_on = 2026-09-10
 status = "active"
 thesis = "A thesis."
@@ -63,6 +70,9 @@ id = "W-2"
 ticker = "ADBE"
 name = "Adobe"
 currency = "USD"
+asset_class = "Equity"
+sector = "Technology"
+instrument_type = "share"
 added_on = 2026-09-10
 status = "active"
 thesis = "Another thesis."
@@ -153,7 +163,8 @@ def test_no_candidates_is_refused(load, watchlist):
         load('# empty\n')
 
 
-@pytest.mark.parametrize("field", ["id", "ticker", "name", "currency", "status", "thesis"])
+@pytest.mark.parametrize("field", ["id", "ticker", "name", "currency", "asset_class",
+                                   "sector", "instrument_type", "status", "thesis"])
 def test_a_candidate_lacking_a_field_is_refused_naming_it(load, watchlist, field):
     text = "\n".join(line for line in W1.splitlines() if not line.startswith(f"{field} = "))
     with pytest.raises(watchlist.WatchlistError, match=rf"lacks \['{field}'\]"):
@@ -214,6 +225,43 @@ def test_the_prediction_rows_are_read_and_the_rest_left_alone(load):
     assert [p.id for p in wl.candidates["W-1"].predictions] == ["W-1.1"]
     for field in ("entry_condition", "added_on"):
         assert not hasattr(wl.candidates["W-1"], field), field
+
+
+# --- the classification ----------------------------------------------------------
+
+def test_the_committed_candidates_state_their_classification(watchlist):
+    """Decision 63: the three the IPS check reads about the instrument
+    itself, as docs/WATCHLIST.md states them and test_watchlist.py holds
+    them. Alphabet's sector is Communication Services and not Technology,
+    where the portfolio already sits above IPS-4.3."""
+    wl = watchlist.load_watchlist("watchlist.toml")
+    w1, w2 = wl.candidates["W-1"], wl.candidates["W-2"]
+    assert (w1.asset_class, w1.sector, w1.instrument_type) == (
+        "Equity", "Communication Services", "share")
+    assert (w2.asset_class, w2.sector, w2.instrument_type) == (
+        "Equity", "Technology", "share")
+
+
+@pytest.mark.parametrize("field", ["asset_class", "sector", "instrument_type"])
+@pytest.mark.parametrize("value", ['""', '"   "', "12"], ids=["empty", "whitespace", "a number"])
+def test_a_classification_that_is_no_word_is_refused(load, watchlist, field, value):
+    """A blank is not a statement. Nothing fills one with a default: the
+    candidate is refused here, before the gate is asked to size it."""
+    text = "\n".join(f"{field} = {value}" if line.startswith(f"{field} = ") else line
+                     for line in W1.splitlines())
+    with pytest.raises(watchlist.WatchlistError, match=rf"lacks \['{field}'\]"):
+        load(text)
+
+
+def test_a_word_the_ips_has_no_band_for_loads_here(load):
+    """The vocabulary is the check's, not the loader's (D42's shape for the
+    metric): a sector or an asset class the IPS does not recognise loads,
+    and the check that reads it stops on it, naming it. A validation here
+    would put the IPS's words in two files."""
+    wl = load(W1.replace('asset_class = "Equity"', 'asset_class = "Crypto"')
+                .replace('sector = "Communication Services"', 'sector = "Widgets"'))
+    candidate = wl.candidates["W-1"]
+    assert (candidate.asset_class, candidate.sector) == ("Crypto", "Widgets")
 
 
 # --- the thesis ----------------------------------------------------------------

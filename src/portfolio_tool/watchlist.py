@@ -4,14 +4,18 @@ candidates I want to own and, for each, the growth I assume for its
 valuation range (Part 11 D38).
 
 What this reads: each candidate's id, ticker, name, currency and status;
-its thesis, as written, for the research agent (case 4.4, PHI-6.1); its
-valuation table, `growth_low` and `growth_high`, both or neither; and its
-prediction rows (case 4.5, Part 14): id, made_on, due, kind and
-statement; a figure prediction's metric, bound, value and period; and the
-score I wrote, all four fields or none. What it leaves alone: the entry
-condition, added_on and the philosophy check, read by nothing.
+its asset class, sector and instrument type, the three the IPS check reads
+about the instrument itself (decision 63); its thesis, as written, for the
+research agent (case 4.4, PHI-6.1); its valuation table, `growth_low` and
+`growth_high`, both or neither; and its prediction rows (case 4.5, Part
+14): id, made_on, due, kind and statement; a figure prediction's metric,
+bound, value and period; and the score I wrote, all four fields or none.
+What it leaves alone: the entry condition, added_on and the philosophy
+check, read by nothing.
 The metric's vocabulary is the scorer's (D42): any name loads here and the
-scorer stops on one it has no formula for.
+scorer stops on one it has no formula for; the classification's three are
+the same, present or refused here and read against the IPS's own words by
+the check that sizes a position, so that neither vocabulary lives twice.
 
 Policy lives in config, not code. This module loads and validates; it
 computes nothing and defaults nothing: a missing file is an error, a
@@ -38,7 +42,13 @@ __all__ = ["Candidate", "Prediction", "Score", "Watchlist", "WatchlistError",
 CANDIDATE_ID = re.compile(r"^W-\d+$")
 PREDICTION_ID = re.compile(r"^(W-\d+)\.\d+$")
 STATUSES = ("active", "closed")
-_HEADER = ("id", "ticker", "name", "currency", "status", "thesis")
+_HEADER = ("id", "ticker", "name", "currency", "asset_class", "sector",
+           "instrument_type", "status", "thesis")
+# asset_class, sector and instrument_type are the three the IPS check reads
+# about the instrument itself (decision 63, docs/WATCHLIST.md): the band of
+# section 3 the position falls in, the count IPS-4.3 limits, and whether
+# IPS-4.2 attributes it to an issuer. They are in the header because every
+# candidate states them; the words themselves are the IPS's to recognise.
 # A prediction row (docs/WATCHLIST.md; Part 14 D45): the five every row
 # carries, the four a figure carries, the four a written score carries.
 _PREDICTION = ("id", "made_on", "due", "kind", "statement")
@@ -89,6 +99,9 @@ class Candidate:
     ticker: str
     name: str
     currency: str
+    asset_class: str
+    sector: str
+    instrument_type: str
     status: str
     thesis: str
     growth: Optional[Mapping[str, float]] = None
@@ -159,7 +172,10 @@ def _parse_candidate(entry: Mapping[str, Any], n: int) -> Candidate:
                if not isinstance(entry.get(k), str) or not entry[k].strip()]
     if missing:
         raise WatchlistError(f"{where} lacks {missing}; every candidate has an id, a ticker, "
-                             "a name, a currency, a status and a thesis (PHI-6.1).")
+                             "a name, a currency, an asset class, a sector, an instrument "
+                             "type, a status and a thesis (PHI-6.1). A candidate that does "
+                             "not state all three of the classification is not checked, and "
+                             "nothing fills a blank with a default (decision 63).")
     cid = entry["id"]
     where = cid
     if not CANDIDATE_ID.match(cid):
@@ -192,8 +208,9 @@ def _parse_candidate(entry: Mapping[str, Any], n: int) -> Candidate:
     predictions = tuple(_parse_prediction(row, cid, n) for n, row in enumerate(rows, start=1))
 
     return Candidate(id=cid, ticker=entry["ticker"], name=entry["name"],
-                     currency=entry["currency"], status=entry["status"],
-                     thesis=entry["thesis"], growth=growth,
+                     currency=entry["currency"], asset_class=entry["asset_class"],
+                     sector=entry["sector"], instrument_type=entry["instrument_type"],
+                     status=entry["status"], thesis=entry["thesis"], growth=growth,
                      predictions=predictions)
 
 
