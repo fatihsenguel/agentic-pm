@@ -16,6 +16,14 @@
 # for the candidate, a low and a high, as fractions (Part 11 D38); a
 # candidate without one has no range until it states them.
 #
+# `asset_class`, `sector` and `instrument_type` are the document's
+# Classification line, the three things the IPS check reads about the
+# instrument itself: the band of section 3 the position falls in, the count
+# IPS-4.3 limits, and whether IPS-4.2 attributes it to an issuer at all.
+# Every candidate states all three, and a candidate missing one is not
+# checked (docs/WATCHLIST.md). The words are mine, not a data provider's; a
+# word the IPS has no band for stops the check that reads it, not this file.
+#
 # No metric here depends on the price (DIRECTION.md invariant 7).
 # portfolio_tool/watchlist.py reads the candidates and their growth pairs;
 # the prediction rows are read by nothing yet (case 4.5).
@@ -26,6 +34,9 @@ id = "W-1"
 ticker = "GOOGL"
 name = "Alphabet"
 currency = "USD"
+asset_class = "Equity"
+sector = "Communication Services"
+instrument_type = "share"
 added_on = 2026-09-10
 status = "active"
 thesis = """Search and YouTube are the advertising businesses that keep growing through every cycle, the cloud segment is now profitable and taking share, and the company funds its own capital spending from operating cash flow with no debt to speak of. The thesis is that the advertising businesses keep their margins while the cloud segment's margin catches up, and that the capital spending on data centres shows in cloud revenue rather than in lasting margin damage."""
@@ -61,6 +72,9 @@ id = "W-2"
 ticker = "ADBE"
 name = "Adobe"
 currency = "USD"
+asset_class = "Equity"
+sector = "Technology"
+instrument_type = "share"
 added_on = 2026-09-10
 status = "active"
 thesis = """The creative and document businesses are subscriptions that customers renew because their work lives in the files, and the gross margin is that of a business selling software it already wrote. The thesis is that the subscription base keeps growing through the shift to generative tools rather than being displaced by them, and that the gross margin holds while it does."""

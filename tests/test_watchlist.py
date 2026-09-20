@@ -33,8 +33,16 @@ DOC_PREDICTION = re.compile(r"\*\*(W-\d+\.\d+)\*\*\s+(.*?)(?:\n\s*\n|\Z)", re.S)
 # the document's words: "Free cash flow growth of 6% to 12% a year".
 DOC_VALUATION = re.compile(
     r"\*\*Valuation assumptions\.\*\*\s+Free cash flow growth of (\d+)% to (\d+)% a year")
+# Decision 63: the three things the IPS check reads about the instrument,
+# in the document's words: "Equity; Communication Services; a directly
+# held share." The first two are the config's words; the third is a phrase
+# and the config's word for it is below, the way the growth line's
+# percentages are read as fractions.
+DOC_CLASSIFICATION = re.compile(r"\*\*Classification\.\*\*\s+(.*?)(?:\n\s*\n|\Z)", re.S)
+INSTRUMENT_WORDS = {"a directly held share": "share", "a fund": "fund"}
 
-CANDIDATE_KEYS = {"id", "ticker", "name", "currency", "added_on", "thesis",
+CANDIDATE_KEYS = {"id", "ticker", "name", "currency", "asset_class", "sector",
+                  "instrument_type", "added_on", "thesis",
                   "entry_condition", "status", "prediction"}
 CANDIDATE_OPTIONAL = {"philosophy_check", "closed_on", "closed_reason", "valuation"}
 VALUATION_KEYS = {"growth_low", "growth_high"}
@@ -68,14 +76,21 @@ def _document():
         body = text[m.start():end]
         thesis = DOC_THESIS.search(body)
         valuation = DOC_VALUATION.search(body)
+        classification = DOC_CLASSIFICATION.search(body)
         sections[m.group(1)] = {
             "thesis": _squash(thesis.group(1)) if thesis else None,
             "predictions": {p.group(1): _squash(p.group(2)) for p in DOC_PREDICTION.finditer(body)},
             "unchecked": "not yet checked" in body.lower(),
             "valuation": ({"growth_low": int(valuation.group(1)) / 100,
                            "growth_high": int(valuation.group(2)) / 100} if valuation else None),
+            "classification": (_parts(classification.group(1)) if classification else None),
         }
     return sections
+
+
+def _parts(line):
+    """The Classification line's three parts, in document order, as written."""
+    return [part.strip() for part in _squash(line).rstrip(".").split(";")]
 
 
 @pytest.fixture(scope="module")
@@ -165,6 +180,25 @@ def test_valuation_assumptions_are_the_documents(candidates):
         assert doc[cid]["valuation"] == pair, (cid, doc[cid]["valuation"], pair)
         stated += 1
     assert stated == 1, "W-1 states its growth and W-2 does not"
+
+
+def test_classification_is_the_documents(candidates):
+    """Decision 63: every candidate states its asset class, its sector and
+    whether it is a directly held share or a fund, and the config's three
+    words are the document's Classification line. The instrument's phrase
+    is written out in the document and in one word in the config; nothing
+    else is translated."""
+    doc = _document()
+    for cid, entry in candidates.items():
+        stated = doc[cid]["classification"]
+        assert stated is not None, f"{cid}: the document states no Classification line"
+        assert len(stated) == 3, (cid, stated)
+        asset_class, sector, instrument = stated
+        assert entry["asset_class"] == asset_class, (cid, entry["asset_class"], asset_class)
+        assert entry["sector"] == sector, (cid, entry["sector"], sector)
+        assert instrument in INSTRUMENT_WORDS, (cid, instrument)
+        assert entry["instrument_type"] == INSTRUMENT_WORDS[instrument], (
+            cid, entry["instrument_type"], instrument)
 
 
 def test_prediction_shape(candidates):
