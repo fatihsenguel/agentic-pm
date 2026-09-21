@@ -396,6 +396,44 @@ answers. Nothing here says the gate's arithmetic is right - that is
 pytest's, against Part 17 - and nothing says a judgement is any good,
 which is the ledger's and waits for 1 February 2027.
 
+**Status note, 21 September 2026 (thirtieth session).** Still 16/18, and
+**4.3 is blocked at a third place**: `out_of_scope` for four sessions,
+the research node's refusal for one, and now the policy. What changed is
+that there is nothing left to build for it. The research node's half
+landed — the model's view of the thesis, the weight the answer is about
+and its source, my entry condition read against the screen's finding on
+its clause, the outcome composed from the four, and the rendering — and
+`check_4_3` **passes on the answer, every assertion of it**. What reports
+the case as blocked is the runner's probe, naming the screen's stop at
+PHI-2.1 (decision 48). The paragraph above headed "What 4.3 will say when
+it is answerable" said this would happen and it did: equity stands at
+69.61% before any purchase against IPS-3.1's 65% ceiling, so the gate
+fails at every weight, and the screen stops where 4.1's does. **A blocked
+case with the right reason is the right answer.** No figure was filled and
+no clause softened to move it.
+
+Beneath it: **Part 15 G** and **D61**, hand-written before the code — the
+view is three fields over the closed set `stands`, `strained`, `no_view`,
+its reasons claim ids of the readings, an uncertainty, and no prose, so
+the answer prints the claims it cites rather than a sentence from the
+model. The view is a second request on the stronger model and not the
+proposal's, so a refused view cannot sink case 4.4's prediction. The
+outcome is composed in the gate node (decision 74), the first place all
+four inputs exist, and written onto the research block; `outcome.compose`
+is held to **all sixteen rows of Part 17 H**, which closes the gap where
+`check_4_3` held one of them and nothing held the other fifteen.
+
+**The first live view, read by hand.** It came back `strained`, `stated`,
+resting on one claim of the thirty-odd read: that the company raised new
+debt financing during the year, quoting the filing saying so, against a
+thesis whose own words are "with no debt to speak of". It is the first
+model output in this project whose reason plainly supports its
+conclusion. Nothing in the code checks that and nothing can; it is
+recorded in `tests/golden/KNOWN_GAPS.md` so the next one has something to
+be compared against. **A pass or a block here still says nothing about
+whether a judgement is any good**, and 4.3's own prediction is not in the
+ledger until I enter it.
+
 **References before code, none computed yet.** Part 10 of
 `expected_values.md`: the synthetic candidate's typed figures over the
 stated years and every philosophy clause's verdict and distance by hand, for
