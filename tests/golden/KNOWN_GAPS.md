@@ -3432,6 +3432,20 @@ The compliance report's header and the out-of-scope refusal's header
 each print one. Removing them changes the answers' text, so it is a
 change the runner sees, own commit, and not a drive-by inside another.
 
+**21 September (thirty-first session), counted rather than carried.**
+Seven headers is right and is not all of it. The seven are out-of-scope
+(`nodes.py:2804`), the policy check (`:2932` and `:2948`), the policy
+lookup (`:2860` and `:2867`), optimization (`:3673`), macro (`:3701`),
+rebalance (`:3746`) and backtest (`:3765`). **An eighth header is on no
+list:** the hypothetical-weight verdict at `:2880`, which prints
+`🚫 **NOT PERMITTED BY THE POLICY**` or `✅ **PERMITTED BY THE POLICY**`
+and was read live as case 3.1 in the full test. Six further answer-text
+lines carry one: the failure stubs at `:2746`, `:2837` and `:3677`, the
+backtest's past-performance note at `:3793`, and the per-agent line at
+`:2789` that prints `DataAgent: ✓`. Fifteen answer-text lines in all, of
+forty-one lines in the file that carry a glyph; the remaining twenty-six
+are comments and console prints, which are the other session's work.
+
 ### Prompt batch, 11 September: fourteen prompts - CLOSED 15 September (seventeenth session), history
 
 **Trigger:** none: history; each miss has its own entry.
@@ -6246,3 +6260,114 @@ as `entry_condition_stopped` rather than raised, so the rest of the answer
 stands and the outcome reads the condition as not permitting. What is not
 decided: whether an event condition should instead read as not
 established, which is a rule for a case nobody asks for yet.
+
+### Case 1.4 answers with the sector table and names no figure for either position
+
+**Trigger:** the commit that gives the allocation formatter a per-position view or a selection axis.
+
+Logged 21 September (thirty-first session), from the full test's first
+batch, read through the CLI. "What positions do I hold in the Technology
+sector?" returns the whole by-sector report - five lines, every sector -
+with Technology's total 116,604.00 and AAPL and MSFT as bare names. Part
+5's expected answer for 1.4 is "2 positions, 114,674.00, 29.05% of
+invested. AAPL 64,992.00 (16.47%), MSFT 49,682.00 (12.59%)": a figure and
+a share for each position. Neither appears anywhere in the answer. What it
+does print is right and traces to the allocation block, and the
+unsectored caveat and the look-through caveat are both there. The runner
+passes 1.4 because it discards the answer, and the golden set prints five
+routing fields, so no loop of the four sees this. It is the shape of the
+JNJ wrong face and of "What's my biggest position?": no per-position view
+is published, and a question that named one sector got all five.
+
+### An exact half cent rounds by the order of the float operations
+
+**Trigger:** the first reference Part whose figure lands on an exact half, or a commit that states a rounding rule.
+
+Logged 21 September (thirty-first session), from the full test's second
+batch, verified in the interpreter. **Case 2.1's answer carries two exact
+halves and rounds them opposite ways.** IPS-3.1's Equity distance is
+18,841.625 and prints 18,841.63; IPS-4.3's Technology distance is
+14,492.125 and prints 14,492.12. The cause is the order of the operations
+and not a rule: the distance is computed as (pct - limit) x total, and
+(284332.5/408447.5 - 0.65) x 408447.5 is 18841.62500000001 in binary,
+which formats up, while the Technology one is 14492.12499999999, which
+formats down. Computed the other way, market_value - limit x total, the
+Equity figure is 18841.625 exactly and formats to 18,841.62 - **a
+different cent from the one the answer gave.** Case 1.2 is the same defect
+in a percentage: 14,967.00 / 20,000.00 is 0.74835 exactly and the answer
+prints +74.83%, where half-up is 74.84%. No reference Part lands on a
+half, so nothing pins which way it should go, and no rounding rule is
+stated anywhere in the repository. What is not decided: whether the rule
+is half-up on a Decimal or something else, and whether a distance to a
+limit is computed from the percentage or from the market value. They are
+the same arithmetic and they are not the same cents.
+
+### Cases 2.2 and 2.3 return the same answer, and 2.1 no longer does
+
+**Trigger:** fired. The compliance-branch note said a measure-like axis for compliance is a decision when a case needs one; two cases need one.
+
+Logged 21 September (thirty-first session), from the full test's second
+batch, the CLI's own identical-answer check reporting it unprompted.
+"What would have to change for me to be within the limits again?" returned,
+word for word, the answer to "Does my current allocation violate any rule
+of my investment policy?". **The older note - "one report serves 2.1, 2.2
+and 2.3" - is half stale, and is corrected here rather than rewritten.**
+2.1 now returns the full check, every clause with its within or breach
+line and the policy statements quoted in full, while 2.2 and 2.3 return
+the breaches-only variant headed "- breaches". So the formatter gained an
+axis after that note was written; what survives of the note is narrower,
+that 2.2 and 2.3 are indistinguishable from each other. 2.3's content is
+not absent - both answers carry the "what would have to change" section -
+only identical. The runner passes 2.3 while it prints another case's
+answer, because it discards the text.
+
+### The router swallows the model call's own error and reports a null dereference
+
+**Trigger:** fired 21 September, and again on any failure of the model call.
+
+Logged 21 September (thirty-first session), when the Anthropic credit
+balance ran out mid-session and every router call began to fail. What the
+answer said was `Router error: 'NoneType' object has no attribute
+'intent'`. What the API had said was "Your credit balance is too low to
+access the Anthropic API", a 400 carrying a request id. The path:
+`smart_router.py:333` catches every exception from the call and writes its
+text into a `ValidationResult`, and `:338` returns `None` as the decision;
+`router_node` dereferences it, `nodes.py:380` catches the resulting
+`AttributeError`, and `:381` reports that. **The one sentence that says
+what is wrong is captured and then discarded, and what reaches the answer
+names a variable in our own code.** It cost a diagnostic run and a
+hand-written API call to learn what the first failed call already knew.
+This is repair-instead-of-raise in its usual shape: a None stands in for a
+failure, and the crash surfaces somewhere that cannot explain it. The same
+swallow hides a rate limit, a bad key and a malformed response behind one
+message that fits none of them.
+
+### The error stub says the analysis is complete when nothing ran
+
+**Trigger:** the commit that strips the emoji from the answer text; this stub is one of its sites.
+
+Logged 21 September (thirty-first session), read in the same failure. With
+the router dead the entire answer was "Some issues occurred during
+analysis:", the error line, and then "Analysis complete. See details
+below:" with nothing below it. Three faults in eleven lines: the sentence
+states the system's status, which no formatter is to do; it states it
+falsely, nothing having completed; and it points at a tail that is empty.
+`nodes.py:2746` is the line.
+
+### Case 1.3's basis line states a different method than Part 4 states
+
+**Trigger:** the next edit to either the volatility formatter or Part 4.
+
+Logged 21 September (thirty-first session), from the full test's first
+batch. The answer's basis reads "Method: sqrt(w'Sw) on a sample covariance
+matrix of daily returns"; Part 4's method line reads "Standard deviation
+of the portfolio's own daily return series". For fixed weights these are
+one number, and Part 4 records that it was computed both ways and the two
+agreed to 4.9e-16, so nothing here is arithmetic. But the basis line is
+what a reader checks the reference against, and the two do not read alike.
+Recorded with it: the live figure was 10.56% over 2025-09-18 to
+2026-09-18, against Part 4's 10.2936% over a different window at a
+different as-of, so **the live volatility traces to its block and to
+nothing hand-computed.** Allocation, P&L and the sector split could be
+checked back to a hand-computed Part at the same as-of only because Part
+17 happens to be priced 2026-09-18; volatility has no such Part.
