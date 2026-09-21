@@ -2080,9 +2080,20 @@ async def gate_node(state: AgentState) -> Dict[str, Any]:
     portfolio as it would be, and those over the portfolio as it stands,
     so the answer can say which way the purchase moved a clause.
 
-    A failure publishes no block and records the error. The formatter
-    refuses to print an outcome without one, so a gate that could not run
-    stops the answer rather than letting it through unchecked.
+    **And decision 68's outcome, onto the research block.** This node is
+    the first place all four of its inputs exist - the screen and the
+    research block on `shared_data`, its own verdict in the block it has
+    just built - because it runs after the research agent, on the edge
+    into the synthesizer. `portfolio_tool.outcome.compose` composes it,
+    held to Part 17 H's sixteen rows; this node decides nothing about it
+    and neither does the formatter. It is written onto the research block
+    rather than this one because that is where the answer about the
+    position is and where `check_4_3` reads it.
+
+    A failure publishes no block and records the error - and no outcome
+    either, so nothing about the position is printed. The formatter
+    refuses to print an outcome without a gate block, so a gate that could
+    not run stops the answer rather than letting it through unchecked.
     """
     shared = state.get("shared_data", {})
     block = judgement_record(state)
@@ -2174,7 +2185,26 @@ async def gate_node(state: AgentState) -> Dict[str, Any]:
             "unrestored": [list(pair) for pair in result.unrestored],
             "permits": result.permits,
         }
-        return {"shared_data": {**shared, "gate": gate_block}}
+
+        # Decision 68's outcome, composed here because this is the first
+        # place all four of its inputs exist: the screen and the research
+        # block are on shared_data, the gate's verdict is the block just
+        # built, and this node runs on the edge into the synthesizer
+        # (decision 62), after the research agent. It goes onto the
+        # research block, where `check_4_3` reads it and where the answer
+        # about the position is; the composition itself is
+        # `portfolio_tool.outcome.compose`'s, held to Part 17 H's sixteen
+        # rows, and nothing about it is decided here or by the formatter.
+        from portfolio_tool.outcome import compose
+
+        composed = compose(shared.get("screening"), gate_block,
+                           block.get("entry_condition"), block.get("judgement"))
+        research = {**block, "outcome": _plain(composed)}
+        print(f"  the outcome supports an entry: {composed.supports_entry}"
+              + (f"; the grounds are {', '.join(composed.grounds)}"
+                 if composed.grounds else ""))
+
+        return {"shared_data": {**shared, "gate": gate_block, "research": research}}
 
     except Exception as e:
         print(f"  the gate did not run: {e}")

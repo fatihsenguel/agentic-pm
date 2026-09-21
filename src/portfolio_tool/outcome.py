@@ -42,9 +42,7 @@ withhold one.
 from dataclasses import dataclass
 from typing import Any, Mapping, Optional, Sequence, Tuple
 
-from portfolio_tool.entry import EntryCondition
 from portfolio_tool.screening import PASS
-from portfolio_tool.thesis_view import ThesisView
 
 __all__ = ["Outcome", "GROUNDS", "STANDS", "compose"]
 
@@ -86,18 +84,26 @@ def _gate_permits(gate: Optional[Mapping[str, Any]]) -> bool:
     return isinstance(gate, Mapping) and gate.get("permits") is True
 
 
-def _condition_permits(condition: Optional[EntryCondition]) -> bool:
-    return isinstance(condition, EntryCondition) and condition.met is True
+def _condition_permits(condition: Optional[Mapping[str, Any]]) -> bool:
+    return isinstance(condition, Mapping) and condition.get("met") is True
 
 
-def _view_permits(view: Optional[ThesisView]) -> bool:
-    return isinstance(view, ThesisView) and view.thesis_view == STANDS
+def _view_permits(view: Optional[Mapping[str, Any]]) -> bool:
+    return isinstance(view, Mapping) and view.get("thesis_view") == STANDS
 
 
 def compose(screen: Optional[Mapping[str, Any]], gate: Optional[Mapping[str, Any]],
-            condition: Optional[EntryCondition], view: Optional[ThesisView]) -> Outcome:
-    """The outcome decision 68 composes from the four (Part 17 H). Each
-    argument may be absent, which does not permit and is named in the
+            condition: Optional[Mapping[str, Any]],
+            view: Optional[Mapping[str, Any]]) -> Outcome:
+    """The outcome decision 68 composes from the four (Part 17 H).
+
+    All four arrive as the blocks they are published as, and not as the
+    records `entry.read` and `thesis_view.record` return: the node that
+    composes this runs after every one of them is on `shared_data`, so
+    published blocks are what it holds, and taking two of one kind and two
+    of the other would be a shape nobody has.
+
+    Each argument may be absent, which does not permit and is named in the
     grounds; nothing here raises, because every state of the four is a row
     of the table."""
     permits = {

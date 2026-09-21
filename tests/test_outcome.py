@@ -23,9 +23,7 @@ import pytest
 
 from portfolio_tool import outcome
 from portfolio_tool.compliance import BREACH, EXEMPT, OK
-from portfolio_tool.entry import EntryCondition
 from portfolio_tool.screening import EXCLUDED, FAIL, PASS
-from portfolio_tool.thesis_view import ThesisView
 
 
 def screen(clear=True):
@@ -49,12 +47,15 @@ def gate(clear=True):
 
 
 def condition(met=True):
-    return EntryCondition(kind="valuation", clause="PHI-4.1", met=met)
+    """The entry condition as the research block publishes it, which is
+    what `compose` reads: `entry.read` returns a record and the node
+    plainly dumps it."""
+    return {"kind": "valuation", "clause": "PHI-4.1", "met": met}
 
 
 def view(stands=True):
-    return ThesisView(thesis_view="stands" if stands else "strained",
-                      reasons=("1.1",), uncertainty="stated")
+    return {"thesis_view": "stands" if stands else "strained",
+            "reasons": ["1.1"], "uncertainty": "stated"}
 
 
 # Part 17 H, transcribed: the four inputs and the grounds the Part lists.
@@ -134,16 +135,14 @@ def test_the_live_shape_on_alphabet_is_row_15():
     weight, the entry condition is not established because the screen
     reported no finding on PHI-4.1, and no view was given."""
     result = outcome.compose(screen(clear=False), gate(clear=False),
-                             EntryCondition(kind="valuation", clause="PHI-4.1", met=None),
-                             None)
+                             condition(met=None), None)
     assert result.supports_entry is False
     assert result.grounds == ("screen", "gate", "entry_condition", "thesis_view")
 
 
 def test_a_condition_not_established_does_not_permit():
     result = outcome.compose(screen(), gate(),
-                             EntryCondition(kind="valuation", clause="PHI-4.1", met=None),
-                             view())
+                             condition(met=None), view())
     assert (result.supports_entry, result.grounds) == (False, ("entry_condition",))
 
 
@@ -153,7 +152,7 @@ def test_no_view_but_stands_takes_away(value):
     a yes, and only `stands` leaves the other three deciding."""
     result = outcome.compose(screen(), gate(),
                              condition(),
-                             ThesisView(thesis_view=value, reasons=(), uncertainty="inferred"))
+                             {"thesis_view": value, "reasons": [], "uncertainty": "inferred"})
     assert (result.supports_entry, result.grounds) == (False, ("thesis_view",))
 
 

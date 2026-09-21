@@ -7,17 +7,25 @@ this file holds the seams. What it pins: that the node publishes the block
 with the figures the pure module computed and the weight the watchlist
 states; that a failure publishes no block at all rather than an empty one;
 that the routing puts the gate on the edge into the synthesizer, that no
-plan can leave it out, and that it cannot loop; and that the formatter
-refuses an outcome whose gate block is missing or is for another position.
+plan can leave it out, and that it cannot loop; that the formatter refuses
+an outcome whose gate block is missing or is for another position; and
+that **decision 68's outcome is composed here and written onto the
+research block**, since this node is the first place all four of its
+inputs exist.
+
+The composition itself is `portfolio_tool.outcome.compose`'s, held to
+Part 17 H's sixteen rows in test_outcome.py. What is held here is the
+seam: which four things are handed to it, where its answer is written, and
+that a gate which could not run composes nothing.
 
 The allocation fixture is test_gate.py's, which is Part 17 B. The policy
 path is monkeypatched: which file a portfolio is checked against is the
 compliance node's seam and is held there, and reading it here would make
 this a database test.
 
-Nothing sets `asks` to "position" yet (case 4.3, decision 66), so the
-judgement records here are built by hand, and the node runs on no question
-the system answers today.
+The judgement records are built by hand, as the research node publishes
+them: extraction sets `asks` from the question and that seam is held in
+test_extraction.py and test_derived_plans.py.
 """
 
 import pytest
@@ -252,3 +260,111 @@ async def test_the_synthesizer_prints_a_thesis_answer_without_one(shared):
     assert "gate block" not in str(out)
 
 
+
+
+# --- decision 68's outcome, composed here -------------------------------------------
+
+def _judgement_with(condition=None, view=None, **changes):
+    """A judgement record as the research node publishes it for a position
+    question: the weight and its source, the entry condition and the
+    judgement, each as a block."""
+    return {**_judgement(), "weight_source": "W-1",
+            "entry_condition": condition, "entry_condition_stopped": None,
+            "judgement": view, "view_stopped": None, **changes}
+
+
+def _clear_screen():
+    return {"findings": [{"clause": "PHI-2.1", "status": "pass"},
+                         {"clause": "PHI-4.1", "status": "pass"}], "stopped": None}
+
+
+def _stopped_screen():
+    return {"findings": [],
+            "stopped": {"clause": "PHI-2.1", "reason": "a figure is missing"}}
+
+
+async def test_the_outcome_goes_onto_the_research_block(shared):
+    """Not onto the gate's: that is where the answer about the position is
+    and where check_4_3 reads it. The gate's own block is unchanged
+    beside it."""
+    shared["screening"] = _stopped_screen()
+    out = await nodes.gate_node(_state(shared))
+    research = out["shared_data"]["research"]
+    assert research["outcome"] == {"supports_entry": False,
+                                  "grounds": ["screen", "gate", "entry_condition",
+                                              "thesis_view"]}
+    assert "outcome" not in out["shared_data"]["gate"]
+    assert research["asks"] == "position" and research["weight"] == WEIGHT
+
+
+async def test_the_live_shape_on_this_portfolio_is_row_15(shared):
+    """Part 17 I. The screen stops at PHI-2.1, the gate fails IPS-3.1 at
+    every weight on this portfolio, the entry condition is not established
+    because the screen reported no finding on PHI-4.1, and no view was
+    given. A blocked case with the right reason is the right answer."""
+    shared["screening"] = _stopped_screen()
+    shared["research"] = _judgement_with(
+        condition={"kind": "valuation", "clause": "PHI-4.1", "met": None}, view=None)
+    out = await nodes.gate_node(_state(shared))
+    assert out["shared_data"]["gate"]["permits"] is False
+    assert out["shared_data"]["research"]["outcome"]["grounds"] == [
+        "screen", "gate", "entry_condition", "thesis_view"]
+
+
+async def test_the_gates_own_verdict_reaches_the_outcome(shared):
+    """The gate fails IPS-3.1 here, so `gate` is among the grounds however
+    clear the other three are: an entry needs all four (decision 68)."""
+    shared["screening"] = _clear_screen()
+    shared["research"] = _judgement_with(
+        condition={"kind": "valuation", "clause": "PHI-4.1", "met": True},
+        view={"thesis_view": "stands", "reasons": ["1.1"], "uncertainty": "stated"})
+    out = await nodes.gate_node(_state(shared))
+    outcome = out["shared_data"]["research"]["outcome"]
+    assert outcome["supports_entry"] is False
+    assert outcome["grounds"] == ["gate"]
+
+
+async def test_the_screen_the_condition_and_the_view_reach_the_outcome(shared):
+    """Each of the three the research node published is read, and named
+    when it does not permit. The gate is in every row because this
+    portfolio's equity is above IPS-3.1's ceiling before any purchase."""
+    shared["screening"] = _clear_screen()
+    shared["research"] = _judgement_with(
+        condition={"kind": "valuation", "clause": "PHI-4.1", "met": False},
+        view={"thesis_view": "strained", "reasons": ["1.1"], "uncertainty": "inferred"})
+    out = await nodes.gate_node(_state(shared))
+    assert out["shared_data"]["research"]["outcome"]["grounds"] == [
+        "gate", "entry_condition", "thesis_view"]
+
+
+async def test_a_gate_that_could_not_run_composes_no_outcome(shared):
+    """A failure publishes no block and no outcome, so nothing about the
+    position is printed and the guard refuses the answer."""
+    shared["screening"] = _clear_screen()
+    del shared["allocation"]
+    out = await nodes.gate_node(_state(shared))
+    assert "shared_data" not in out
+    assert any("No allocation in shared_data" in e for e in out["errors"])
+
+
+async def test_the_composition_is_not_this_nodes_arithmetic(shared, monkeypatch):
+    """The node calls outcome.compose and prints what it returns; it
+    decides nothing itself. With compose standing in, the block carries
+    the stand-in's answer."""
+    from portfolio_tool import outcome as outcome_module
+
+    asked = []
+
+    def standing_in(screen, gate, condition, view):
+        asked.append((screen, gate, condition, view))
+        return outcome_module.Outcome(supports_entry=True, grounds=())
+
+    monkeypatch.setattr(outcome_module, "compose", standing_in)
+    shared["screening"] = _clear_screen()
+    out = await nodes.gate_node(_state(shared))
+    assert out["shared_data"]["research"]["outcome"] == {"supports_entry": True,
+                                                        "grounds": []}
+    screen, gate_block, condition, view = asked[0]
+    assert screen is shared["screening"]
+    assert gate_block is out["shared_data"]["gate"]
+    assert condition is None and view is None
