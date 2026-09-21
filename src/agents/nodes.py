@@ -1807,6 +1807,13 @@ def _position(candidate, readings, screening, models, agent_ctx):
         "entry_condition_stopped": condition_stopped,
         "judgement": _plain(view) if view is not None else None,
         "view_stopped": view_stopped,
+        # The predictions already entered in the ledger under this
+        # candidate, as the file states them: decision 69 passes the case
+        # on one of them cited by id, and a proposal made in this run is
+        # printed beside them and marked proposed and not entered. Read
+        # here and not by the formatter, which reads no file; nothing is
+        # written to the ledger by anything.
+        "entered": _plain(candidate.predictions),
         "models": {**models, "view": view_m.id},
     }
 
@@ -2766,8 +2773,12 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             # thesis question implies none and passes straight through.
             judgement = judgement_record(state)
             if judgement is not None:
-                require_gate(state.get("shared_data") or {}, judgement)
-            lines.extend(_format_thesis_response(sub_results))
+                shared = state.get("shared_data") or {}
+                gate_block = require_gate(shared, judgement)
+                lines.extend(_format_position_response(judgement, gate_block,
+                                                       shared.get("screening")))
+            else:
+                lines.extend(_format_thesis_response(sub_results))
         elif intent == "research":
             lines.extend(_format_research_response(sub_results))
         elif intent == "ledger":
@@ -3365,6 +3376,241 @@ def _proposed_row(p: Dict) -> List[str]:
     return row
 
 
+def _readings_and_proposals(block: Dict) -> List[str]:
+    """The readings and the proposed prediction, the part a thesis question
+    and a position question print the same way (Part 15 D47 to D50 and F).
+
+    Every reading with its form, accession, section, fiscal year, filed
+    date and source, each claim on one line with its id and its
+    uncertainty and its quote beneath it; every section not read with its
+    reason; and the proposed prediction with its dates, its statement, its
+    value's filing, the claims it rests on, and the row and the sentence I
+    would enter, marked proposed and not entered, or the reason none was
+    proposed. Lifted out of `_format_thesis_response` unchanged when case
+    4.3 came to print the same lines: one place to be wrong, and
+    tests/test_thesis_formatter.py holds each line whole."""
+    models = block.get("models") or {}
+    lines = []
+    for r in block.get("readings") or []:
+        lines += ["", f"**{r.get('section')}** of the {r.get('form')} for {r.get('fiscal_year')}, "
+                      f"accession {r.get('accn')}, filed {r.get('filed')}, source "
+                      f"{r.get('source')}:"]
+        for c in r.get("claims") or []:
+            lines += [f"  [{c.get('id')}] ({c.get('uncertainty')}) {c.get('claim')}",
+                      f"      \"{c.get('quote')}\""]
+    for entry in block.get("not_read") or []:
+        lines += ["", f"**{entry.get('section')}** not read: {entry.get('reason')}"]
+
+    predictions = block.get("predictions") or []
+    if not predictions:
+        lines += ["", "**No prediction proposed.**", f"  {block.get('proposal_stopped')}"]
+    for p in predictions:
+        lines += ["", f"**{p.get('id')}**, proposed, not entered. Made {p.get('made_on')}, "
+                      f"due {p.get('due')}; chosen by the model ({models.get('proposal')}), "
+                      "every number in it the pipeline's.",
+                  f"  {p.get('statement')}"]
+        if p.get("kind") == "figure":
+            source = p.get("source") or {}
+            bound = "at least" if p.get("bound") == "min" else "at most"
+            lines.append(f"  The threshold, {p.get('metric')} {bound} "
+                         f"{_stated_figure(p.get('metric'), p.get('value'))} for "
+                         f"{p.get('period')}, is the last filed year's figure: the "
+                         f"{source.get('form')} accession {source.get('accn')}, filed "
+                         f"{source.get('filed')}, source {source.get('source')}.")
+        lines.append(f"  It rests on {', '.join(p.get('reasons') or [])} above.")
+        lines += ["", "  The row for watchlist.toml, if I enter it:", ""]
+        lines += [f"    {line}" for line in _proposed_row(p)]
+        lines += ["", "  The sentence for docs/WATCHLIST.md:", "",
+                  f"    **{p.get('id')}** {p.get('statement')}"]
+    return lines
+
+
+def _not_computed(block: Dict) -> List[str]:
+    """The statement clauses of a policy that carry no finding, so that
+    "every clause" is visibly every clause (Part 17 D60, Part 7's 2.2
+    answer).
+
+    A clause that is a statement and carries a finding anyway is left out:
+    **IPS-5.3 is one.** It states no number, so the loader reads it as a
+    statement, and decision 64's funding makes it directly applicable, so
+    D59 gives it a finding of its own. Listing it as not computed beside
+    its own finding is a contradiction, and the first version of this
+    rendering printed exactly that."""
+    decided = {f.get("clause") for f in block.get("findings") or []}
+    return [s.get("clause") for s in block.get("statements") or []
+            if s.get("clause") not in decided]
+
+
+def _position_grounds(block: Dict, gate_block: Dict, screening: Dict) -> List[str]:
+    """One line for each input decision 68's outcome names as not
+    permitting, worded from the blocks and not from the outcome: a stop is
+    worded as not established and never as a no."""
+    condition = block.get("entry_condition") or {}
+    view = block.get("judgement") or {}
+    stopped = (screening or {}).get("stopped") or {}
+    said = {
+        "screen": (f"the philosophy screen stopped at {stopped.get('clause')}: "
+                   f"{stopped.get('reason')}" if stopped else
+                   "the philosophy screen does not clear the company on every clause"),
+        "gate": "the investment policy does not clear the position at this weight",
+        "entry_condition": (
+            f"my entry condition on {condition.get('clause')} is not established: the "
+            "screen reported no finding on that clause" if condition.get("met") is None
+            else f"my entry condition on {condition.get('clause')} is not met"),
+        "thesis_view": (f"the model's view of the thesis is not established: "
+                        f"{block.get('view_stopped')}" if not view else
+                        f"the model's view is that the thesis does not stand "
+                        f"({view.get('thesis_view')})"),
+    }
+    grounds = ((block.get("outcome") or {}).get("grounds")) or []
+    return [f"  - {said.get(name, name)}" for name in grounds]
+
+
+def _format_position_response(block: Dict, gate_block: Dict,
+                              screening: Dict) -> List[str]:
+    """Format the research block for a position question (case 4.3;
+    decisions 61, 65, 67, 68 and 69; Part 15 G; Part 17).
+
+    Prints the outcome and the grounds it names; the judgement, marked as
+    judgement, with the claims it rests on and its uncertainty; the
+    philosophy screen clause by clause with its statements named as not
+    computed; the investment policy over the portfolio as it would be, at
+    the weight the watchlist entry states and citing that entry as its
+    source, clause by clause with its statements named as not computed; my
+    entry condition against the screen's finding on its clause; then the
+    thesis, the readings and the proposed prediction as a thesis question
+    prints them, and the predictions already entered in the ledger, cited
+    by id.
+
+    Every figure here is a figure a block carries; a percent is
+    presentation of a stored value and nothing is computed. The outcome is
+    the gate node's, composed by `portfolio_tool.outcome.compose`: this
+    reads it and words it. No price is forecast and no recommendation is
+    made beyond what the two policies and my own condition say.
+
+    **The block is the published one**, `shared_data["research"]`, which
+    is what `judgement_record` returns and what the guard is keyed on -
+    not the research node's own `sub_results` entry. The gate node writes
+    the outcome onto the published block, so a rendering that read
+    `sub_results` would print an outcome of no grounds whatever the gate
+    found, and the first version of this formatter did."""
+    block = block or {}
+    subject = block.get("subject") or {}
+    thesis = block.get("thesis") or {}
+    models = block.get("models") or {}
+    outcome = block.get("outcome") or {}
+    condition = block.get("entry_condition") or {}
+    view = block.get("judgement") or {}
+    cid = thesis.get("candidate")
+    weight = block.get("weight")
+    screening = screening or {}
+    gate_block = gate_block or {}
+
+    lines = [f"**SHOULD I BUY {subject.get('ticker')}?** ({cid}), as of "
+             f"{block.get('as_of')}", ""]
+
+    if outcome.get("supports_entry"):
+        lines.append("**The outcome: this supports an entry.** The philosophy screen is "
+                     "clear, the investment policy clears the position at the stated "
+                     "weight, my entry condition is met, and the model's view is that the "
+                     "thesis stands.")
+    else:
+        lines.append("**The outcome: this supports no entry.** An entry needs all four of "
+                     "the philosophy screen, the investment policy at the stated weight, "
+                     "my entry condition and the model's view of the thesis to permit "
+                     "(decision 68). What did not:")
+        lines += _position_grounds(block, gate_block, screening)
+        lines += ["", "  What is not established is named as such and is not a verdict "
+                      "against the company."]
+
+    lines += ["", f"**The judgement**, and it is a judgement and not a computation. The "
+                  f"model's view ({models.get('view')}) of {cid}'s thesis:"]
+    if view:
+        lines += [f"  {view.get('thesis_view')}, {view.get('uncertainty')}, resting on "
+                  f"{', '.join(view.get('reasons') or []) or 'no claim'} below.",
+                  "  It can only take away: no view of the thesis makes a position the two "
+                  "policies refuse allowable."]
+    else:
+        lines += [f"  not established. {block.get('view_stopped')}",
+                  "  The system did not make this judgement; that is not a judgement "
+                  "against the thesis."]
+
+    lines += ["", "**The philosophy screen**, clause by clause."]
+    if screening.get("stopped"):
+        stop = screening["stopped"]
+        lines += [f"  Stopped at {stop.get('clause')}: {stop.get('reason')}",
+                  "  No verdict is reported on any clause, this one included (PHI-1.2)."]
+    for f in screening.get("findings") or []:
+        lines.append(f"  {f.get('clause')}: {f.get('status')}" + (
+            f", distance {f.get('distance'):+.4f}" if f.get("distance") is not None else ""))
+    statements = _not_computed(screening)
+    if statements:
+        lines.append("  Not computed, being statements of what I look for: "
+                     + ", ".join(statements) + ".")
+
+    lines.append("")
+    if isinstance(weight, (int, float)) and not isinstance(weight, bool):
+        lines.append(f"**The investment policy** over the portfolio as it would be with "
+                     f"{subject.get('ticker')} at {weight:.2%} of it.")
+    else:
+        lines.append("**The investment policy** at the weight my entry states.")
+    if gate_block.get("new_money") is not None:
+        lines.append(f"  The weight is {block.get('weight_source')}'s, my watchlist entry, "
+                     f"and the purchase is funded by {gate_block.get('funding')}: "
+                     f"{gate_block.get('new_money'):,.2f} "
+                     f"{gate_block.get('base_currency')} on top of "
+                     f"{gate_block.get('total_before'):,.2f}, a total of "
+                     f"{gate_block.get('total_after'):,.2f}.")
+    else:
+        lines.append(f"  The weight is {block.get('weight_source')}'s, my watchlist entry.")
+    for f in gate_block.get("findings") or []:
+        # The bound is printed because a band clause emits one finding per
+        # bound, so IPS-3.1 appears twice and the two are told apart by it.
+        bound = f" ({f.get('bound')})" if f.get("bound") else ""
+        lines.append(f"  {f.get('clause')}{bound} {f.get('subject')}: {f.get('status')}" + (
+            f", {f.get('distance_pp'):+.4f} pp" if f.get("distance_pp") is not None else ""))
+    ips_statements = _not_computed(gate_block)
+    if ips_statements:
+        lines.append("  Not computed, being statements of policy: "
+                     + ", ".join(ips_statements) + ".")
+
+    lines += ["", "**My entry condition.**"]
+    if condition:
+        stands = {True: "met", False: "not met", None: "not established"}[condition.get("met")]
+        lines.append(f"  {condition.get('kind')} on {condition.get('clause')}: {stands}"
+                     + ("; the screen reported no finding on that clause"
+                        if condition.get("met") is None else ""))
+    else:
+        lines.append(f"  Not read: {block.get('entry_condition_stopped')}")
+
+    lines += ["", f"**The thesis**, {cid}'s, as my watchlist states it:", "",
+              f"  {str(thesis.get('text', '')).strip()}", "",
+              f"Each claim below is the model's reading ({models.get('reading')}) of one "
+              f"section of {subject.get('name')}'s latest annual report, with the passage "
+              "it rests on quoted from the filing; `stated` means the passage says it in "
+              "so many words, `inferred` that it is read across the section."]
+    lines += _readings_and_proposals(block)
+
+    entered = block.get("entered") or []
+    lines.append("")
+    if entered:
+        lines.append(f"**Entered in the ledger under {cid}**, mine to score when each "
+                     "date comes:")
+        for p in entered:
+            lines.append(f"  **{p.get('id')}** due {p.get('due')}: {p.get('statement')}")
+    else:
+        lines.append(f"**Nothing is entered in the ledger under {cid}.** A thesis carries "
+                     "at least one dated prediction (PHI-6.1), and this one carries none.")
+
+    lines += [
+        "",
+        "**Not done:** nothing was entered in the ledger or written to the watchlist; a "
+        "proposed prediction is entered by hand or not at all. No figure here is the "
+        "model's: every one of them is a block's. No price is forecast.",
+    ]
+    return lines
+
+
 def _format_thesis_response(sub_results: Dict) -> List[str]:
     """Format the research block for a thesis question (case 4.4; Part 15
     D47 to D50 and F; decision 67). Prints the thesis as the watchlist
@@ -3397,37 +3643,7 @@ def _format_thesis_response(sub_results: Dict) -> List[str]:
         "the filing; `stated` means the passage says it in so many words, `inferred` that "
         "it is read across the section.",
     ]
-    for r in block.get("readings") or []:
-        lines += ["", f"**{r.get('section')}** of the {r.get('form')} for {r.get('fiscal_year')}, "
-                      f"accession {r.get('accn')}, filed {r.get('filed')}, source "
-                      f"{r.get('source')}:"]
-        for c in r.get("claims") or []:
-            lines += [f"  [{c.get('id')}] ({c.get('uncertainty')}) {c.get('claim')}",
-                      f"      \"{c.get('quote')}\""]
-    for entry in block.get("not_read") or []:
-        lines += ["", f"**{entry.get('section')}** not read: {entry.get('reason')}"]
-
-    predictions = block.get("predictions") or []
-    if not predictions:
-        lines += ["", "**No prediction proposed.**", f"  {block.get('proposal_stopped')}"]
-    for p in predictions:
-        lines += ["", f"**{p.get('id')}**, proposed, not entered. Made {p.get('made_on')}, "
-                      f"due {p.get('due')}; chosen by the model ({models.get('proposal')}), "
-                      "every number in it the pipeline's.",
-                  f"  {p.get('statement')}"]
-        if p.get("kind") == "figure":
-            source = p.get("source") or {}
-            bound = "at least" if p.get("bound") == "min" else "at most"
-            lines.append(f"  The threshold, {p.get('metric')} {bound} "
-                         f"{_stated_figure(p.get('metric'), p.get('value'))} for "
-                         f"{p.get('period')}, is the last filed year's figure: the "
-                         f"{source.get('form')} accession {source.get('accn')}, filed "
-                         f"{source.get('filed')}, source {source.get('source')}.")
-        lines.append(f"  It rests on {', '.join(p.get('reasons') or [])} above.")
-        lines += ["", "  The row for watchlist.toml, if I enter it:", ""]
-        lines += [f"    {line}" for line in _proposed_row(p)]
-        lines += ["", "  The sentence for docs/WATCHLIST.md:", "",
-                  f"    **{p.get('id')}** {p.get('statement')}"]
+    lines += _readings_and_proposals(block)
     lines += [
         "",
         "**Not done:** nothing was entered in the ledger or written to the watchlist; a "

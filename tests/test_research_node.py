@@ -74,7 +74,7 @@ FIGURE = {"kind": "figure", "metric": "gross_margin", "bound": "min", "reasons":
 VIEW = {"thesis_view": "stands", "reasons": ["1A.2"], "uncertainty": "inferred"}
 # What a position question adds (case 4.3, Part 15 G, Part 17).
 POSITION_KEYS = {"weight", "weight_source", "entry_condition", "entry_condition_stopped",
-                 "judgement", "view_stopped"}
+                 "judgement", "view_stopped", "entered"}
 PASSES = {"clause": "PHI-4.1", "type": "margin_of_safety", "subject": "GOOGL",
           "status": "pass", "distance": -0.1}
 
@@ -514,3 +514,13 @@ async def test_a_reason_that_is_no_claim_of_the_readings_refuses_the_view(edgar,
     research = _research(await nodes.research_agent_node(state(asks="position")))
     assert research["judgement"] is None
     assert "'9.9' is no claim" in research["view_stopped"]
+
+
+async def test_the_entered_predictions_are_the_files(edgar, models):
+    """Decision 69: the case passes on a prediction entered in the ledger,
+    cited by id. The block carries the file's rows so that the formatter
+    reads no file; `predictions` beside them are the proposals."""
+    research = _research(await nodes.research_agent_node(state(asks="position")))
+    assert [p["id"] for p in research["entered"]] == ["W-1.1", "W-1.2"]
+    assert [p["id"] for p in research["predictions"]] == ["W-1.3"]
+    assert all(p.get("author") is None for p in research["entered"])

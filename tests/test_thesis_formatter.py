@@ -5,8 +5,11 @@ check_4_4 and by Part 15 C's row (case 4.4; Part 15 D47 to D50 and F).
 The block is the research node's own, run over test_research_node's
 stand-ins, so the rendering is held over what the node publishes and not
 over a block written for the rendering. The answer is the formatter's
-lines joined as the synthesizer joins them; the synthesizer does not call
-this formatter yet, and the golden set and the runner cannot see it.
+lines joined as the synthesizer joins them. *Corrected 2026-09-21: the
+synthesizer does call this formatter, for a thesis question, and has since
+the commit that put the research agent in the graph; the sentence here said
+it did not. A position question goes to `_format_position_response`
+instead, held in test_position_formatter.py.*
 
 The rules, each a test:
 
