@@ -6507,3 +6507,105 @@ and a rank, logged 11 September from the owner's CLI session and not built.
 `filter` has never been built. What 21 September adds is a fourth site, the
 screening formatter, and a fourth kind of value: which of two published
 blocks answers the question that was asked.
+
+### The four intents outside the benchmark roster - DECIDED 21 September (thirty-second session)
+
+**Trigger:** decided, not executed. The deletion is its own session, and the sixteen entries whose trigger reads "pending decision 51" are that session's reading list.
+
+**The evidence, 21 September (thirty-second session).** The full test at the
+end of Order 4 reached all four live intents outside the roster, each asked
+once through the CLI and read by hand. All four answered. All four failed,
+each differently.
+
+- **macro_analysis**, "What is the current market regime?", the golden
+  line's wording: routes `macro_analysis`, plan `[MacroAgent]`, three
+  provider calls. Three defects in six printed lines. The VIX prints as
+  `14.8100004196167`, a raw double at full precision. **The answer states
+  no as-of at all**, while `macro_snapshot` carries `"date": "2026-09-18"`
+  - three days stale on a question asking what is current, which is the
+  failure 3.3 exists to catch and this path has no guard for. And
+  `Risk Stance: cautious_risk_on` is a raw enum in prose and a tactical
+  call, which benchmark.md Part 2 excludes as a regime-driven tactical
+  adjustment.
+- **optimization**, "What is the optimal allocation for my portfolio?":
+  routes `optimization`, plan `[DataAgent, OptimizationAgent]`. The weights
+  are withheld with a sentence naming the reason, and `optimal_weights`
+  sits in `shared_data` unprinted - a gate somebody already built. Beside
+  it the answer prints **"Return: 26.49%", a forward return stated as a
+  number**, which invariant 7 forbids and which benchmark.md Part 2 lists
+  as out of scope. The gate was put on the weights and not on the forecast
+  next to them.
+- **rebalancing**, "Should I rebalance my portfolio?", the golden set's
+  pinned failure, confirmed live: `RebalanceAgent` fails with "No target
+  weights from OptimizationAgent", the answer is an error block followed by
+  an empty section header, three internal agent names are shown to the
+  user, and the CLI's Part 3b check fires. **The cause is in the dependency
+  table**, `schemas.py`: `"RebalanceAgent": ("DataAgent",)`, while the node
+  requires `optimal_weights`. No wording can succeed.
+- **backtest**, "How would my portfolio have performed over the last three
+  years?": routes `backtest`, plan `[DataAgent, OptimizationAgent,
+  BacktestAgent]`. **It did not backtest the portfolio.**
+  `backtest_agent_node` reads `shared["optimal_weights"]` and raises
+  without them, so by construction it can only test the optimiser's
+  weights, and the answer says nothing about whose weights they are. The
+  tell is in the figures: volatility 12.48% here, 12.58% from the
+  optimiser, against the portfolio's own 11.8652% computed minutes
+  earlier. Its arithmetic is sound - the CAGR 29.05% follows from the total
+  return 114.89% over 756 closes at 252 a year - and it is arithmetic about
+  a portfolio the owner does not hold. Also `Drawdown Date: N/A`, and Max
+  Drawdown and Sharpe survive here although the seventeenth session deleted
+  both from `quant/risk_metrics.py`.
+
+**Decided: delete three, keep rebalancing.** `macro_analysis`,
+`optimization` and `backtest` go, with their agents and the two packages
+only they import - 4,094 lines across `macro_agent.py` (804),
+`optimization_agent.py` (307), `backtest_agent.py` (589),
+`portfolio_tool/backtest/` (1,944) and `portfolio_tool/optimization/`
+(814). No benchmark case asks for any of them, no reference Part covers a
+single figure they print, so invariant 6 is unmet for every number in all
+three answers, and two of them breach an invariant outright on a path the
+router reaches today. Deleting them takes the router's intent vocabulary
+from eleven values to seven, which is the direction DIRECTION.md states for
+the router.
+
+**Rebalancing stays, and the reason is benchmark.md's own words.** Part 2:
+"*Portfolio mechanics on what is already held are in scope*: drift, trades
+to a stated target, what would have to change to be within limits (2.3).
+Those are arithmetic on a portfolio I already chose, not a judgement about
+what to own." Deleting the intent would be a scope change against the
+definition of done, not a cleanup. It does not follow that it works: it
+cannot, for the reason above, and when `OptimizationAgent` goes its only
+source of target weights goes with it. Rebuilding it against a target the
+owner states, or against the IPS bands, is what Part 2 actually describes
+and is Order 1 work.
+
+**Rejected.** *Delete all four*, which was the recommendation until
+benchmark.md Part 2 was opened and read; it was wrong on that quarter, and
+the lesson is below. *Keep and repair all four* - dropping the return
+figure, formatting the VIX, adding an as-of, correcting the dependency
+table, making the backtest read the holdings - which is building out a
+scope benchmark.md does not define, with a hand-computed reference needed
+for every figure first. *Keep as-is and log*, which leaves a reachable path
+printing a return forecast.
+
+**What the deletion session owes.** A tag at the deletion's parent,
+`intents-parked`, naming the tree that still had the three intents.
+Removing three intent descriptions from `schemas.py` **is a prompt change**
+- the registry is the prompt - so it wants a written line-by-line
+prediction and two golden runs: the macro line and the optimisation line
+must route somewhere once their intents are gone, and where is not known.
+`expected.txt` then changes as its own commit with its own yes; the
+rebalancing line and its pinned failure stay, the intent being kept. The
+runner is untouched at 16/18, no case asking for any of them. pytest loses
+the 9 tests in `test_macro_node.py` and `test_rebalance.py`, and nine
+further test files carry references - 25 in `test_smart_router.py`, 14 in
+`test_strict_nodes.py`, 12 in `test_all_configs.py` and fewer in six others
+- whose test count is to be measured before the commit and not estimated.
+Nothing outside the three agents imports either package.
+
+**The lesson, and it cost a wrong recommendation.** *Open the definition of
+done before recommending that something be deleted for not being in it.*
+The four intents are outside the benchmark's eighteen cases, which is what
+decision 51 was framed on; three of them are also outside its statement of
+scope, and one is inside it. A roster and a scope are not the same document
+and the case list is not the whole of benchmark.md.
