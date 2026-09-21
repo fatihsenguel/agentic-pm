@@ -6317,8 +6317,25 @@ beside it, so that the two numbers on one line are one quantity in two
 units. `_finding` is given the allocation line's market value; a line
 carrying none raises, as it already does for a missing `pct_of_total`.
 **The rounding.** Half-up, on a Decimal built from the figure, where the
-figure is printed: one helper, not each call site. Nothing is rounded in the
-tool and no rounded figure is published.
+figure is printed: one helper, not each call site.
+
+**Corrected 21 September, after the decision was taken and before any code
+was written.** A sentence stood here - "Nothing is rounded in the tool and
+no rounded figure is published" - which is false about this code and was
+written without checking it. `nodes.py` publishes `round(market_value, 2)`,
+`round(cost_basis, 2)`, `round(pnl_abs, 2)` and the three totals, fifteen
+`round(` calls in the block-publishing stretch alone, while `pct_of_total`
+goes out unrounded. And **`data_agent.py:525` rounds the last close to two
+decimals before anything computes with it**: `daily_prices` holds AAPL's
+2026-09-18 close as `336.130004882813`, provider noise and all, and what
+reaches the arithmetic is `336.13`. **This does not weaken the decision; it
+is why the decision works.** The market value the value path reads is
+already an exact two-decimal amount - 284,332.50, not 284,332.4999 - which
+is why all five of Part 7's distances reproduce exactly from it. What the
+decision requires is narrower than the struck sentence: **the distance
+itself is not rounded before the formatter sees it**, and that holds today,
+`nodes.py:1220` publishing the findings as `asdict(f)` with
+`distance_value` as computed.
 
 **What the reference already said, which this entry got wrong when it was
 logged.** The sentence above - "No reference Part lands on a half, so
@@ -6353,7 +6370,7 @@ one, so it is not policy.
 0.74835 exactly, but the stored double is below the half rather than on it,
 so no rounding rule at the formatter prints 74.84; that wants the ratio
 itself in decimal arithmetic from the two amounts, and it is a different
-decision.
+decision. **It is decision 76, numbered 21 September and pending.**
 
 **Which loop sees it.** pytest, against Part 7 at its own as-of, if the
 check is written first. The runner sees an answer-text change and cannot
@@ -6453,7 +6470,7 @@ the same invariant.
 
 ### Case 3.3's answer carries three exact halves and prints three different roundings
 
-**Trigger:** the decision on decimal arithmetic for ratios that decision 75 named and did not take, and any commit that computes a percentage for an answer.
+**Trigger:** pending decision 76, and any commit that computes a percentage for an answer.
 
 Logged 21 September (thirty-second session), from the full test,
 recomputed in the interpreter. "How is my position doing today?" prints the
@@ -6476,7 +6493,21 @@ decision fixes the quantity and the rounding of a distance to a limit,
 which is two currency amounts subtracted; these are ratios whose stored
 double is already on the wrong side of the tie before any rounding rule is
 applied to it. The fix is decimal arithmetic from the two amounts, and it
-is not decided.
+is **decision 76**, numbered 21 September and pending.
+
+**Where these figures come from, added 21 September the same day, because
+the entry above cannot be reproduced from the store without it.**
+`daily_prices` does not hold clean closes: AAPL's 2026-09-18 row is
+`336.130004882813`, GLD's `401.170013427734`, SPY's `761.690002441406`,
+and only TLT's `81.25` is exact. **`data_agent.py:525` rounds the last
+close to two decimals** and every figure downstream is computed from that,
+which is why 200 x 336.13 is exactly 67,226.00 and the ratio lands on an
+exact half. Recomputing from the stored close instead gives
+67,226.0009765626 and **+68.07%**, a different printed percentage from the
+one the system gave. So the three halves above are halves of the rounded
+price, which is the right basis and is not stated anywhere in the code.
+Anyone checking this entry against `daily_prices` will get different
+figures unless they round first.
 
 ### Cases 4.1 and 4.2 return the same answer
 
