@@ -66,6 +66,17 @@ QUERIES = [
     # section not yet read is one request to the stronger model, cached
     # after, and the proposal is one request on every run.
     ("What has to be true in a year for my GOOGL thesis to be right?", 3),
+    # The buy question about a company that is a candidate (case 4.3,
+    # decision 68), sighted 21 September before the line was written. The
+    # routing is line 11's exactly: the same intent, the same four agents,
+    # and the two differ in the error count alone, 0 here against 2 where
+    # the company is on no entry. What this line pins is that the candidate
+    # path still reaches the research agent without an error. It cannot see
+    # the asks parameter, so a change that answered the thesis question here
+    # would leave all five fields standing (KNOWN_GAPS). Routed to the
+    # research agent it runs the screen and the three cached readings, and
+    # asks the stronger model twice on every run: the proposal and the view.
+    ("Should I buy GOOGL?", 3),
 ]
 
 
