@@ -138,3 +138,10 @@ Q: What has to be true in a year for my GOOGL thesis to be right? | pid=3
   agents_run: ['ResearchAgent', 'ScreeningAgent']
   errors: 0
 
+Q: Should I buy GOOGL? | pid=3
+  intent: research
+  plan:   ['DataAgent', 'PortfolioAnalysisAgent', 'ScreeningAgent', 'ResearchAgent']
+  period: None
+  agents_run: ['DataAgent', 'PortfolioAnalysisAgent', 'ResearchAgent', 'ScreeningAgent']
+  errors: 0
+
