@@ -1,9 +1,9 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 21 September 2026, begun about 14:10 UTC (thirty-second session), ended the same day. Regenerated at its end. The thirty-first session ran the same morning and ended when the credit balance emptied.
-**Branch:** `rounding`, cut from `baseline-v1` at **7c48fda** before the first commit. **`baseline-v1` is the trunk** and stands at **7c48fda**, four commits ahead of `origin/baseline-v1` at **8cf8e3c** and not pushed — that gap is yesterday's and this session added none of it. This session's commits: `git rev-list --count 7c48fda..HEAD` — **4**, this file making 5. The owner merges and pushes; `origin`'s push URL is `no_push`.
+**Branch:** `rounding`, cut from `baseline-v1` at **7c48fda** before the first commit. **`baseline-v1` is the trunk.** It stood at 7c48fda, four commits ahead of origin, while this document was being written — that gap was yesterday's and this session added none of it. **The owner then merged `rounding` `--ff-only` and pushed, so the trunk and `origin/baseline-v1` are level at b702674**, and the two commits made after that, the correction to decision 75's entry and decision 76, are on `rounding` again and unmerged. Seven commits in the session: five to b702674 and two after it. The owner merges and pushes; `origin`'s push URL is `no_push`.
 
-**State:** pytest **1943 passed, 6 xfailed**, unchanged — every commit this session is markdown. **The runner ran once and reports 16/18**, unchanged since the thirtieth session. **The golden set was not run**: nothing touched routing. **The full test at the end of Order 4 is complete — eighteen of eighteen cases read through the CLI, every figure recomputed rather than read, plus the four intents outside the roster.** **Order 4's closing condition is met.** Decision 51 is closed and decision 75 taken; the pending list falls from eleven to **ten**.
+**State:** pytest **1943 passed, 6 xfailed**, unchanged — every commit this session is markdown. **The runner ran once and reports 16/18**, unchanged since the thirtieth session. **The golden set was not run**: nothing touched routing. **The full test at the end of Order 4 is complete — eighteen of eighteen cases read through the CLI, every figure recomputed rather than read, plus the four intents outside the roster.** **Order 4's closing condition is met.** Decision 51 is closed, decision 75 taken and decision 76 numbered; the pending list falls from eleven to ten and back to **eleven**.
 
 Written for whoever picks this up cold, myself included.
 
@@ -438,6 +438,20 @@ once at the end: 16/18. The golden set did not run and had no reason to.
   all four failures as its evidence and what the deletion session owes.
 - **9fe59a0** benchmark.md's status note for the full test's completion.
 
+**Two commits after this document was first written and merged**, and this
+is the patch that records them rather than a regeneration:
+- **e3283eb** a correction to decision 75's entry. Checking the store for
+  decision 76 turned up that `daily_prices` holds AAPL's close as
+  `336.130004882813` and that `data_agent.py:525` rounds it to two decimals
+  before anything computes. The entry had claimed no rounded figure is
+  published, which is false at fifteen `round(` calls in the
+  block-publishing stretch. **The decision stands and is better supported
+  for it** — the value path reads an exact two-decimal amount, which is why
+  Part 7 reproduces — but the claim was written without checking the code
+  and the correction is dated in place.
+- **decision 76**, numbered on the owner's word, with the shape, the
+  evidence, three uncosted candidates and no recommendation.
+
 **The full test, batches 1 to 3.** Batch 1 at 14:24, cases 3.2 to 3.5, the
 last of them two turns. Batch 2 at 14:28, cases 4.1 to 4.6. Batch 3 at
 14:33, the four out-of-roster intents. **Every figure in all fourteen
@@ -496,9 +510,12 @@ the CIK confirmation; formulas for `operating_margin` and
   because benchmark.md Part 2 puts drift in scope. The deletion is its own
   session and the entry lists what it owes.
 
-**Pending — decide before writing code. Ten by count: one closed, none
-opened.** CLAUDE.md's line now reads "The list stands at 10 on 21
-September: 10, 12, 13, 16, 17, 22, 45, 48, 52 and 54". The cap is 25.
+**Pending — decide before writing code. Eleven by count: one closed, one
+opened.** CLAUDE.md's line now reads "The list stands at 11 on 21
+September: 10, 12, 13, 16, 17, 22, 45, 48, 52, 54 and 76". The cap is 25.
+**76 was numbered after this document was first written**, which is why the
+count moves twice in one session: eleven, then ten when 51 closed, then
+eleven again.
 
 10. A window return as a measure with a reference.
 12. The hypothetical mode's instrument type.
@@ -519,10 +536,14 @@ September: 10, 12, 13, 16, 17, 22, 45, 48, 52 and 54". The cap is 25.
 54. BaseAgent's tool loop and the three `AgentConfig` fields: delete, its
     own sitting.
 
-**Not numbered, and named by decision 75's entry:** whether money and
-ratios are computed in decimal from the ledger up. That is what case 1.2's
-+74.83% and case 3.3's three halves need and what 75 deliberately does not
-reach. It is larger than 75 and it is the owner's to number or refuse.
+76. **Whether money and ratios are computed in decimal.** Numbered at the
+    end of the session, after the list above was written. What case
+    1.2's +74.83% and case 3.3's three halves need, and what decision 75
+    deliberately does not reach. **Smaller than "decimal from the ledger
+    up" sounds**: `data_agent.py:525` already rounds the close to two
+    decimals before anything computes, so the arithmetic starts exact and
+    it is the float type that loses the tie. Three candidate shapes in the
+    entry, none of them costed, so no recommendation is attached to it.
 
 - **The full test at the end of Order 4** (owner's): **complete.** Order
   4's closing condition is met and Order 5 may be opened.

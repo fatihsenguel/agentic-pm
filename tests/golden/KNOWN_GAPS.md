@@ -6640,3 +6640,65 @@ The four intents are outside the benchmark's eighteen cases, which is what
 decision 51 was framed on; three of them are also outside its statement of
 scope, and one is inside it. A roster and a scope are not the same document
 and the case list is not the whole of benchmark.md.
+
+### Whether money and ratios are computed in decimal - decision 76, pending
+
+**Trigger:** pending decision 76. Read it with decision 75's entry, and before any commit that computes or prints a percentage.
+
+**Numbered 21 September (thirty-second session) at the owner's word, and
+not decided.** Decision 75 settled the quantity and the rounding of a
+distance to a limit, which is two currency amounts subtracted, and said in
+as many words that it does not reach a ratio. **This is the ratio.**
+
+**The evidence.** Case 1.2's +74.83%: 14,967.00 / 20,000.00 is 0.74835
+exactly, the stored double is 0.7483499999999999596, below the tie, and no
+rounding rule applied at the formatter prints 74.84. Case 3.3's three
+halves in one answer - 68.065% printed 68.06, 74.835% printed 74.83,
+23.445% printed 23.45 - matching half-even, neither rule and half-up
+respectively. Three of nine positions on one day's closes.
+
+**Where the boundary actually is, which this decision has to start from.**
+Prices arrive from the provider carrying binary noise: AAPL's 2026-09-18
+close is stored as `336.130004882813`. **`data_agent.py:525` rounds the
+last close to two decimals** before anything computes with it, so the
+arithmetic already begins at an exact two-decimal price, and quantities,
+average prices and cost bases in the ledger are exact decimals too. **It is
+the float type that loses the tie, not the data.** That is worth stating
+because it makes the decision smaller than "decimal from the ledger up"
+sounds: the ledger is already exact at the point the arithmetic starts.
+
+**The shape. Three candidates, and the cost of none of them is measured,**
+which by this session's own lesson is why there is no recommendation
+attached:
+
+- **Decimal from the rounded price onward.** `latest_prices` carries
+  Decimal; the quant layer computes market values, shares and ratios in
+  Decimal; blocks publish strings or Decimals; formatters quantize. Every
+  figure then reproduces by hand. Touches `quant/allocation.py`,
+  `quant/returns.py`, `compliance.py`, `gate.py`, `quant/valuation.py` and
+  every block publisher, and changes what `shared_data` carries, which is a
+  separation-of-concerns question of its own.
+- **Decimal only where a ratio is printed**, computed at render from the
+  two amounts the block already carries. Far smaller. Against it: a
+  formatter that divides is a formatter doing arithmetic, which this
+  project calls a bug.
+- **Leave it and state the rule**: a printed percentage is the correctly
+  rounded value of the stored double, which is not the correctly rounded
+  value of the quotient. Cheapest, and it means a hand recomputation will
+  disagree with the answer now and then, silently.
+
+**What decides it is not taste.** The question is whether a figure in an
+answer must reproduce from a hand computation over the amounts the answer
+itself prints. Invariant 1 says every number traces to a tool output; it
+does not say the tool's output reproduces by hand. **The reference Parts
+assume it does** - Part 7's distances were hand-computed and decision 75 is
+the code being brought to them.
+
+**What it owes before it is taken.** A count of the `round(` and format
+sites that would move; which reference Parts carry a ratio that could pin a
+rule, there being none today; and whether SQLite's REAL columns force a
+float boundary regardless of what the Python layer does.
+
+**Which loop sees it.** pytest, if a check is written against a reference
+Part whose ratio lands on a half; no Part does yet. The runner and the
+golden set are blind to every figure in this entry.
