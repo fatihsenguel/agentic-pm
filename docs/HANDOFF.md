@@ -3,7 +3,7 @@
 **Session date:** begun 20 September 2026 at 15:56 UTC (thirtieth session), ended on the 21st. Regenerated at its end.
 **Branch:** `judgement`, cut from `baseline-v1` at **1f75b72** on the owner's word, the branch not existing before. **`baseline-v1` is the trunk** and stood at 1f75b72 at session start, level with `origin/baseline-v1` — the brief warned the tracking ref might read 641b492 after a push by URL and it did not. The previous session's branch `gate` is merged and its commits are on the trunk; the tags `baseline-v1-20160b0`, `baseline-v1-clean`, `baseline-v1-green`, `rag-early-parked` and `quant-inventory-parked` mark older tips and parked code. This session's commits: `git rev-list --count 1f75b72..HEAD` — **13**, this file making 14. The owner merges and pushes; `origin`'s push URL is `no_push`.
 
-**State:** pytest **1943 passed, 6 xfailed**, up from 1761 by 182. **Golden set: twenty lines, one run, zero diff.** **Runner 16/18, twice** — at session start 4.3 blocked at the research node's refusal, at session end **blocked at the policy**, the same count and a different reason. **The CLI twice**: the allocation question, which fetched nothing, and **"Should I buy GOOGL?", the first live position answer**. **Case 4.3's half is built end to end**: Part 15 G and D61, the view and its own request, the loader's entry condition, `entry.py`, `outcome.py` over all sixteen rows of Part 17 H, the research node's position branch, the gate node composing the outcome, and the rendering with `check_4_3` run over it. **`check_4_3` passes on the live answer, every assertion of it; the probe blocks the case on the screen's stop.** **Decision 74 taken** with a word. **Order 4's work is done. What is left is the full test across both halves, which is its own session, before anything of Order 5.**
+**State:** pytest **1943 passed, 6 xfailed**, up from 1761 by 182. **Golden set: twenty lines, two runs, zero diff both times**, the second after everything had landed. **Runner 16/18, twice** — at session start 4.3 blocked at the research node's refusal, at session end **blocked at the policy**, the same count and a different reason. **The CLI twice**: the allocation question, which fetched nothing, and **"Should I buy GOOGL?", the first live position answer**. **Case 4.3's half is built end to end**: Part 15 G and D61, the view and its own request, the loader's entry condition, `entry.py`, `outcome.py` over all sixteen rows of Part 17 H, the research node's position branch, the gate node composing the outcome, and the rendering with `check_4_3` run over it. **`check_4_3` passes on the live answer, every assertion of it; the probe blocks the case on the screen's stop.** **Decision 74 taken** with a word. **Order 4's work is done. What is left is the full test across both halves, which is its own session, before anything of Order 5.**
 
 Written for whoever picks this up cold, myself included.
 
@@ -147,9 +147,10 @@ scaffolding until the tool layer is complete.
   what changes on a yes, the rejected alternatives, which loop sees it.
 - **The reference before the code**, each time, in its own commit.
 - **A paid loop says first what it will fetch and store, table by table**,
-  read off the store and the clock, and says after what moved. Four paid
-  loops this session, every table prediction exact and **the cost
-  prediction wrong by half**, which is its own KNOWN_GAPS entry.
+  read off the store and the clock, and says after what moved. Five paid
+  loops this session, **every table prediction exact, to the new quota
+  row's count**, and **the cost prediction wrong by half**, which is its
+  own KNOWN_GAPS entry.
 - **A check is exercised against wrong versions**, one per rule, and one
   that changes nothing is rewritten, not counted.
 - **Say which loop can see a change.** Most of this session was pytest
@@ -208,13 +209,17 @@ condition (16), the research node's position branch (16), the gate node's
 composition (6) and the position rendering (21).
 
 **Golden set: twenty lines, one pinned failure** ("Should I rebalance my
-portfolio?", errors 1). **One run, at session start, zero diff.** No prompt
-changed this session, so none was run after. Line 11, "Should I buy
-Nvidia?", exercises the refusal branch and its error count is unchanged at
-2 — the screen refuses a company on no entry and the research node then
-finds no screening block, where before the node refused the question
-itself. **That was predicted and not sighted: the golden set was not run
-again.**
+portfolio?", errors 1). **Two runs, both zero diff**: one at session start
+and one at the end, on the owner's word, after everything had landed. No
+prompt changed this session, so no line was expected to move and none did.
+**Line 11, "Should I buy Nvidia?", is sighted on the final code**: it
+exercises the refusal branch and its error count is unchanged at 2, now
+for a different reason on the second error — the screen refuses a company
+on no entry (decision 73) and the research node then finds no screening
+block, where before this session the node refused the question itself.
+The second run wrote exactly what was predicted: `api_call_logs` 2,461 to
+**2,464**, a new `api_quotas` row for the 21st with a count of 3, and no
+price row, no macro row, no reading and no EDGAR fetch.
 
 **The runner twice: 16/18 both times, the same eighteen questions, and
 4.3 blocked at two different places.** At session start it stopped at the
@@ -259,12 +264,14 @@ session. No reseed. **What this session wrote:**
   fetched a price: the holdings' stamps are 2026-09-20 12:53 UTC and
   GOOGL's 12:56, so **the price interval runs out on 21 September at 12:53
   and 12:56** — a few hours after this session ended.
-- `macro_data`: **209, unchanged**. The golden set's regime line asked for
-  three indicators and no trading day had closed; the runner asks for none.
-- `api_call_logs`: 2,458 to **2,461**. Three macro indicators on the one
-  golden run, and nothing else: no provider call in either runner run or
-  either CLI run. `api_quotas` for the 20th: **22**. **No Anthropic call
-  is logged here at all** (KNOWN_GAPS).
+- `macro_data`: **209, unchanged**. The regime line asked for three
+  indicators on each golden run and no trading day had closed either time
+  — Friday the 18th was already stored and Monday's close was still hours
+  away; the runner asks for none.
+- `api_call_logs`: 2,458 to **2,464**. Three macro indicators on each of
+  the two golden runs, and nothing else: no provider call in either runner
+  run or either CLI run. `api_quotas`: the 20th **22**, the 21st **3**.
+  **No Anthropic call is logged here at all** (KNOWN_GAPS).
 - `document_readings`: **5 rows, unchanged.** Item 1 under `1b2d86a8ba32`,
   `ba9a7051eeca` and `a64f51fde1eb` (the one the node serves); Item 1A
   under `903e89b123b5`; Item 7 under `54b0dba223f4`. All three sections
@@ -356,8 +363,9 @@ refuses anything else. `ledger_agent_node`, intent `ledger`, unchanged.
   measurement. **Nothing records a model call's tokens** — `api_call_logs`
   is provider calls only and `observability/token_counter.py` counts words
   times 1.3 for `smart_router.py` alone (KNOWN_GAPS). **Spent this
-  session: about $0.09** — one golden run, two runner runs and one CLI
-  position answer — plus Haiku router calls. Treat it as an estimate.
+  session: about $0.10** — two golden runs, two runner runs and one CLI
+  position answer, five paid loops — plus Haiku router calls. Treat it as
+  an estimate.
 - **The price provider** is `nodes.price_provider()`; **the models** are
   `nodes.reading_model()`, `nodes.proposal_model()` and
   `nodes.view_model()`; the EDGAR provider is `nodes.edgar_provider()`.
@@ -434,7 +442,9 @@ the code each time, and each commit on its own word.
 interval having almost a day to run — and it fetched nothing. Then, on a
 word and one after the other, the golden set once (twenty lines, zero
 diff) and the runner once (16/18), each predicted table by table and each
-holding.
+holding. **And at the end, on the owner's word, the golden set a second
+time over the final code**: twenty lines, zero diff again, and line 11
+sighted at errors 2.
 
 **Under the word, in order.**
 - **51cf7ce** **Part 15 G**, the model's view of a thesis, by hand before
@@ -474,12 +484,13 @@ CLI printed the answer, which is where the live view was read: **the
 runner discards every answer, so reading one costs a run of its own**
 (KNOWN_GAPS).
 
-**Not done, on purpose.** The full test, which is its own session; the
-golden set after the node changes, line 11's error count predicted and
-unsighted; the loader's `author` and Part 15 F9; the seven emoji headers;
-decisions 51, 52 and 54; the currency; the philosophy topic lookup; the
-CIK confirmation; formulas for `operating_margin` and `free_cash_flow`;
-any change to the reading, proposal or view prompts for faithfulness.
+**Not done, on purpose.** The full test, which is its own session; a
+golden line for a buy question about a company that *is* a candidate,
+which wants sighting first; the loader's `author` and Part 15 F9; the
+seven emoji headers; decisions 51, 52 and 54; the currency; the philosophy
+topic lookup; the CIK confirmation; formulas for `operating_margin` and
+`free_cash_flow`; any change to the reading, proposal or view prompts for
+faithfulness.
 
 ---
 
@@ -558,14 +569,14 @@ of Order 5. Its trigger has fired: Order 4's work is built. Decision 51's
 trigger — the four live intents outside the benchmark roster — fires with
 it.
 
-**Before it, two things this session predicted and did not sight.** The
-golden set has not run since the node changes: line 11's error count
-should be unchanged at 2, for a different reason on the second error, and
-that is a prediction rather than a sighting. And **no golden line covers a
-buy question about a company that is a candidate** (KNOWN_GAPS) — the
-runner's 4.3 covers it and the golden set does not, so a routing change
-that broke only the candidate path would show up in one loop of four. A
-line for it wants sighting first, and there is now something to sight.
+**Before it, one thing this session did not sight.** **No golden line
+covers a buy question about a company that is a candidate** (KNOWN_GAPS) —
+the runner's 4.3 covers it and the golden set does not, so a routing
+change that broke only the candidate path would show up in one loop of
+four. A line for it wants sighting first, and there is now something to
+sight: the answer exists and the CLI prints it. Line 11's own error count
+was the other unsighted prediction and is sighted: the golden set ran a
+second time at session end and it held at 2.
 
 ### Later, with reasons
 
@@ -592,10 +603,11 @@ line for it wants sighting first, and there is now something to sight.
 - **Every paid loop still costs Sonnet**: a golden run proposes once, a
   runner run proposes twice and views once, a CLI position answer proposes
   and views once.
-- **The next paid loop fetches the holdings' closes**: the interval ran
-  out on 21 September at 12:53 UTC, GOOGL's at 12:56, both a few hours
-  after this session ended. **The filings intervals run out on 22 and 23
-  September.**
+- **The next paid loop fetches the holdings' closes**: the stamps stand at
+  2026-09-20 12:53 UTC and GOOGL's at 12:56, so the interval runs out on
+  21 September at those times — the last golden run, at 08:53, was still
+  four hours inside it. **The filings intervals run out on 22 September at
+  22:17 and 23 September at 01:33 to 01:38.**
 - **The loader's `author`**, with my sentence in WATCHLIST.md, before the
   first system prediction is entered; Part 15 F9 comes with it.
 - **1 February 2027**: W-2.1 and W-2.2 fall due.
