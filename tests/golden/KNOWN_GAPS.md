@@ -2857,6 +2857,11 @@ nothing on"; the sentence reads badly. A formatter wording, no arithmetic:
 say the policy contains nothing on this and name what was asked on its own
 line, or nothing at all. Logged, not chased.
 
+**Still live 21 September (thirty-second session).** The full test ran 3.4
+through the CLI and the sentence is unchanged, word for word, twelve days
+on. The clause count beside it is right: `ips.toml` holds 17 clauses and
+`docs/IPS.md` states 17 ids.
+
 ### One-figure questions get the whole block
 
 **Trigger:** pending decision 17, the selection axis.
@@ -6423,3 +6428,82 @@ different as-of, so **the live volatility traces to its block and to
 nothing hand-computed.** Allocation, P&L and the sector split could be
 checked back to a hand-computed Part at the same as-of only because Part
 17 happens to be priced 2026-09-18; volatility has no such Part.
+
+### The out-of-scope answer names capabilities the system now has
+
+**Trigger:** pending decision 13, which moves `OUT_OF_SCOPE_RESPONSE` into the IPS, and any commit that touches the constant.
+
+Logged 21 September (thirty-second session), from the full test, read
+through the CLI. Case 3.2, "What will Nvidia's share price be at the end of
+next year?", routes `out_of_scope`, plans no agents and refuses the
+forecast, which is what the case asks for. The sentence it refuses with is
+`OUT_OF_SCOPE_RESPONSE` at `nodes.py:2803`: "It does not screen, pick, or
+say whether to buy or sell an instrument, forecast prices or returns,
+assess tax, or place orders." Since 5b4be76 on 20 September, invariant 8
+says whether to buy one named company **is** answered - through the
+philosophy screen, the valuation range and the IPS gate at the weight the
+watchlist states. Case 4.3 is that answer and the twenty-first golden line
+is that question. So the constant states what the system is and states it
+wrongly, against the principle that a formatter states what the data says
+and never what the system is. The runner passes 3.2: it checks the refusal,
+not the sentence. Two halves, and only one is plainly false - the "buy"
+clause is, while "screen" is ambiguous, the philosophy check being called
+screening in the code while screening for candidates stays out of scope by
+the same invariant.
+
+### Case 3.3's answer carries three exact halves and prints three different roundings
+
+**Trigger:** the decision on decimal arithmetic for ratios that decision 75 named and did not take, and any commit that computes a percentage for an answer.
+
+Logged 21 September (thirty-second session), from the full test,
+recomputed in the interpreter. "How is my position doing today?" prints the
+since-purchase P&L of all nine positions, each priced 2026-09-18. Every
+market value, cost and absolute P&L reproduces from quantity times price,
+and the nine sum to 392,947.50 invested and 408,447.50 total. **Three of
+the nine percentages land on an exact half in decimal, and the three
+printed values follow no single rule:**
+
+    AAPL  27,226.00 / 40,000.00 = 68.065%, printed 68.06 - half-even's answer
+    JPM   14,967.00 / 20,000.00 = 74.835%, printed 74.83 - neither rule's answer
+    MSFT   9,378.00 / 40,000.00 = 23.445%, printed 23.45 - half-up's answer
+
+Half-up would print 68.07, 74.84 and 23.45; half-even 68.06, 74.84 and
+23.44. What decides each one is which side of the tie the binary double of
+the ratio falls on, which is nothing. Case 1.2's +74.83% is JPM's line: it
+was logged as one odd figure and it is one of three in a single answer over
+a portfolio of nine. **Decision 75 does not reach any of them.** That
+decision fixes the quantity and the rounding of a distance to a limit,
+which is two currency amounts subtracted; these are ratios whose stored
+double is already on the wrong side of the tie before any rounding rule is
+applied to it. The fix is decimal arithmetic from the two amounts, and it
+is not decided.
+
+### Cases 4.1 and 4.2 return the same answer
+
+**Trigger:** pending decision 17, the selection axis.
+
+Logged 21 September (thirty-second session), from the full test, the CLI's
+own identical-answer check reporting it unprompted. "Does GOOGL clear my
+philosophy?" and "What is GOOGL worth?" return the same text byte for byte:
+the heading "PHILOSOPHY CHECK: GOOGL", the screen stopping at PHI-2.1 with
+no verdict on any clause, the SIC code, then the valuation range 129.39 to
+205.62 with its five assumptions, PHI-4.3's text, the last close and the
+eleven fiscal years' filing dates. A question about what a company is worth
+is answered under a philosophy heading, and a question about the philosophy
+is answered with a valuation nobody asked for. **This is the third pair in
+three formatters**: 1.4 in the allocation formatter, 2.2 against 2.3 in the
+compliance formatter, and now 4.1 against 4.2 in the screening formatter,
+which is the first in the judgement half. No loop sees it: the runner
+passes 4.2 and has 4.1 blocked by decision 48. Everything in both answers
+traces - the last close, GOOGL 349.54, is the store's row for 2026-09-18 to
+the cent.
+
+**And a correction to the handoff's §5.** It lists "a selection axis for
+the allocation and compliance formatters" among the things not yet
+numbered. The axis is decision 17's and has been since 8 September, and
+this file's entries name it so. Three values are already logged: a named
+position (`tickers`) and breaches only (`status`), both built 9 September,
+and a rank, logged 11 September from the owner's CLI session and not built.
+`filter` has never been built. What 21 September adds is a fourth site, the
+screening formatter, and a fourth kind of value: which of two published
+blocks answers the question that was asked.
