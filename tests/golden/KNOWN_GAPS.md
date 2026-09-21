@@ -6279,9 +6279,9 @@ routing fields, so no loop of the four sees this. It is the shape of the
 JNJ wrong face and of "What's my biggest position?": no per-position view
 is published, and a question that named one sector got all five.
 
-### An exact half cent rounds by the order of the float operations
+### An exact half cent rounds by the order of the float operations - DECIDED 21 September (thirty-second session)
 
-**Trigger:** the first reference Part whose figure lands on an exact half, or a commit that states a rounding rule.
+**Trigger:** decided and not implemented. Read it before any commit that touches `_finding` or a formatter that prints a currency amount.
 
 Logged 21 September (thirty-first session), from the full test's second
 batch, verified in the interpreter. **Case 2.1's answer carries two exact
@@ -6301,6 +6301,58 @@ stated anywhere in the repository. What is not decided: whether the rule
 is half-up on a Decimal or something else, and whether a distance to a
 limit is computed from the percentage or from the market value. They are
 the same arithmetic and they are not the same cents.
+
+**Decided 21 September (thirty-second session), decision 75, and not
+implemented.** Two things at once, because the printed cent depends on
+both. **The quantity.** A distance to a limit is a currency figure computed
+from the market value - `market_value - limit * total` against a ceiling,
+`limit * total - market_value` against a floor - and the percentage-point
+figure beside it is derived from that currency figure rather than computed
+beside it, so that the two numbers on one line are one quantity in two
+units. `_finding` is given the allocation line's market value; a line
+carrying none raises, as it already does for a missing `pct_of_total`.
+**The rounding.** Half-up, on a Decimal built from the figure, where the
+figure is printed: one helper, not each call site. Nothing is rounded in the
+tool and no rounded figure is published.
+
+**What the reference already said, which this entry got wrong when it was
+logged.** The sentence above - "No reference Part lands on a half, so
+nothing pins which way it should go" - is wrong, and is corrected here
+rather than rewritten. Part 7 states five distances in currency and **two of
+them land on exact halves**: IPS-3.1's Equity distance is 18,083.175 and the
+Part states 18,083.18, IPS-4.3's Technology distance is 12,123.875 and the
+Part states 12,123.88. Both are stated rounded up. They do not separate
+half-up from half-even, the preceding digit being odd in both, so the two
+rules agree there. What they do settle is the quantity: **all five of Part
+7's distances reproduce exactly from `market_value - limit * total`**,
+recomputed in decimal on 21 September - 27,291.94 for SPY, 457.94 for MSFT,
+261.45 for JNJ, and the two halves above. The reference computed the
+distance from the market value before the checker existed, and the code
+computes it from the share. The reference wins; this decision is the code
+being brought to it and not a new rule.
+
+**What moves on the implementing commit.** IPS-4.3's Technology distance in
+case 2.1's answer, 14,492.12 to 14,492.13. IPS-3.1's Equity distance stands
+at 18,841.63. Those are at the 2026-09-18 closes, not Part 7's.
+
+**Rejected.** The share-first path, which leaves the cent to the order of
+two float operations and printed two halves in one answer opposite ways.
+Half-even, which would print 18,841.62 for a figure a reader computes by
+hand as 18,841.625, and which neither of Part 7's two halves supports.
+Rounding inside the tool and publishing the rounded figure, which costs
+every later consumer the precision and puts the block out of step with the
+Parts. The rule in `config.toml`: nobody would run this with a different
+one, so it is not policy.
+
+**Not reached by this.** Case 1.2's +74.83%. There 14,967.00 / 20,000.00 is
+0.74835 exactly, but the stored double is below the half rather than on it,
+so no rounding rule at the formatter prints 74.84; that wants the ratio
+itself in decimal arithmetic from the two amounts, and it is a different
+decision.
+
+**Which loop sees it.** pytest, against Part 7 at its own as-of, if the
+check is written first. The runner sees an answer-text change and cannot
+tell the cents apart. The golden set is blind to it.
 
 ### Cases 2.2 and 2.3 return the same answer, and 2.1 no longer does
 
