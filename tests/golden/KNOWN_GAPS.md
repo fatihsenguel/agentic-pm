@@ -6730,11 +6730,14 @@ interlude.**
    cannot verify it. What survives a refactor is a corpus of prompts with the
    answers I want back. That corpus is the precondition for Order 5 being
    safe to attempt, not a detour around it.
-3. **I want a demo I can show for job applications**: recorded runs on GitHub
-   that make a hiring manager interested, with the governance visible — the
-   plan, the delegation between agents, the tracing, the policy gate refusing
-   something and saying why. The same corpus that makes Order 5 safe is what
-   the demo shows, so the two goals want the same work.
+3. **I want a first demo, and the demo is a test.** Recorded runs where the
+   governance is visible: the plan, the delegation between agents, the
+   tracing, and the policy gate refusing something and saying why. A demo is
+   the first time the system is put in front of someone who was not there
+   while it was built, so it has to stand without me narrating it. That is a
+   requirement and not a presentation. Those are also the things no score
+   can show me, so the same corpus that makes Order 5 safe is what the demo
+   shows, and the two goals want the same work.
 4. **Before adding anything I want to know what is actually missing**, and to
    decide deliberately whether the schemas, the routing, the graph and the
    prompts need rethinking, rather than discovering it halfway through Order
@@ -6823,6 +6826,16 @@ clarification sentence in `smart_router.py` — seven files, and the string
 count depends on whether docstrings and the API's descriptions are in scope
 of the cleanup. The number is the cleanup session's to measure and state, not
 this entry's to carry forward unchecked.
+
+**The record names the requirement, not the audience.** Step 8 keeps this
+file in the public repository, and reason 3 above was first written as a
+recorded run that makes a particular kind of reader interested. That is
+shorthand: it gestures at a standard and leaves the standard unwritten,
+assuming whoever reads it works out for themselves what the demo therefore
+has to do. The bar is that the runs stand without me narrating them, and
+that is what the reason says now. Who is watching is not the record's
+business. Whether this entry is what a stranger should read first, and
+whether the file goes over whole, is step 8's decision.
 
 **What this entry is not.** It is not a direction change by itself.
 DIRECTION.md's Order runs 1 to 6 and this interlude sits between 4 and 5;
