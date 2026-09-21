@@ -164,6 +164,22 @@ change. Nothing before Order 6 waits on anything personal.
 4. The judgement half's tools, one at a time, each with a reference: a
    valuation pipeline; the philosophy check; a filings reader; prediction
    scoring. A stronger model for the reading. Then the research agent.
+
+   Between this and the next, an interlude, unnumbered so that nothing
+   already written about Order 5 has to be read twice. Before the
+   conversational layer replaces the router, a corpus: prompts with the
+   answers I want back, hand-written before they are run, grown inside
+   benchmark.md and expected_values.md rather than as a document of its own.
+   It exists because the golden set is the loop that dies with that refactor
+   and cannot verify it, and because no loop shows me an answer, so I have no
+   feel for what this system does. Its five kinds, its size, and what is
+   pinned exactly against what is pinned by invariants are in KNOWN_GAPS
+   under "The interlude between Order 4 and Order 5". The interlude shrinks
+   the surface first, makes the CLI the client rather than a developer
+   console, and produces the demo. No capability is added inside it until the
+   corpus names its absence. It closes when the full test is run again and
+   finds nothing the loops could not already have caught.
+
 5. The conversational layer replaces the router. The pipelines do not change.
 6. Make it mine, the rest: the personal IPS, its clause types grown one at a
    time, each with its reference first; the personal philosophy; my real
@@ -190,4 +206,6 @@ X" stopped being refused. Level 4 defines security selection, so the
 invariant now says what it is in scope through rather than that it is out
 until something defines it. The direction has not changed — this is the
 change it anticipated — and benchmark.md's Part 2 was rewritten the same
-day to match.*
+day to match. Revised 21 September 2026: an unnumbered interlude between
+Orders 4 and 5 — the corpus, the CLI as the client, the demo. The Order
+numbers do not move; the direction has not changed.*
