@@ -6702,3 +6702,128 @@ float boundary regardless of what the Python layer does.
 **Which loop sees it.** pytest, if a check is written against a reference
 Part whose ratio lands on a half; no Part does yet. The runner and the
 golden set are blind to every figure in this entry.
+
+### The interlude between Order 4 and Order 5, and how the corpus is built
+
+**Trigger:** the start of every session until Order 5 is opened; the commit that opens Order 5 closes this entry.
+
+**Written 21 September 2026 (thirty-third session), in my words, because all
+of it was decided in conversation and a prompt is not a record.** Order 4's
+closing condition was met on the 21st: eighteen of eighteen benchmark cases
+read through the CLI, every figure recomputed by hand rather than read, and
+eight defects out of cases the runner scores as passes. Order 5 may be opened
+and I am not opening it yet.
+
+**Why I pause. Four reasons, and they are the frame for every session in this
+interlude.**
+
+1. **I have no feel for what this system can actually do**, and that is
+   structural rather than a mood: none of the four loops shows me an answer.
+   The runner prints 16/18, the golden set prints five routing fields, pytest
+   prints a number, and only the CLI shows an answer at all. Until 21
+   September only eight of the eighteen cases had ever been read end to end,
+   and reading the other ten found four more defects in cases the runner
+   calls passes.
+2. **Order 5 is a big step and I do not want to carry confusion or debt into
+   it.** It replaces the router, which means the golden set — twenty-one
+   lines of five routing fields — is the loop that dies with the refactor and
+   cannot verify it. What survives a refactor is a corpus of prompts with the
+   answers I want back. That corpus is the precondition for Order 5 being
+   safe to attempt, not a detour around it.
+3. **I want a demo I can show for job applications**: recorded runs on GitHub
+   that make a hiring manager interested, with the governance visible — the
+   plan, the delegation between agents, the tracing, the policy gate refusing
+   something and saying why. The same corpus that makes Order 5 safe is what
+   the demo shows, so the two goals want the same work.
+4. **Before adding anything I want to know what is actually missing**, and to
+   decide deliberately whether the schemas, the routing, the graph and the
+   prompts need rethinking, rather than discovering it halfway through Order
+   5.
+
+**The arc. Eight steps, each its own session or more.**
+
+1. **The deletion.** Decision 51: shrink the surface first — 4,094 lines,
+   three intents, and four of the answers that would embarrass a demo.
+2. **The corpus:** prompts and the answers I want back, grown inside
+   benchmark.md and expected_values.md, written before any of it is run.
+3. **Running the corpus:** the actual test of the whole system, read by hand.
+4. **What it finds:** decide the gaps, and only then whether any capability
+   is added. Decisions 17, 75 and 76 are already waiting in that queue.
+5. **The CLI as the client.** `src/agents/cli.py` is the only way anyone uses
+   this program, and today it is a developer console: it prints the
+   `SHARED_DATA` keys, truncated raw payloads, `steps=2 request_id=... 1.8s`
+   and `:r raw`. It has to become the product surface, with the trace as a
+   designed view rather than a debug dump — today `:v` only removes a
+   200-character truncation and dumps 160,000 characters of price data, which
+   is worse for a demo and not better. This is both the product gap and the
+   demo's substance.
+6. **The cleanup:** the German debug strings under `src/`, and the glyphed
+   answer headers of item 32.
+7. **The front door:** the README, 71 lines and stale on purpose, and the
+   demo recordings.
+8. **Last, a cleaned public repository** that keeps KNOWN_GAPS, the
+   hand-computed references and the blocked cases. This repository stays the
+   workshop until then.
+
+**The interlude closes when the full test is run again and finds nothing the
+loops could not already have caught.** Then Order 5.
+
+**How the corpus is built, decided with the arc.**
+
+- **It grows inside `docs/benchmark.md` and `tests/golden/expected_values.md`**
+  — the definition of done getting bigger — and not as a new document. It
+  inherits the reference rules: hand-written before the prompts are run, and
+  never updated to match output.
+- **Five kinds, and they are not to be mixed.**
+  - **(a) The spine.** The eighteen benchmark cases, one canonical prompt per
+    capability, unchanged.
+  - **(b) Variations of the same question**, governed by one rule. A
+    variation that tests **extraction** is permanent value, because
+    extraction becomes the tools' input validation at Order 5: a company name
+    for a ticker, a typo, "last twelve months" against "1Y", a German
+    phrasing, a weight written in words. A variation that tests **intent
+    classification** is investment in something Order 5 deletes. Write the
+    first generously and the second sparingly. Decision 16 is already this
+    and is pending.
+  - **(c) Questions it should refuse.** Level 3 is already this, and its own
+    line in Part 3 says why: cases where the system correctly does not
+    deliver are more telling than any successful answer.
+  - **(d) Questions I want answered that nothing handles.** The entry
+    "Questions the system cannot express, and which kind each is" is already
+    that list, triggered on decision 45. Grow that entry rather than start a
+    second list.
+  - **(e) Multi-turn sequences**, which are new and matter most for Order 5.
+    Conversation memory today is one extraction rule over one previous turn,
+    and exactly one benchmark case is two turns — 3.5, "Hows my APPL doing?"
+    then "yes". **Order 5 is a conversation**; if the corpus has no
+    sequences, the refactor has nothing to be judged against on the dimension
+    it exists to add. A question, then a follow-up that depends on it.
+- **Size discipline.** Every prompt costs a hand-written expected answer, and
+  the answer is where the value is. A prompt list with no answers is a wish
+  list. The eighteen plus roughly twenty to thirty more, not hundreds. The
+  demo is a separate selection of three to five runs out of the corpus, not
+  the corpus.
+- **Verbosity.** The quiet answer is pinned exactly, because it is the
+  product. The trace view is pinned by invariants — the plan, every agent
+  that ran, the source block behind each figure, the request id, the timing —
+  and never byte for byte, or every internal change breaks it and I learn to
+  ignore the diff.
+- **No capability is added until the corpus names its absence**, and
+  benchmark.md Part 2 decides what is in scope.
+- **benchmark.md Part 5 already holds the demo plan**, written earlier:
+  runnable offline, show a failure, have the specification to hand, set the
+  frame. The demo work executes it rather than replacing it.
+
+**One count in this entry is deliberately absent.** Step 6 was described to
+me as 22 German debug strings across five files under `src/`. A grep on 21
+September finds German console and docstring text in `data_manager.py`,
+`providers/yfinance_provider.py`, `services/quota_manager.py`,
+`scripts/run_backfill.py`, `api/main.py`, `database_setup.py` and one
+clarification sentence in `smart_router.py` — seven files, and the string
+count depends on whether docstrings and the API's descriptions are in scope
+of the cleanup. The number is the cleanup session's to measure and state, not
+this entry's to carry forward unchecked.
+
+**What this entry is not.** It is not a direction change by itself.
+DIRECTION.md's Order runs 1 to 6 and this interlude sits between 4 and 5;
+wording for a dated Order there is proposed separately and is mine to accept.
