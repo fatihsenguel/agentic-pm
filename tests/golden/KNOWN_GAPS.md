@@ -5558,6 +5558,18 @@ margin, Item 1 saying nothing about one. Item 7, which does, is the
 section not read. The frame holds that a reason is a claim of the
 readings; nothing holds that it supports the prediction.
 
+**Narrowed 21 September (thirtieth session), and not closed.** Item 7 is
+cached now, and the proposal on the live 4.3 run cites it: W-1.3, gross
+margin at least 59.65% for FY2026, resting on 7.4 (operating margin flat
+at 32% as expenses grew with revenue), 7.7 and 7.8 (Services' and Cloud's
+operating income up, revenue outpacing costs) and 7.6 (capital spending
+sharply up and rising further). Those are about margins, which the
+paragraph above says none of them was. What is still not held is the
+metric: the prediction names **gross** margin and every claim is about
+**operating** margin or segment operating income. The reasons are adjacent
+to the metric rather than on it, and the cause of the original gap - the
+section that discusses margins being unread - is gone.
+
 ### A field `check_4_4` finds on another line
 
 **Trigger:** the next change to the thesis rendering.
@@ -6089,3 +6101,148 @@ loop of the four.
 
 A line for it is a new case and wants sighting before its golden line is
 written.
+
+### Case 4.3 answers: D61, the view's own request, and what the first live run showed
+
+**Trigger:** the full test at the end of Order 4; the next session of Order 4 reads this entry first.
+
+Logged 21 September (thirtieth session), the session that built the
+research node's half of case 4.3. What landed: **Part 15 G**, the model's
+view of a thesis, hand-written before the code, with **D61** - three
+fields and no others, the closed set's three members and what each means,
+ten accept/refuse rows, and the map from the three onto Part 17 H's two
+columns; `portfolio_tool/thesis_view.py` and `agents/view_model.py`;
+a dated note on **Part 17 I** saying the entry condition reads *not
+established* while the screen stops; the loader reading
+`[candidate.entry_condition]`; `portfolio_tool/entry.py`;
+`portfolio_tool/outcome.py` with a harness over **all sixteen rows of
+Part 17 H**, which closes "check_4_3 holds one row of decision 68's
+sixteen"; the research node answering a position question; the gate node
+composing the outcome; and the rendering with `check_4_3` run over it.
+pytest 1761 to 1943.
+
+**One decision taken with the owner's word, numbered here and his to
+renumber. 74**: the **gate node** composes decision 68's outcome and
+writes it onto the research block. The outcome must sit on the research
+block, because `check_4_3` reads it there and that is where the answer
+about the position is; it needs the gate, which runs after the research
+agent on the edge into the synthesizer (decision 62). So something after
+the gate writes into another node's block either way, and the only choice
+is which node. Rejected: a third node between the gate and the
+synthesizer, one job each but a second node on an edge decision 62
+describes as one, and writing the research block all the same; changing
+`check_4_3` to read the outcome off the gate block, which moves a check
+written before the capability to fit the code.
+
+**What the live run showed, and it is the first model output of this
+project whose reason plainly supports its conclusion.** The view came back
+`strained`, `stated`, resting on one claim of thirty-odd: **7.12**, "The
+company raised significant new debt financing during the year to support
+its capital needs", quoting "In 2025, we raised capital through the
+issuance of debt and we expect to continue to assess the use of debt and
+other forms of financing in the future." W-1's thesis says the company
+"funds its own capital spending from operating cash flow with no debt to
+speak of". The model found the claim that contradicts a stated leg of the
+thesis, in the thesis's own terms, and `stated` is the right uncertainty
+because the quote says it in so many words. Read by hand twice. Nothing in
+the code checks this and nothing can; it is recorded because the next
+live view may be worse and there is now one reading to compare it against.
+
+**4.3 reads BLOCKED and `check_4_3` passes on the answer.** Every
+assertion of the check holds; what reports the case as blocked is the
+probe, `blocked_on_recommendation`, naming the screen's stop at PHI-2.1
+(decision 48). That is Part 17 I arriving at the runner with every piece
+built and working. The runner is 16/18, the same count as before, and
+4.3 is blocked at a third place: `out_of_scope` for four sessions, the
+research node's refusal for one, and now the policy.
+
+### The runner discards every answer, so a live model output is read only through the CLI
+
+**Trigger:** the next session that reads a live reading, proposal or view by hand.
+
+Logged 21 September (thirtieth session), after a runner run that produced
+the first live view and showed neither of us a word of it.
+`tests/benchmark/run_cases.py` wraps each case in
+`contextlib.redirect_stdout` into a buffer it uses for nothing (lines
+2501 and 2515), so the nodes' console lines and the rendered answer are
+gone when the run ends; the output is the verdict lines alone. Nothing
+stores a view or a proposal either - D50 keeps the system's predictions
+out of the database and the view follows it - so there is no row to read
+afterwards.
+
+**So a live model output costs its own CLI run to read.** On the 21st
+that was a second pair of Sonnet calls, about $0.025, for a view and a
+proposal the runner had already paid for minutes earlier. Reading the
+answer by hand is the practice this project holds to for every model
+output, so the choice is to pay twice or not to read. Not fixed here: what
+the runner does with that buffer is a change to the scoreboard, and
+whether it should keep the answers is a decision about what a run leaves
+behind.
+
+### No model call's tokens are recorded anywhere
+
+**Trigger:** the next paid loop's cost prediction.
+
+Logged 21 September (thirtieth session), having under-predicted a paid
+loop's cost by about half. Every cost figure this project states comes
+from **one** hand-read response, 19 September: 2,424 tokens in, 214 out,
+$0.0070, over **Item 1's claims alone**. Since decision 70 all three
+sections are cached, so the user message is 13,945 characters against
+4,779 - 2.9 times as long - and a proposal is nearer **$0.0136**. The
+handoff carried the $0.0070 forward past the change that invalidated it,
+and so did I, in a prediction the owner said yes to.
+
+**Nothing in the store would have caught it.** `api_call_logs` records
+provider calls only - yfinance rows, no Anthropic row and no token
+columns. `observability/token_counter.py` exists, counts words times 1.3
+rather than tokens, and is wired into `smart_router.py` alone, touching
+neither the reader nor the proposer nor the view. So every figure in this
+repository about what a model call costs is arithmetic on one data point,
+and a figure measured before a prompt or a message changed is not a
+figure about the call being made.
+
+### `check_4_3`'s weight_source assertion cannot fail
+
+**Trigger:** the next change to `check_4_3`.
+
+Logged 21 September (thirtieth session), while seeing each of the check's
+answer-facing assertions fail with its own piece taken out of the answer.
+The check asks that `gate["weight_source"]` reach the answer. The source
+is the candidate's id, `W-1`, and the answer must print that anyway: the
+thesis is attached to it and `_research_invariants` asks for it
+separately. So the assertion is satisfied by the id wherever it appears
+and says nothing about whether the weight's own sentence names what
+stated it. `tests/test_position_formatter.py` carries the finding as a
+test rather than a contrived mutation. Nothing is wrong in the answer
+today; what is wrong is that the check would not notice if there were.
+
+### `outcome.compose` is stricter than `check_4_3` on a screen with no finding
+
+**Trigger:** the next change to `portfolio_tool/outcome.py` or to `check_4_3`'s screen rule.
+
+Logged 21 September (thirtieth session), and named in the module and in a
+test rather than left to be found. `check_4_3` derives whether the screen
+is clear with `all(...)` over its findings, and `all()` over an empty list
+is true, so a screen with no stop and no finding would read as clear
+there. `compose` does not permit on it: a screen that computed no finding
+established nothing. The difference can only withhold an entry and never
+grant one, so it cannot turn a passing case into a failing one, and no
+state either of them has seen reaches it - a screen that stops always
+carries its stop. It is here so that the next reader of the two rules does
+not take them for a copy of each other.
+
+### An event entry condition stops, and no candidate states one
+
+**Trigger:** a candidate whose entry condition is an event.
+
+Logged 21 September (thirtieth session), with `portfolio_tool/entry.py`.
+`docs/WATCHLIST.md` allows an entry condition to name an event, and the
+loader takes any non-empty kind. The reader has a rule for `valuation`
+alone and stops on anything else, naming it: an event condition is met
+when the event happens, and nothing in this system is told that it did,
+so a verdict on one would be invented. Both candidates state a valuation
+condition, so nothing is wrong today. The stop is recorded on the block
+as `entry_condition_stopped` rather than raised, so the rest of the answer
+stands and the outcome reads the condition as not permitting. What is not
+decided: whether an event condition should instead read as not
+established, which is a rule for a case nobody asks for yet.
