@@ -434,6 +434,33 @@ be compared against. **A pass or a block here still says nothing about
 whether a judgement is any good**, and 4.3's own prediction is not in the
 ledger until I enter it.
 
+**Status note, 21 September 2026 (thirty-second session). The full test at
+the end of Order 4 is complete: eighteen of eighteen cases read through the
+CLI, every figure in them recomputed rather than read.** Eight over the
+thirty-first session and ten over this one, plus the four live intents
+outside this roster, which are decision 51's evidence. The runner ran at
+the end and still reports **16/18**, unchanged since the thirtieth session,
+with 4.1 and 4.3 blocked on the PHI-2.1 stop and decision 48 named. No case
+moved and nothing this session touched the graph.
+
+**What the reading found that the count cannot.** Eight defects, every one
+of them in a case the runner scores as a pass or blocks for an unrelated
+reason, and every one invisible to all four loops: 1.4 answers a
+one-sector question with the five-sector table and no per-position figure;
+2.2 and 2.3 are byte-identical; 4.1 and 4.2 are byte-identical, the first
+such pair in the judgement half; 3.2's refusal names capabilities the
+system has had since invariant 8 was revised on 20 September; 3.3 prints
+three exact halves and rounds them three different ways; 3.4's lookup
+sentence swallows the whole question; 1.3's basis line states a method Part
+4 does not; and a distance to a limit is computed from the share rather
+than from the market value, which decision 75 has now settled. All are in
+`tests/golden/KNOWN_GAPS.md` with their triggers.
+
+**So the number stands and means less than it did.** **n/18 counts
+well-formed answers and cannot count right ones.** The reading is the test;
+the count is not. That is the finding of Order 4's close, and it is an
+argument for what the next level's definition of done has to check.
+
 **References before code, none computed yet.** Part 10 of
 `expected_values.md`: the synthetic candidate's typed figures over the
 stated years and every philosophy clause's verdict and distance by hand, for
