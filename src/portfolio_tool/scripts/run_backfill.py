@@ -2,11 +2,11 @@ import sys
 import os
 from sqlalchemy.orm import Session
 
-# --- Sys.path-Fix: zwei Ebenen hoch -> Projektwurzel (Finance_Phase_3) ---
+# --- sys.path fix: two levels up, the project root ---
 script_dir = os.path.dirname(os.path.abspath(__file__))          # .../portfolio_tool/scripts
 project_root = os.path.dirname(os.path.dirname(script_dir))      # .../Finance_Phase_3
 sys.path.insert(0, project_root)
-# --- Ende Fix ---
+# --- End of the fix ---
 
 import datetime
 
@@ -21,30 +21,30 @@ from portfolio_tool.data_manager import DataManager
 from portfolio_tool.providers.yfinance_provider import YFinanceProvider
 from portfolio_tool.services.quota_manager import DatabaseQuotaManager
 
-# Konfiguration für den Backfill-Run
+# Configuration of the backfill run
 PROVIDER_NAME = "yfinance"
-YFINANCE_DAILY_LIMIT = 2000      # Sicherheitsnetz
+YFINANCE_DAILY_LIMIT = 2000      # a safety net
 PER_MINUTE_LIMIT = 60
 
 
 def main_backfill():
     """
-    EINMALIGES Backfill-Skript.
+    A ONE-OFF backfill script.
 
-    Ziel:
-      - Shares-Historie vollständig befüllen
-      - Quarterly Earnings vollständig befüllen
-      - Financial Statements (Income, Balance Sheet, Cash Flow;
-        annual + quarterly) vollständig befüllen.
+    Goal:
+      - fill the shares history completely
+      - fill the quarterly earnings completely
+      - fill the financial statements (income, balance sheet, cash flow;
+        annual and quarterly) completely.
     """
-    print("--- STARTE EINMALIGEN BACKFILL ---")
+    print("--- STARTING THE ONE-OFF BACKFILL ---")
 
     session: Session = get_session()
     run: PipelineRun | None = None
     run_id_for_logging: int | None = None
 
     try:
-        # 1) PipelineRun für diesen Backfill anlegen
+        # 1) Create the PipelineRun for this backfill
         run = PipelineRun(
             script_name="portfolio_tool/scripts/run_backfill.py",
             status=PipelineRunStatus.RUNNING,
@@ -52,9 +52,9 @@ def main_backfill():
         session.add(run)
         session.commit()
         run_id_for_logging = run.id
-        print(f"\n=== Starte Backfill-PipelineRun ID: {run_id_for_logging} ===")
+        print(f"\n=== Starting backfill PipelineRun ID: {run_id_for_logging} ===")
 
-        # 2) QuotaManager + Provider + DataManager initialisieren
+        # 2) Initialise the QuotaManager, the provider and the DataManager
         quota_manager = DatabaseQuotaManager(
             session=session,
             pipeline_run_id=run.id,
@@ -68,16 +68,16 @@ def main_backfill():
         )
         manager = DataManager(session, provider)
 
-        # 3) Alle Assets aus der DB laden
+        # 3) Load every asset from the database
         assets = session.query(Asset).all()
-        print(f"Fülle fehlende Daten für {len(assets)} Assets auf...")
+        print(f"Filling in missing data for {len(assets)} assets...")
 
-        # 4) Pro Asset: Shares, Earnings und Financial Statements backfillen
+        # 4) Per asset: backfill shares, earnings and financial statements
         for asset in assets:
-            print(f"\n--- Backfill für: {asset.ticker} ---")
+            print(f"\n--- Backfill for: {asset.ticker} ---")
 
-            # 4.1 Shares History (force_update=True -> Intervall-GUARD ignorieren)
-            print("  > Backfill Shares-Historie...")
+            # 4.1 Shares history (force_update=True ignores the interval guard)
+            print("  > Backfill shares history...")
             manager.update_shares_history_for_asset(asset, force_update=True)
 
             # 4.2 Quarterly Earnings
@@ -95,15 +95,15 @@ def main_backfill():
                         period_type=period_type,
                     )
 
-        # 5) Wenn alles gut: Run auf SUCCESS setzen
-        print(f"\n=== Backfill-PipelineRun ID: {run_id_for_logging} erfolgreich abgeschlossen. ===")
+        # 5) All well: set the run to SUCCESS
+        print(f"\n=== Backfill PipelineRun ID: {run_id_for_logging} completed. ===")
         run.status = PipelineRunStatus.SUCCESS
         run.end_time = func.now()
         session.commit()
 
     except Exception as e:
         import traceback
-        print("!!!!!!!!!!!!!! SCHWERER FEHLER IM BACKFILL !!!!!!!!!!!!!!", file=sys.stderr)
+        print("!!!!!!!!!!!!!! SEVERE ERROR IN THE BACKFILL !!!!!!!!!!!!!!", file=sys.stderr)
         traceback.print_exc()
         session.rollback()
 
@@ -115,14 +115,14 @@ def main_backfill():
                 session.add(run)
                 session.commit()
             except Exception as log_e:
-                print(f"Zusätzlicher Fehler beim Loggen des FAILED-Status: {log_e}", file=sys.stderr)
+                print(f"Further error while logging the FAILED status: {log_e}", file=sys.stderr)
                 session.rollback()
 
     finally:
         session.close()
         print(
-            f"--- Backfill-Prozess (Run ID: {run_id_for_logging if run_id_for_logging else '??'}) "
-            f"abgeschlossen. Session geschlossen. ---"
+            f"--- Backfill process (Run ID: {run_id_for_logging if run_id_for_logging else '??'}) "
+            f"finished. Session closed. ---"
         )
 
 
