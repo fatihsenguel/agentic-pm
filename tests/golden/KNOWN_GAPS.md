@@ -7152,6 +7152,13 @@ sixth rather than after all eight — re-scoped 22 September, see below.**
    logged by class with a trigger: thirteen existing entries grown, four
    opened. The answers I want are reachable where a rule reaches them;
    where the model guesses, it asks back.
+   **Sent whole 22 September (thirty-seventh session): R-8 and R-9, the
+   first EDGAR pull for Adobe, on their own yes, 67 of 67.** R-8 matched;
+   R-9 missed in R-7's shape, an error where a refusal was pinned, with
+   the 10-K read before the weight was asked for. Part 3c.6's third
+   block and `tests/golden/run_R-8_R-9_2026-09-22.txt` hold the reading
+   and the transcript; three existing entries grown with a dated line,
+   none opened, nothing fixed. 31 of 67 matched over the two runs.
 4. **A narrow fix list.** Only what is wrong in a pipeline's arithmetic,
    because that is what Order 5 leaves untouched. **Routing defects are
    not fixed** — the router is being deleted. **Formatter layout is not
