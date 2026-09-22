@@ -520,6 +520,86 @@ A response containing only a header with no content underneath is a failure, not
 
 ---
 
+## Part 3c — The corpus
+
+**Added 22 September 2026 (thirty-fourth session), step 2 of the interlude
+between Orders 4 and 5** (`docs/DIRECTION.md`; `tests/golden/KNOWN_GAPS.md`,
+"The interlude between Order 4 and Order 5, and how the corpus is built").
+Part 3 is the capabilities, one canonical prompt each, with a status the
+runner owns. This Part is the wordings and the sequences Part 3 lacks,
+written before any of them is run: the loop that survives Order 5, which
+deletes the router and with it the golden set. It has no status column.
+Step 3 of the interlude runs it once through the CLI to capture the
+baseline, and what that finds is logged, not fixed.
+
+**Rules.** An entry is a prompt and a pointer to its expected answer in
+`tests/golden/expected_values.md` Part 18. An expected answer is written
+before the prompt is run and never updated to match output. It pins what
+survives the refactor: every figure with the Part and table it comes from,
+the as-of date the answer must state, every clause it must cite, and what
+it must say it did not do or refuses. It does not pin the prose, which is
+rebuilt after Order 5, and it does not pin the intent or the plan, which
+Order 5 deletes. A figure no Part holds does not go into an entry; it gets
+its Part first. The spine's wordings are the runner's, verbatim, because
+those are what has been run and scored, and a spine case is what a prompt
+change moves first (KNOWN_GAPS, "Deleting three intents moved case 2.1 to
+risk_analysis").
+
+**The trace is pinned by invariants and never byte for byte.** For every
+entry: which pipelines ran, the source block behind every figure, the
+request id, the timing. Today those read as the plan and the agents that
+ran; after Order 5 they read as the tool calls of a conversation. An
+internal change that breaks a byte-for-byte trace teaches me to ignore the
+diff, so none is pinned.
+
+**Two price dates, by design.** Levels 1 to 3 are answered at the
+2026-09-02 closes of Parts 1 to 7 of `expected_values.md`; Level 4 at the
+2026-09-18 closes and the filings of Parts 9 C, 11, 13, 14, 15 and 17. A
+run prints a later date. The comparison is the reference's own rule: the
+figures that do not move must match, and a market value is read against
+the as-of date the answer states, or through Part 17 A's identity for the
+gate.
+
+### 3c.1 — The spine
+
+The eighteen cases of Levels 1 to 4 as `tests/benchmark/run_cases.py`
+sends them, X being GOOGL (W-1 on the watchlist) and Y JPM. Where the
+Level tables differ from these wordings, the tables stand as the definition
+and these are the spine: 1.2, 1.4 and the Level 4 rows name X and Y; 1.3
+says "over twelve months"; 3.1 has a dash where the runner sends a comma.
+
+| # | Prompt, verbatim | Answer |
+| --- | --- | --- |
+| 1.1 | What is my current allocation by asset class? | Part 18, 1.1 |
+| 1.2 | How has my JPM position performed since I bought it? | Part 18, 1.2 |
+| 1.3 | What is my volatility over the past twelve months? | Part 18, 1.3 |
+| 1.4 | What positions do I hold in the Technology sector? | Part 18, 1.4 |
+| 2.1 | What concentration risk do I have, and is it compatible with my investment policy? | Part 18, 2.1 |
+| 2.2 | Does my current allocation violate any rule of my investment policy? | Part 18, 2.2 |
+| 2.3 | What would have to change for me to be within the limits again? | Part 18, 2.3 |
+| 3.1 | I want to put 15% into a single position, is that allowed? | Part 18, 3.1 |
+| 3.2 | What will Nvidia's share price be at the end of next year? | Part 18, 3.2 |
+| 3.3 | How is my position doing today? | Part 18, 3.3 |
+| 3.4 | What does my investment policy say about currency risk? | Part 18, 3.4 |
+| 3.5 | Turn 1: Hows my APPL doing? Turn 2: yes | Part 18, 3.5, one entry per turn |
+| 4.1 | Does GOOGL clear my philosophy? | Part 18, 4.1 |
+| 4.2 | What is GOOGL worth? | Part 18, 4.2 |
+| 4.3 | Should I buy GOOGL? | Part 18, 4.3 |
+| 4.4 | What has to be true in a year for my GOOGL thesis to be right? | Part 18, 4.4 |
+| 4.5 | How have my predictions done? | Part 18, 4.5 |
+| 4.6 | Does JPM clear my philosophy? | Part 18, 4.6 |
+
+**Case 2.1, pinned.** The wording above is the one the runner has sent
+since 4 September and the one that moved on 22 September, from
+`compliance` to `risk_analysis`, when three intents it does not mention
+were deleted; it is not fixed, and the reason is in the KNOWN_GAPS entry
+named above. Its answer is the compliance answer: the three concentration
+tables of Part 7 §4, every finding citing its clause, whatever routes it.
+The intent and the plan are not part of the entry. Order 5 is where this
+class of defect ends, and this row is what it is judged against.
+
+---
+
 ## Part 4 — Order of work under time pressure
 
 Work through it and stop when time runs out. Sorted by effect, not by effort.
