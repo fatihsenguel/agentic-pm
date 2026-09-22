@@ -7063,11 +7063,20 @@ trigger.** Then Order 5.
   list. The eighteen plus roughly twenty to thirty more, not hundreds. The
   demo is a separate selection of three to five runs out of the corpus, not
   the corpus.
-- **Verbosity.** The quiet answer is pinned exactly, because it is the
-  product. The trace view is pinned by invariants — the plan, every agent
-  that ran, the source block behind each figure, the request id, the timing —
-  and never byte for byte, or every internal change breaks it and I learn to
-  ignore the diff.
+- **Verbosity, corrected 22 September after the re-scope.** The quiet
+  answer is pinned by its required content and not byte for byte: every
+  figure with the Part and table it comes from, the as-of date it must
+  state, every clause it must cite, and what it must say it did not do or
+  refuses. A short phrasing that matters, such as a refusal's scope
+  sentence, is quoted; the rest of the prose is not pinned, because prose
+  survives the refactor only in part and the presentation is rebuilt after
+  Order 5. The line that stood here until the 22nd said the quiet answer
+  was pinned exactly, because it is the product; that predates the
+  re-scope and contradicts it, and I carried it into the corpus session's
+  brief before noticing. The trace view is pinned by invariants — the
+  plan, every agent that ran, the source block behind each figure, the
+  request id, the timing — and never byte for byte, or every internal
+  change breaks it and I learn to ignore the diff.
 - **No capability is added until the corpus names its absence**, and
   benchmark.md Part 2 decides what is in scope.
 - **benchmark.md Part 5 already holds the demo plan**, written earlier:
