@@ -1,8 +1,8 @@
 Q: What is the current market regime? | pid=None
-  intent: macro_analysis
-  plan:   ['MacroAgent']
+  intent: out_of_scope
+  plan:   []
   period: None
-  agents_run: ['MacroAgent']
+  agents_run: []
   errors: 0
 
 Q: Get me the last 1 year of prices for SPY and TLT | pid=None
@@ -13,10 +13,10 @@ Q: Get me the last 1 year of prices for SPY and TLT | pid=None
   errors: 0
 
 Q: Optimize a portfolio of SPY, TLT and GLD for maximum Sharpe ratio | pid=None
-  intent: optimization
-  plan:   ['DataAgent', 'OptimizationAgent']
+  intent: out_of_scope
+  plan:   []
   period: None
-  agents_run: ['DataAgent', 'OptimizationAgent']
+  agents_run: []
   errors: 0
 
 Q: What is my current allocation by asset class? | pid=3
