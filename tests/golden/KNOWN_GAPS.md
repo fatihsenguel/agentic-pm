@@ -6854,3 +6854,79 @@ whether the file goes over whole, is step 8's decision.
 **What this entry is not.** It is not a direction change by itself.
 DIRECTION.md's Order runs 1 to 6 and this interlude sits between 4 and 5;
 wording for a dated Order there is proposed separately and is mine to accept.
+
+### Deleting three intents moved case 2.1 to risk_analysis: the runner falls to 15/18
+
+**Trigger:** any change to `schemas.INTENTS`, including Order 5's replacement of the router; and the corpus session, which owes case 2.1 a pinned wording.
+
+**Logged 22 September (thirty-third session), from the runner run that
+closed decision 51's deletion.** The runner had been 16/18, 0 failing, 2
+blocked since the thirtieth session. After the three deletions it reads
+**15/18, 0 failing, 3 blocked**, and the third block is case 2.1:
+
+    2.1  BLOCKED  What concentration risk do I have, and is it compatible
+                  with my investment policy?
+      - the router did not plan ComplianceAgent (intent 'risk_analysis',
+        plan ['DataAgent']); the agent exists, the routing for this
+        wording does not
+
+It routed `compliance` with `[DataAgent, PortfolioAnalysisAgent,
+ComplianceAgent]` before. **Deterministic: three runs, identical every
+time** - the diagnostic run plus two more asked for that purpose. Not the
+known nondeterminism.
+
+**The cause, and it is the whole point of the entry.** Nothing that
+decides this changed. `compliance` and `risk_analysis` keep their
+descriptions byte for byte; `TERMINAL`, `REQUIRES` and `derive_plan` are
+untouched and pytest holds all three at 1926 passed. What changed is the
+number of options the one LLM call chooses between: `INTENTS` went from
+eleven to eight. The question names both a risk and the policy, and with
+eleven options on the list the model resolved it to the policy clause,
+while with eight it resolves on the word "risk" first. **With an LLM
+classifier there is no local change to the prompt: every question's
+routing depends on every other option in the list.** That was always true
+and the deletion is what attached a scoreboard number to it.
+
+**What is lost, precisely.** Not the capability. `ComplianceAgent` runs
+and its arithmetic is unchanged, and the three compliance wordings the
+golden set pins - "Is my AAPL position too big?", "Is my AAPL position
+within my policy's limits?", "Is AAPL too concentrated?" - all still route
+`compliance`, unchanged across both golden runs. What is lost is that this
+one wording reaches the checker, and case 2.1 is one of the eighteen spine
+cases rather than a variation.
+
+**Why no loop warned of it.** The golden set carries no wording of case
+2.1, so its twenty-one lines moved exactly where predicted and said
+nothing about this. pytest holds the tables and the derivation, all
+correct. The runner is the only loop that asks this wording, and it is the
+only loop that moved. **A prompt change can move a question it does not
+mention, and the loop that sees it may not be the loop you ran the change
+against.**
+
+**Not fixed, and the reason is DIRECTION.md's.** The obvious repair is to
+narrow `risk_analysis`'s description so it stops competing. That is a
+prompt rule bought to fix a routing defect, which DIRECTION.md forbids in
+as many words, and Order 5 deletes this router, so it would be paid for
+twice. Extraction cannot carry it either: extraction pulls tickers,
+periods and weights before the LLM, and a pre-LLM rule forcing "names my
+investment policy" to `compliance` is the same prompt rule written in
+Python. Reverting the deletion was the other alternative and was rejected:
+the optimisation path printed "Return: 26.49%", a forward return stated as
+a number, which breaks invariant 7 outright, and one wording's routing is
+the right side of that exchange.
+
+**What it owes.** The corpus session pins case 2.1's exact wording with
+the routing it must have. The sharpening this finding gives step 2 of the
+interlude: **the corpus carries the benchmark wordings verbatim, not
+paraphrases**, because the spine cases are what a prompt change moves
+first. Order 5 is where this class of defect ends - the model picks a tool
+by its signature and there is no list of options to compete inside - so
+this entry's trigger includes that commit.
+
+**A mistake of my own, recorded because it cost the cheapest information
+in the run.** The runner's output was piped through `tail -30`, which cut
+off cases 1.1 to 2.1 - the five containing the finding. Three further runs
+were spent working out which case had moved, and the first guess was
+wrong: I reasoned that 1.3 must be it because the golden set cannot see
+`measure`, which fitted a story I already had about that blind spot rather
+than the evidence. **Do not filter the output of a paid run.**
