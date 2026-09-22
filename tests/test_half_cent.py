@@ -38,9 +38,6 @@ from portfolio_tool.ips import load_ips
 from test_compliance import CLASSES, INSTRUMENT_TYPES, SECTORS, TOTAL, allocation
 
 
-pytestmark = pytest.mark.xfail(
-    strict=True, reason="decision 75, decided 21 September and not implemented")
-
 # Part 7's eight breaches at 2026-09-02: the distance in currency as the
 # reference computed it, exact, and as it prints it, to the cent.
 PART_7 = [

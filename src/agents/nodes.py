@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 import datetime as dt
 import os
 import re
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Dict, Any, Optional, Literal, List, Tuple
 from langchain_core.messages import AIMessage, HumanMessage
 
@@ -2460,6 +2461,17 @@ def _format_hypothetical(findings: List[Dict], policy: Dict) -> List[str]:
     return lines
 
 
+CENT = Decimal("0.01")
+
+
+def _cents(amount: float) -> str:
+    """A currency amount to the cent, half-up on the decimal the figure
+    prints as: 18,083.175 is 18,083.18, where the float format gives the
+    binary neighbour's .17 (decision 75). The one rounding site for a
+    distance the checker computed; the block carries it unrounded."""
+    return f"{Decimal(repr(amount)).quantize(CENT, rounding=ROUND_HALF_UP):,}"
+
+
 def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict],
                          subjects: List[str] = (), status: Optional[str] = None) -> List[str]:
     """The portfolio against every checkable clause, then the conditions
@@ -2554,7 +2566,7 @@ def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict],
                 elif f.get("status") == "breach":
                     lines.append(f"  {f['subject']}: {f['observed']:.2%} of total against "
                                  f"{f['bound']} {f['limit']:.0%} → BREACH, "
-                                 f"{f['distance_pp']:+.2f} pp ({f['distance_value']:,.2f} {base}).")
+                                 f"{f['distance_pp']:+.2f} pp ({_cents(f['distance_value'])} {base}).")
                 else:
                     lines.append(f"  {f['subject']}: {f['observed']:.2%} of total against "
                                  f"{f['bound']} {f['limit']:.0%} → within.")
@@ -2568,7 +2580,7 @@ def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict],
         for f in breaches:
             direction = "down" if f["bound"] == "max" else "up"
             lines.append(f"  {f['clause']} {f['subject']}: {direction} {f['distance_pp']:.2f} pp "
-                         f"of total ({f['distance_value']:,.2f} {base} at unchanged total).")
+                         f"of total ({_cents(f['distance_value'])} {base} at unchanged total).")
 
     statements = block.get("statements") or []
     selected = bool(subjects) or status is not None

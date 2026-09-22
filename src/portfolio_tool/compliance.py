@@ -2,12 +2,12 @@
 Compliance: the IPS applied to the allocation PortfolioAnalysisAgent published.
 
 Pure functions over dicts. No database, no LLM, no state, and no second
-arithmetic path: every percentage and total is read from the allocation
-block exactly as published to shared_data, and the only arithmetic here is
-one subtraction per finding. The checker does not know how the block was
-computed and does not recompute it; if the block is wrong the findings are
-wrong in the same way, which is the point - one computation, one place to
-be wrong.
+arithmetic path: every percentage, market value and total is read from the
+allocation block exactly as published to shared_data, and the only
+arithmetic here is one distance per finding. The checker does not know how
+the block was computed and does not recompute it; if the block is wrong
+the findings are wrong in the same way, which is the point - one
+computation, one place to be wrong.
 
 Reference: tests/golden/expected_values.md Part 7, computed by hand before
 this existed, and its decisions:
@@ -26,8 +26,15 @@ this existed, and its decisions:
 A finding per (clause, subject, bound): a band clause with two bounds emits
 two findings, so the checker never chooses a "nearer" bound. Distances are
 signed so that positive is a breach and negative is headroom (the workbook's
-convention), in percentage points of total, and in currency at unchanged
-total (IPS-5.2's condition, the amount that returns the figure to the limit).
+convention), in currency at unchanged total (IPS-5.2's condition, the amount
+that returns the figure to the limit) and in percentage points of total.
+The currency figure is the one computed, `market_value - limit * total`
+against a ceiling and the reverse against a floor, in decimal from the
+block's amounts so that an exact half cent is an exact half and not
+whichever side of it two float operations land on (decision 75); the
+percentage points are that figure over the total, so the two numbers on
+one line are one quantity in two units. Part 7's distances reproduce from
+this and not from the share.
 
 Raise, do not repair. A holding with no instrument type, a clause naming an
 asset class the allocation has no line for, a fund inside a sector bucket:
@@ -35,6 +42,7 @@ each is a data problem that would otherwise turn into a plausible verdict.
 """
 
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Dict, List, Mapping, Optional
 
 from portfolio_tool.ips import IPS, Clause
@@ -62,11 +70,12 @@ class ComplianceError(Exception):
 class Finding:
     """One clause applied to one subject against one bound.
 
-    `observed` and `limit` are fractions of total value. `distance_pp` is in
-    percentage points, signed, positive = breach. `distance_value` is the
-    same distance in currency at unchanged total, None when there is no
-    total to price it against (a hypothetical weight). An exempt finding
-    carries no arithmetic at all.
+    `observed` and `limit` are fractions of total value. `distance_value` is
+    the distance to the limit in currency at unchanged total, signed,
+    positive = breach, None when there is no total to price it against (a
+    hypothetical weight). `distance_pp` is the same distance in percentage
+    points of total, derived from the currency figure where there is one.
+    An exempt finding carries no arithmetic at all.
     """
 
     clause: str
@@ -87,9 +96,30 @@ def _finding(
     limit: float,
     bound: str,
     total: Optional[float],
+    market_value: Optional[float],
     over: str = BREACH,
 ) -> Finding:
+    """The verdict is on the published share, strict and unrounded (D9).
+    The distance is on the published market value, in decimal built from
+    the figures as they print, and published as the float nearest to it,
+    whose repr is that decimal again; the points are derived from it. With
+    no total there is no market value and no currency figure, and the
+    points are the share's own difference."""
     signed = (observed - limit) if bound == "max" else (limit - observed)
+    status = over if signed > 0 else OK
+    if total is None:
+        return Finding(clause.id, clause.type, subject, observed, limit, bound,
+                       status, signed * 100, None)
+    if market_value is None:
+        raise ComplianceError(
+            f"{clause.id}: {subject} carries no market_value. The distance to the "
+            "limit is computed from the market value PortfolioAnalysisAgent "
+            "published, not from the share."
+        )
+    total_d = Decimal(repr(total))
+    limit_share = Decimal(repr(limit)) * total_d
+    value_d = Decimal(repr(market_value))
+    distance = (value_d - limit_share) if bound == "max" else (limit_share - value_d)
     return Finding(
         clause=clause.id,
         type=clause.type,
@@ -97,9 +127,9 @@ def _finding(
         observed=observed,
         limit=limit,
         bound=bound,
-        status=over if signed > 0 else OK,
-        distance_pp=signed * 100,
-        distance_value=signed * total if total is not None else None,
+        status=status,
+        distance_pp=float(distance / total_d * 100),
+        distance_value=float(distance),
     )
 
 
@@ -189,11 +219,12 @@ def _band(clause: Clause, class_lines: Mapping[str, Mapping], total: float) -> L
             "is published by PortfolioAnalysisAgent, not divided for here."
         )
 
+    value = line.get("market_value")
     out = []
     if "min" in clause.params:
-        out.append(_finding(clause, label, observed, clause.params["min"], "min", total))
+        out.append(_finding(clause, label, observed, clause.params["min"], "min", total, value))
     if "max" in clause.params:
-        out.append(_finding(clause, label, observed, clause.params["max"], "max", total))
+        out.append(_finding(clause, label, observed, clause.params["max"], "max", total, value))
     return out
 
 
@@ -216,7 +247,8 @@ def _per_position(
                 f"{clause.id}: {ticker} carries no pct_of_total. The share of total "
                 "is published by PortfolioAnalysisAgent, not divided for here."
             )
-        out.append(_finding(clause, ticker, observed, clause.params["max"], "max", total))
+        out.append(_finding(clause, ticker, observed, clause.params["max"], "max", total,
+                            line.get("market_value")))
     return out
 
 
@@ -250,7 +282,8 @@ def _per_sector(
                 f"{clause.id}: sector {label!r} carries no pct_of_total. The share "
                 "of total is published by PortfolioAnalysisAgent, not divided for here."
             )
-        out.append(_finding(clause, label, observed, clause.params["max"], "max", total))
+        out.append(_finding(clause, label, observed, clause.params["max"], "max", total,
+                            line.get("market_value")))
     return out
 
 
@@ -264,7 +297,8 @@ def refuse(ips: IPS, weight: float) -> List[Finding]:
     if not 0 < weight <= 1:
         raise ComplianceError(f"Weight {weight!r} is not a fraction in (0, 1].")
     return [
-        _finding(clause, HYPOTHETICAL, weight, clause.params["max"], "max", None, over=REFUSED)
+        _finding(clause, HYPOTHETICAL, weight, clause.params["max"], "max", None, None,
+                 over=REFUSED)
         for clause in ips.checkable
         if clause.type in ("max_instrument_weight", "max_issuer_weight")
     ]

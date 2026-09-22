@@ -245,9 +245,12 @@ def test_distances_reconcile(findings):
 
 
 def test_at_the_limit_passes(ips):
-    """D9. A position at exactly 12.00% of total is ok under IPS-4.1."""
+    """D9. A position at exactly 12.00% of total is ok under IPS-4.1. The
+    market value is set with the share, since the distance is computed
+    from it (decision 75)."""
     alloc = allocation()
     _line(alloc, "by_position", "JPM")["pct_of_total"] = 0.12
+    _line(alloc, "by_position", "JPM")["market_value"] = 0.12 * TOTAL
     f = by_key(check(ips, alloc, INSTRUMENT_TYPES))[("IPS-4.1", "JPM", "max")]
     assert f.status == OK and f.distance_pp == pytest.approx(0.0, abs=1e-9)
 

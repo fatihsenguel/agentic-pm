@@ -13,7 +13,7 @@ no clause id at all when the policy has nothing.
 import re
 from dataclasses import asdict
 
-from agents.nodes import _format_compliance_response
+from agents.nodes import _cents, _format_compliance_response
 from portfolio_tool.compliance import check, refuse
 from portfolio_tool.ips import load_ips
 
@@ -296,8 +296,8 @@ def test_total_and_every_distance_in_currency_name_the_base():
     assert f"**Total portfolio value:** {TOTAL:,.2f} USD" in answer
     for f in findings:
         if f.status == "breach":
-            assert f"({f.distance_value:,.2f} USD)" in answer, f
-            assert f"({f.distance_value:,.2f} USD at unchanged total)" in answer, f
+            assert f"({_cents(f.distance_value)} USD)" in answer, f
+            assert f"({_cents(f.distance_value)} USD at unchanged total)" in answer, f
 
 
 def test_currency_is_read_from_the_block_not_assumed():
