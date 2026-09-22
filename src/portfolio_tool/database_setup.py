@@ -16,13 +16,13 @@ from config import config
 
 DATABASE_URL = config.database.url
 
-print(f"DEBUG: Verbinde mit DB unter {DATABASE_URL}")
+print(f"DEBUG: Connecting to the database at {DATABASE_URL}")
 
 engine = create_engine(DATABASE_URL, echo=False)
 Base = declarative_base()
 
 
-# --- 2. Tabellen-Definitionen (Models) ---
+# --- 2. Table definitions (models) ---
 class Asset(Base):
     __tablename__ = 'assets'
     id = Column(Integer, primary_key=True)
@@ -76,8 +76,8 @@ class AssetFetchMetadata(Base):
     # How far back have we actually asked the provider for prices?
     earliest_price_start = Column(Date, nullable=True)
 
-    # (Wir können hier bei Bedarf leicht weitere Zeitstempel hinzufügen, 
-    #  z.B. last_dividends_fetch_time)
+    # Further fetch timestamps go here as they are needed, e.g.
+    # last_dividends_fetch_time.
 
 class DailyPrice(Base):
     __tablename__ = 'daily_prices'
@@ -328,7 +328,6 @@ class Transaction(Base):
     asset = relationship('Asset', back_populates='transactions')
 
 class Dividend(Base):
-    # ... (Ihr Code) ...
     __tablename__ = 'dividends'
     id = Column(Integer, primary_key=True)
     asset_id = Column(Integer, ForeignKey('assets.id'), nullable=False)
@@ -340,7 +339,6 @@ class Dividend(Base):
     __table_args__ = (UniqueConstraint('asset_id', 'ex_date', name='_asset_ex_date_uc'),)
     
 class CorporateAction(Base):
-    # ... (Ihr Code) ...
     __tablename__ = 'corporate_actions'
     id = Column(Integer, primary_key=True)
     asset_id = Column(Integer, ForeignKey('assets.id'), nullable=False)
@@ -351,7 +349,6 @@ class CorporateAction(Base):
     __table_args__ = (UniqueConstraint('asset_id', 'date', 'action_type', name='_asset_action_date_uc'),)
 
 class SharesHistory(Base):
-    # ... (Ihr Code) ...
     __tablename__ = 'shares_history'
     id = Column(Integer, primary_key=True)
     asset_id = Column(Integer, ForeignKey('assets.id'), nullable=False)
@@ -362,13 +359,13 @@ class SharesHistory(Base):
 
 class Fundamentals(Base):
     """
-    Speichert einen Schnappschuss der Fundamentaldaten.
-    Dies ist eine 1:1-Beziehung zu Asset.
+    A snapshot of the fundamentals.
+    One row per asset (1:1).
     """
     __tablename__ = 'fundamentals'
-    
+
     id = Column(Integer, primary_key=True)
-    # Wichtig: unique=True erzwingt die 1:1-Beziehung
+    # unique=True enforces the 1:1 relationship
     asset_id = Column(Integer, ForeignKey('assets.id'), nullable=False, unique=True)
     
     market_cap = Column(BigInteger, nullable=True)
@@ -377,7 +374,7 @@ class Fundamentals(Base):
     trailing_eps = Column(Float, nullable=True)
     last_updated = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
-    # Beziehung zurück zu Asset
+    # The relationship back to Asset
     asset = relationship('Asset', back_populates='fundamentals')
 
     def __repr__(self):
@@ -385,8 +382,8 @@ class Fundamentals(Base):
 
 class QuarterlyEarnings(Base):
     """
-    Speichert die historische Zeitreihe der Quartalsberichte.
-    Dies ist eine 1:N-Beziehung zu Asset.
+    The historical series of quarterly reports.
+    Many rows per asset (1:N).
     """
     __tablename__ = 'quarterly_earnings'
     
@@ -397,10 +394,10 @@ class QuarterlyEarnings(Base):
     revenue = Column(BigInteger, nullable=True)
     basic_eps = Column(Float, nullable=True)
     
-    # Beziehung zurück zu Asset
+    # The relationship back to Asset
     asset = relationship('Asset', back_populates='quarterly_earnings')
     
-    # Einzigartigkeit: Ein Asset pro Berichtsdatum
+    # Uniqueness: one row per asset and report date
     __table_args__ = (
         UniqueConstraint('asset_id', 'report_date', name='_asset_earnings_date_uc'),
     )
@@ -409,15 +406,15 @@ class QuarterlyEarnings(Base):
         return f"<QuarterlyEarnings(asset='{self.asset.ticker}', date={self.report_date})>"
 
 class PipelineRunStatus(enum.Enum):
-    """Definiert den Status einer Pipeline-Ausführung."""
+    """The status of a pipeline run."""
     RUNNING = "RUNNING"
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
 
 class PipelineRun(Base):
     """
-    Erfasst eine einzelne Ausführung eines Orchestrierungs-Skripts.
-    Dies ist der "Eltern-Eintrag" für alle Logs, die während dieses Laufs entstehen.
+    One run of an orchestration script: the parent row of every log
+    written during that run.
     """
     __tablename__ = 'pipeline_runs'
     
@@ -429,13 +426,13 @@ class PipelineRun(Base):
     
     status = Column(Enum(PipelineRunStatus), nullable=False, default=PipelineRunStatus.RUNNING)
     
-    # Metadaten (aus "Kurzfristig" in der Bibel)
+    # Run metadata
     git_commit_hash = Column(String(40), nullable=True)
-    config_hash = Column(String(64), nullable=True) # z.B. SHA-256 der config.toml
+    config_hash = Column(String(64), nullable=True) # e.g. the SHA-256 of config.toml
     
     error_message = Column(String, nullable=True)
     
-    # Beziehung: Ein PipelineRun hat viele ApiCallLogs
+    # One PipelineRun has many ApiCallLogs
     api_calls = relationship('ApiCallLog', back_populates='pipeline_run', cascade='all, delete-orphan')
 
     def __repr__(self):
@@ -443,26 +440,25 @@ class PipelineRun(Base):
 
 class ApiQuota(Base):
     """
-    Speichert den *aktuellen* verbrauchten Stand für ein bestimmtes Quota-Fenster.
-    Dies ist die Tabelle, die der 'CentralRateLimitManager' (Nächster Schritt) 
-    atomar (SELECT ... FOR UPDATE) aktualisieren wird.
+    The *current* consumption in one quota window: the table the quota
+    manager updates atomically.
     """
     __tablename__ = 'api_quotas'
-    
+
     id = Column(Integer, primary_key=True)
-    
-    # z.B. 'yfinance' oder 'alphavantage'
+
+    # e.g. 'yfinance' or 'alphavantage'
     provider_name = Column(String(100), nullable=False)
     
-    # Eindeutiger Schlüssel für das Zeitfenster, z.B. "daily_2025-11-10"
+    # The unique key of the time window, e.g. "daily_2025-11-10"
     bucket_key = Column(String(255), nullable=False, unique=True, index=True)
     
     calls_consumed = Column(Integer, nullable=False, default=0)
     
-    # Wann begann dieses Fenster (nützlich für die Logik)
+    # When this window began
     window_start_time = Column(DateTime(timezone=True), nullable=False)
     
-    # Wann wurde dieser Zähler zuletzt erhöht?
+    # When this counter was last raised
     last_updated = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
 
     def __repr__(self):
@@ -470,38 +466,38 @@ class ApiQuota(Base):
 
 class ApiCallLog(Base):
     """
-    Ein unveränderliches "Ledger" (Protokoll) *jeder* einzelnen API-Anfrage.
-    Ermöglicht detailliertes Debugging, Auditing und Performance-Analyse.
+    An immutable ledger of *every* API request, for debugging, auditing
+    and performance analysis.
     """
     __tablename__ = 'api_call_logs'
-    
+
     id = Column(Integer, primary_key=True)
-    
-    # Fremdschlüssel: Zu welchem Lauf gehört dieser API-Aufruf?
+
+    # Foreign key: the run this API call belongs to
     pipeline_run_id = Column(Integer, ForeignKey('pipeline_runs.id'), nullable=False, index=True)
     
     provider_name = Column(String(100), nullable=False, index=True)
     
-    # z.B. '.info', '.history', '/v1/getData'
+    # e.g. '.info', '.history', '/v1/getData'
     endpoint_name = Column(String(255), nullable=True)
     
-    # Für welches Asset? (Optional, aber sehr nützlich für Debugging)
+    # For which asset (optional, useful when debugging)
     asset_ticker = Column(String(20), nullable=True, index=True)
     
-    # Zeitstempel des Aufrufs
+    # The time of the call
     call_timestamp = Column(DateTime(timezone=True), server_default=func.now())
     
-    # Erfolg oder Misserfolg (z.B. HTTP 200, 429, 500)
+    # Success or failure (e.g. HTTP 200, 429, 500)
     http_status_code = Column(Integer, nullable=True)
     success = Column(Boolean, nullable=False, default=True)
     
-    # Wie viele "Credits" hat dieser Aufruf verbraucht (meistens 1)
+    # How many credits this call consumed (usually 1)
     credits_consumed = Column(Integer, nullable=False, default=1)
     
-    # Falls ein Fehler aufgetreten ist
+    # If an error occurred
     error_message = Column(String, nullable=True)
     
-    # Beziehung zurück zum "Eltern-Lauf"
+    # The relationship back to the parent run
     pipeline_run = relationship('PipelineRun', back_populates='api_calls')
 
     def __repr__(self):
@@ -509,16 +505,16 @@ class ApiCallLog(Base):
 
 class FinancialStatement(Base):
     """
-    Speichert einen vollständigen Finanzbericht (z.B. Income Statement annual).
-    Eine Zeile pro (Asset, Date, report_type, period_type).
+    One complete financial statement (e.g. an annual income statement).
+    One row per (asset, date, report_type, period_type).
     """
     __tablename__ = "financial_statements"
 
     id = Column(Integer, primary_key=True)
     asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False, index=True)
 
-    # "Header" – identifizieren den Report
-    date = Column(Date, nullable=False, index=True)      # Periodenende (z.B. 2024-12-31)
+    # The header: identifies the report
+    date = Column(Date, nullable=False, index=True)      # period end (e.g. 2024-12-31)
     report_type = Column(String(32), nullable=False)     # "income", "balance_sheet", "cash_flow"
     period_type = Column(String(16), nullable=False)     # "annual", "quarterly"
     # The provider's name, written by the fetch from its DTO. Required and
@@ -526,7 +522,7 @@ class FinancialStatement(Base):
     # origin is unknown is a claim nobody made.
     source = Column(String(32), nullable=False)
 
-    # Golden Columns – Standardmetriken
+    # The golden columns: the standard metrics
     revenue = Column(Float, nullable=True)
     net_income = Column(Float, nullable=True)
     eps = Column(Float, nullable=True)
@@ -566,10 +562,10 @@ class FinancialStatement(Base):
     repurchase_of_stock = Column(Float, nullable=True)
     operating_cash_flow = Column(Float, nullable=True)
 
-    # Rohdump des Providers (alle Zeilen als Dict)
+    # The provider's raw dump (every line item as a dict)
     raw_json = Column(JSON, nullable=True)
 
-    # Beziehung zurück zu Asset
+    # The relationship back to Asset
     asset = relationship("Asset", back_populates="financial_statements")
 
     __table_args__ = (
@@ -589,22 +585,21 @@ class FinancialStatement(Base):
             f"period_type='{self.period_type}')>"
         )
 
-# ==================== NEUE TABELLE ====================
+# ==================== MACRO DATA ====================
 
 class MacroData(Base):
     """
-    Time-series: Macro-economic indicator data.
-    
-    Speichert tägliche Werte für:
-    - VIX (Volatility Index)
-    - Treasury Yields (10Y, 2Y, 30Y, 3M)
-    - USD Index
+    Time series: macro-economic indicator data.
+
+    Daily values for:
+    - VIX (volatility index)
+    - Treasury yields (10Y, 2Y, 30Y, 3M)
+    - USD index
     - Gold price
-    
-    PATTERN:
-    - Analog zu DailyPrice (asset_id, date) → (indicator, date)
-    - UniqueConstraint für ON CONFLICT UPDATE
-    - Indexed für schnelle Queries
+
+    The same shape as DailyPrice, (asset_id, date) becoming
+    (indicator, date): a UniqueConstraint for ON CONFLICT UPDATE and
+    indexes for fast queries.
     """
     __tablename__ = 'macro_data'
     
@@ -618,11 +613,11 @@ class MacroData(Base):
     created_at = Column(DateTime, default=None)
     
     __table_args__ = (
-        # Unique constraint für idempotente Upserts
-        # PATTERN: Gleich wie DailyPrice._asset_date_uc
+        # The unique constraint for idempotent upserts, the same shape
+        # as DailyPrice._asset_date_uc
         UniqueConstraint('date', 'indicator', name='_macro_date_indicator_uc'),
         
-        # Indexes für häufige Queries
+        # Indexes for frequent queries
         Index('ix_macro_indicator', 'indicator'),
         Index('ix_macro_date', 'date'),
         Index('ix_macro_indicator_date', 'indicator', 'date'),
@@ -671,7 +666,7 @@ class Portfolio(Base):
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_session() -> Session:
-    """Stellt eine neue DB-Session zur Verfügung."""
+    """Provides a new database session."""
     return SessionLocal()
 
 def get_engine():
