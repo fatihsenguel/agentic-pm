@@ -1,7 +1,7 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 22 September 2026 (thirty-seventh session), begun about 20:05 UTC. Regenerated at its end. The thirty-third to thirty-sixth sessions ran earlier the same day.
-**Branch:** `adobe`, cut from `baseline-v1` at **8099988** before the first commit, in a worktree under `.claude/worktrees/` because this session's harness rejects edits outside one; **six commits with this one**, not merged, not pushed. The trunk at 8099988 is the thirty-sixth session's handoff commit, merged `--ff-only` from `half-cent` and pushed on the evening of the 22nd, and `git ls-remote` shows the remote's `baseline-v1` at that commit. `origin`'s push URL is `no_push` and the push goes by URL, so the local `origin/baseline-v1` ref lags: it stands at **33769f6**, the "Decision 76" commit; `git rev-list --count origin/baseline-v1..HEAD` says forty-five for the trunk and fifty-one for this branch with this commit. The push output is the record.
+**Branch:** `adobe`, cut from `baseline-v1` at **8099988** before the first commit, in a worktree under `.claude/worktrees/` because this session's harness rejects edits outside one; six commits with this one. **Corrected 22 September 2026, the evening of the same day: merged `--ff-only` and pushed, so `baseline-v1` is the trunk at 1d4eb9c, this handoff's own commit, and the remote's `baseline-v1` stands at the same commit by `git ls-remote`; the `adobe` branch and its worktree are removed.** `origin`'s push URL is `no_push` and the push goes by URL, so the local `origin/baseline-v1` ref lags: it stands at **33769f6**, the "Decision 76" commit; `git rev-list --count origin/baseline-v1..baseline-v1` says fifty-one for the trunk at 1d4eb9c. The push output is the record.
 
 **State:** pytest **1934 passed, 6 xfailed**, unchanged; run at session start in the worktree and again after the record commits. **Two paid loops ran, one after the other, on their own yes: R-8 through the CLI at 20:35 UTC, one Haiku call, and R-9 at 21:06, one Haiku call and four Sonnet calls.** The runner was not run: no answer text changed. The golden set was not run: no prompt changed. **Step 3 of the interlude is sent whole: 67 of 67 corpus turns**, 31 matched over the two runs. Step 4 stands done but for decision 76. The pending list stands at eleven, unchanged.
 
@@ -198,13 +198,14 @@ third block.
 
 ### Branches and tags
 
-`baseline-v1` is the trunk at **8099988**, pushed to that commit on the
-evening of 22 September; `adobe` is cut from it and carries this
-session's six commits, **to be merged `--ff-only` by the owner**. The
-`adobe` worktree holds a symlink `data/portfolio.db` to the checkout's
-database, gitignored, so pytest and the CLI there ran against the real
-store, and `.env` was found by walking up from the worktree; the same
-arrangement serves any later worktree.
+`baseline-v1` is the trunk at **1d4eb9c**, merged `--ff-only` from
+`adobe` and pushed to that commit on the evening of 22 September
+(corrected 22 September 2026; the paragraph had said 8099988 and a merge
+still to come). `adobe` is merged and deleted. Its worktree held a
+symlink `data/portfolio.db` to the checkout's database, gitignored, so
+pytest and the CLI there ran against the real store, and `.env` was found
+by walking up from the worktree; the worktree is removed and the same
+arrangement serves any later one.
 `half-cent`, `intents-parked` at addfbc7 (the tree that still had the
 three intents), `corpus-run`, `handoff`, `rounding`, `halves`,
 `judgement`, `gate`, `thesis`, `reader`, `research`, `score`, `publish`,
