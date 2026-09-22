@@ -8,45 +8,44 @@ from datetime import datetime, date
 
 class SimpleRateLimiter:
     """
-    Ein einfacher Rate-Limiter, der sicherstellt, dass nicht mehr als
-    'per_minute'-Aufrufe in einem 60-Sekunden-Fenster erfolgen.
-    (Basierend auf FIN_API_Runbook.md, Abschnitt 5.1)
+    A simple rate limiter that allows no more than 'per_minute' calls
+    within a 60-second window.
+    (After FIN_API_Runbook.md, section 5.1)
     """
     def __init__(self, per_minute: int):
         self.per_minute = per_minute
         self.window_seconds = 60
-        # deque speichert die Zeitstempel der Aufrufe im Fenster
+        # The deque holds the timestamps of the calls within the window
         self.timestamps = deque()
 
     def wait_for_slot(self):
         """
-        Blockiert, bis ein Slot für einen Aufruf verfügbar ist.
+        Blocks until a slot for a call is available.
         """
         now = time.time()
 
-        # 1. Entferne alte Zeitstempel (älter als 'window_seconds')
+        # 1. Drop the old timestamps (older than 'window_seconds')
         while self.timestamps and (now - self.timestamps[0] > self.window_seconds):
             self.timestamps.popleft()
 
-        # 2. Prüfen, ob das Fenster voll ist
+        # 2. Is the window full?
         if len(self.timestamps) < self.per_minute:
-            # Slot ist frei
+            # A slot is free
             self.timestamps.append(now)
             return
 
-        # 3. Fenster ist voll. Wir müssen warten.
-        # Warte, bis der älteste Aufruf aus dem Fenster fällt.
+        # 3. The window is full: wait until the oldest call falls out of it.
         oldest_call_time = self.timestamps[0]
         time_to_wait = (oldest_call_time + self.window_seconds) - now
-        
+
         if time_to_wait > 0:
-            # (+ 0.02s Puffer, um Rundungsfehler zu vermeiden)
+            # (plus a 0.02 s buffer against rounding errors)
             time.sleep(time_to_wait + 0.02)
-        
-        # Rekursiver Aufruf, um den Slot erneut zu prüfen (falls mehrere Threads warten)
-        # In unserem Single-Thread-Skript könnten wir auch einfach 
-        # self.timestamps.popleft() und self.timestamps.append(time.time()) machen.
-        # Aber die rekursive Variante ist sicherer.
+
+        # A recursive call checks the slot again, in case several threads
+        # are waiting. A single-threaded script could simply do
+        # self.timestamps.popleft() and self.timestamps.append(time.time());
+        # the recursive form is the safer one.
         self.wait_for_slot()
 
 
