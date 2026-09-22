@@ -173,8 +173,8 @@ change. Nothing before Order 6 waits on anything personal.
    It exists because the golden set is the loop that dies with that refactor
    and cannot verify it, and because no loop shows me an answer, so I have no
    feel for what this system does. Its five kinds, its size, and what is
-   pinned exactly against what is pinned by invariants are in KNOWN_GAPS
-   under "The interlude between Order 4 and Order 5".
+   pinned by required content against what is pinned by invariants are in
+   KNOWN_GAPS under "The interlude between Order 4 and Order 5".
 
    **What belongs in the interlude is decided by what survives the
    refactor.** A question survives it, and so do the figures an answer must
@@ -222,4 +222,10 @@ September 2026, the day the interlude's first step landed: what belongs
 in it is decided by what survives the refactor, so the corpus and its one
 run stay before Order 5 and the CLI, the README and the demo recordings
 move after it. Still not a change of direction — a change in what is
-worth building before the layer underneath it is replaced.*
+worth building before the layer underneath it is replaced. Revised a third
+time on 22 September 2026, the day the corpus was written: "pinned
+exactly" became "pinned by required content" in the interlude paragraph,
+because prose survives the refactor only in part and the presentation is
+rebuilt after Order 5, so an answer pins its figures, its as-of, its
+clauses and what it refuses, and not its text. A correction of one
+pointer sentence to the entry it points at, not a change of direction.*
