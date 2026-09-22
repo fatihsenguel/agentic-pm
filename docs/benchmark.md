@@ -857,6 +857,25 @@ the block above's 2.2 to the byte but for the two cents.
 | --- | --- |
 | 2.2 | matched on the two halves: 19,552.475 printed 19,552.48 and 15,147.375 printed 15,147.38, in the findings line and the condition line alike; the rest as read above, the four section 3 clauses inside their limits still carry no figure and 2.3's conditions are still carried |
 
+**Run of 22 September 2026, R-8 and R-9, commit 573cc04, transcript
+`tests/golden/run_R-8_R-9_2026-09-22.txt`.** Two turns through the CLI in
+two processes, R-8 at 20:35 UTC and R-9 from 21:06:23 to 21:07:18, the
+two the first run did not send, on their own yes: the first EDGAR pull
+for Adobe. With them the corpus has been sent whole, 67 of 67. R-8 fetched
+and stored Adobe's filer row, SIC 7372 and not excluded, its 17,117 facts,
+an assets row from W-2's currency and five closes to 2026-09-21; R-9
+fetched nothing but the FY2025 10-K's document and read two of its three
+sections on Sonnet, Item 1 refused on a quote the model had altered,
+before it refused on the missing weight. Nothing else moved: the ticker
+file and the nine holdings' closes were inside their intervals. 1 matched,
+1 missed; with the first run, 31 of 67. The classes are logged in
+KNOWN_GAPS; nothing was fixed.
+
+| Entry | Reading |
+| --- | --- |
+| R-8 | matched: the range refused naming W-2, growth_low and growth_high; no range, no point, nothing filled; the last close 249.52 on 2026-09-21 with its source; the screen's own report, unpinned, stopped at PHI-2.1 on FY2021's return on invested capital, the clause Alphabet stops on |
+| R-9 | missed: an error, not a refusal, R-7's shape (KNOWN_GAPS, "A buy question about a company on no entry arrives shaped as an error"); the reason named is the right one, W-2 states no weight, but no outcome, no grounds, and the range's refusal not printed, the screening block unrendered once the research agent failed; no recommendation and no price, as pinned; the 10-K fetched and read before the weight was looked at |
+
 ---
 
 ## Part 4 — Order of work under time pressure
