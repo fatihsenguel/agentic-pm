@@ -174,11 +174,20 @@ change. Nothing before Order 6 waits on anything personal.
    and cannot verify it, and because no loop shows me an answer, so I have no
    feel for what this system does. Its five kinds, its size, and what is
    pinned exactly against what is pinned by invariants are in KNOWN_GAPS
-   under "The interlude between Order 4 and Order 5". The interlude shrinks
-   the surface first, makes the CLI the client rather than a developer
-   console, and produces the demo. No capability is added inside it until the
-   corpus names its absence. It closes when the full test is run again and
-   finds nothing the loops could not already have caught.
+   under "The interlude between Order 4 and Order 5".
+
+   **What belongs in the interlude is decided by what survives the
+   refactor.** A question survives it, and so do the figures an answer must
+   carry, the clauses a refusal must cite, and a sequence of turns. An
+   intent and a plan do not. So the interlude shrinks the surface, writes
+   the corpus, runs it once to capture the baseline, and fixes only what is
+   wrong in a pipeline's arithmetic — routing defects are not repaired in a
+   router that is about to be deleted, and presentation is not designed
+   twice. **The CLI as the client, the README and the demo recordings come
+   after Order 5**, built against the system that will ship. No capability
+   is added inside the interlude until the corpus names its absence. It
+   closes when the corpus exists, has been run end to end, and what it
+   found is fixed under that rule or logged with a trigger.
 
 5. The conversational layer replaces the router. The pipelines do not change.
 6. Make it mine, the rest: the personal IPS, its clause types grown one at a
@@ -208,4 +217,9 @@ until something defines it. The direction has not changed — this is the
 change it anticipated — and benchmark.md's Part 2 was rewritten the same
 day to match. Revised 21 September 2026: an unnumbered interlude between
 Orders 4 and 5 — the corpus, the CLI as the client, the demo. The Order
-numbers do not move; the direction has not changed.*
+numbers do not move; the direction has not changed. Revised again 22
+September 2026, the day the interlude's first step landed: what belongs
+in it is decided by what survives the refactor, so the corpus and its one
+run stay before Order 5 and the CLI, the README and the demo recordings
+move after it. Still not a change of direction — a change in what is
+worth building before the layer underneath it is replaced.*
