@@ -1,7 +1,7 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 22 September 2026 (thirty-sixth session), begun about 18:25 UTC. Regenerated at its end. The thirty-third, thirty-fourth and thirty-fifth sessions ran earlier the same day.
-**Branch:** `half-cent`, cut from `baseline-v1` at **dfbc7d2** before the first commit, in a worktree under `.claude/worktrees/` because this session's harness rejects edits outside one; **seven commits with this one**, not merged, not pushed. The brief named 5a2ab7b as the branch point; the trunk had moved to dfbc7d2 by the handoff correction the brief itself called done, and a branch from 5a2ab7b could not have merged fast-forward, so the cut was taken from the trunk head and said so. `origin`'s push URL is `no_push` and the push goes by URL, so the local `origin/baseline-v1` ref lags: it stands at **33769f6**, the "Decision 76" commit, not at b308b71 as the previous handoff said (b308b71 was the first commit of that evening's push, sixteen past the ref); `git rev-list --count origin/baseline-v1..baseline-v1` says thirty-eight for the trunk at dfbc7d2 and forty-four for this branch. The push output is the record.
+**Branch:** `half-cent`, cut from `baseline-v1` at **dfbc7d2** before the first commit, in a worktree under `.claude/worktrees/` because this session's harness rejects edits outside one; seven commits with this one. **Corrected 22 September 2026, the evening of the same day: merged `--ff-only` and pushed, so `baseline-v1` is the trunk at 8099988, this handoff's own commit, and the remote's `baseline-v1` stands at the same commit by `git ls-remote`; the `half-cent` worktree is removed.** The brief named 5a2ab7b as the branch point; the trunk had moved to dfbc7d2 by the handoff correction the brief itself called done, and a branch from 5a2ab7b could not have merged fast-forward, so the cut was taken from the trunk head and said so. `origin`'s push URL is `no_push` and the push goes by URL, so the local `origin/baseline-v1` ref lags: it stands at **33769f6**, the "Decision 76" commit, not at b308b71 as the previous handoff said (b308b71 was the first commit of that evening's push, sixteen past the ref); `git rev-list --count origin/baseline-v1..baseline-v1` says forty-five for the trunk at 8099988. The push output is the record.
 
 **State:** pytest **1934 passed, 6 xfailed**, up five from 1929 by the five tests of the one check this session wrote; run at session start in the worktree and again at the end. **Two paid loops ran, one after the other: the runner once at 18:42 UTC, 15/18, every verdict as predicted and as at 12:51; and 2.2 alone through the CLI at 18:49, one Haiku call.** The golden set was not run: no prompt changed. **Step 4 of the interlude is done but for decision 76**: decision 75, the exact half cent, is implemented, its check written first against Part 7 and red for one commit, and the record says what the check found before any code was written. The pending list stands at eleven, unchanged.
 
@@ -208,13 +208,14 @@ stand as logged. R-8 and R-9 not run.
 
 ### Branches and tags
 
-`baseline-v1` is the trunk at **dfbc7d2**, pushed to that commit on 22
-September; `half-cent` is cut from it and carries this session's seven
-commits, **to be merged `--ff-only` by the owner**. The `half-cent`
-worktree holds a symlink `data/portfolio.db` to the checkout's database,
-gitignored, so pytest and the CLI there ran against the real store, and
-`.env` was found by walking up from the worktree; the same arrangement
-serves any later worktree.
+`baseline-v1` is the trunk at **8099988**, merged `--ff-only` from
+`half-cent` and pushed to that commit on the evening of 22 September
+(corrected 22 September 2026; the paragraph had said dfbc7d2 and a merge
+still to come). `half-cent` is merged and older. Its worktree held a
+symlink `data/portfolio.db` to the checkout's database, gitignored, so
+pytest and the CLI there ran against the real store, and `.env` was found
+by walking up from the worktree; the worktree is removed and the same
+arrangement serves any later one.
 `intents-parked` at addfbc7 holds the tree that still had the three
 intents. `corpus-run`, `handoff`, `rounding`, `halves`, `judgement`,
 `gate`, `thesis`, `reader`, `research`, `score`, `publish`, `range`,
