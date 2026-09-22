@@ -7123,6 +7123,11 @@ sixth rather than after all eight — re-scoped 22 September, see below.**
    back. One arithmetic item found, so step 4 is decision 75's
    implementation, its check written first against Part 7, and 76 on my
    word.
+   **Done 22 September (thirty-sixth session), but for 76.** Decision 75
+   implemented, the check 0bbde46 first and the implementation 2c43ad0;
+   the runner once, 15/18 unchanged; 2.2 alone re-read and Part 3c.6's
+   second block. What the check found before the code is in the
+   decision's entry. Decision 76 was not put here and stays pending.
 5. **The cleanup:** the German debug strings under `src/`, and the glyphed
    answer headers of item 32. Independent of everything else and cheap, so
    it can happen whenever there is an hour for it.
