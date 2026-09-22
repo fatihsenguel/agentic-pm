@@ -668,6 +668,86 @@ own rules, it cites that instead.
 | R-8 | What is ADBE worth? | a candidate whose entry states no growth pair (`docs/WATCHLIST.md`, entry conditions) | Part 18, R-8 |
 | R-9 | Should I buy ADBE? | a candidate whose entry states no weight (`docs/WATCHLIST.md`, the weight) | Part 18, R-9 |
 
+### 3c.5 — Sequences
+
+Order 5 is a conversation, and this is the dimension it exists to add.
+Today conversation memory is one extraction rule over one previous turn,
+the unknown-ticker clarification, and 3.5 is the only two-turn case. A
+sequence is a numbered list of turns, each turn a prompt verbatim, and
+what makes it a sequence is written beside every turn after the first:
+**what the answer depends on from the turn before**, such that the turn's
+answer is not derivable from its own prompt alone. Four kinds of
+dependency exist to write, and the rows below carry all four: a
+clarification answered or corrected (S-2, S-3), a referent carried ("and
+MSFT?", S-1, S-7), a referent to the previous answer ("that", "it", S-4,
+S-5, S-6), and one sequence where nothing may carry over (S-8). Every
+turn's answer is a Part 18 entry, most of them a spine entry by pointer.
+Only S-2 and S-8 rest on a rule that exists today. S-3, S-6 and S-7
+cannot be done and say so. S-1, S-4 and S-5 have no rule behind them:
+their second turn is routed as a new message and passes or fails on the
+model's guess, which is the case the golden set calls a line that only
+holds most of the time. All eight are written for Order 5 to be judged
+against, not for step 3 to pass.
+
+**S-1, a referent carried, three turns.**
+
+1. How has my JPM position performed since I bought it? Answer: Part 18,
+   1.2.
+2. And MSFT? Depends on turn 1's question: the measure and the frame.
+   Alone it asks nothing. Answer: Part 18, S-1.T2.
+3. And JNJ? Depends on turn 2 the same way, the frame carried twice.
+   Answer: Part 18, S-1.T3.
+
+**S-2, a clarification corrected.**
+
+1. Hows my APPL doing? Answer: Part 18, 3.5 turn 1.
+2. no, I meant MSFT. Depends on turn 1's record: the reply names a
+   different held ticker and it is substituted for the token; the answer
+   is MSFT's and not AAPL's. Answer: Part 18, S-2.T2.
+
+**S-3, a span clarification answered. Cannot be done today: only the
+unknown-ticker clarification leaves a record.**
+
+1. What is my volatility over the last 6 months? Answer: Part 18, C-3.
+2. 1Y. Depends on turn 1's record: the reply is one of the spans offered
+   and stands for the original question at that span. Answer: Part 18,
+   1.3.
+
+**S-4, a referent to the previous answer.**
+
+1. Does my current allocation violate any rule of my investment policy?
+   Answer: Part 18, 2.2.
+2. What would have to change to fix that? Depends on turn 1's answer:
+   "that" is the set of breaches just reported. Answer: Part 18, 2.3.
+
+**S-5, a referent to the previous answer, a narrower clause set.**
+
+1. What is my current allocation by asset class? Answer: Part 18, 1.1.
+2. Is that within my policy? Depends on turn 1's answer: "that" is the
+   allocation by asset class, so the clauses are section 3's. Answer:
+   Part 18, S-5.T2.
+
+**S-6, a pronoun for a candidate. Cannot be done today: extraction reads
+no ticker from "it".**
+
+1. What is GOOGL worth? Answer: Part 18, 4.2.
+2. Should I buy it? Depends on turn 1's question: "it" is GOOGL. Answer:
+   Part 18, 4.3.
+
+**S-7, a frame carried across candidates. Cannot be done today.**
+
+1. Does JPM clear my philosophy? Answer: Part 18, 4.6.
+2. And GOOGL? Depends on turn 1's question: the frame is the philosophy
+   check. Answer: Part 18, 4.1.
+
+**S-8, nothing carries over.**
+
+1. Is my AAPL position too big? Answer: Part 18, 2.1a.
+2. What is my volatility over the past twelve months? Depends on nothing:
+   the answer is 1.3's, about the portfolio and not about AAPL, and
+   nothing from turn 1 reaches it. A memory that contaminates fails here.
+   Answer: Part 18, 1.3.
+
 ---
 
 ## Part 4 — Order of work under time pressure

@@ -3512,3 +3512,53 @@ system now has").
   weight); the range is refused as in R-8. The outcome supports no entry
   and the grounds name what could not be established. No recommendation,
   no price. The same EDGAR caveat as R-8.
+
+### The sequences, S-1 to S-8
+
+One entry per turn whose answer is not already an entry above
+(benchmark.md Part 3c.5). Every other turn's answer is the spine entry
+Part 3c points at, and it is the same answer whether the question was
+typed whole or reached through the turn before: a sequence changes how a
+question arrives, never what it must carry. Each entry here states what
+the turn depends on, since that is what the sequence tests.
+
+- **S-1.T2, And MSFT?** Depends on turn 1's frame, position P&L since
+  purchase. MSFT: 100 shares, average price 400.00, cost basis 40,000.00,
+  purchased 2024-03-18; price 496.82; market value 49,682.00; P&L
+  +9,682.00, +24.21% (Part 1, MSFT row). As of 2026-09-02. Price return
+  only (D4). About MSFT alone.
+- **S-1.T3, And JNJ?** Depends on turn 2's frame, carried from turn 1.
+  JNJ: 150 shares, average price 150.00, cost basis 22,500.00, purchased
+  2024-05-06; price 275.21; market value 41,281.50; P&L +18,781.50,
+  +83.47% (Part 1, JNJ row). As of 2026-09-02. Price return only (D4).
+  About JNJ alone.
+- **S-2.T2, no, I meant MSFT.** Depends on turn 1's record of the
+  unknown-ticker question: MSFT, a held ticker named in the reply, is put
+  where APPL was, and the resolved question is answered as if typed
+  (`agents/extraction.py`, the resolution rule). The answer is S-1.T2's,
+  MSFT's row, and carries nothing of AAPL.
+- **S-3.T2, 1Y.** Depends on turn 1's record of the span question, which
+  does not exist today. The answer is 1.3's: 10.29% annualised with its
+  basis (Part 4). A reply of "1Y" routed as a new message, with no
+  measure, is the failure this turn is written to show.
+- **S-4.T2, What would have to change to fix that?** Depends on turn 1's
+  answer: "that" is the eight breaches of entry 2.2. The answer is 2.3's,
+  one condition per breach from Part 7's Distance columns, naming no
+  instrument (IPS-5.2).
+- **S-5.T2, Is that within my policy?** Depends on turn 1's answer:
+  "that" is the allocation by asset class, so the clauses are section 3's.
+  IPS-3.1 Equity 69.41% against 40% to 65%, breach, 4.41 pp = 18,083.18;
+  IPS-3.2 Fixed Income 9.99% against 8% to 30%, ok; IPS-3.3 Commodity
+  9.82% against 15%, ok; IPS-3.4 Real Estate 7.00% against 15%, ok;
+  IPS-3.5 Cash 3.78% against 3%, ok (Part 7 §3). As of 2026-09-02. Each
+  cited by clause. Not pinned: whether section 4's tables follow.
+- **S-6.T2, Should I buy it?** Depends on turn 1's question: "it" is
+  GOOGL. The answer is 4.3's. A question with no ticker read from it,
+  answered as an error or refused for want of a company, is the failure
+  this turn is written to show.
+- **S-7.T2, And GOOGL?** Depends on turn 1's frame, the philosophy check.
+  The answer is 4.1's, the stop at PHI-2.1.
+- **S-8.T2, What is my volatility over the past twelve months?** Depends
+  on nothing. The answer is 1.3's, the portfolio's volatility, and carries
+  nothing about AAPL from turn 1. An answer narrowed to AAPL, or one that
+  mentions the position, is the failure this turn is written to show.
