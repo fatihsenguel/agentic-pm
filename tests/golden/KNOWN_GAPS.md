@@ -3570,9 +3570,9 @@ run-by-hand script is `seed_portfolio.py`. Same family as the two scripts that
 called the deleted `add_holding` (resolved in the eleventh session). Either
 repaired when a script is next wanted, or deleted, which is a decision.
 
-### Two formatter headers still carry an emoji
+### Two formatter headers still carry an emoji - RESOLVED 22 September (thirty-eighth session)
 
-**Trigger:** the commit that strips the headers, under the handoff's next steps. Decision 32 left the pending list 15 September (eighteenth session) as work, not a decision.
+**Trigger:** none: closed by 1b8558f, the commit that stripped the headers. Decision 32 left the pending list 15 September (eighteenth session) as work, not a decision.
 
 Recorded 11 September (fourteenth session), seen in the prompt batch.
 The compliance report's header and the out-of-scope refusal's header
@@ -3592,6 +3592,27 @@ backtest's past-performance note at `:3793`, and the per-agent line at
 `:2789` that prints `DataAgent: ✓`. Fifteen answer-text lines in all, of
 forty-one lines in the file that carry a glyph; the remaining twenty-six
 are comments and console prints, which are the other session's work.
+
+**Closed 22 September (thirty-eighth session), step 5 of the interlude,
+measured before and after.** The 15 September deletions took five of the
+fifteen lines with the optimization, macro and backtest formatters: their
+three headers, the stub at `:3677` and the note at `:3793`. Ten remained,
+recounted by a script over every string and comment token under `src/`
+and read by hand: the five headers on seven lines, the error preamble,
+the compliance failure stub and the per-agent line, twelve glyphs in
+all. The paragraph above says six further lines and lists five; the
+five were right. No check reads any of them: the runner asserts on the
+out-of-scope first sentence, the golden script carries no glyph, and
+every glyph under `tests/` is a print in a test's own console output,
+so nothing moved with the commit. 1b8558f stripped the ten, the tick and
+cross of the per-agent line becoming the words ok and failed, and no
+other text changed. The runner ran against it at 21:49 UTC from the
+worktree with `PYTHONPATH=src`: 15/18, 0 failing, 3 blocked, every
+verdict as at 18:42 and as predicted, and every one of the store's
+thirteen counts unmoved, no clock having run out. The 113 further
+strings and comments under `src/` that carry a glyph, in comments,
+console prints, the trace and the token counter, stand for the console
+session.
 
 ### Prompt batch, 11 September: fourteen prompts - CLOSED 15 September (seventeenth session), history
 
