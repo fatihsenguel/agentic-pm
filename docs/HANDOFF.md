@@ -1,7 +1,7 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 22 September 2026 (thirty-fourth session), begun about 14:20 UTC. Regenerated at its end. The thirty-third session ran earlier the same day and executed decision 51.
-**Branch:** `corpus`, cut from `baseline-v1` at **b308b71** before the first commit, **eleven commits** counting this one. The owner merges and pushes; `origin`'s push URL is `no_push`. **The trunk is still sixteen ahead of `origin/baseline-v1`** from the previous session, and `corpus` adds eleven on top of it.
+**Branches:** `corpus`, cut from `baseline-v1` at **b308b71** before the first commit, **eleven commits**, merged `--ff-only` by the owner after this document was first written; then `direction`, cut from the trunk at 08cd2f1, **two commits**, the DIRECTION.md revision and this correction. **Thirteen commits in the session.** The owner merges and pushes; `origin`'s push URL is `no_push`. **The trunk is twenty-seven ahead of `origin/baseline-v1`** with `corpus` merged, and `direction` adds two on top of it.
 
 **State:** pytest **1926 passed, 6 xfailed**, run once at session start and matching the previous handoff's number; nothing that runs was touched. **No paid loop ran**: the golden set, the runner and the CLI were not started, and every table of the store is where the previous session left it. **The runner is 15/18 by the previous session's run and was not rerun.** Step 2 of the interlude, the corpus, is **written**: benchmark.md Part 3c and expected_values.md Part 18. The pending list stands at eleven, unchanged.
 
@@ -26,7 +26,7 @@ the next session**, and it is the first paid run since the clocks ran out.
 
 | File | What it is |
 |---|---|
-| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1 to 4 are built. The interlude between Orders 4 and 5 is its unnumbered paragraph under Order 4; **its sentence "what is pinned exactly against what is pinned by invariants" is now stale**, the entry it points at having been corrected on the 22nd, and it is the owner's to revise. |
+| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1 to 4 are built. The interlude between Orders 4 and 5 is its unnumbered paragraph under Order 4; **revised a third time on 22 September, on the owner's approval after the merge**: "pinned exactly" became "pinned by required content", a pointer sentence corrected to the entry it points at, not a change of direction. |
 | `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **172 lines start `**Trigger:**`**, unchanged. **Start with "The interlude between Order 4 and Order 5, and how the corpus is built"**, whose step 2 now says written and whose verbosity line was corrected this session. Then "Deleting three intents moved case 2.1 to risk_analysis", which carries a dated note that the wording is pinned. |
 | `docs/benchmark.md` | **The definition of done, and now the corpus.** Levels 1 to 4 unchanged. **New Part 3c, after 3b**: the rules of the corpus, the eighteen spine wordings verbatim as the runner sends them, fifteen extraction variations, seven clarifications, nine refusals, eight sequences. No status column; the runner is still the status of Levels 1 to 4. **Read Part 2 and Part 3c before Part 3's tables.** |
 | `tests/golden/expected_values.md` | Hand-computed reference, **Parts 1 to 18**. **New Part 18**: one entry per corpus prompt and turn, pinned by required content. Never update it to match code output. Part 18 carries no figure that Parts 1 to 17 do not, except the two subtractions of the 12% row, written out. |
@@ -124,7 +124,8 @@ Unchanged in the code, since no code was touched. What the writing found:
   at 14:24 and 14:28, the filings intervals at 22:17 on the 22nd and
   between 00:03 and 01:38 on the 23rd.
 - **A count in a message is counted, and a count about the writing
-  includes the writing**: eleven commits on `corpus`, this one included.
+  includes the writing**: eleven commits on `corpus` and two on
+  `direction`, this correction included.
 - **Check the citation, not the memory of it.** Two KNOWN_GAPS titles were
   cited from memory as paraphrases and caught by grep before the diff was
   shown; a third had already landed in e782bda and got its own commit.
@@ -180,9 +181,10 @@ PHI-2.1 stop.
 
 ### Branches and tags
 
-`baseline-v1` is the trunk at **b308b71**, sixteen ahead of
-`origin/baseline-v1`, unpushed. **`corpus` is cut from it and carries
-eleven commits**, this handoff the eleventh. `intents-parked` at addfbc7
+`baseline-v1` is the trunk at **08cd2f1** after the owner merged `corpus`
+`--ff-only`, twenty-seven ahead of `origin/baseline-v1`, unpushed.
+**`direction` is cut from it and carries two commits**, the DIRECTION.md
+revision and this correction. `intents-parked` at addfbc7
 holds the tree that still had the three intents. `rounding`, `halves`,
 `judgement`, `gate`, `thesis`, `reader`, `research`, `score`, `publish`,
 `range`, `keys`, `node`, `filer`, `bridge`, `consolidate`, `selection`,
@@ -421,10 +423,8 @@ there. Answer text changes, so the runner runs against it.
 
 ### Later, with reasons
 
-- **The push.** The trunk is sixteen ahead, and `corpus` eleven on top.
-- **DIRECTION.md's interlude paragraph** says "what is pinned exactly";
-  the entry it points at now says required content. The owner's to
-  revise, dated.
+- **The push.** The trunk is twenty-seven ahead with `corpus` merged, and
+  `direction` adds two.
 - **Part 3c.1 and `CASES` can drift.** A pytest test that reads both and
   asserts the eighteen wordings agree is cheap and adds no capability;
   proposed, not built, because the session was writing.
