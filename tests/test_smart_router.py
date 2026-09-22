@@ -42,17 +42,17 @@ class TestRouterDecision:
     def test_valid_simple_decision(self):
         """Test a simple valid routing decision."""
         data = {
-            "intent": "macro_analysis",
+            "intent": "ledger",
             "confidence": 0.9,
-            "execution_order": ["MacroAgent"],
+            "execution_order": ["LedgerAgent"],
             "parameters": {"tickers": [], "period": None},
-            "reasoning": "User asked about market conditions",
+            "reasoning": "User asked how their predictions have done",
         }
-        
+
         decision = RouterDecision.model_validate(data)
-        assert decision.intent == IntentType.MACRO_ANALYSIS
+        assert decision.intent == IntentType.LEDGER
         assert decision.confidence == 0.9
-        assert decision.execution_order == ["MacroAgent"]
+        assert decision.execution_order == ["LedgerAgent"]
     
     def test_invalid_agent_name(self):
         """Test that invalid agent names are rejected."""
@@ -76,7 +76,7 @@ class TestRouterDecision:
         on (its deletion is the next commit)."""
         data = {
             "intent": "combined", "confidence": 0.9,
-            "execution_order": ["MacroAgent"], "parameters": {},
+            "execution_order": ["DataAgent"], "parameters": {},
             "reasoning": "a multi-step plan the model wrote",
         }
         with pytest.raises(ValueError):
@@ -282,7 +282,7 @@ class TestDependencies:
         """The model was allowed to send execution_plan for execution_order;
         nothing asks it for either now, and a plan under another name is
         not read."""
-        data = self._plan("macro_analysis", ["MacroAgent"])
+        data = self._plan("ledger", ["LedgerAgent"])
         data["execution_plan"] = data.pop("execution_order")
         with pytest.raises(ValueError, match=r"not \[\]"):
             RouterDecision.model_validate(data)
@@ -321,7 +321,7 @@ class TestDependencies:
         shapes = (
             ("risk_analysis", ["DataAgent"]),
             ("rebalancing", ["DataAgent", "RebalanceAgent"]),
-            ("macro_analysis", ["MacroAgent"]),
+            ("ledger", ["LedgerAgent"]),
             ("research", ["ScreeningAgent"]),
         )
         for intent, order in shapes:
@@ -550,9 +550,9 @@ class TestSafeParse:
     def test_safe_parse_success(self):
         """Test successful safe parse."""
         data = {
-            "intent": "macro_analysis",
+            "intent": "ledger",
             "confidence": 0.9,
-            "execution_order": ["MacroAgent"],
+            "execution_order": ["LedgerAgent"],
             "parameters": {"tickers": []},
             "reasoning": "Test reasoning",
         }

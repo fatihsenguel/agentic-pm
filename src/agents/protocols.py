@@ -21,11 +21,9 @@ import uuid
 class TaskType(str, Enum):
     """Types of portfolio tasks agents can perform."""
     OPTIMIZE = "optimize"
-    ANALYZE_REGIME = "analyze_regime"
     REBALANCE = "rebalance"
     FETCH_DATA = "fetch_data"
     CALCULATE_RISK = "calculate_risk"
-    MACRO_ANALYSIS = "macro_analysis"  # NEU für MacroAgent
 
 
 class OptimizationMethod(str, Enum):
@@ -44,25 +42,6 @@ class RebalanceFrequency(str, Enum):
     MONTHLY = "monthly"
     QUARTERLY = "quarterly"
     ANNUAL = "annual"
-
-
-class RegimeType(str, Enum):
-    """
-    Market regime classifications.
-    
-    Used by MacroAgent for TAA signal generation.
-    """
-    RISK_ON = "risk_on"
-    RISK_OFF = "risk_off"
-    NEUTRAL = "neutral"
-    
-    # NEU: Für MacroAgent Regime Detection
-    CRISIS = "crisis"
-    RECOVERY = "recovery"
-    
-    # Legacy (für Kompatibilität)
-    HIGH_VOLATILITY = "high_volatility"
-    LOW_VOLATILITY = "low_volatility"
 
 
 @dataclass
@@ -278,8 +257,8 @@ class PortfolioResult:
     confidence: float = 1.0  # 0-1 scale
     warnings: List[str] = field(default_factory=list)
     
-    # NEW: For macro analysis results
-    result_type: Optional[str] = None  # "optimization", "macro_analysis"
+    # Nothing sets this since decision 51 deleted the two intents that did.
+    result_type: Optional[str] = None
     data: Optional[Dict[str, Any]] = None  # Generic data container
     message: Optional[str] = None  # Human-readable summary
     metadata: Dict[str, Any] = field(default_factory=dict)
@@ -337,12 +316,6 @@ class PortfolioResult:
             lines.append(f"Error: {self.error_message}")
             return "\n".join(lines)
         
-        # For macro analysis
-        if self.result_type == "macro_analysis" and self.message:
-            lines.append(f"\n{self.message}")
-            return "\n".join(lines)
-        
-        # For optimization
         if self.weights:
             lines.append(f"\nOptimal Weights:")
             for asset, weight in sorted(self.weights.items(), key=lambda x: -x[1]):
@@ -416,26 +389,6 @@ class CovarianceResult:
             "error_message": self.error_message,
         }
 
-
-@dataclass
-class RegimeSignal:
-    """Signal from macro/regime analysis."""
-    regime: RegimeType
-    confidence: float  # 0-1
-    
-    # Contributing factors
-    fed_sentiment: Optional[float] = None  # -1 (dovish) to +1 (hawkish)
-    vix_level: Optional[float] = None
-    vix_percentile: Optional[float] = None  # vs 1Y history
-    yield_curve_spread: Optional[float] = None  # 10Y - 2Y
-    
-    # Recommendations
-    recommended_action: str = ""  # "reduce_equity", "increase_bonds", etc.
-    taa_adjustment: Optional[Dict[str, float]] = None  # Suggested weight changes
-    
-    # Audit trail
-    analysis_date: datetime = field(default_factory=datetime.now)
-    sources: List[str] = field(default_factory=list)  # ["fed_minutes", "vix", "yield_curve"]
 
 
 @dataclass

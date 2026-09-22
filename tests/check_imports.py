@@ -32,7 +32,6 @@ except Exception as e:
 # Test 2: Agent imports
 agents_to_test = [
     "data_agent",
-    "macro_agent",
     "rebalance_agent",
     "smart_router"
 ]

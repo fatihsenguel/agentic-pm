@@ -28,7 +28,7 @@ Usage:
                 result = fetch_prices(...)
                 tool_trace.set_output(result)
             
-            agent_trace.log_decision("Delegating to MacroAgent")
+            agent_trace.log_decision("Delegating to PortfolioAnalysisAgent")
     
     print(tracer.get_summary())
 """
@@ -444,7 +444,6 @@ class ConsoleFormatter:
     COLORS = {
         "RiskManager": "\033[93m",    # Yellow
         "DataAgent": "\033[94m",       # Blue
-        "MacroAgent": "\033[92m",      # Green
         "RebalanceAgent": "\033[96m",  # Cyan
     }
     RESET = "\033[0m"

@@ -10,7 +10,7 @@
 Agents Module for Quant Portfolio Manager.
 
 Usage:
-    from agents import create_data_agent, create_macro_agent
+    from agents import create_data_agent
     
     data_agent = create_data_agent(verbose=True)
     result = data_agent.fetch_prices_tool(tickers="SPY,TLT", period="1Y")
@@ -46,7 +46,6 @@ from .protocols import (
     TaskType,
     OptimizationMethod,
     RebalanceFrequency,
-    RegimeType,
     # Core DTOs
     PortfolioTask,
     PortfolioResult,
@@ -55,7 +54,6 @@ from .protocols import (
     TAARule,
     RiskDecomposition,
     CovarianceResult,
-    RegimeSignal,
     RebalanceAnalysis,
 )
 
@@ -80,12 +78,6 @@ from .base_agent import (
 from .data_agent import (
     DataAgent,
     create_data_agent,
-)
-
-# Macro Agent - VIX, yields, regime detection, TAA signals
-from .macro_agent import (
-    MacroAgent,
-    create_macro_agent,
 )
 
 # Rebalance Agent - Drift analysis, trade generation (DETERMINISTIC)
@@ -117,7 +109,6 @@ __all__ = [
     "TaskType",
     "OptimizationMethod",
     "RebalanceFrequency",
-    "RegimeType",
     
     # === Protocols (Core DTOs) ===
     "PortfolioTask",
@@ -128,7 +119,6 @@ __all__ = [
     "TAARule",
     "RiskDecomposition",
     "CovarianceResult",
-    "RegimeSignal",
     "RebalanceAnalysis",
     
     # === Base Classes ===
@@ -143,11 +133,7 @@ __all__ = [
     # Data Agent
     "DataAgent",
     "create_data_agent",
-    
-    # Macro Agent
-    "MacroAgent",
-    "create_macro_agent",
-    
+
     # Rebalance Agent
     "RebalanceAgent", 
     "create_rebalance_agent",

@@ -66,9 +66,6 @@ CONFIDENCE GUIDELINES:
 
 EXAMPLES:
 
-User: "Wie ist die aktuelle Marktlage?"
-→ intent: "macro_analysis", confidence: 0.95
-
 User: "What is my volatility over the past twelve months?"
 → intent: "risk_analysis", measure: "portfolio_volatility", confidence: 0.95
 
@@ -154,15 +151,6 @@ ROUTER_SYSTEM_PROMPT = (
 # =============================================================================
 
 ROUTER_FEW_SHOT_EXAMPLES = [
-    {
-        "user": "Was sagt der VIX gerade? Ist Risk-On oder Risk-Off?",
-        "response": {
-            "intent": "macro_analysis",
-            "confidence": 0.95,
-            "parameters": {"measure": None, "group_by": None},
-            "reasoning": "Clear request for macro analysis - VIX and regime assessment.",
-        }
-    },
     {
         "user": "Mein Portfolio ist SPY 45%, TLT 25%, GLD 20%, VWO 10%. Soll 40/30/15/15 sein. Soll ich rebalancen?",
         "response": {

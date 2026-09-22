@@ -21,7 +21,6 @@ import re
 # holds to this set at import. The descriptions are the prompt's text, moved
 # and not edited; the prompt shrink is its own change with its own golden runs.
 INTENTS: Dict[str, str] = {
-    'macro_analysis': 'User asks about market conditions, VIX, yields',
     'rebalancing': 'User wants drift analysis or trade generation',
     'data_fetch': 'User wants raw price data or metrics',
     'risk_analysis': 'User wants risk metrics (VaR, volatility, drawdown)',
@@ -51,7 +50,6 @@ IntentType = Enum(
 # if the binding and this dict disagree.
 AGENTS: Dict[str, str] = {
     "DataAgent": "Fetches market prices, calculates covariance matrices, returns, volatility",
-    "MacroAgent": "Analyzes VIX, yield curve, market regime (risk-on/risk-off)",
     "RebalanceAgent": "Calculates drift, generates trade lists for rebalancing",
     "PortfolioAnalysisAgent": "Computes figures about an EXISTING portfolio's holdings: allocation by asset class and by sector, P&L per position since purchase, and the portfolio's own volatility from its weights and the covariance matrix. Needs DataAgent first (holdings, prices, cash, covariance).",
     "ComplianceAgent": "Checks an EXISTING portfolio against the owner's Investment Policy Statement: every clause with a numeric limit, breach or headroom per clause with the distance to the limit, citing clause ids. Needs DataAgent and PortfolioAnalysisAgent first.",
@@ -198,7 +196,6 @@ class ExtractedParameters(BaseModel):
 # than one: `asks=position` needs the portfolio computed and the company
 # screened and read, and neither requires the other.
 TERMINAL: Dict[str, Dict[str, Tuple[Any, bool]]] = {
-    "macro_analysis": {"": ("MacroAgent", True)},
     "rebalancing": {"": ("RebalanceAgent", True)},
     "data_fetch": {"": ("DataAgent", True), "measure": ("PortfolioAnalysisAgent", True)},
     "risk_analysis": {"": ("DataAgent", True), "measure": ("PortfolioAnalysisAgent", True)},

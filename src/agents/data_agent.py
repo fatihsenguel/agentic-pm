@@ -859,7 +859,7 @@ Always include in your responses:
             return {
                 "success": False,
                 "error": "Risk-free rate unavailable in DB and no default configured.",
-                "fix": "Run MacroAgent to fetch Treasury yields or set 'default_risk_free_rate' in config."
+                "fix": "Load Treasury yields into macro_data or set 'default_risk_free_rate' in config."
             }
             
         except Exception as e:

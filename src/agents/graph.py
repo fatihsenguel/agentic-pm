@@ -12,7 +12,6 @@ from .state import AgentState, create_initial_state, is_execution_complete, get_
 from .nodes import (
     router_node,
     data_agent_node,
-    macro_agent_node,
     rebalance_agent_node,
     portfolio_analysis_agent_node,
     compliance_agent_node,
@@ -38,7 +37,6 @@ logger = logging.getLogger(__name__)
 # entry, fails here at import rather than on the first live route.
 AGENT_NODES = {
     "DataAgent": data_agent_node,
-    "MacroAgent": macro_agent_node,
     "RebalanceAgent": rebalance_agent_node,
     "PortfolioAnalysisAgent": portfolio_analysis_agent_node,
     "ComplianceAgent": compliance_agent_node,

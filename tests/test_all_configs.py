@@ -107,12 +107,6 @@ def test_agent_creation():
     assert agent.name == "DataAgent"
     print("✅ DataAgent created")
     
-    # Macro Agent
-    from agents.macro_agent import create_macro_agent
-    agent = create_macro_agent()
-    assert agent.name == "MacroAgent"
-    print("✅ MacroAgent created")
-    
     # Rebalance Agent
     from agents.rebalance_agent import create_rebalance_agent
     agent = create_rebalance_agent()
@@ -133,7 +127,6 @@ def test_no_self_config_references():
 
     agent_files = [
         agents_dir / "data_agent.py",
-        agents_dir / "macro_agent.py",
         agents_dir / "rebalance_agent.py",
     ]
 

@@ -676,92 +676,6 @@ async def data_agent_node(state: AgentState) -> Dict[str, Any]:
 
 
 # =============================================================================
-# MACRO AGENT NODE
-# =============================================================================
-
-async def macro_agent_node(state: AgentState) -> Dict[str, Any]:
-    """
-    Macro Agent node - analyzes VIX, yield curve, and market regime.
-    """
-
-    tracer = get_tracer()
-    agent_ctx = None
-
-    # ✅ ROBUST TRACING START
-    try:
-        if tracer and hasattr(tracer, "get_current_request"):
-            req = tracer.get_current_request()
-            if req:
-                agent_ctx = req.trace_agent("MacroAgent")
-                agent_ctx.__enter__()
-    except Exception as e:
-        logger.warning(f"Tracing failed in MacroAgent (ignoring): {e}")
-
-
-    try:
-        # Try to import and use the actual MacroAgent
-        try:
-            from .macro_agent import create_macro_agent
-            agent = create_macro_agent(verbose=False)
-            
-            # Fetch macro data
-            fetch_result = agent.fetch_macro_data_tool(indicators="VIX,TNX_10Y,IRX_3M", days=30)
-            
-            # Get snapshot
-            snapshot = agent.get_macro_snapshot_tool()
-            
-            # Assess regime
-            vix_data = snapshot.get("vix", {})
-            yc_data = snapshot.get("yield_curve", {})
-            vix_level = vix_data.get("value")
-            if vix_level is None:
-                raise DataCalculationError("VIX data missing from snapshot")
-
-            slope = yc_data.get("slope")
-            if slope is None:
-                raise DataCalculationError("Yield curve data missing from snapshot")
-
-            regime = agent.assess_regime_tool(
-                vix_level=vix_level,
-                yield_curve_slope=slope
-            )
-            
-            result = {
-                "success": True,
-                "snapshot": snapshot,
-                "regime": regime,
-                "fetch_result": fetch_result,
-            }
-            
-            # Store regime in shared data
-            return {
-                **mark_agent_complete(state, "MacroAgent", result),
-                "shared_data": {
-                    **state.get("shared_data", {}),
-                    "macro_regime": regime,
-                    "macro_snapshot": snapshot,
-                },
-            }
-            
-        except ImportError as e:
-            logger.error(f"Agent error: {e}")
-            
-            return {
-                **mark_agent_complete(state, "MacroAgent", {"success": False, "error": str(e)}),
-                **add_error(state, f"MacroAgent: {str(e)}"),
-            }
-    
-    except Exception as e:
-        return {
-            **mark_agent_complete(state, "MacroAgent", {"success": False, "error": str(e)}),
-            **add_error(state, f"MacroAgent error: {str(e)}"),
-        }
-    finally:
-        # ✅ ROBUST TRACING END
-        if agent_ctx:
-            agent_ctx.__exit__(None, None, None)
-
-# =============================================================================
 # PORTFOLIO ANALYSIS AGENT NODE
 # =============================================================================
 
@@ -2324,14 +2238,6 @@ async def rebalance_agent_node(state: AgentState) -> Dict[str, Any]:
             if not result.get("success"):
                 raise RuntimeError(f"Rebalancing failed: {result.get('error')}")
             
-            # Add TAA recommendation if available
-            regime = shared.get("macro_regime")
-            if regime:
-                result["taa_signal"] = {
-                    "regime": regime.get("regime", "NEUTRAL"),
-                    "equity_adjustment": regime.get("equity_adjustment", 0),
-                }
-            
             return mark_agent_complete(state, "RebalanceAgent", result)
             
         except ImportError as e:
@@ -2372,7 +2278,7 @@ async def rebalance_agent_node(state: AgentState) -> Dict[str, Any]:
 # branch - router_node writes its final_response and the graph exits before
 # the synthesizer (KNOWN_GAPS, "Clarification exits the graph on a proxy").
 SYNTHESIZER_INTENTS = frozenset({
-    "macro_analysis", "rebalancing", "data_fetch",
+    "rebalancing", "data_fetch",
     "risk_analysis", "out_of_scope", "compliance", "research", "ledger",
 })
 _UNSYNTHESIZED_INTENTS = frozenset({"clarification_needed"})
@@ -2413,9 +2319,7 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             lines.append("")
         
         # Intent-specific formatting
-        if intent == "macro_analysis":
-            lines.extend(_format_macro_response(sub_results))
-        elif intent == "rebalancing":
+        if intent == "rebalancing":
             lines.extend(_format_rebalance_response(sub_results))
         elif intent == "data_fetch" and "PortfolioAnalysisAgent" in sub_results:
             lines.extend(_format_analysis_response(decision, sub_results))
@@ -3311,29 +3215,6 @@ def _format_thesis_response(sub_results: Dict) -> List[str]:
         "the investment policy was not consulted. No recommendation, and no price is "
         "forecast.",
     ]
-    return lines
-
-
-def _format_macro_response(sub_results: Dict) -> List[str]:
-    """Format macro analysis results."""
-    lines = ["🌍 **MACRO ENVIRONMENT ANALYSIS**", ""]
-    
-    macro = sub_results.get("MacroAgent", {})
-    if macro.get("success"):
-        snapshot = macro.get("snapshot", {})
-        regime = macro.get("regime", {})
-        
-        vix = snapshot.get("vix", {})
-        yc = snapshot.get("yield_curve", {})
-        
-        lines.append(f"**Market Regime:** {regime.get('regime', 'N/A')}")
-        lines.append(f"**Risk Stance:** {regime.get('risk_stance', 'N/A')}")
-        lines.append("")
-        lines.append("**Indicators:**")
-        lines.append(f"  • VIX: {vix.get('value', 'N/A')} ({vix.get('regime', 'N/A')})")
-        lines.append(f"  • Yield Curve: {yc.get('status', 'N/A')} (slope: {yc.get('slope', 'N/A')})")
-        
-    
     return lines
 
 

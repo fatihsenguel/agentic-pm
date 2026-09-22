@@ -15,13 +15,12 @@ from agents.schemas import (
 
 
 D, A, C = "DataAgent", "PortfolioAnalysisAgent", "ComplianceAgent"
-R, M = "RebalanceAgent", "MacroAgent"
+R = "RebalanceAgent"
 S = "ScreeningAgent"
 
 # intent, parameters, derived plan
 ROWS = [
     ("rebalancing", {}, [D, R]),
-    ("macro_analysis", {}, [M]),
     ("data_fetch", {}, [D]),
     ("data_fetch", {"measure": "allocation"}, [D, A]),
     ("data_fetch", {"measure": "position_pnl"}, [D, A]),
