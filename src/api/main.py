@@ -6,32 +6,32 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 import datetime
 
-# --- (1) Pfad-Fix (Genau wie in 'scripts') ---
-# Fügt das Hauptverzeichnis (Finance_Phase_3) zum Suchpfad hinzu,
-# damit wir 'portfolio_tool' importieren können.
+# --- (1) Path fix, as in 'scripts' ---
+# Adds the project root to the search path so that 'portfolio_tool'
+# can be imported.
 script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(script_dir)
 sys.path.insert(0, project_root)
-# --- Ende Pfad-Fix ---
+# --- End of the path fix ---
 
-# (2) Importiere jetzt unsere Projekt-Module
+# (2) The project modules
 try:
     from portfolio_tool.database_setup import get_session, Asset, DailyPrice
 except ImportError:
-    print("FEHLER: Konnte 'portfolio_tool' nicht importieren.")
-    print("Stelle sicher, dass 'api/main.py' im Root-Verzeichnis des Projekts liegt.")
+    print("ERROR: Could not import 'portfolio_tool'.")
+    print("Make sure 'api/main.py' sits in the project's root directory.")
     sys.exit(1)
 
-# (3) Erstelle die FastAPI-App
+# (3) The FastAPI app
 app = FastAPI(
     title="Portfolio Tool API",
-    description="Ein minimaler Endpunkt zur Überwachung der Datenfrische.",
+    description="A minimal endpoint for monitoring data freshness.",
     version="0.1.0"
 )
 
-# (4) Definition der Abhängigkeit (Dependency)
+# (4) The dependency
 def get_db_session():
-    """Stellt eine DB-Session bereit und schließt sie nach der Anfrage."""
+    """Provides a DB session and closes it after the request."""
     session = None
     try:
         session = get_session()
@@ -40,17 +40,17 @@ def get_db_session():
         if session:
             session.close()
 
-# (5) Der "Freshness"-Endpunkt
+# (5) The freshness endpoint
 @app.get("/freshness")
 def get_data_freshness(session: Session = Depends(get_db_session)):
     """
-    Überprüft das letzte verfügbare Datum (MAX(date)) für alle Assets
-    in der 'daily_prices'-Tabelle.
+    Checks the latest available date (MAX(date)) for every asset in the
+    'daily_prices' table.
     """
-    print("API-Aufruf: /freshness")
-    
+    print("API call: /freshness")
+
     try:
-        # Führe die Abfrage aus:
+        # The query:
         # SELECT assets.ticker, MAX(daily_prices.date)
         # FROM assets
         # JOIN daily_prices ON assets.id = daily_prices.asset_id
@@ -65,7 +65,7 @@ def get_data_freshness(session: Session = Depends(get_db_session)):
             .all()
         )
         
-        # Formatiere die Ergebnisse in ein sauberes Dictionary
+        # Format the results as a plain dictionary
         result = {
             ticker: last_date.strftime("%Y-%m-%d") 
             for ticker, last_date in freshness_query
@@ -74,10 +74,10 @@ def get_data_freshness(session: Session = Depends(get_db_session)):
         return result
 
     except Exception as e:
-        print(f"Fehler bei der /freshness Abfrage: {e}")
+        print(f"Error in the /freshness query: {e}")
         return {"error": str(e)}
 
 @app.get("/")
 def read_root():
-    """Wurzel-Endpunkt, der zur Dokumentation weiterleitet."""
-    return {"message": "Willkommen bei der Portfolio Tool API. Gehe zu /docs für die API-Dokumentation."}
+    """The root endpoint, pointing at the documentation."""
+    return {"message": "Welcome to the Portfolio Tool API. See /docs for the API documentation."}
