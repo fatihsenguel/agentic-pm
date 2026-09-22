@@ -4883,7 +4883,7 @@ probe, written the same day, uses the same wording.
 
 ### What W-2 needs before it has a range
 
-**Trigger:** the first question naming ADBE, or a third candidate on the watchlist.
+**Trigger:** the growth pair stated on W-2, which is the owner's; the fetch this entry described was made 22 September (thirty-seventh session), and a third candidate would make it again.
 
 Logged 18 September (twenty-third session). Adobe has no filers row and no
 facts stored: a live fetch of its submissions document and its company
@@ -4893,6 +4893,24 @@ a watchlist without the pair; the price is fetched, the entry stating
 USD; the screen runs on whatever Adobe files under the block's tags,
 with a November year end nothing has exercised, and stops where it must.
 None of that is built for; it is what the code does, untested live.
+
+**22 September 2026 (thirty-seventh session), the trigger fired: R-8,
+"What is ADBE worth?"** What the code did, live, every table predicted
+before the prompt and read after: the ticker file inside its interval and
+not fetched; the submissions document fetched and the row stored as
+ADOBE INC., SIC 7372, Services-Prepackaged Software, none of PHI-3.2's
+seven codes; the company facts fetched, 17,117 rows, more than either
+filer before it; seventeen fiscal years read, FY2009 to FY2025, each
+ending in late November or the first days of December, and nothing
+stopped on the calendar; the range's stop published naming both ends, as
+the node test showed; an assets row from W-2's currency and five closes
+to 2026-09-21 on one yfinance call, 249.52 the last. The screen stopped
+at PHI-2.1, return on invested capital for FY2021 not in the figures, the
+clause Alphabet stops on. R-8 read as matched against Part 18; the
+transcript is `tests/golden/run_R-8_R-9_2026-09-22.txt`. The growth pair
+stays the owner's, and R-9 on the same day showed what the missing weight
+does (the entry "A buy question about a company on no entry arrives
+shaped as an error").
 
 ### The registry's valuation sentence: a prompt hypothesis that held
 
@@ -5738,6 +5756,18 @@ reading and proposes once, about $0.007, down from about $0.12. What
 stands is the shape: a refused section leaves no row (D57), so any
 section that starts refusing is asked for again on every run.
 
+**22 September 2026 (thirty-seventh session), a second filer.** R-9's
+first reading of Adobe's FY2025 10-K, 0000796343-26-000003: Item 1
+refused on claim 2, whose quote is not in the section; Items 1A and 7
+accepted on the first request and stored. The cause, read off the stored
+text: the filing says "... price terms and license the majority of our
+software products through a subscription model ...", and the model quoted
+"We license the majority of our software products through a subscription
+model ...", the sentence's start rewritten to stand alone. D47 refused
+it, which is the record working. The shape stands: Item 1 has no row and
+is asked for again, a few cents, on every thesis or position question
+about ADBE until a request returns a faithful reading.
+
 ### The first live proposals cite claims that do not support them
 
 **Trigger:** the next prompt version of the proposer; the commit that makes 4.3 answerable.
@@ -6269,6 +6299,25 @@ the empty ticker list and the missing screening block, with the DataAgent
 and the PortfolioAnalysisAgent run first; V-4.1a, V-4.2a and V-4.6a
 arrived as the first error alone (benchmark.md Part 3c.6). Not fixed:
 routing and rendering, neither arithmetic, step 4's rule.
+
+**22 September 2026 (thirty-seventh session), R-9.** "Should I buy
+ADBE?", the corpus's last refusal, arrived in this shape from the other
+side of the watchlist check: ADBE is a candidate, so the screen ran and
+published, and the research agent read the filing before `_position`
+asked for the weight; W-2 states none, `position_weight` raised, and the
+raise landed in the node's catch-all as "ResearchAgent: W-2 (ADBE) states
+no weight ...", printed under "Some issues occurred" and again under
+"Research not done". The reason is the one Part 18's R-9 asks for; the
+shape is this entry's. What the shape hides: the screening block, already
+published with the range's refusal and the close, is not rendered once
+the research agent fails, so the answer carries neither. And the work
+before the refusal is larger here than the paragraph above measured: the
+10-K's document fetched and stored, Items 1A and 7 read on Sonnet and
+Item 1 asked for, one proposal made, about 15 cents by the section sizes,
+for an answer that says no weight is stated, a fact the watchlist loader
+had before the first call. Not fixed: rendering and the order of the
+position step, neither arithmetic (benchmark.md Part 3c.6, the third
+block).
 
 ### IPS-2.1 would pass an instrument the policy forbids
 
