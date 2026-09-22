@@ -7291,3 +7291,93 @@ than the evidence. **Do not filter the output of a paid run.**
 to `risk_analysis` with the DataAgent alone and answered with per-holding
 volatilities over 756 closes; no concentration table, no clause
 (benchmark.md Part 3c.6). Still the pinned row; not fixed.
+
+### A follow-up that depends on the previous turn is asked back by the model
+
+**Trigger:** the commit that opens Order 5, which is where this class ends; read before it, since the sequences are what Order 5 is judged against.
+
+Recorded 22 September 2026 (thirty-fifth session), from the corpus's
+first run (benchmark.md Part 3c.6). Conversation memory today is one
+extraction rule over one previous turn, the unknown-ticker record, and
+the CLI passes every previous turn's state to the next. Six second turns
+that depend on the turn before reached the model as new messages, and in
+every one the model asked back rather than guessed: "And MSFT?" and "And
+JNJ?" after JPM's P&L (S-1); "What would have to change to fix that?"
+after the policy check (S-4); "Is that within my policy?" after the
+allocation (S-5); "Should I buy it?" after GOOGL's range (S-6, asked
+which company); "And GOOGL?" after JPM's philosophy check (S-7). Each
+clarification is the model's own sentence at a confidence of 0.05 to 0.4,
+a list of the things the follow-up might mean. S-8 held: a volatility
+question after AAPL's policy check carried nothing of AAPL.
+
+What this is not: a routing defect to be fixed in the router. Part 3c.5
+says S-1, S-4 and S-5 pass or fail on the model's guess and S-6 and S-7
+cannot be done; the run says which way the guess went, which is a
+clarification every time, and the honest failure rather than a plausible
+wrong answer. What it is: the baseline for the dimension Order 5 exists
+to add. The run after Order 5 reads these same ten turns, and the pinned
+answers are the spine entries Part 3c.5 points at.
+
+### The unknown-ticker correction fails on the comma after "no"
+
+**Trigger:** the next change to `extraction.resolve`, or the commit that opens Order 5, whichever comes first.
+
+Recorded 22 September 2026 (thirty-fifth session), from the corpus's
+first run. S-2's second turn, "no, I meant MSFT.", did not resolve
+against the record of "Hows my APPL doing?" and went to the model, which
+asked what to do with MSFT. Checked directly after the run: `resolve`
+strips punctuation to spaces, so the reply becomes "no  I meant MSFT"
+with two spaces, and after MSFT is removed the remainder, "no  i meant",
+is not in the set the rule accepts, which holds "no i meant" with one.
+"no I meant MSFT", "I meant MSFT" and "MSFT" all resolve to "Hows my
+MSFT doing?"; "no, I meant MSFT" and the same with a full stop do not.
+Part 3c.5 says S-2 rests on a rule that exists today; the rule exists and
+a comma defeats it. Extraction, so it survives Order 5 as input
+validation; not arithmetic, so not step 4's. A one-line fix when it is
+taken: collapse runs of whitespace before the comparison, with the test
+written first on the corpus wording.
+
+### Three Level 4 answers leave out content Part 18 pins
+
+**Trigger:** the presentation rebuild after Order 5, the interlude's step 6, when the research formatters are written against the corpus; and any commit that touches the screening, position or thesis formatter before that.
+
+Recorded 22 September 2026 (thirty-fifth session), from the corpus's
+first run. Every figure the three answers print is right and traces to
+its block; what follows is content the entries require and the answers
+omit.
+
+- **4.2, the range.** Part 18 pins the 10-K's accession beside the range,
+  0001652044-26-000018 (Part 11 B). The answer names the fiscal year, its
+  end and its filed date and not the accession; the accession appears
+  only in 4.3's and 4.4's readings.
+- **4.3, the gate.** Part 18 pins the before column beside the after
+  (D60), each clause's share after the purchase, and each distance in
+  currency at the new total (Part 17 D and E). The answer prints one
+  figure per clause, the distance in percentage points, and none of the
+  three: no before share, no after share, no currency amount. The console
+  trace prints the after shares that the answer does not.
+- **4.4, the thesis.** Part 18 pins PHI-6.1 and PHI-6.2 as the clauses
+  cited. Neither id appears in the answer; W-1 is cited, the readings and
+  the proposal are complete.
+
+Formatter selection in all three, no arithmetic; not fixed under step 4's
+rule. The rebuild after Order 5 is designed once, against Part 18, and
+these three are what it is read against first.
+
+### A bare opinion on a company is routed to the philosophy screen
+
+**Trigger:** the commit that opens Order 5, where the tool layer decides what "Is X a good investment" reaches; and pending decision 13, since the refusal it wants is the out-of-scope answer's.
+
+Recorded 22 September 2026 (thirty-fifth session), from the corpus's
+first run. R-2, "Is AAPL a good investment?", is pinned as a refusal: a
+bare opinion is outside what this system does, and no screen is run on a
+company I have not written down (Part 18, R-2; benchmark.md Part 2). The
+router sent it to `research` at 0.85, reasoning that a buy question is
+answered through the screen. The screen ran on Apple: filer and facts
+from the cache, the last close fetched and printed, 338.98 on 2026-09-21,
+the range refused for want of a watchlist entry, the check stopped at
+PHI-4.1 for want of a range, seventeen fiscal years listed. The answer
+gives no opinion, which is right, and prints a figure about the company
+and a stop the question never asked for, which is not. A routing miss
+that Order 5 ends, logged and not fixed; the same run routed R-1, R-3 to
+R-6 and 3.2 to the out-of-scope answer as pinned.
