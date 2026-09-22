@@ -1,7 +1,7 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 22 September 2026 (thirty-third session), begun about 11:50 UTC. Regenerated at its end. The thirty-second session ran on the 21st and closed the full test at the end of Order 4.
-**Branch:** `intents`, cut from `baseline-v1` at **33769f6** before the first commit. **`baseline-v1` is the trunk.** It stands at 33769f6 and `origin/baseline-v1` is level with it — the owner merged and pushed after the thirty-second session, so there is no gap this time. **Eleven commits in this session, none merged.** The owner merges and pushes; `origin`'s push URL is `no_push`.
+**Branches:** `intents`, cut from `baseline-v1` at **33769f6** before the first commit, eleven commits — **merged `--ff-only` by the owner after this document was first written**, so the trunk stands at **8201102**, one ahead of `origin/baseline-v1`. Then `arc`, cut from the trunk at 8201102, **two further commits, unmerged**: the interlude was re-scoped after the merge. **Thirteen commits in the session.** The owner merges and pushes; `origin`'s push URL is `no_push`.
 
 **State:** pytest **1926 passed, 6 xfailed**, down from 1943 by the seventeen tests decision 51's deletion took with it — the measured number and the corrected prediction agreeing exactly. **The runner is 15/18, 0 failing, 3 blocked**, down from 16/18: case 2.1 now routes `risk_analysis` instead of `compliance` and that is this session's real finding. **The golden set ran twice, byte-identical, and `expected.txt` moved six lines across two queries.** Decision 51 is **executed**; the pending list stands at eleven, unchanged.
 
@@ -18,13 +18,25 @@ KNOWN_GAPS holds the four reasons, the eight steps and how the corpus is
 built. **Step 1, the deletion, is done. Step 2 is the corpus and is the
 next session.**
 
+**And the arc was re-scoped at the very end of the session, after the
+merge, on the owner's question: if Order 5 changes so much, why test and
+fix what will change?** The answer is that a corpus entry's parts have
+different lifespans — the question, the figures, the cited clauses and
+the turn sequences survive the refactor; the intent and the plan do not.
+**So Order 5 now sits between steps five and six.** Before it: the
+deletion, the corpus, one run to capture the baseline, a fix list narrowed
+to pipeline arithmetic, the cleanup. After it: the CLI as the client, the
+front door and the public repository. **The rule that decides future cases
+too: what belongs in the interlude is decided by what survives the
+refactor.**
+
 ---
 
 ## 0. Read these first, in this order
 
 | File | What it is |
 |---|---|
-| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1 to 4 are built and Order 4's closing condition is met. **Revised 22 September: an unnumbered interlude between Orders 4 and 5** — the corpus, the CLI as the client, the demo. The Order numbers did not move, and the direction did not change. |
+| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1 to 4 are built and Order 4's closing condition is met. **Revised twice on 22 September**: an unnumbered interlude between Orders 4 and 5, and then re-scoped so that **what belongs in it is decided by what survives the refactor** — the corpus and its one run before Order 5, the CLI, the README and the demo recordings after it. The Order numbers did not move, and the direction did not change. |
 | `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **172 lines start `**Trigger:**`.** **Start with "The interlude between Order 4 and Order 5, and how the corpus is built"** — it is the frame for every session until Order 5 opens. Then "Deleting three intents moved case 2.1 to risk_analysis", which is this session's finding. **No entry names "pending decision 51" any more**: eleven are RESOLVED and five moved to decisions 13, 45 and 52. |
 | `docs/benchmark.md` | **The definition of done.** Levels 1 to 3: 12 cases, **11 pass, 2.1 blocked**. Level 4: 4.2, 4.4, 4.5 and 4.6 pass; 4.1 and 4.3 blocked. **15/18, as the runner reported it at 12:51 on 22 September.** Unchanged this session and out of its scope; its status column is not maintained by hand — the runner is the status. **Read Part 2, not only the case list**, and **Part 5, which is the demo plan the interlude executes rather than replaces.** |
 | `tests/golden/expected_values.md` | Hand-computed reference, Parts 1 to 17. **Not opened this session.** Never update it to match code output. |
@@ -220,7 +232,9 @@ corpus session.
 ### Branches and tags
 
 `baseline-v1` is the trunk and stands level with `origin/baseline-v1` at
-**33769f6**. `intents` is this session's branch, eleven commits, unmerged.
+**8201102**, one ahead of `origin/baseline-v1`: the owner merged `intents`
+`--ff-only` after this document was first written. `arc` carries the two
+re-scope commits and is unmerged.
 **`intents-parked` is cut at addfbc7**, the parent of the first deletion
 commit: it holds the tree that still had the three intents. `rounding`,
 `halves` and `judgement` are merged and older, with `gate`, `thesis`,
@@ -515,8 +529,12 @@ this session began.
 76. Whether money and ratios are computed in decimal. Three candidate
     shapes, none costed, no recommendation attached.
 
-- **The interlude between Orders 4 and 5** (owner's): **step 1 of eight
-  done.** Step 2, the corpus, is the next session.
+- **The interlude between Orders 4 and 5** (owner's): **step 1 done, and
+  the arc re-scoped after the merge** so that Order 5 falls between steps
+  five and six. Step 2, the corpus, is the next session. **Step 4 is now a
+  rule rather than a queue**: only pipeline arithmetic is fixed before
+  Order 5, so decisions 75 and 76 belong there and decision 17, a
+  selection axis across four formatters, probably does not.
 
 ---
 
@@ -563,12 +581,17 @@ it.
 without it, then the rounding helper. Answer text changes, so the runner
 runs against it.
 
-**3. Then the rest of the interlude**, or decision 17 taken first.
+**3. Then step 4's narrow fix list and step 5's cleanup, and Order 5 may
+open.** Decision 17 is not in that list under the re-scope: it is a
+selection axis across four formatters, and presentation is rebuilt after
+Order 5 rather than before it.
 
 ### Later, with reasons
 
-- **The trunk.** `git switch baseline-v1 && git merge --ff-only intents`.
-  Eleven commits, and the runner is 15/18 on them.
+- **The trunk.** `intents` is merged; **`arc` is not**.
+  `git switch baseline-v1 && git merge --ff-only arc` takes the two
+  re-scope commits. The trunk is one ahead of `origin/baseline-v1` and
+  the runner is 15/18 on it.
 - **The first paid run of the next session will fetch prices.** The
   one-day interval ran out at 14:24 and 14:28 on 22 September, and Monday
   the 21st has closed since, so a close will be stored.
