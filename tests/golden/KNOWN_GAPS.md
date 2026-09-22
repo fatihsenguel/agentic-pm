@@ -6507,7 +6507,7 @@ selection, not arithmetic.
 
 ### An exact half cent rounds by the order of the float operations - DECIDED 21 September (thirty-second session)
 
-**Trigger:** decided and not implemented. Read it before any commit that touches `_finding` or a formatter that prints a currency amount.
+**Trigger:** none: implemented 22 September (thirty-sixth session) in two commits, 0bbde46 the check and 2c43ad0 the implementation. Decision 76 reads it, and so does any commit that touches `_finding` or `_cents`.
 
 Logged 21 September (thirty-first session), from the full test's second
 batch, verified in the interpreter. **Case 2.1's answer carries two exact
@@ -6604,6 +6604,40 @@ prints IPS-3.1's distance, 286,857.50 less 65% of 411,238.50, which is
 total, 15,147.375, as 15,147.38 (benchmark.md Part 3c.6; the transcript).
 The one arithmetic finding of the run; decision 75 stays on step 4's
 list.
+
+**Implemented 22 September 2026 (thirty-sixth session), the check
+0bbde46 and the implementation 2c43ad0.** The check first,
+`tests/test_half_cent.py`: five tests against Part 7 at 2026-09-02, Part
+17 B at 2026-09-18 and the corpus run's closes at 2026-09-21, each one
+test over its figures so the share-first path fails it whole, marked xfail
+strict for the one commit it sat red. **What the check found before any
+code was written, and the decision above did not anticipate:** the float
+subtraction `market_value - limit * total` does not land on the half
+either. 0.65 times 410,200.50 is 266,630.325, which a double does not hold,
+and the Equity distance comes out 18083.17499999999; at the 09-21 closes,
+19552.474999999977. A Decimal built from that figure rounds half-up to .17,
+against Part 7's .18 and against the .48 this entry's own line above
+expects. The 09-18 pair lands on the half exactly by the luck of that
+product, which is why the prediction above held in the interpreter. So the
+one subtraction is done in decimal inside `_finding`, from the block's
+three amounts as they print, and the float published is that decimal's
+nearest double, whose repr is the decimal again; `_cents` in `nodes.py`,
+the one helper, builds its Decimal from the repr and rounds half-up at the
+two sites that print a distance in currency. Read as inside this decision
+and not 76, on the owner's word: the quantity above was verified in
+decimal, Part 7 is the reference, and 76 is the ratios and the pipeline
+upstream, none of which this touches. The verdict stays on the published
+share (D9); the distance is on the published market value; a line with
+none raises, as one with no `pct_of_total` already did. **What moved.**
+Part 7's IPS-3.1 distance prints 18,083.18 as the Part states it, where
+the answer at the Part's own closes had printed .17 unnoticed, because the
+formatter test formatted the float itself and no test asserted a printed
+cent against the Part; the 09-18 pair as predicted above; the 09-21 pair
+.48 and .38. pytest 1929 to 1934. The runner once, 15/18, every verdict as
+at 12:51 on the 22nd, nothing fetched. 2.2 alone through the CLI at 18:49
+UTC: 19,552.48 and 15,147.38 in both places, the rest of the answer
+byte-identical to the corpus run's (benchmark.md Part 3c.6, the second
+block; `tests/golden/run_2.2_2026-09-22.txt`).
 
 ### Cases 2.2 and 2.3 return the same answer, and 2.1 no longer does
 
@@ -6759,6 +6793,13 @@ one the system gave. So the three halves above are halves of the rounded
 price, which is the right basis and is not stated anywhere in the code.
 Anyone checking this entry against `daily_prices` will get different
 figures unless they round first.
+
+**22 September 2026 (thirty-sixth session).** The trigger fired on
+2c43ad0, decision 75's implementation, which derives a finding's
+`distance_pp` from the currency distance instead of computing it beside
+it. Read: the three halves here are ratios of two amounts, which that
+commit does not reach, as the entry says. Nothing here changes; decision
+76 stays pending.
 
 ### Cases 4.1 and 4.2 return the same answer
 
