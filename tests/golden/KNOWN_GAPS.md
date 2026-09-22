@@ -6613,6 +6613,21 @@ router reaches today. Deleting them takes the router's intent vocabulary
 from eleven values to seven, which is the direction DIRECTION.md states for
 the router.
 
+**Two figures in the paragraph above are wrong, measured 22 September
+(thirty-third session) before the first deletion commit and corrected
+here rather than in place, the arithmetic being the record of what was
+decided on.** The five components are each right and the total is not:
+804 + 307 + 589 + 1,944 + 814 is **4,458**, not 4,094, so the deletion is
+364 lines larger than the decision stated. And `macro_agent.py` is 805
+lines by `wc -l`, not 804, which makes it **4,459** on the day. The
+vocabulary count is wrong the other way: `INTENTS` held eleven values and
+three were removed, so it goes from eleven to **eight**, not to seven.
+`AGENTS` goes from ten to seven. Both were verified against the tree
+after the third commit: eight intents - `clarification_needed`,
+`compliance`, `data_fetch`, `ledger`, `out_of_scope`, `rebalancing`,
+`research`, `risk_analysis` - and seven agents. **Neither error changed
+what was decided**; the direction of both is still as stated.
+
 **Rebalancing stays, and the reason is benchmark.md's own words.** Part 2:
 "*Portfolio mechanics on what is already held are in scope*: drift, trades
 to a stated target, what would have to change to be within limits (2.3).
@@ -6759,7 +6774,9 @@ interlude.**
 
 **The arc. Eight steps, each its own session or more.**
 
-1. **The deletion.** Decision 51: shrink the surface first — 4,094 lines,
+1. **The deletion.** Decision 51: shrink the surface first — 4,459 lines
+   as measured on the day, the decision's own total of 4,094 being 365
+   short of its own five components —
    three intents, and four of the answers that would embarrass a demo.
 2. **The corpus:** prompts and the answers I want back, grown inside
    benchmark.md and expected_values.md, written before any of it is run.
