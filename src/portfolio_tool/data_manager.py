@@ -8,8 +8,8 @@ from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from typing import Optional, List, Dict, Any
 
-# --- NEUER IMPORT FÜR RESPONSES ---
-from .models.responses import UpdateResult 
+# The result type every update returns
+from .models.responses import UpdateResult
 
 from .database_setup import (
     Asset, DailyPrice, Dividend, CorporateAction, SharesHistory,
@@ -22,8 +22,8 @@ from datetime import timedelta, date, datetime
 import logging
 logger = logging.getLogger(__name__)
 
-# --- CONFIG-LADEN (unverändert) ---
-CONFIG_PATH = "config.toml" 
+# --- Config ---
+CONFIG_PATH = "config.toml"
 
 def load_config():
     """Loads config.toml. The fetch intervals are policy and live there and
@@ -38,11 +38,11 @@ def load_config():
             f"have no defaults in code"
         )
     except tomli.TOMLDecodeError:
-        print(f"FEHLER: {CONFIG_PATH} ist fehlerhaft.")
+        print(f"ERROR: {CONFIG_PATH} is malformed.")
         raise
 
 CONFIG = load_config()
-# --- ENDE CONFIG ---
+# --- End of config ---
 
 
 class DataManager:
@@ -52,7 +52,7 @@ class DataManager:
         self.provider = provider
         self.config = CONFIG['data_fetch']
         
-    # --- Interne Helfer (unverändert) ---
+    # --- Internal helpers ---
     def _get_or_create_metadata(self, asset_id: int) -> AssetFetchMetadata:
         meta = self.session.query(AssetFetchMetadata).get(asset_id)
         if not meta:
@@ -65,17 +65,17 @@ class DataManager:
             return True 
         return (datetime.utcnow() - last_fetch_time).days >= interval_days
 
-    # --- Asset-Management (unverändert) ---
+    # --- Asset management ---
     def _get_or_create_asset(self, ticker: str, name: str, asset_class: str) -> Optional[Asset]:
         asset = self.session.query(Asset).filter_by(ticker=ticker).first()
         if asset:
-            print(f"Asset gefunden: {asset.name}")
+            print(f"Asset found: {asset.name}")
             return asset
-        print(f"Asset {ticker} nicht gefunden, erstelle es...")
+        print(f"Asset {ticker} not found, creating it...")
         info_dto = self.provider.get_asset_info(ticker)
         new_asset_data = {'ticker': ticker, 'asset_class': asset_class, 'name': name}
         if info_dto:
-            print(f"... Lade erweiterte Stammdaten für {ticker}")
+            print(f"... Loading extended master data for {ticker}")
             new_asset_data.update({
                 'sector': info_dto.sector,
                 'industry': info_dto.industry,
@@ -84,29 +84,29 @@ class DataManager:
                 'name': info_dto.long_name or name 
             })
         else:
-            print(f"WARNUNG: Konnte keine erweiterten Daten für {ticker} abrufen.")
+            print(f"WARNING: Could not fetch extended data for {ticker}.")
         try:
             new_asset = Asset(**new_asset_data)
             self.session.add(new_asset)
             self.session.commit()
-            print(f"Asset erstellt: {new_asset}")
+            print(f"Asset created: {new_asset}")
             return new_asset
         except Exception as e:
-            print(f"Fehler beim Erstellen von Asset {ticker}: {e}", file=sys.stderr)
+            print(f"Error creating asset {ticker}: {e}", file=sys.stderr)
             self.session.rollback()
             return None
 
-    # --- IDEMPOTENTE UPSERT-METHODEN --- MIT BATCHES ---
-    def _perform_upsert(self, 
-                        model: DeclarativeMeta, 
-                        values: list[dict], 
+    # --- Idempotent upserts, in batches ---
+    def _perform_upsert(self,
+                        model: DeclarativeMeta,
+                        values: list[dict],
                         index_elements: list[str]) -> int:
         """
-        Führt einen atomaren, idempotenten Upsert-Vorgang für SQLite aus.
-        Gibt die Anzahl der bearbeiteten Zeilen zurück.
+        Runs an atomic, idempotent upsert for SQLite.
+        Returns the number of rows processed.
         """
         if not values:
-            return 0 # Nichts zu tun
+            return 0 # Nothing to do
 
         BATCH_SIZE = 500
         total_rows = len(values)
@@ -133,13 +133,13 @@ class DataManager:
                 self.session.execute(upsert_stmt)
             
             self.session.commit()
-            print(f"... {total_rows} Zeilen in {model.__tablename__} importiert (Upsert in {num_batches} Batches).")
+            print(f"... {total_rows} rows imported into {model.__tablename__} (upsert in {num_batches} batches).")
             return total_rows
-        
+
         except Exception as e:
-            print(f"... FEHLER beim Batch-Upsert in {model.__tablename__}: {e}", file=sys.stderr)
+            print(f"... ERROR in the batch upsert into {model.__tablename__}: {e}", file=sys.stderr)
             self.session.rollback()
-            raise e  # WICHTIG: Fehler weiterwerfen, damit UpdateResult ihn fangen kann
+            raise e  # Re-raised so UpdateResult can catch it
 
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -161,7 +161,7 @@ class DataManager:
         fetched it twice.
         """
         try:
-            print(f"... prüfe Preise für {asset.ticker}")
+            print(f"... checking prices for {asset.ticker}")
             meta = self._get_or_create_metadata(asset.id)
 
             first_stored, last_stored = self.session.query(
@@ -393,7 +393,7 @@ class DataManager:
 
     def update_dividends_for_asset(self, asset: Asset) -> UpdateResult:
         try:
-            print(f"... prüfe Dividenden für {asset.ticker}")
+            print(f"... checking dividends for {asset.ticker}")
             last_ex_date = self.session.query(func.max(Dividend.ex_date)).filter(
                 Dividend.asset_id == asset.id
             ).scalar()
@@ -427,7 +427,7 @@ class DataManager:
 
     def update_splits_for_asset(self, asset: Asset) -> UpdateResult:
         try:
-            print(f"... prüfe Splits für {asset.ticker}")
+            print(f"... checking splits for {asset.ticker}")
             last_split_date = self.session.query(func.max(CorporateAction.date)).filter(
                 CorporateAction.asset_id == asset.id,
                 CorporateAction.action_type == 'Split'
@@ -463,7 +463,7 @@ class DataManager:
 
     def update_shares_history_for_asset(self, asset: Asset, force_update: bool = False) -> UpdateResult:
         try:
-            print(f"... prüfe Historie der Aktienanzahl für {asset.ticker}")
+            print(f"... checking the shares history for {asset.ticker}")
             meta = self._get_or_create_metadata(asset.id)
             interval = self.config.get('shares_fetch_interval_days', 30)
 
@@ -503,14 +503,14 @@ class DataManager:
                     index_elements=['asset_id', 'date']
                 )
 
-            # Commit für die Metadaten
+            # Commit the metadata
             meta.last_shares_fetch_time = datetime.utcnow()
             self.session.commit()
             
             return UpdateResult(True, "update_shares", affected_count, [asset.ticker], "asset")
             
         except Exception as e:
-            # Versuche Rollback bei Fehler, falls Session offen
+            # Roll back if the session is still open
             try:
                 self.session.rollback()
             except:
@@ -519,7 +519,7 @@ class DataManager:
 
     def update_quarterly_earnings_for_asset(self, asset: Asset, force_update: bool = False) -> UpdateResult:
         try:
-            print(f"... prüfe Quartalsberichte für {asset.ticker}")
+            print(f"... checking quarterly reports for {asset.ticker}")
             meta = self._get_or_create_metadata(asset.id)
             interval = self.config.get('earnings_fetch_interval_days', 7)
 
@@ -560,7 +560,7 @@ class DataManager:
                     index_elements=['asset_id', 'report_date']
                 )
 
-            # Commit für die Metadaten
+            # Commit the metadata
             meta.last_earnings_fetch_time = datetime.utcnow()
             if max_report_date and max_report_date != since_date:
                 meta.last_earnings_report_date = max_report_date
@@ -577,7 +577,7 @@ class DataManager:
 
     def force_update_asset_info(self, asset: Asset) -> UpdateResult:
         try:
-            print(f"  > Erzwinge Stammdaten-Update für {asset.ticker}...")
+            print(f"  > Forcing a master-data update for {asset.ticker}...")
             info_dto = self.provider.get_asset_info(asset.ticker)
             if not info_dto:
                 return UpdateResult(False, "update_asset_info", 0, [asset.ticker], "asset", error_message="No data from provider")
@@ -590,7 +590,7 @@ class DataManager:
                 asset.name = info_dto.long_name
             
             self.session.commit()
-            print(f"  > {asset.ticker} erfolgreich aktualisiert.")
+            print(f"  > {asset.ticker} updated.")
             return UpdateResult(True, "update_asset_info", 1, [asset.ticker], "asset")
             
         except Exception as e:
@@ -599,7 +599,7 @@ class DataManager:
 
     def update_fundamental_data(self, asset: Asset, force_update: bool = False) -> UpdateResult:
         try:
-            print(f"... prüfe Fundamentaldaten für {asset.ticker}")
+            print(f"... checking fundamentals for {asset.ticker}")
             meta = self._get_or_create_metadata(asset.id)
             interval = self.config.get('profile_fetch_interval_days', 30)
 
@@ -623,7 +623,7 @@ class DataManager:
             meta.last_profile_fetch_time = datetime.utcnow()
 
             self.session.commit()
-            print(f"... Fundamentaldaten (beta) für {asset.ticker} gespeichert.")
+            print(f"... Fundamentals (beta) for {asset.ticker} stored.")
             return UpdateResult(True, "update_fundamentals", 1, [asset.ticker], "asset")
             
         except Exception as e:
@@ -637,11 +637,11 @@ class DataManager:
         period_type: str,
     ) -> UpdateResult:
         """
-        Holt Financial Statements für ein Asset und speichert sie idempotent
-        in der Tabelle financial_statements.
+        Fetches financial statements for an asset and stores them
+        idempotently in the financial_statements table.
         """
         try:
-            print(f"... prüfe Financial Statements für {asset.ticker} ({report_type}, {period_type})")
+            print(f"... checking financial statements for {asset.ticker} ({report_type}, {period_type})")
 
             last_date = (
                 self.session.query(func.max(FinancialStatement.date))
@@ -730,14 +730,9 @@ class DataManager:
             return UpdateResult(False, "update_financial_statements", 0, [asset.ticker], "asset", error_message=str(e))
         
 
-    """
-    Neue Methoden für DataManager.
-    
-    INTEGRATION:
-    Kopiere diese Methoden in deine DataManager Klasse.
-    Sie nutzen die bestehenden Patterns (session, _perform_upsert, UpdateResult).
-    """
-    
+    # Macro data, through the same session, upsert and UpdateResult as the
+    # asset methods above.
+
     # ==================== UPDATE METHODS ====================
     
     def update_macro_data(
@@ -747,23 +742,23 @@ class DataManager:
         end_date: Optional[date] = None
     ) -> UpdateResult:
         """
-        Fetcht Macro-Daten vom Provider und speichert sie in der DB.
-        
-        PATTERN: Gleich wie update_prices_for_asset()
-        1. Provider holt Daten als List[ProviderMacroData]
-        2. Transform zu List[dict] für Upsert
-        3. _perform_upsert() mit index_elements=['date', 'indicator']
-        4. Return UpdateResult
-        
+        Fetches macro data from the provider and stores it in the database.
+
+        The same pattern as update_prices_for_asset():
+        1. the provider returns List[ProviderMacroData]
+        2. transformed to List[dict] for the upsert
+        3. _perform_upsert() with index_elements=['date', 'indicator']
+        4. an UpdateResult
+
         Args:
-            indicators: Liste der Indikatoren ["VIX", "TNX_10Y", etc.]
-            start_date: Startdatum (default: 30 Tage zurück)
-            end_date: Enddatum (default: heute)
-            
+            indicators: the indicators ["VIX", "TNX_10Y", etc.]
+            start_date: (default: 30 days back)
+            end_date: (default: today)
+
         Returns:
-            UpdateResult mit affected_count
+            UpdateResult with affected_count
         """
-        # Default: letzte 30 Tage
+        # Default: the last 30 days
         if end_date is None:
             end_date = date.today()
         if start_date is None:
@@ -773,14 +768,14 @@ class DataManager:
             all_values = []
             
             for indicator in indicators:
-                # Provider holt Daten
+                # The provider fetches the data
                 provider_data = self.provider.get_macro_indicator(
                     indicator=indicator,
                     start=start_date,
                     end=end_date
                 )
                 
-                # Transform zu Upsert-Format
+                # Transform to the upsert shape
                 for dto in provider_data:
                     all_values.append({
                         'date': dto.date,
@@ -800,7 +795,7 @@ class DataManager:
                     metadata={"reason": "no_data_from_provider"}
                 )
             
-            # Batch Upsert (nutzt bestehende Methode)
+            # Batch upsert through the same method as the asset tables
             affected_count = self._perform_upsert(
                 MacroData, 
                 all_values, 
@@ -833,20 +828,20 @@ class DataManager:
             )
     
     def update_vix(self, days: int = 30) -> UpdateResult:
-        """Convenience: Update nur VIX-Daten."""
+        """Convenience: update the VIX data only."""
         end_date = date.today()
         start_date = end_date - timedelta(days=days)
         return self.update_macro_data(["VIX"], start_date, end_date)
     
     def update_treasury_yields(self, days: int = 30) -> UpdateResult:
-        """Convenience: Update alle Treasury Yields."""
+        """Convenience: update every Treasury yield."""
         indicators = ["TNX_10Y", "TYX_30Y", "IRX_3M"]
         end_date = date.today()
         start_date = end_date - timedelta(days=days)
         return self.update_macro_data(indicators, start_date, end_date)
     
     def update_all_macro_data(self, days: int = 30) -> UpdateResult:
-        """Convenience: Update alle Macro-Indikatoren."""
+        """Convenience: update every macro indicator."""
         indicators = ["VIX", "TNX_10Y", "TYX_30Y", "IRX_3M", "USD_INDEX", "GOLD"]
         end_date = date.today()
         start_date = end_date - timedelta(days=days)
@@ -856,21 +851,21 @@ class DataManager:
     
     def get_latest_macro_values(self) -> Dict[str, Any]:
         """
-        Holt den neuesten Wert für jeden Macro-Indikator aus der DB.
-        
+        Fetches the latest value of every macro indicator from the database.
+
         Returns:
-            Dict mit Indikator -> {value, date}
-            
-        PATTERN: Hot Potato - gibt aggregierte Daten zurück, keine Rohdaten
+            Dict of indicator -> {value, date}
+
+        Hot potato: aggregated figures come back, no raw rows
         """
         try:
-            # Subquery: Neuestes Datum pro Indikator
+            # Subquery: the newest date per indicator
             subquery = self.session.query(
                 MacroData.indicator,
                 func.max(MacroData.date).label('max_date')
             ).group_by(MacroData.indicator).subquery()
             
-            # Join für neueste Werte
+            # Join for the newest values
             latest_records = self.session.query(MacroData).join(
                 subquery,
                 (MacroData.indicator == subquery.c.indicator) &
@@ -904,10 +899,10 @@ class DataManager:
         days: int = 30
     ) -> Dict[str, Any]:
         """
-        Holt historische Daten für einen Indikator.
-        
+        Fetches the history of one indicator.
+
         Returns:
-            Dict mit Liste der Werte (Hot Potato Principle)
+            Dict with the list of values (hot potato)
         """
         try:
             start_date = date.today() - timedelta(days=days)
@@ -950,16 +945,16 @@ class DataManager:
     
     def get_vix_with_regime(self) -> Dict[str, Any]:
         """
-        Holt VIX mit Regime-Klassifikation.
-        
+        Fetches the VIX with a regime classification.
+
         Returns:
-            Dict mit VIX-Wert, Regime, Trend, Percentile
-            
-        PATTERN: Hot Potato - Business Logic wird hier angewendet,
-                 Agent bekommt fertige Analyse
+            Dict with the VIX value, regime, trend and percentile
+
+        Hot potato: the business logic is applied here and the agent
+        receives the finished analysis
         """
         try:
-            # VIX History der letzten 30 Tage
+            # The VIX history of the last 30 days
             history = self.get_macro_history("VIX", days=30)
             
             if not history.get("success") or history.get("count", 0) == 0:
@@ -972,12 +967,12 @@ class DataManager:
             current_vix = values[-1]
             avg_30d = sum(values) / len(values)
             
-            # Percentile berechnen
+            # The percentile
             sorted_values = sorted(values)
             rank = sum(1 for v in sorted_values if v <= current_vix)
             percentile = int((rank / len(values)) * 100)
             
-            # Regime bestimmen
+            # The regime
             if current_vix < 15:
                 regime = "low"
             elif current_vix < 25:
@@ -987,7 +982,7 @@ class DataManager:
             else:
                 regime = "crisis"
             
-            # Trend (letzte 5 vs vorherige 5 Tage)
+            # The trend (the last 5 days against the previous 5)
             if len(values) >= 10:
                 recent_avg = sum(values[-5:]) / 5
                 previous_avg = sum(values[-10:-5]) / 5
@@ -1019,10 +1014,10 @@ class DataManager:
     
     def get_yield_curve_status(self) -> Dict[str, Any]:
         """
-        Holt Yield Curve Status mit Inversions-Warnung.
-        
+        Fetches the yield curve status with an inversion warning.
+
         Returns:
-            Dict mit Yields, Slope, Status, Recession Signal
+            Dict with the yields, slope, status and recession signal
         """
         try:
             latest = self.get_latest_macro_values()
@@ -1043,12 +1038,12 @@ class DataManager:
                 "treasury_30y": t30y
             }
             
-            # Slope berechnen (10Y - 3M)
+            # The slope (10Y - 3M)
             if t10y is not None and t3m is not None:
                 slope = t10y - t3m
                 result["slope_10y_3m"] = round(slope, 4)
                 
-                # Status bestimmen
+                # The status
                 if slope < -0.5:
                     status = "deeply_inverted"
                     recession_signal = True
