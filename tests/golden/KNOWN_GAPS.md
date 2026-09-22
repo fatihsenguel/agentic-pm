@@ -992,7 +992,21 @@ needing.
 
 ### The synthesizer returns the same answer regardless of the question
 
-**Trigger:** pending decision 51: the stub is reached by a bare price fetch and by a derived plan whose agents all fail, both on intents outside the benchmark roster.
+**Trigger:** the next question that reaches the stub, and pending decision 17, the selection axis. Decision 51 fired on 22 September and narrowed what reaches it without closing it.
+
+**Updated 22 September (thirty-third session). The stub is still there
+and two of its three doors are shut.** `SYNTHESIZER_INTENTS` is checked
+against `schemas.INTENTS` at import, so the deletion took
+`"optimization"`, `"macro_analysis"` and `"backtest"` out of the dispatch
+chain along with their three formatters. What remains is the same fall-
+through: `data_fetch` and `risk_analysis` with no `PortfolioAnalysisAgent`
+in `sub_results` reach no branch, and the answer is "Analysis complete.
+See details below:" over a list of agent names. **Case 2.1 now lands
+exactly there** - it routes `risk_analysis` with `[DataAgent]` alone
+since the deletion (its own entry), which is a live question reaching the
+stub rather than a hypothetical one. The error stub's sentence is a
+separate entry: a formatter states what the data says and never what the
+system is.
 
 All four benchmark Level 1 queries return a byte-identical response:
 
@@ -1082,7 +1096,30 @@ computed and already in shared_data separately.
 
 ### Rebalance has no target allocation source
 
-**Trigger:** pending decision 13, the target-weights clause, and pending decision 51 before it.
+**Trigger:** pending decision 13, the target-weights clause. Decision 51 fired on 22 September and is no longer part of this trigger.
+
+**Updated 22 September (thirty-third session), and the entry's own
+instruction has now been carried out.** It said: DO NOT fix by inserting
+OptimizationAgent into the chain, because re-optimising on every drift
+check means the target moves with the covariance matrix, which is not how
+strategic asset allocation works. Decision 51 deleted the optimiser, so
+that repair is no longer available to anyone. `rebalance_agent_node` now
+reads `shared["target_weights"]`, **a key nothing publishes**, and raises
+"No target allocation. Cannot measure drift without a target to measure
+it against. The Investment Policy Statement states the target; no clause
+does so yet." The key names the seam decision 13 fills rather than a
+source. The golden line keeps its pinned `errors: 1`, confirmed on both
+runs of the 22nd.
+
+**The two defects waiting behind the missing target are unchanged and
+still unreachable**: `get_current_positions(holdings)` returns
+`{ticker: quantity}` and is passed as `current_weights`, and
+`_format_rebalance_response` reads `decision["max_drift"]` where the
+tool's `to_dict` carries a formatted string under `drift_analysis`. Both
+still fire the day a target arrives. **And a third, which is the owner's
+and out of the deletion session's scope:** `REQUIRES["RebalanceAgent"]`
+is `("DataAgent",)` while the node needs a target, so the dependency
+table cannot reject a plan the node will raise on.
 
 "Should I rebalance my portfolio?" fails with "No target weights from
 OptimizationAgent." RebalanceAgent needs a target to measure drift against; the
@@ -1582,9 +1619,19 @@ node to the tool. Golden set twice, identical, the macro line moved from
 `errors: 1` to `errors: 0` and nothing else, as predicted; `expected.txt`
 moved in its own commit. The CLI answers "neutral" with VIX and the slope.
 
-### MacroAgent is live but outside the target architecture
+### MacroAgent is live but outside the target architecture - RESOLVED 22 September (thirty-third session)
 
-**Trigger:** pending decision 51.
+**Trigger:** none: `macro_agent.py`, the node, the formatter and every registration are deleted.
+
+**Closed 22 September.** The entry's own reasoning was that deleting it
+would touch six files and require rewriting router few-shot examples, and
+that the cost was not justified by anything on the list. Both halves held
+up: the deletion touched seventeen files and did rewrite the few-shots -
+and the justification, when it came, was not a blocked benchmark case but
+the full test finding that the answer printed a raw double and stated no
+as-of at all. **"Revisit only if it blocks a benchmark case" was the
+wrong condition**, because an intent outside the roster can never block
+one; what settled it was reading the answer.
 
 Wired into the graph (`graph.py:118`, routing map at 135) and named in
 `router_prompts.py`, with two of the four few-shot examples using it. Absent from
@@ -1603,9 +1650,19 @@ reading `shared["macro_regime"]` for `regime` and `equity_adjustment`,
 
 **15 September (seventeenth session).** It answers now (db567c8), which makes it the one intent outside the benchmark roster whose answer is live. Delete or keep is decision 51, with the optimisation, rebalancing and backtest intents.
 
-### The macro `equity_adjustment` surface is a market-timing recommendation
+### The macro `equity_adjustment` surface is a market-timing recommendation - RESOLVED 22 September (thirty-third session)
 
-**Trigger:** pending decision 51.
+**Trigger:** none: every element of the surface is deleted.
+
+**Closed 22 September by deletion.** The live surface this entry traced -
+`assess_regime_tool` to `MacroSignal.equity_adjustment` to
+`shared_data["macro_regime"]` to `_format_macro_response`, and the copy
+into `rebalance_agent_node`'s `taa_signal` - is gone end to end, along
+with `generate_taa_signal_tool`, which the entry established had no
+caller from the graph at all. The router prompt's German multi-step line
+that taught the same thing went with the macro few-shots. **The lesson
+this entry carries outlives it: registration in a tools list is not
+reachability, grep for the caller.**
 
 Rewritten 7 September. The entry used to be titled after
 `generate_taa_signal_tool`, and the 7 September handoff turned that into
@@ -1899,16 +1956,34 @@ to `www.sec.gov`.
 
 ### `hawkish_threshold` and `dovish_threshold` are now unreferenced
 
-**Trigger:** pending decision 51.
+**Trigger:** pending decision 52, the Yahoo-fed tables: delete or keep. Decision 51 fired on 22 September and did not reach these.
+
+**Still open, 22 September (thirty-third session).** Decision 51 deleted
+`macro_agent.py`, but `config.MacroConfig` was deliberately left standing
+in that scope - the macro tables stay, `data_agent.py` reading the
+risk-free rate out of `macro_data`, and a config decision does not belong
+inside a code deletion. So these two keys are still there and are now
+further from any consumer than when this was logged: their Fed blocks
+went in ccfa1e1 and the agent that held the rest of `MacroConfig` has
+gone too. **What `config.macro` still has a live reader for is the VIX
+thresholds and nothing else**; these two remain what the entry called
+them, dead keys implying a Fed signal exists.
 
 `config.py:67-68`, in `MacroConfig`. Their only consumers were the Fed blocks
 removed in ccfa1e1. Left in place rather than deleted, because dead config keys
 that imply a Fed signal exists are worth one deliberate decision rather than a
 drive-by removal.
 
-### `regime_confidence` now derives from VIX alone
+### `regime_confidence` now derives from VIX alone - RESOLVED 22 September (thirty-third session)
 
-**Trigger:** pending decision 51.
+**Trigger:** none: `_calculate_regime_confidence` is deleted with `macro_agent.py`.
+
+**Closed 22 September by deletion.** The formula was built as a 50/50
+Fed/VIX blend, capped at 0.3 once the Fed half went in ccfa1e1, and was
+deliberately not rescaled because picking a multiplier would fabricate
+the precision that had just been removed. That judgement held to the end:
+the number was never made to look healthier, and then the whole agent
+went.
 
 After ccfa1e1, `_calculate_regime_confidence` takes only `vix_regime` and returns
 0.1, 0.2 or 0.3. The formula was built as a 50/50 Fed/VIX blend; with Fed gone it
@@ -1982,9 +2057,17 @@ has both branches (`pct_change` and `np.log`, search both); the covariance
 path uses `pct_change`. The formatter says "daily returns" and no more. A
 `returns_type` beside `covariance_method` would close it.
 
-### Inline `sqrt(w'Σw)` inside optimiser objectives cannot delegate
+### Inline `sqrt(w'Σw)` inside optimiser objectives cannot delegate - RESOLVED 22 September (thirty-third session)
 
-**Trigger:** pending decision 51.
+**Trigger:** none: `constraints.py` and `mean_variance.py` are deleted with `portfolio_tool/optimization/`.
+
+**Closed 22 September by deletion.** The question - a non-validating core
+the validated `portfolio_volatility` wraps, or objective internals scoped
+like the engine's - never had to be answered. `risk_parity.py` went on 15
+September and the last two sites, `constraints.py`'s volatility
+constraint and `max_sharpe`'s objective, went with the package. The
+canonical `portfolio_volatility` still raises on weights that do not sum
+to one, and now nothing needs it not to.
 
 `optimization/constraints.py` (four sites), `mean_variance.py` and
 `risk_parity.py` compute the portfolio variance inline inside objective and
@@ -2251,7 +2334,21 @@ a grep for the "Not done" label could not see. It moved with the line.
 
 ### `ExtractedParameters` fields with no reader - grep, 8 September
 
-**Trigger:** pending decision 51: `portfolio_value` keeps its reader in the backtest node.
+**Trigger:** the next grep over `ExtractedParameters`, and pending decision 45, the tool-boundary pass, which is where extraction's fields become the tools' input validation.
+
+**Corrected 22 September (thirty-third session): this entry's last line
+is now false.** It ends "`portfolio_value` keeps its reader in the
+backtest node and no writer, and stays." Decision 51 deleted the backtest
+node, so **`portfolio_value` now has neither a reader nor a writer**.
+`max_volatility` joins it: its only reader was `optimization_agent_node`,
+and `smart_router.py` still writes it into `parameters` from extraction
+at two sites. Neither was deleted with the intents, deliberately and on
+the owner's word - extraction becomes the tools' input validation at
+Order 5, and the corpus is to be written generously on extraction
+variations, `test_extraction.py` still carrying "Optimize SPY and TLT
+with max 12% volatility" as a max-volatility case and "Backtest over the
+past 10 years" as a period case. **Deleting them is a decision about the
+extraction surface, not a cleanup**, which is why they stand.
 
 Recorded 8 September (seventh sitting, after the merge), from
 `grep -rnE '(parameters|params)(\.get\("F"|\["F"\]|\.F\b)' src/` for each
@@ -2427,9 +2524,16 @@ question in the decision dict as well as in `final_response`. Unchanged
 otherwise.
 
 
-### `taa_signal` is still attached to the rebalance result
+### `taa_signal` is still attached to the rebalance result - RESOLVED 22 September (thirty-third session)
 
-**Trigger:** pending decision 51.
+**Trigger:** none: the block that wrote it is deleted.
+
+**Closed 22 September.** The entry said the field stayed because removing
+it was a RebalanceAgent change. It was removed in the macro commit, on
+the owner's word and flagged rather than swept in: with `macro_regime`
+gone no writer can exist, so the `if regime:` guard could never fire
+again. The formatter line that printed it had gone on 7 September, so
+the field had neither a writer nor a reader.
 
 `rebalance_agent_node` copies `shared_data["macro_regime"]`'s regime and
 `equity_adjustment` into `result["taa_signal"]`. The formatter line that
@@ -2726,9 +2830,15 @@ the record: prose that names a plan can classify by proxy, and a shrink
 that removes it is a hypothesis about every line the proxy touched, not
 only the lines that mention it.
 
-### "Optimization failed: None": the node formats an absent error key
+### "Optimization failed: None": the node formats an absent error key - RESOLVED 22 September (thirty-third session)
 
-**Trigger:** pending decision 51; decision 14 merged into it 15 September (eighteenth session).
+**Trigger:** none: the optimisation node that formatted the absent key is deleted (RESOLVED 22 September, thirty-third session). Decision 14 was merged into this entry 15 September (eighteenth session) and goes with it.
+
+**Closed 22 September by deletion.** `optimization_agent_node` raised
+`Optimization failed: {result.get('error')}` on a result carrying no
+`error` key, printing `None` where the cause belonged. Both the
+undiagnosed two-asset failure and the message that hid it go with the
+node. Nothing was diagnosed and nothing was fixed.
 
 Recorded 8 September (eighth sitting), from the CLI. "Backtest SPY and TLT over 5 years" with no
 portfolio ran the derived plan `[DataAgent, OptimizationAgent,
@@ -3548,7 +3658,17 @@ the table stays a Yahoo-fed one under decision 52.
 
 ### The rebalance verdict word is wider than its schema, and part of it is advice
 
-**Trigger:** pending decision 13, and pending decision 51 before it.
+**Trigger:** pending decision 13, which gives the rebalancer a target and makes this whole surface live in one commit. Decision 51 fired on 22 September and is no longer part of this trigger.
+
+**Still open and still dead, 22 September (thirty-third session).** The
+path is dead for the same reason as before and for a new one: the node
+raised on a missing target from the optimiser, and now raises on a
+missing target full stop, the optimiser having been deleted. Neither
+`"monitor_closely"` nor `"below_break_even"` is in
+`RebalanceProposal.recommendation`'s `Literal`, the formatter still reads
+the word off a plain dict rather than the validated model, and the
+cost branch still sets a recommendation where a threshold classification
+belongs. Nothing here was touched by the deletion.
 
 Found 11 September (fifteenth session), reading `rebalance_tools.py` for the
 label change (91fd126). Two things in one field.
@@ -3656,9 +3776,16 @@ Kept because the wrong attribution sat here for three days while the actual
 line was greppable. An observed symptom in a router output is not evidence
 about the router until the code between the LLM and the state has been read.
 
-### The backtest tests the weights on the window they were estimated on
+### The backtest tests the weights on the window they were estimated on - RESOLVED 22 September (thirty-third session)
 
-**Trigger:** pending decision 51.
+**Trigger:** none: the backtest intent, its node, its agent and `portfolio_tool/backtest/` are deleted.
+
+**Closed 22 September by deletion, not by a walk-forward split.** The
+methodology defect stood: the weights were estimated on the window and
+tested on it, and the answer did not say so. Nothing here was repaired -
+the whole path went, 589 lines of agent and 1,944 of package. If a
+backtest is ever built it starts from a reference Part and a stated
+split, and this entry is the record of why.
 
 **Recorded 15 September (seventeenth session), from the owner's reading, confirmed against the
 code.** `backtest_agent_node` takes `optimal_weights`, which the optimiser
@@ -3721,9 +3848,16 @@ description of code in a reference file, which the owner decides whether to
 annotate. **15 September (eighteenth session): decision 55, yes**; the note
 is in Part 13 C, dated.
 
-### The macro answer, now that it prints
+### The macro answer, now that it prints - RESOLVED 22 September (thirty-third session)
 
-**Trigger:** pending decision 51.
+**Trigger:** none: the answer, the node and the formatter are deleted.
+
+**Closed 22 September.** Decision 51 deleted `macro_agent_node` and
+`_format_macro_response`, so none of the three defects can print: the
+missing as-of, the unrounded float32 VIX, and the risk stance beside the
+regime. The raw double `14.8100004196167` read live on 21 September was
+the last of it. **It is the deletion that closed these and not a fix** -
+no as-of was added and no figure was formatted.
 
 **Recorded 15 September (seventeenth session), from the CLI after db567c8.** "What's the market
 regime?" answers `neutral` with VIX and the slope. Three things in the text.
@@ -5155,9 +5289,16 @@ a missing figure reuses the scorer's words, "the prediction is not
 scored", for a prediction that was never made; it names the figure and
 the year correctly. Each is fixed with the row the third metric brings.
 
-### The golden set's regime line rewrites `macro_data` on every run
+### The golden set's regime line rewrites `macro_data` on every run - RESOLVED 22 September (thirty-third session)
 
-**Trigger:** pending decision 51.
+**Trigger:** none: the regime line routes `out_of_scope` with no agent since decision 51.
+
+**Closed 22 September, measured.** "What is the current market regime?"
+now routes `out_of_scope` and plans nothing, so no agent asks the
+provider for thirty days of VIX and the yields. Both golden runs left
+`macro_data` at 209 with every `created_at` unmoved. This was the only
+thing writing to the store on every golden run: the two runs after the
+deletion are the first in this project that wrote nothing at all.
 
 Logged 18 September (twenty-fifth session). "What is the current market
 regime?" runs the macro agent, whose update has no interval: every
@@ -5297,9 +5438,15 @@ is sighted at least twice before it is written.
 alone, both out_of_scope, four of five in all; the line written at
 out_of_scope on one golden run (e9b6022).
 
-### What a golden run writes, beyond the macro rows
+### What a golden run writes, beyond the macro rows - RESOLVED 22 September (thirty-third session)
 
-**Trigger:** pending decision 51.
+**Trigger:** none: the three provider calls were the macro agent's, and decision 51 deleted it.
+
+**Closed 22 September, measured.** Across the two golden runs after the
+deletion, `api_call_logs` stayed at 2,480 and `api_quotas`'s last row
+stayed `daily_yfinance_2026-09-21` at 19 - no row was opened for the
+22nd. A golden run now makes no provider call at all, prices being inside
+their one-day interval and the macro line reaching no agent.
 
 Logged 19 September (twenty-sixth session). Beside `macro_data`'s
 rewritten stamps, the regime line's three provider calls each add a row to
@@ -5604,9 +5751,16 @@ raised it, "Item 7, claim 8: a digit in the claim; a figure appears only
 inside a quote, where it is the filing's": accurate, and written for the
 code rather than for me.
 
-### A golden run adds macro rows when a trading day has closed
+### A golden run adds macro rows when a trading day has closed - RESOLVED 22 September (thirty-third session)
 
-**Trigger:** pending decision 51.
+**Trigger:** none: decision 51 deleted the macro intent, and a golden run no longer reaches the macro agent or the provider.
+
+**Closed 22 September, on a measurement rather than an inference.** The
+two golden runs at 12:43 and 12:45, the first after the deletion, left
+`macro_data` at 209 rows with its newest `created_at` still 2026-09-21
+14:33:47 - yesterday's CLI batch, not either run. A trading day had
+closed since the last run (Monday the 21st), which is exactly the
+condition this entry says adds rows, and none were added.
 
 Logged 19 September (twenty-seventh session). The regime line's entry
 says the count stands still while the stamps move. It holds only when no
@@ -6555,7 +6709,7 @@ blocks answers the question that was asked.
 
 ### The four intents outside the benchmark roster - DECIDED 21 September (thirty-second session)
 
-**Trigger:** decided, not executed. The deletion is its own session, and the sixteen entries whose trigger reads "pending decision 51" are that session's reading list.
+**Trigger:** none: executed 22 September (thirty-third session) in three commits, 7e27d47, aa6ed13 and 868e9f5. Of the sixteen entries that carried "pending decision 51", eleven are RESOLVED and five stay open on decisions 13, 45 and 52; none still names 51.
 
 **The evidence, 21 September (thirty-second session).** The full test at the
 end of Order 4 reached all four live intents outside the roster, each asked
@@ -6662,6 +6816,21 @@ further test files carry references - 25 in `test_smart_router.py`, 14 in
 `test_strict_nodes.py`, 12 in `test_all_configs.py` and fewer in six others
 - whose test count is to be measured before the commit and not estimated.
 Nothing outside the three agents imports either package.
+
+**Executed 22 September (thirty-third session), and what it actually
+cost.** Three commits, backtest then optimisation then macro, each
+leaving the tree green. 4,459 lines by `wc -l` on the day. pytest 1943 to
+**1926**, seventeen tests, which was the measurement's corrected
+prediction exactly. The golden set ran twice, byte-identical: the macro
+line went to `out_of_scope` where `clarification_needed` was predicted -
+a failed hypothesis, and the second guess - and the optimisation line to
+`out_of_scope` as predicted. `expected.txt` moved six lines across those
+two queries and no other; the pinned rebalance failure stands. **The
+runner fell from 16/18 to 15/18**: case 2.1 now routes `risk_analysis`
+instead of `compliance`, which is its own entry and the real price of
+this decision. Three of the seven glyphed answer headers went with the
+three formatters; four remain for item 32. Everything the entry said the
+session owed was done, and the tag `intents-parked` stands at addfbc7.
 
 **The lesson, and it cost a wrong recommendation.** *Open the definition of
 done before recommending that something be deleted for not being in it.*
