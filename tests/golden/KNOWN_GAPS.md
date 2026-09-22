@@ -7208,6 +7208,25 @@ sixth rather than after all eight — re-scoped 22 September, see below.**
 5. **The cleanup:** the German debug strings under `src/`, and the glyphed
    answer headers of item 32. Independent of everything else and cheap, so
    it can happen whenever there is an hour for it.
+   **Done 22 and 23 September (thirty-eighth session), counted before
+   and after.** Item 32 first: ten answer-text lines in `nodes.py`
+   carried twelve glyphs, no check read any of them, 1b8558f stripped
+   them and the runner ran against it, 15/18 with every verdict and
+   every store count as predicted; the entry "Two formatter headers
+   still carry an emoji" closed on that commit. Then the German
+   strings: 240 in eight files, translated one file per commit, 62 in
+   `yfinance_provider.py`, 53 in `data_manager.py`, 42 in
+   `database_setup.py`, 21 in `run_backfill.py`, 19 in `api/main.py`,
+   16 in `providers/base.py`, 14 in `quota_manager.py` and 13 in
+   `providers/utils.py`; pytest 1934 passed, 6 xfailed after every
+   one. Nothing that reaches an answer changed in those eight commits,
+   and no test asserted on any of the 240. Three German strings stand
+   and were never this step's: the router prompt's clarification
+   example and its German few-shot, decision 16's, and the router's
+   fallback clarification question in `smart_router.py`, answer text
+   when routing fails. The 113 further strings and comments under
+   `src/` that carry a glyph, console and trace, stand for their own
+   session.
 
 *Then Order 5.*
 
