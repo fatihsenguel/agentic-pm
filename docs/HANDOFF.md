@@ -1,9 +1,9 @@
 # AGENTIC_FINANCE — Session Handoff
 
-**Session date:** 22 September 2026 (thirty-eighth session), begun about 21:33 UTC and ending about 22:30 UTC, past midnight on the local clock, which is why the record's dated lines say 22 and 23 September. Regenerated at its end. The thirty-third to thirty-seventh sessions ran earlier the same day.
-**Branch:** `cleanup`, cut from `baseline-v1` at **1d4eb9c** before the first commit, in a worktree under `.claude/worktrees/` because this session's harness rejects edits outside one; **thirteen commits with this one**, not merged, not pushed, **to be merged `--ff-only` by the owner**. The trunk at 1d4eb9c is the thirty-seventh session's handoff commit, merged `--ff-only` from `adobe` and pushed on the evening of the 22nd, and `git ls-remote` showed the remote's `baseline-v1` at that commit at this session's start. `origin`'s push URL is `no_push` and the push goes by URL, so the local `origin/baseline-v1` ref lags: it stands at **33769f6**, the "Decision 76" commit; `git rev-list --count origin/baseline-v1..HEAD` says fifty-one for the trunk and sixty-four for this branch with this commit. The push output is the record.
+**Session date:** 22 September 2026 (thirty-eighth session), begun about 21:33 UTC and ending about 23:50 UTC, past midnight on the local clock, which is why the record's dated lines say 22 and 23 September. Regenerated at its end, twice: once at 22:30 when the cleanup was done, and again now, the session having continued through the owner's question on what to do before Order 5 and the two fixes that followed. The thirty-third to thirty-seventh sessions ran earlier the same day.
+**Branch:** `cleanup`, cut from `baseline-v1` at **1d4eb9c** before the first commit, in a worktree under `.claude/worktrees/` because this session's harness rejects edits outside one; **seventeen commits with this one**, not merged, not pushed, **to be merged `--ff-only` by the owner**. The trunk at 1d4eb9c is the thirty-seventh session's handoff commit, merged `--ff-only` from `adobe` and pushed on the evening of the 22nd, and `git ls-remote` showed the remote's `baseline-v1` at that commit at this session's start. `origin`'s push URL is `no_push` and the push goes by URL, so the local `origin/baseline-v1` ref lags: it stands at **33769f6**, the "Decision 76" commit; `git rev-list --count origin/baseline-v1..HEAD` says fifty-one for the trunk and sixty-eight for this branch with this commit. The push output is the record.
 
-**State:** pytest **1934 passed, 6 xfailed**, unchanged; run at session start in the worktree and after every one of the nine code commits. **One paid loop ran, on its own yes: the runner at 21:49 UTC from the worktree with `PYTHONPATH=src`, 15/18, 0 failing, 3 blocked, every verdict as at 18:42 and as predicted, and every one of the store's thirteen counts unmoved.** The golden set was not run: no prompt changed. The corpus was not rerun: the transcripts are records. **Step 5 of the interlude, the cleanup, is done**: the ten glyphed answer-text lines stripped and the 240 German strings in eight files put into English, one file per commit. Step 4 stands done but for decision 76. The pending list stands at eleven, unchanged. **Every step of the interlude before Order 5 is now done or waits on the owner's word; opening Order 5 is the owner's word.**
+**State:** pytest **1935 passed, 6 xfailed**, one up from 1934 by the test that pins S-2's reply; run at session start in the worktree and after every one of the eleven code commits. **One paid loop ran, on its own yes: the runner at 21:49 UTC from the worktree with `PYTHONPATH=src`, 15/18, 0 failing, 3 blocked, every verdict as at 18:42 and as predicted, and every one of the store's thirteen counts unmoved.** The golden set was not run: no prompt changed. The corpus was not rerun: the transcripts are records. **Step 5 of the interlude, the cleanup, is done**: the ten glyphed answer-text lines stripped and the 240 German strings in eight files put into English, one file per commit. **Two fixes that survive Order 5 were then taken on the owner's word: S-2's reply now resolves, and the runner imports its own tree.** Step 4 stands done but for decision 76. The pending list stands at eleven, unchanged. **Every step of the interlude before Order 5 is now done or waits on the owner's word; opening Order 5 is the owner's word.**
 
 Written for whoever picks this up cold, myself included.
 
@@ -21,7 +21,10 @@ were measured before anything was written, the numbers said twice:
 the glyphs that reach an answer, and the German strings under `src/`.
 Then item 32 in one commit with the runner run against it, the record
 entry it closes, eight translation commits with pytest after each, the
-interlude entry's step 5 marked done, and this.
+interlude entry's step 5 marked done, and a handoff. Then, on the
+owner's question of what to do before Order 5, an assessment, and on
+the owner's word two of its items: S-2's reply, test first, and the
+runner's import path; the record for both; and this.
 
 ---
 
@@ -30,14 +33,15 @@ interlude entry's step 5 marked done, and this.
 | File | What it is |
 |---|---|
 | `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1 to 4 are built. The interlude between Orders 4 and 5 is its unnumbered paragraph under Order 4, last revised 22 September. Unchanged this session. |
-| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **Start with "The interlude between Order 4 and Order 5, and how the corpus is built"**, whose step 5 now says done with the counts. One entry closed this session: "Two formatter headers still carry an emoji", RESOLVED on 1b8558f, its closing paragraph holding the recount, the check search and the runner's verdicts. Nothing was opened. **176 lines start `**Trigger:**`**, unchanged in count: one changed its text to "none", the closed entry's. |
+| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **Start with "The interlude between Order 4 and Order 5, and how the corpus is built"**, whose step 5 now says done with the counts. Two entries closed this session: "Two formatter headers still carry an emoji", RESOLVED on 1b8558f, and "The unknown-ticker correction fails on the comma after "no"", RESOLVED on b430a0a with its cause corrected, the full stop having been a second defeat. One opened: "A ticker followed by a full stop is not a ticker in a first turn", the same regex on the first turn, triggered on the next change to `_TOKEN`, the next corpus run's reading of R-5, or Order 5's opening commit. **177 lines start `**Trigger:**`**, one up. |
 | `docs/benchmark.md` | **The definition of done, the corpus, and its runs.** Part 3c.6 holds three blocks: the run of 22 September at 17:11, 65 turns; 2.2 alone at 18:49; and R-8 and R-9 at 20:35 and 21:06. Unchanged this session. **Read Part 2, Part 3c and 3c.6 before Part 3's tables.** |
 | `tests/golden/expected_values.md` | Hand-computed reference, Parts 1 to 18. **Unchanged this session, by a character.** Never update it to match code output. |
-| `tests/golden/run_R-8_R-9_2026-09-22.txt`, `run_corpus_2026-09-22.txt`, `run_2.2_2026-09-22.txt` | The three transcripts, 285, 5,887 and 187 lines. Unchanged; records. The corpus transcript shows the glyphed headers as they printed until 1b8558f. |
+| `tests/golden/run_R-8_R-9_2026-09-22.txt`, `run_corpus_2026-09-22.txt`, `run_2.2_2026-09-22.txt` | The three transcripts, 285, 5,887 and 187 lines. Unchanged; records. The corpus transcript shows the glyphed headers as they printed until 1b8558f, and S-2's second turn asked back as it was until b430a0a. |
+| `tests/test_extraction.py` | The unknown-ticker rule's replies, now with the corpus's S-2 wording, "no, I meant MSFT.", pinned to "Hows my MSFT doing?". |
 | `tests/test_half_cent.py` | Decision 75 held to Part 7, Part 17 B and the corpus run's closes. Unchanged. |
 | `tests/test_corpus_spine.py` | Part 3c.1's eighteen wordings are the runner's `CASES`. Unchanged. |
 | `tests/golden/expected.txt` | Twenty-one lines, one pinned failure. Unchanged; not run this session. |
-| `tests/benchmark/run_cases.py` | **The scoreboard.** Eighteen cases, unchanged; **15/18 by this session's run at 21:49 UTC on the 22nd**, from the worktree with `PYTHONPATH=src`. It carries no glyph and asserts on the out-of-scope refusal's first sentence, not its header. |
+| `tests/benchmark/run_cases.py` | **The scoreboard.** Eighteen cases, unchanged; **15/18 by this session's run at 21:49 UTC on the 22nd**. It carries no glyph and asserts on the out-of-scope refusal's first sentence, not its header. **Since 9d9ca39 it inserts its own tree's `src` first, as `cli.py` does, so from a worktree it scores the worktree without `PYTHONPATH`**; verified by a verbose import, not by a paid run. |
 | `tests/golden/expected_values.xlsx` | The workbook, eleven sheets. Not opened this session. |
 | `docs/IPS.md`, `docs/PHILOSOPHY.md`, `docs/WATCHLIST.md`, `watchlist.toml` | The owner's. Unchanged, not edited. W-2 still states no growth pair and no weight. |
 | `docs/PM-Assistant — Roadmap.md` | Stale; DIRECTION.md's Order supersedes it. |
@@ -82,26 +86,30 @@ headers on seven lines, the error preamble, the compliance failure stub
 and the fallback per-agent line, whose tick and cross became the words
 ok and failed. CLAUDE.md's seven headers had become four with the 15
 September deletions, and the record's entry had already counted the
-hypothetical verdict as an eighth. No check read any of them: the runner
-asserts on the out-of-scope first sentence, the golden script carries no
-glyph, and every glyph under `tests/` is a print in a test's own console
-output. Under `src/`, 240 German strings sat in eight files, 118
-comments, 62 docstrings, 54 console prints and 6 other strings, and no
-test asserted on any of them; three more German strings are prompt or
-answer text and were never step 5's. A word list undercounted by about
-thirty comments until every unflagged comment was read by eye, and by
-three single-word comments until a second pass caught those. The runner
-saw the header change and moved nowhere. Nothing arithmetic was touched.
+hypothetical verdict as an eighth. No check read any of them. Under
+`src/`, 240 German strings sat in eight files, 118 comments, 62
+docstrings, 54 console prints and 6 other strings, and no test asserted
+on any of them; three more German strings are prompt or answer text and
+were never step 5's. A word list undercounted by about thirty comments
+until every unflagged comment was read by eye, and by three single-word
+comments until a second pass caught those. Then S-2's reply: the record
+had one cause, the comma, and there were two, the full stop riding on
+the ticker's token; the test written first was red on each in turn. The
+regex that defeats it feeds every first turn as well, logged rather
+than fixed. The runner saw the header change and moved nowhere. Nothing
+arithmetic was touched.
 
 ### Design principles
 
 Unchanged in the code. What this session held them to:
 
-- **Nothing that reaches an answer changed but the twelve glyphs.** The
-  eight translation commits touched comments, docstrings and console
-  prints, plus one bare string that ran as a no-op expression and the
-  FastAPI module's two HTTP strings, which nothing under `src/` or
-  `tests/` imports.
+- **Nothing that reaches an answer changed but the twelve glyphs and
+  one reply's resolution.** The eight translation commits touched
+  comments, docstrings and console prints, plus one bare string that ran
+  as a no-op expression and the FastAPI module's two HTTP strings, which
+  nothing under `src/` or `tests/` imports. S-2's fix changes which
+  message a reply stands for, and only for a reply to a pending
+  unknown-ticker record.
 - **No conversational residue in a comment.** Seven comments in the
   provider narrated the writing, "we keep", "we import", "the old quota
   logic was removed entirely"; four section comments said "unchanged";
@@ -109,21 +117,27 @@ Unchanged in the code. What this session held them to:
   nickname; one named a class that does not exist and a "next step" long
   taken. Each became a sentence about what the code does or was deleted,
   and each is named in its commit's message to the owner.
+- **References before code.** S-2's test went in on the corpus wording
+  before either line of the fix, and was red before each.
+- **Raise, do not repair, at the boundary too.** The reply rule still
+  routes anything outside its vocabulary as typed; the fix widened what
+  it recognises by two punctuation marks and guessed at nothing.
 - **A paid loop is predicted first, per branch of the clock, and read
   against the store after.** Every verdict and every count held; the run
   took the first branch, before Apple's facts ran out at 22:17.
 - **Which tree a loop imports is checked before it is paid for.** With
   `PYTHONPATH=src` the runner printed the worktree's `agents` and
-  `portfolio_tool`; without it, the checkout's.
+  `portfolio_tool`; without it, the checkout's; since 9d9ca39 its own.
 - No emoji in anything newly written.
 
 ### How I work on this
 
 - Every change starts as a written decision in plain words: what it is,
   what changes on a yes, the rejected alternatives, which loop sees it.
-  This session took two small ones on the owner's yes: all ten answer-text
-  lines rather than the seven headers, and one commit per file rather
-  than two across eight files.
+  This session took two small shapes on the owner's yes, all ten
+  answer-text lines rather than the seven headers and one commit per
+  file, and two fixes on the owner's word after an assessment of what to
+  do before Order 5.
 - **A count is measured twice and said twice before anything is
   written.** The glyph count by a script over every string and comment
   token under `src/`, then by reading the ten lines and their formatters;
@@ -134,11 +148,15 @@ Unchanged in the code. What this session held them to:
   the commit does not land.** Every glyph and every header phrase was
   grepped in the runner, the golden script and every test before the
   edit; none matched, so nothing moved.
+- **A fix is traced when the test stays red.** The record's cause was
+  applied and the test did not move; a five-line trace over the reply's
+  variants found the second cause before a second guess was made.
 - **The diff goes whole into the message that asks for the yes**, and
   the whitespace the editor drops is counted and named: `git diff -w`
   against `git diff`, both numbers said.
 - **Grep the heading before citing it, and grep the class before opening
-  an entry.** One entry closed, one grown; none opened.
+  an entry.** Two entries closed, one grown, one opened after a search
+  of the headings for the regex found nothing.
 - **The capture is never filtered.** The runner's whole output went to a
   file under the job's temporary directory; its forty lines are the
   verdicts.
@@ -182,28 +200,32 @@ python tests/benchmark/run_cases.py
 python src/agents/cli.py --portfolio 3
 ```
 
-**Two of the five ran.** pytest: **1934 passed, 6 xfailed**, 6 to 13
-seconds, at session start and after each of the nine code commits. The
-runner once, at 21:49 UTC. The CLI and the golden set were not run.
+**Two of the five ran.** pytest: **1935 passed, 6 xfailed**, 5 to 13
+seconds, at session start and after each of the eleven code commits;
+1934 until b430a0a's test. The runner once, at 21:49 UTC, before the two
+fixes. The CLI and the golden set were not run.
 
 **Golden set: twenty-one lines, one pinned failure**, `expected.txt` at
-4f7ca89. Not run.
+4f7ca89. Not run. Neither fix can move it: `resolve` runs only on a
+reply to a pending record, and the runner's import path is the runner's.
 
 **The runner: 15/18, 0 failing, 3 blocked** by this session's run at
 21:49 UTC on the 22nd, from the worktree with `PYTHONPATH=src`. 2.1
 blocked on routing, 4.1 and 4.3 on the PHI-2.1 stop; every verdict as at
 18:42. The output is forty lines and is the verdicts; the runner
 discards each case's console output, so the model calls it made were
-not counted.
+not counted. Neither fix moves a verdict: 3.5 replies "yes", the
+confirmation path.
 
 **The corpus: 67 of 67 sent, 31 matched.** Unchanged: benchmark.md Part
-3c.6's three blocks.
+3c.6's three blocks. S-2 turn 2 is fixed by b430a0a and is read again in
+the next run, which is the run after Order 5.
 
 ### Branches and tags
 
 `baseline-v1` is the trunk at **1d4eb9c**, pushed to that commit on the
 evening of 22 September; `cleanup` is cut from it and carries this
-session's thirteen commits, **to be merged `--ff-only` by the owner**.
+session's seventeen commits, **to be merged `--ff-only` by the owner**.
 The `cleanup` worktree holds a symlink `data/portfolio.db` to the
 checkout's database, gitignored, so pytest and the runner there ran
 against the real store, and `.env` was found by walking up from the
@@ -223,7 +245,8 @@ holds the tree before the seventeenth session's quant deletions.
 `data/portfolio.db` is untracked runtime state. Alembic head
 **`2445c12e728c`**, not re-checked this session; no migration. No reseed.
 **Read before and after the runner, at 21:48 and 21:50 UTC; nothing
-moved, no clock having run out.**
+moved, no clock having run out.** Nothing after the runner touched the
+store.
 
 - `daily_prices` **7,024**, last close **2026-09-21**. The one-day
   interval, `(utcnow - last).days >= 1` in `data_manager.py`, runs out at
@@ -243,15 +266,15 @@ moved, no clock having run out.**
 - **The filings clocks, as stored and against the whole-days test
   `(now - pulled_at).days < 7` in `filings.py`**: Apple's facts pulled
   2026-09-15 22:17 UTC, so **ran out at 22:17 UTC on the 22nd, after
-  this session's runner and before this handoff**, and are read by no
-  runner case; Apple's filer row 09-16 00:03, JPM's filer row 09-16
-  01:33 and the ticker file 09-16 01:33, Alphabet's filer row and facts
-  09-16 01:38, so those run out at **00:03, 01:33 and 01:38 UTC on the
-  23rd**; **Adobe's filer row and facts run out at 20:35 UTC on the
-  29th.** The next paid run of a Level 4 question after 01:38 on the
-  23rd refetches the ticker file, JPM's and Alphabet's filer rows and
-  Alphabet's facts, which should store zero new rows or raise on a
-  changed figure; after 17:11 it also fetches the closes for the 22nd.
+  this session's runner**, and are read by no runner case; Apple's filer
+  row 09-16 00:03, JPM's filer row 09-16 01:33 and the ticker file 09-16
+  01:33, Alphabet's filer row and facts 09-16 01:38, so those run out at
+  **00:03, 01:33 and 01:38 UTC on the 23rd**; **Adobe's filer row and
+  facts run out at 20:35 UTC on the 29th.** The next paid run of a Level
+  4 question after 01:38 on the 23rd refetches the ticker file, JPM's
+  and Alphabet's filer rows and Alphabet's facts, which should store
+  zero new rows or raise on a changed figure; after 17:11 it also fetches
+  the closes for the 22nd.
 
 Unchanged: portfolio 3 the only portfolio, nine ledger rows, cost basis
 284,500 plus 15,500 cash, USD, policy `ips.toml`. There is no holdings
@@ -271,12 +294,13 @@ thirty-seventh session's handoff.
   (`__editable__.agentic_finance-0.1.0.pth`). From a worktree: pytest
   imports the worktree's tree because `tests/conftest.py` inserts its
   own `src` first (checked again: the warning paths were the worktree's);
-  the CLI does because `cli.py` inserts its own parent directory;
-  **`tests/benchmark/run_cases.py` inserts nothing and imports the
-  checkout's code**, so from a worktree it scores the trunk, not the
-  branch, unless run with `PYTHONPATH=src` (checked again: with it,
-  `agents.__file__` and `portfolio_tool.__file__` were the worktree's,
-  and the database URL resolved through the worktree's symlink).
+  the CLI does because `cli.py` inserts its own parent directory; **and
+  since 9d9ca39 `tests/benchmark/run_cases.py` inserts its own tree's
+  `src` the same way**, so a worktree's runner scores the worktree with
+  or without `PYTHONPATH=src` (checked by `python -v ... --help`: the
+  graph module loaded from the worktree's path). Before that commit it
+  inserted nothing and scored the checkout, which is why this session's
+  paid run used `PYTHONPATH=src`.
 - `.env` holds keys. Never print it. A permission rule denies sessions the
   shell and the editor on `.env*` files. `load_dotenv()` in `config.py`
   finds it by walking up from the calling file, so a worktree nested
@@ -300,7 +324,10 @@ thirty-seventh session's handoff.
 - **The period vocabulary**: `config.DataConfig.period_days`, a default in
   code, keys `1Y, 2Y, 3Y, 5Y, 10Y`, passed to extraction by
   `smart_router.py`. Not in `config.toml`.
-- **Extraction** (`src/agents/extraction.py`): unchanged.
+- **Extraction** (`src/agents/extraction.py`): `resolve` changed in
+  b430a0a, two lines; `_TOKEN` is `[A-Z][A-Z0-9.]{0,5}` and still lets a
+  full stop ride on a ticker that ends a sentence, its own record entry.
+  Nothing else in the module changed.
 - `config.toml` carries five fetch intervals: prices 1 day, filings 7,
   earnings 7, profile 30, shares 30. Its `[macro]`, `[optimization]` and
   `[backtest]` sections stand although two have no consumer.
@@ -337,25 +364,31 @@ thirty-seventh session's handoff.
 
 ## 4. What the thirty-eighth session did
 
-`git log --oneline 1d4eb9c..HEAD`, **thirteen commits** with this one,
-the first twelve touching eleven files, **390 insertions and 363
-deletions**; this handoff is a rewrite of one file on top. In the
-owner's order: the handoff's branch line, the two counts, item 32 with
-the runner against it, the record entry it closes, the eight German
-files one by one, the interlude's step 5, the handoff.
+`git log --oneline 1d4eb9c..HEAD`, **seventeen commits** with this one,
+the first sixteen touching fourteen files, **803 insertions and 705
+deletions**, of which the first handoff regeneration is 380 and 347;
+this one is a rewrite of the same file on top. In the owner's order:
+the handoff's branch line, the two counts, item 32 with the runner
+against it, the record entry it closes, the eight German files one by
+one, the interlude's step 5, a handoff; then the assessment, S-2's
+reply, the runner's import, the record for both, this.
 
 **Read first, and only what the brief named**: DIRECTION.md, the previous
 handoff and its §0, the interlude entry's step 5, CLAUDE.md's paragraph
-on what already breaks the no-emoji rule, and, when its trigger fired,
-"Two formatter headers still carry an emoji". Then the code the counts
-needed: every string and comment token under `src/` by a script, the
-synthesizer and the seven formatters that carry a header, the rebalance
-node and the rebalance agent's message path, the runner's `CASES` and
-`run_case`, the cache clocks in `filings.py` and `data_manager.py`, and
-the writers of `api_call_logs` and `pipeline_runs`. **The brief's claims,
-checked**: the trunk at 1d4eb9c, the remote at the same commit by
-`git ls-remote`, the local origin ref at 33769f6, `adobe` and its
-worktree gone, pytest's number, the clocks as the brief gave them.
+on what already breaks the no-emoji rule, and, when their triggers
+fired, "Two formatter headers still carry an emoji" and "The
+unknown-ticker correction fails on the comma after "no"". Then the code
+the counts needed: every string and comment token under `src/` by a
+script, the synthesizer and the seven formatters that carry a header,
+the rebalance node and the rebalance agent's message path, the runner's
+`CASES` and `run_case`, the cache clocks in `filings.py` and
+`data_manager.py`, the writers of `api_call_logs` and `pipeline_runs`;
+and for the fixes, `resolve` and `_tickers` with `_TOKEN`, the reply
+tests, S-2's wording in Part 3c.5, and the runner's import block beside
+`cli.py`'s. **The brief's claims, checked**: the trunk at 1d4eb9c, the
+remote at the same commit by `git ls-remote`, the local origin ref at
+33769f6, `adobe` and its worktree gone, pytest's number, the clocks as
+the brief gave them.
 
 **The two counts, before anything was written.**
 - **Glyphs in the answer text**: ten lines in `nodes.py`, eleven string
@@ -384,6 +417,21 @@ worktree gone, pytest's number, the clocks as the brief gave them.
   clarification question at `smart_router.py:434`, answer text when
   routing fails.
 
+**The assessment, on the owner's question of what to do before Order 5,
+in one paragraph.** Nothing more to build; decide and measure. Decision
+45, the tool-boundary pass, is the written decision the interlude's
+fourth reason asked for and should open Order 5 on paper, with 12, 13,
+17 and 54 folded in and a model and a cost per turn stated. Two fixes
+survive the refactor and were worth taking first so the corpus rerun
+measures the refactor alone: S-2's reply and the runner's import; both
+taken. Measured for the after: the runner reads the plan or the intent
+in twelve of its twenty-eight probes and checks, so those need rewriting
+when the router goes; pytest has eight files and 112 tests touching the
+router, prompt or intents, of which 23 are extraction and derivation and
+survive, so about 89 go and the count after Order 5 is roughly 1846 plus
+the new layer's own. Decision 52's tables are the eight files just
+translated; if they are to go, after Order 5 is cheaper than through it.
+
 **The commits.**
 - **795cfaf** `docs/HANDOFF.md`: the branch line and §2 corrected to the
   merged state, dated.
@@ -405,23 +453,41 @@ worktree gone, pytest's number, the clocks as the brief gave them.
   name, were dropped; the `FIN_API_Runbook.md` citation in `utils.py`
   was kept, unverified.
 - **577ed11** KNOWN_GAPS: the interlude's step 5 done, with the counts.
+- **8184c1d** the handoff, regenerated at what was then the end.
+- **b430a0a** `extraction.py` and `tests/test_extraction.py`: S-2's
+  reply resolves. The test first on "no, I meant MSFT.", red; the
+  whitespace collapse the record prescribed, still red; a trace found
+  the full stop as a second cause, the token regex matching "MSFT."
+  whole; a trailing dot stripped from each matched token in `resolve`,
+  green. pytest 1935.
+- **9d9ca39** `run_cases.py` inserts its own tree's `src` first, as
+  `cli.py` does; verified by a verbose import, no paid run.
+- **aa3f039** KNOWN_GAPS: S-2's entry closed with its cause corrected,
+  and "A ticker followed by a full stop is not a ticker in a first turn"
+  opened.
 
-**What was found and not fixed.** The record's entry counted "six
-further lines" and listed five on 21 September; the five were right, and
-the closing paragraph says so. `quota_manager.py` opens with an English
-header comment "FIX 2 ... CHANGES:" that narrates the writing; not
-German, so not this step's. `docs/workflow.md` still carries emoji in
-its headers; a document, not this step's. The runner's `run_case`
-discards each case's console output, so the calls a run makes cannot be
-counted from it.
+**What was found and not fixed.** `_TOKEN` lets a full stop ride on a
+ticker that ends a sentence, so a first turn such as "How is MSFT
+doing." names no ticker and gets no near-miss question; the corpus has
+one such wording, R-5 "Sell 50 SPY.", whose refusal names no subject
+regardless, so the run cannot show it; logged with a trigger, the fix
+being in the regex with tests first on that wording and on a dotted
+ticker, and the golden set run after. The record's S-2 entry had one
+cause and there were two. The record's emoji entry counted "six further
+lines" and listed five; the five were right. `quota_manager.py` opens
+with an English header comment "FIX 2 ... CHANGES:" that narrates the
+writing; not German, so not this step's. `docs/workflow.md` still
+carries emoji in its headers; a document, not this step's. The runner's
+`run_case` discards each case's console output, so the calls a run
+makes cannot be counted from it.
 
-**Not done, on purpose.** Order 5 and the decision to open it. Decision
-76. Every miss the runs logged, S-2's comma and R-9's shape included,
-all waiting on their triggers. The console glyphs, their own session.
-W-2's weight and growth pair, the owner's. The CLI, the README, the demo
-recordings. Decisions 12, 13, 16 and 17 as work. The cross-check in
-`_finding`. The owner's four documents. The three German prompt and
-answer strings.
+**Not done, on purpose.** Order 5 and the decision to open it; decision
+45 as its written opening. Decision 76. Every other miss the runs
+logged, R-9's shape included, all waiting on their triggers. The console
+glyphs, their own session. W-2's weight and growth pair, the owner's.
+The CLI, the README, the demo recordings. Decisions 12, 13, 16 and 17
+as work. The cross-check in `_finding`. The owner's four documents. The
+three German prompt and answer strings. The token regex.
 
 ---
 
@@ -429,25 +495,36 @@ answer strings.
 
 **Taken this session:** none of the numbered kind. Two small shapes on
 the owner's yes: all ten answer-text lines rather than the seven header
-lines, and one translation commit per file.
+lines, and one translation commit per file. Two fixes on the owner's
+word after the assessment: S-2's reply and the runner's import path.
 
 **Pending — decide before writing code. Eleven by count, unchanged:**
 10, 12, 13, 16, 17, 22, 45, 48, 52, 54 and 76. The cap is 25.
 
 10. A window return as a measure with a reference.
-12. The hypothetical mode's instrument type.
+12. The hypothetical mode's instrument type. Folds into 45 by the
+    assessment.
 13. A target-weights clause and `OUT_OF_SCOPE_RESPONSE` moving into the
-    IPS.
+    IPS. Folds into 45 by the assessment.
 16. Company names, German phrasings, the softer 3.5. The router prompt's
-    two German strings are this decision's.
-17. The selection axis.
+    two German strings are this decision's. Extraction, so it survives
+    Order 5 and can go either side of it.
+17. The selection axis. Folds into 45 by the assessment.
 22. Volatility over as-traded closes or a total-return series.
-45. The tool-boundary pass, tagged Order 5. Absorbs 9, 11 and 36.
+45. The tool-boundary pass, tagged Order 5. Absorbs 9, 11 and 36. **The
+    assessment's recommendation: this is the written decision that opens
+    Order 5, with 12, 13, 17 and 54 folded in, and it states what a tool
+    is, which node becomes which tool, where extraction sits as input
+    validation, how a plan derives from a dependency table, which model
+    drives the conversation and what a turn costs, and the pytest count
+    to expect after the router goes.**
 48. Part 13 E's item 7, second half only.
 52. The Yahoo-fed tables: delete or keep. The eight translated files are
     largely this decision's surface; translating them decided nothing
-    about keeping them.
-54. BaseAgent's tool loop and the three `AgentConfig` fields.
+    about keeping them, and deleting them after Order 5 is cheaper than
+    carrying them through it.
+54. BaseAgent's tool loop and the three `AgentConfig` fields. Folds into
+    45 by the assessment.
 76. Whether money and ratios are computed in decimal. Stays pending on
     the owner's word; its entry is unchanged this session.
 
@@ -465,12 +542,14 @@ lines, and one translation commit per file.
 Levels 1 to 3: **11/12**, 2.1 BLOCKED on routing. Level 4: 4.2, 4.4, 4.5
 and 4.6 PASS; 4.1 and 4.3 BLOCKED at the PHI-2.1 stop. **15/18, by this
 session's run at 21:49 UTC on 22 September**, the same eighteen verdicts
-as at 18:42.
+as at 18:42; the two fixes after it move no verdict.
 
 **Against the corpus: 31 of 67, all 67 sent**, benchmark.md Part 3c.6's
 three blocks, unchanged. The spine's 19 turns: 10 matched, 9 missed. The
 variations: 6 of 15. The clarifications: 7 of 7. The refusals: 1 of 9,
-every refusal itself right. The sequences: 7 of 17 turns, S-8 whole.
+every refusal itself right. The sequences: 7 of 17 turns, S-8 whole;
+**S-2 turn 2 should match in the next run**, by b430a0a's test on its
+wording, which makes 32 the number to expect from the same code.
 
 What the runner cannot see and the reading has: whether an answer
 carries the figures its entry pins, whether it cites the clauses, whether
@@ -482,6 +561,12 @@ until 2027; whether a quote supports its claim; and whether any answer
 reads well. **The headers an answer prints are now plain text; no check
 saw them before and none sees them now.**
 
+**What Order 5 takes with the router, measured this session**: the
+golden set whole; twelve of the runner's twenty-eight probes and checks,
+which read `router_decision`; and about 89 of pytest's 1935, in eight
+files, the 23 extraction and derivation tests among them surviving as
+the tools' input validation and dependency table.
+
 ---
 
 ## 7. Next steps, in order
@@ -489,18 +574,23 @@ saw them before and none sees them now.**
 **1. The merge.** `cleanup` onto the trunk, `--ff-only`, then the push by
 URL; the worktree removed after.
 
-**2. Order 5, on the owner's word.** When it opens, the record's four
-entries from the corpus run and the interlude entry close on its commit,
-and the run after it is Part 3c.6's next block, all 67 turns. **The
-closes of the 22nd and the refetch of the ticker file and two filers'
-rows and facts come with the first paid Level 4 run after 01:38 UTC on
-the 23rd**: say so before it, table by table. Apple's facts have run out
-already and no runner case reads them.
+**2. Decision 45 on paper, then Order 5, on the owner's word.** When it
+opens, the record's four entries from the corpus run, the interlude entry
+and the token-regex entry close on its commit, and the run after it is
+Part 3c.6's next block, all 67 turns, read against the same Part 18 with
+S-2 turn 2 expected to match. **The closes of the 22nd and the refetch
+of the ticker file and two filers' rows and facts come with the first
+paid Level 4 run after 01:38 UTC on the 23rd**: say so before it, table
+by table. Apple's facts have run out already and no runner case reads
+them.
 
 ### Later, with reasons
 
 - **Decision 76**, on the owner's word only; its entry lists what it
   owes before it is taken.
+- **The token regex**: a full stop after a ticker defeats a first turn;
+  fix in `_TOKEN`, tests first on "Sell 50 SPY." and a dotted ticker,
+  then the golden set, since every question's tickers pass through it.
 - **The console glyphs**: 113 strings and comments under `src/`, by file
   in §4, their own session; the transcripts show how they print. Beside
   them the English header comment of `quota_manager.py` and the pasted
@@ -510,9 +600,6 @@ already and no runner case reads them.
   proposal. Whether the check moves in front of the reading is a shape of
   the research node, logged on the R-7 entry, and Order 5 rebuilds the
   node's frame; not the interlude's.
-- **S-2's comma**, one line in `extraction.resolve`, the test first on
-  the corpus wording; extraction survives Order 5, so it is worth a
-  commit before it, and it is not step 4's.
 - **The period vocabulary** in `config.DataConfig.period_days` is printed
   to the user by four clarifications and lives in code.
 - **The router's swallowed exception** — a failed model call should raise
@@ -524,9 +611,6 @@ already and no runner case reads them.
 - **IPS-5.3's second limb** is not computed (decision 71).
 - **Nothing records a model call's tokens**, and the runner discards the
   console output that would show the calls; a run's cost is an estimate.
-- **`run_cases.py` could insert its own `src`** as `cli.py` does, so a
-  worktree's runner scores the worktree without `PYTHONPATH`; one line,
-  not this session's.
 - **1 February 2027**: W-2.1 and W-2.2 fall due; Adobe's facts go stale
   on the 29th like any other filer's. **1 March 2027**: W-1.1 and W-1.2.
 - Three stale statements, the owner's to fix on the owner's word:
@@ -536,6 +620,13 @@ already and no runner case reads them.
 ---
 
 ## 8. Rules learned the hard way
+
+**A recorded cause is a hypothesis until the test goes green.** The
+record said one line would fix S-2 and named the comma; the line went in
+and the test on the corpus wording stayed red. A trace over five
+variants of the reply found the full stop as a second cause in the
+regex, not the whitespace. Apply the record's fix, read the test, and
+trace before a second guess.
 
 **A word list undercounts, and the remainder is read by eye.** The first
 list found 194 German strings; reading every unflagged comment and
@@ -563,6 +654,10 @@ from the run. Say so rather than guess a number.
 **A glyph count is three counts.** Lines, literals and characters differ
 (ten, eleven, twelve here), and a record that says "six further lines"
 and lists five has mixed two of them. Name which one a number is.
+
+**Measure what a refactor will delete before it is written.** Twelve
+probes and about 89 tests go with the router; said now, the drop in the
+count after Order 5 reads as the plan and not as breakage.
 
 Still true, from earlier sessions: **a refusal can arrive in a failure's
 shape from either side of a check**; **a count of readings is predicted
@@ -641,8 +736,8 @@ python tests/golden/run_golden.py > /tmp/golden_now.txt 2>/tmp/golden_err.txt
 diff tests/golden/expected.txt /tmp/golden_now.txt
 python tests/benchmark/run_cases.py
 python tests/benchmark/run_cases.py --case 2.1     # one Haiku call, ~$0.001
-# from a worktree the runner needs the worktree's src, or it scores the checkout:
-PYTHONPATH=src python tests/benchmark/run_cases.py
+# from a worktree the runner scores the worktree since 9d9ca39; to see which tree it loads:
+python -v tests/benchmark/run_cases.py --help 2>&1 | grep -o '[^ ]*src/agents/graph.py'
 
 python src/agents/cli.py --portfolio 3        # :q to quit
 # several questions through one process; a corpus sequence is consecutive turns here.
@@ -663,6 +758,9 @@ git rev-list --count 1d4eb9c..HEAD
 # what still carries a glyph or a German word under src/, by file:
 grep -rlP '[^\x00-\x7F]' src --include='*.py'
 grep -rcP '[äöüÄÖÜß]' src --include='*.py' | grep -v ':0$'
+
+# the reply rule on the corpus wording, no model call:
+pytest -q tests/test_extraction.py -k MSFT
 
 # the corpus: prompts, answers, and the runs' readings
 grep -n '^### 3c\|^| [VCRS]-\|^\*\*S-' docs/benchmark.md
@@ -700,10 +798,10 @@ git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1
 
 | Loop | Cost | Answers |
 |---|---|---|
-| `pytest` | ~7s, no model calls | Do the components still work; does every reference Part reproduce; does each node fetch in order and publish its block; does the gate refuse what it must; does the outcome compose every row of the truth table; do Part 3c.1's wordings match the runner's; does the compliance answer print Part 7's cents. Sees nothing of the corpus's answers and nothing of a header's text. |
+| `pytest` | ~7s, no model calls | Do the components still work; does every reference Part reproduce; does each node fetch in order and publish its block; does the gate refuse what it must; does the outcome compose every row of the truth table; do Part 3c.1's wordings match the runner's; does the compliance answer print Part 7's cents; does S-2's reply resolve. Sees nothing of the corpus's answers and nothing of a header's text. |
 | CLI | ~2s and one Haiku call for most questions; a screen of a new filer about 5s and two EDGAR fetches; a position or thesis question about a filer with no cached reading about 55s and four Sonnet calls, about 15 cents; a deterministic clarification free; **fetches prices past their interval, which runs out on the 23rd at 17:11 UTC** | What it is actually doing: the plan, the parameters, the reasoning line, the answer text. **The only loop that shows an answer, and therefore the only loop that can be read against Part 18.** The whole corpus is 67 turns, about 3 and a half minutes and about 0.30 dollars. |
-| Golden set | ~50s, about $0.039 per run; writes to no table since decision 51, prices aside | Did routing change anywhere (twenty-one lines, one pinned failure). Blind to `measure`, `group_by`, `tickers`, answer text, and any wording it does not carry |
-| Benchmark runner | ~60s, about $0.039 plus the Level 4 cases' Sonnet; `--case X` is one routing at about $0.001; **from a worktree, `PYTHONPATH=src`** | How many cases pass, n/18. Its checks read each answer's text and show it to nobody, discard the console, and cannot tell one cent from another, nor a refusal from a failure, nor a glyphed header from a plain one. **Carries none of the 41 corpus additions** |
+| Golden set | ~50s, about $0.039 per run; writes to no table since decision 51, prices aside | Did routing change anywhere (twenty-one lines, one pinned failure). Blind to `measure`, `group_by`, `tickers`, answer text, a reply to a record, and any wording it does not carry |
+| Benchmark runner | ~60s, about $0.039 plus the Level 4 cases' Sonnet; `--case X` is one routing at about $0.001; **scores its own tree since 9d9ca39** | How many cases pass, n/18. Its checks read each answer's text and show it to nobody, discard the console, and cannot tell one cent from another, nor a refusal from a failure, nor a glyphed header from a plain one. **Carries none of the 41 corpus additions** |
 
 `golden set → change → golden set → decide → then update expected.txt, its own
 commit`. Prediction first, twice for a prompt change, stop at the second miss
