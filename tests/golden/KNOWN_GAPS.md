@@ -7186,6 +7186,13 @@ first. Order 5 is where this class of defect ends - the model picks a tool
 by its signature and there is no list of options to compete inside - so
 this entry's trigger includes that commit.
 
+*Pinned 22 September (thirty-fourth session), the first entry of the
+corpus: the wording verbatim as the runner sends it in benchmark.md Part
+3c.1, and the answer it must give in expected_values.md Part 18, entry
+2.1, the three concentration tables of Part 7 §4 with every clause cited.
+Pinned without the routing, which the re-scope of the same day put outside
+what the corpus records; the routing it has today is the paragraph above.*
+
 **A mistake of my own, recorded because it cost the cheapest information
 in the run.** The runner's output was piped through `tail -30`, which cut
 off cases 1.1 to 2.1 - the five containing the finding. Three further runs
