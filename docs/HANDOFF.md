@@ -1,9 +1,9 @@
 # AGENTIC_FINANCE — Session Handoff
 
-**Session date:** 21 September 2026, begun about 14:10 UTC (thirty-second session), ended the same day. Regenerated at its end. The thirty-first session ran the same morning and ended when the credit balance emptied.
-**Branch:** `rounding`, cut from `baseline-v1` at **7c48fda** before the first commit. **`baseline-v1` is the trunk.** It stood at 7c48fda, four commits ahead of origin, while this document was being written — that gap was yesterday's and this session added none of it. **The owner then merged `rounding` `--ff-only` and pushed, so the trunk and `origin/baseline-v1` are level at b702674**, and the two commits made after that, the correction to decision 75's entry and decision 76, are on `rounding` again and unmerged. Seven commits in the session: five to b702674 and two after it. The owner merges and pushes; `origin`'s push URL is `no_push`.
+**Session date:** 22 September 2026 (thirty-third session), begun about 11:50 UTC. Regenerated at its end. The thirty-second session ran on the 21st and closed the full test at the end of Order 4.
+**Branch:** `intents`, cut from `baseline-v1` at **33769f6** before the first commit. **`baseline-v1` is the trunk.** It stands at 33769f6 and `origin/baseline-v1` is level with it — the owner merged and pushed after the thirty-second session, so there is no gap this time. **Eleven commits in this session, none merged.** The owner merges and pushes; `origin`'s push URL is `no_push`.
 
-**State:** pytest **1943 passed, 6 xfailed**, unchanged — every commit this session is markdown. **The runner ran once and reports 16/18**, unchanged since the thirtieth session. **The golden set was not run**: nothing touched routing. **The full test at the end of Order 4 is complete — eighteen of eighteen cases read through the CLI, every figure recomputed rather than read, plus the four intents outside the roster.** **Order 4's closing condition is met.** Decision 51 is closed, decision 75 taken and decision 76 numbered; the pending list falls from eleven to ten and back to **eleven**.
+**State:** pytest **1926 passed, 6 xfailed**, down from 1943 by the seventeen tests decision 51's deletion took with it — the measured number and the corrected prediction agreeing exactly. **The runner is 15/18, 0 failing, 3 blocked**, down from 16/18: case 2.1 now routes `risk_analysis` instead of `compliance` and that is this session's real finding. **The golden set ran twice, byte-identical, and `expected.txt` moved six lines across two queries.** Decision 51 is **executed**; the pending list stands at eleven, unchanged.
 
 Written for whoever picks this up cold, myself included.
 
@@ -12,19 +12,11 @@ Written for whoever picks this up cold, myself included.
 this file.** Sections whose claims were checked again this session and
 still hold are kept word for word; the rest is rewritten.
 
-**The credits are back.** The balance was topped up mid-session and the
-one-line check in §9 answered. Before that it failed once more with the
-same message and a new request id, `req_011CfGdTPecaATTdfd3wLaS4` — a 400
-`invalid_request_error`, not a 401, so the key authenticates and it is the
-balance that is empty when this happens.
-
-**What the full test cost me to learn, which is the point of it.** Eighteen
-cases, eight findings, and **the runner calls every one of those cases a
-pass, or blocks it for an unrelated reason**. Every finding is invisible to
-all four loops: the runner shows nobody an answer, the golden set prints five
-routing fields, pytest holds components, and only a hand reading through
-the CLI sees them. **n/18 counts well-formed answers and cannot count right
-ones.**
+**The interlude between Orders 4 and 5 has begun.** DIRECTION.md now
+carries it as an unnumbered paragraph under Order 4 (d221a8a), and
+KNOWN_GAPS holds the four reasons, the eight steps and how the corpus is
+built. **Step 1, the deletion, is done. Step 2 is the corpus and is the
+next session.**
 
 ---
 
@@ -32,12 +24,12 @@ ones.**
 
 | File | What it is |
 |---|---|
-| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1, 2 and 3 are built. **Order 4's work is built and its closing condition is now met**: the full test is done. **Order 5 may be opened and nothing of it has been started.** Invariant 8 was revised at 5b4be76, dated 20 September; case 3.2's refusal text has not caught up (KNOWN_GAPS). |
-| `docs/benchmark.md` | **The definition of done.** Levels 1 to 3: 12 cases, 12 pass. Level 4: 4.2, 4.4, 4.5 and 4.6 pass; 4.1 and 4.3 blocked. **16/18, as the runner reported it at 14:45 on 21 September.** Twelve dated status notes under Level 4, **one added this session** recording the full test's completion. **Read Part 2, not only the case list:** it states what is in scope in words, and drift and trades to a stated target are in it. That sentence is why decision 51 kept the rebalancing intent. |
-| `tests/golden/expected_values.md` | Hand-computed reference, Parts 1 to 17. **Unchanged this session and Part 7 read hard.** All five of its currency distances reproduce exactly from `market_value - limit * total`, and two of them land on exact halves, both stated rounded up. That is what settled decision 75. Never update it to match code output. |
-| `tests/golden/expected.txt` | **Twenty-one lines**, unchanged this session, one pinned failure. |
-| `tests/benchmark/run_cases.py` | **The scoreboard.** Eighteen cases, unchanged, **run once at 14:45**. **Its checks read every answer** — `_answer(state)` at line 160 is `state["final_response"]`, read at thirty-two sites — but it **shows** nobody one: `contextlib.redirect_stdout` (2501, 2515) discards the printed console trace, and the run prints verdict lines alone. That is why every finding costs a CLI run. **Corrected 21 September (thirty-third session); this row said it discards the answer, which is false** (KNOWN_GAPS). |
-| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **169 lines start `**Trigger:**`**, up from 165 by the four added this session. **Sixteen entries carry "pending decision 51"; all sixteen are now the deletion session's reading list.** |
+| `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1 to 4 are built and Order 4's closing condition is met. **Revised 22 September: an unnumbered interlude between Orders 4 and 5** — the corpus, the CLI as the client, the demo. The Order numbers did not move, and the direction did not change. |
+| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **172 lines start `**Trigger:**`.** **Start with "The interlude between Order 4 and Order 5, and how the corpus is built"** — it is the frame for every session until Order 5 opens. Then "Deleting three intents moved case 2.1 to risk_analysis", which is this session's finding. **No entry names "pending decision 51" any more**: eleven are RESOLVED and five moved to decisions 13, 45 and 52. |
+| `docs/benchmark.md` | **The definition of done.** Levels 1 to 3: 12 cases, **11 pass, 2.1 blocked**. Level 4: 4.2, 4.4, 4.5 and 4.6 pass; 4.1 and 4.3 blocked. **15/18, as the runner reported it at 12:51 on 22 September.** Unchanged this session and out of its scope; its status column is not maintained by hand — the runner is the status. **Read Part 2, not only the case list**, and **Part 5, which is the demo plan the interlude executes rather than replaces.** |
+| `tests/golden/expected_values.md` | Hand-computed reference, Parts 1 to 17. **Not opened this session.** Never update it to match code output. |
+| `tests/golden/expected.txt` | **Twenty-one lines**, one pinned failure. **Six lines changed on 22 September** — the macro and optimisation queries now refuse. |
+| `tests/benchmark/run_cases.py` | **The scoreboard.** Eighteen cases, unchanged, **run once at 12:51 and four single cases after it**. **Its checks read every answer** — `_answer(state)` at line 160 is `state["final_response"]`, read at thirty-two sites — but it **shows** nobody one: `redirect_stdout` (2501, 2515) discards the printed console trace and the run prints verdict lines alone. |
 | `tests/golden/expected_values.xlsx` | The workbook, eleven sheets, **not opened this session**. Saved in Excel at b07bc33 by the owner at the end of the twenty-ninth session. Parts 9 C, 11, 14, 15, 16 and 17 have no sheet. |
 | `docs/IPS.md` | The policy, synthetic, 17 clauses. Unchanged. |
 | `docs/PHILOSOPHY.md` | What is worth wanting, synthetic: seventeen clauses. Unchanged. |
@@ -59,72 +51,59 @@ ones.**
 
 `docs/DIRECTION.md` states it. A conversation with a strong model that calls
 deterministic pipelines as tools; a guarantee half that is tools and done,
-and a judgement half whose tools — the philosophy check, the valuation
-range, prediction scoring, the reading tool, the research agent, the gate,
-the model's view of a thesis and the outcome it feeds — are in the graph
-with their references. The router is scaffolding until the tool layer is
-complete.
+and a judgement half whose tools are in the graph with their references.
+The router is scaffolding until the tool layer is complete.
 **No deadline. Correctness over speed. Scope creep is the risk.**
+
+### Why the interlude, in one paragraph
+
+Four reasons, the owner's, recorded in full in KNOWN_GAPS. No loop shows
+an answer, so there is no feel for what the system does. Order 5 replaces
+the router, which kills the golden set — the loop that cannot verify it —
+so a corpus of prompts with hand-written answers is the precondition.
+A first demo is a test: recorded runs that stand without narration. And
+what is actually missing should be known before anything is added.
+**The corpus grows inside benchmark.md and expected_values.md, hand-written
+before it is run, never updated to match output.**
 
 ### Design principles
 
-These were checked against the code again this session; what eighteen
-readings add is marked.
+Checked against the code again this session; what the deletion adds is marked.
 
-- **Hot potato — agents never see raw data.** A filing's document is text
-  in `filed_documents` returned to no agent; what leaves the reader is the
-  record, at most twelve claims a section. **Read live: cases 4.3 and 4.4
-  print thirty-six claims, exactly twelve for each of Item 1, Item 1A and
-  Item 7, each with its quote — the cap is reached in all three.**
-- **No number from a model.** **Held over eighteen answers.** Every figure
-  in all of them traced to a published block and I recomputed each by hand:
-  nine market values and nine P&L figures from the closes, the gate's
-  sixteen distances in decimal, the new money 26,071.12 and the total
-  434,518.62, and the proposed prediction's threshold, which is Alphabet's
-  FY2025 revenues 402,836,000,000 less cost of revenue 162,535,000,000 over
-  revenues — 0.5965231508, printed 59.65%. **A number written in words is
-  still not caught.**
-- **Policy lives in config, not code.** The thesis, the growth pair, the
-  classification, the weight and the entry condition are the watchlist's;
-  the IPS's words are the IPS's. **Read live: GOOGL's asset class and
-  sector are blank on its `assets` row and the gate placed it in Equity and
-  in Communication Services from the watchlist entry, which is decision 63
-  working.**
-- **One arithmetic path.** The gate builds the allocation the portfolio
-  would have and hands it to `compliance.check`. **And it is one path in
-  the code: `distance_value` has exactly one writer, `compliance.py:102`.**
-  The handoff said last session that the same distance is "computed two
-  ways in the codebase"; that was wrong and is corrected here. The other
-  way is a quantity nobody computes, worked out by hand — and it is the one
-  Part 7 uses, which is what decision 75 settled.
-- **Raise, do not repair.** **Read live, and correct in the strict places:**
-  `backtest_agent_node` raises without `optimal_weights` rather than
-  assuming equal weights, and the screening node refuses a ticker on no
-  watchlist entry. **Still broken where it matters most:** the router
-  catches every exception from the model call, returns `None`, and the
-  answer reports a null dereference instead of the API's own sentence.
+- **Hot potato — agents never see raw data.** Unchanged and unexercised
+  this session: no CLI run was made.
+- **No number from a model.** **The deletion removed the one live path
+  that broke it**: `_format_optimization_response` printed "Return:
+  26.49%", a forward return stated as a number, which invariant 7 forbids.
+  The query that reached it now refuses.
+- **Policy lives in config, not code.** **Read live in the scoping:**
+  `config.MacroConfig`, `OptimizationConfig` and `BacktestConfig` were
+  deliberately left standing when their agents went, because a config
+  decision does not belong inside a code deletion. `config.macro` still
+  has a live reader — `data_agent.py:818` takes the risk-free rate from
+  the 10Y Treasury yield in `macro_data`.
+- **One arithmetic path.** Unchanged; `distance_value` still has exactly
+  one writer, `compliance.py:102`.
+- **Raise, do not repair.** **Held through the deletion.**
+  `rebalance_agent_node` had its target read rewritten rather than
+  repaired: it reads `shared["target_weights"]`, a key nothing publishes,
+  and raises. No default target was invented. **Still broken where it
+  matters most:** the router catches every exception from the model call
+  and returns `None`.
 - **Compliance is a gate, not a tool.** `gate_node` is in neither
-  `schemas.AGENTS` nor `graph.AGENT_NODES`. **Read live in 4.3: the outcome
-  named all four inputs that did not permit, and said in its own words that
-  no view of a thesis makes a position the policies refuse allowable.**
-- **The outcome is nobody's judgement.** **Not established is not a yes**,
-  and 4.3's answer says so in that many words.
-- **References before code.** **Part 7 was written on 7 September before
-  the checker existed and it decided decision 75 fourteen days later.** That
-  is the principle paying out: the reference had already chosen the
-  arithmetic the code got wrong.
-- **The score is mine, and so is a row.** **Read live: 4.3 and 4.4 both
-  printed the `watchlist.toml` row and the WATCHLIST.md sentence for W-1.3
-  and wrote neither file.**
+  `schemas.AGENTS` nor `graph.AGENT_NODES`. Unchanged.
+- **References before code.** Unexercised this session.
+- **The registry is the prompt.** **This session is the evidence, and it
+  cost a benchmark case.** Removing three intent descriptions moved case
+  2.1 — a question mentioning none of them — from `compliance` to
+  `risk_analysis`. `compliance` and `risk_analysis` keep their
+  descriptions byte for byte. **With an LLM classifier there is no local
+  change to the prompt.**
 - **A formatter states what the data says and never what the system is.**
-  **Broken in two places now.** The error stub prints "Analysis complete.
-  See details below:" after nothing ran, and `OUT_OF_SCOPE_RESPONSE` tells
-  the user the system does not say whether to buy an instrument, which it
-  has done since 20 September (KNOWN_GAPS, both).
-- **The registry is the prompt.** No prompt change this session, so no
-  hypothesis and no golden line moved. **The next session's deletion is a
-  prompt change**, because removing three intents removes three
-  descriptions.
+  Still broken in two places, and one of them gained a third instance:
+  `OUT_OF_SCOPE_RESPONSE` now answers "What is the current market
+  regime?" with a sentence listing screening, forecasts, tax and orders,
+  none of which is market conditions.
 
 ### How I work on this
 
@@ -132,43 +111,43 @@ readings add is marked.
   what changes on a yes, the rejected alternatives, which loop sees it.
 - **The reference before the code**, each time, in its own commit.
 - **A paid loop says first what it will fetch and store, table by table**,
-  read off the store and the clock, and says after what moved. **Four paid
-  loops this session and every table prediction exact** — but one of the
-  four was corrected by me before it ran, GOOGL's clock having run out at
-  12:56 where I had called it fresh. **The runner's prediction was written
-  to a file at 14:36 before the run rather than said afterwards**, which is
-  the form to keep when a prediction and its result land in one message.
-- **Read a live model output by hand.** The runner never shows it.
-- **Recompute the answer's arithmetic rather than reading it.** Every
-  rounding defect this project has found was invisible to a reading.
+  read off the store and the clock, and says after what moved. **Five paid
+  runs this session and every table prediction exact** — and the
+  prediction was "nothing", which held: the golden set now writes to no
+  table at all.
+- **A prompt change is a hypothesis, written before the run.** The
+  prediction for this deletion went into commit 7e27d47's message before
+  any of it ran. **One of the two lines missed**, to its stated second
+  guess.
+- **Measure before deleting, and say the number twice.** The measurement
+  before said seventeen tests would fall; pytest said 1926. It was wrong
+  once by one and corrected mid-session, in a commit message, before the
+  run that would have exposed it.
 - **Grep the caller, not the registration**, and **grep the writer the
-  reader reads.**
-- **Search the record before logging a finding.** Case 3.4's malformed
-  sentence was logged on 9 September, word for word, and this session
-  nearly logged it again.
-- **CLAUDE.md is mine and untracked.** **Edited by the session on my word
-  this time rather than proposed:** the golden-set count from "Twenty" to
-  "Twenty-one", and the pending list from eleven members to ten.
+  reader reads** — and now **grep the package, not three files**: the
+  first deletion broke collection at 34 errors because
+  `agents/__init__.py` re-exported the agent.
 - No emoji in anything newly written. A count I predict is a count I add up.
 
 ### What I do NOT want
 
 A pure asyncio/regex version without LangGraph. Prompt rules added to fix a
-routing defect. My real portfolio's data in the repo: Order 6, last. No cached
-holdings table; no fallback rate, currency or policy; no adjusted close; no
-environment switch for which policy runs. **No invented figures as a runtime
-source, and no price a stock will reach anywhere.** No widening of the
-router's schema to make it a better classifier. No NOPAT at the company's
-filed tax rate. No formatter sentence that states the system's status.
-**No number, threshold or weight from a model; no row written into the
-watchlist by the system; no outcome decided by the formatter or the model.**
-**No score written into the ledger by the system; no partial credit; no
-prediction scored before its date.** **No long quote cut in code to pass the
-cap, no third wording after two misses.** **No exception swallowed into a
-`None` that crashes somewhere it cannot be explained.** **And new, from what
-the four out-of-roster intents print: no forward return as a number, no
-figure printed at full binary precision, and no answer about a portfolio I
-do not hold that does not say whose portfolio it is.**
+routing defect — **and this session declined to add one even at the cost of
+a benchmark case**. My real portfolio's data in the repo: Order 6, last. No
+cached holdings table; no fallback rate, currency or policy; no adjusted
+close; no environment switch for which policy runs. **No invented figures as
+a runtime source, and no price a stock will reach anywhere.** No widening of
+the router's schema to make it a better classifier. No NOPAT at the
+company's filed tax rate. No formatter sentence that states the system's
+status. **No number, threshold or weight from a model; no row written into
+the watchlist by the system; no outcome decided by the formatter or the
+model.** **No score written into the ledger by the system; no partial
+credit; no prediction scored before its date.** **No long quote cut in code
+to pass the cap, no third wording after two misses.** **No exception
+swallowed into a `None` that crashes somewhere it cannot be explained.**
+**No forward return as a number** — the one path that printed one is
+deleted. **And no sentence in the record that names an audience instead of
+a requirement.**
 
 ---
 
@@ -187,120 +166,112 @@ python tests/benchmark/run_cases.py
 python src/agents/cli.py --portfolio 3
 ```
 
-**All five run again.** The credit balance is topped up.
+**Four of the five run. The CLI was not run this session at all** — no
+answer was read by hand, which is worth knowing before trusting anything
+here about answer text.
 
-**1943 passed, 6 xfailed**, about 6 seconds. Run at session start and
-unchanged since: all four commits are markdown.
+**pytest: 1926 passed, 6 xfailed**, about 6 seconds. Was 1943 at session
+start. The seventeen that went are decision 51's, itemised in §4.
 
 **Golden set: twenty-one lines, one pinned failure** ("Should I rebalance
-my portfolio?", errors 1). **Not run this session** — the condition was a
-change that touches routing and there was none.
+my portfolio?", errors 1). **Run twice on 22 September at 12:43 and 12:45,
+byte-identical to each other.** `expected.txt` updated at 4f7ca89.
 
-**The runner: 16/18, 0 failing, 2 blocked**, run once at 14:45. 4.1 and 4.3
-blocked on the PHI-2.1 stop with decision 48 and D36 named. Nothing has
-touched the graph since the thirtieth session, and the score has not moved.
+**The runner: 15/18, 0 failing, 3 blocked**, run once at 12:51. 4.1 and
+4.3 blocked as before on the PHI-2.1 stop; **2.1 newly blocked** because
+the router plans `[DataAgent]` under `risk_analysis` and ComplianceAgent
+never runs.
 
-**The CLI, three batches, every answer read by hand and every figure
-recomputed:** cases 3.2 to 3.5 at 14:24; cases 4.1 to 4.6 at 14:28; the
-four out-of-roster intents at 14:33.
+### What the deletion did, and what it cost
 
-### The full test at the end of Order 4 — complete
+**Decision 51 executed in three commits**, backtest then optimisation then
+macro, each leaving the tree green. **4,459 lines by `wc -l` on the day**
+— the decision's own total of 4,094 was 365 short of its own five
+components, corrected at 2cbecca.
 
-**Eighteen of eighteen read.** Eight in the thirty-first session, ten in
-this one.
-
-| Case | Read | What the reading found |
+| Measure | Before | After |
 |---|---|---|
-| 1.1 | 31st | every figure traces and matches Part 17's at the same as-of |
-| 1.2 | 31st | right, but +74.83% is an exact half rounded by the float |
-| 1.3 | 31st | traces to its block and to no Part; the basis line states a method Part 4 does not |
-| 1.4 | 31st | **the five-sector table, and no figure for either position** |
-| 2.1 | 31st | every clause recomputed and held; two exact halves rounded opposite ways |
-| 2.2 | 31st | right |
-| 2.3 | 31st | **byte-identical to 2.2, flagged by the CLI itself** |
-| 3.1 | 31st | refused on IPS-4.1 and IPS-4.2 without computing a portfolio, which is right |
-| 3.2 | 32nd | refuses the forecast, **and its refusal names capabilities the system now has** |
-| 3.3 | 32nd | all nine positions traced and summed; **three exact halves, three different roundings** |
-| 3.4 | 32nd | right, and the lookup sentence still swallows the whole question (logged 9 September) |
-| 3.5 | 32nd | asked back, resolved "yes" to AAPL, answered AAPL alone. Clean |
-| 4.1 | 32nd | **byte-identical to 4.2**, flagged by the CLI itself |
-| 4.2 | 32nd | the same answer under a philosophy heading; every figure traces |
-| 4.3 | 32nd | **the sixteen gate distances all reproduce in decimal**; outcome no entry, four inputs named |
-| 4.4 | 32nd | thesis, thirty-six claims, W-1.3 proposed and neither file written |
-| 4.5 | 32nd | ledger: 4 predictions, 0 scored, 0 due, 4 open. Correct as of today |
-| 4.6 | 32nd | JPM excluded under PHI-3.2, SIC 6021, nothing else read. Clean |
+| `schemas.INTENTS` | 11 | **8** |
+| `schemas.AGENTS` | 10 | **7** |
+| `schemas.REQUIRES` | 6 entries | **4** |
+| pytest | 1943 | **1926** |
+| runner | 16/18 | **15/18** |
+| glyphed answer headers | 7 | **4** |
 
-**Eight findings over the eighteen, all in KNOWN_GAPS, all invisible to
-every loop.**
+The eight intents: `clarification_needed`, `compliance`, `data_fetch`,
+`ledger`, `out_of_scope`, `rebalancing`, `research`, `risk_analysis`.
+The seven agents: `ComplianceAgent`, `DataAgent`, `LedgerAgent`,
+`PortfolioAnalysisAgent`, `RebalanceAgent`, `ResearchAgent`,
+`ScreeningAgent`.
 
-### The four intents outside the roster — decision 51's evidence
-
-Each asked once, each answered, **each failed differently**: macro prints a
-raw double `14.8100004196167` and states no as-of; optimization prints
-"Return: 26.49%", a forward return as a number; rebalancing cannot succeed
-for any wording because the dependency table gives `RebalanceAgent` only
-`DataAgent` while the node needs `optimal_weights`; and backtest tests the
-optimiser's weights rather than the holdings and does not say so. The full
-evidence is in KNOWN_GAPS under decision 51.
+**The finding, and it is the session's most important output.** Case 2.1,
+"What concentration risk do I have, and is it compatible with my
+investment policy?", routed `compliance` with the three agents and now
+routes `risk_analysis` with `[DataAgent]` alone. **Deterministic over
+three runs.** Nothing that decides it changed: `compliance` and
+`risk_analysis` keep their descriptions byte for byte, `TERMINAL`,
+`REQUIRES` and `derive_plan` are untouched and pytest holds all three.
+What changed is the number of options the one LLM call chooses between.
+**Not fixed**: narrowing `risk_analysis`'s description is a prompt rule
+bought to fix a routing defect, which DIRECTION.md forbids and Order 5
+would make us pay for twice. Logged at bb163b3 with what it owes the
+corpus session.
 
 ### Branches and tags
 
-`baseline-v1` is the trunk; sessions branch from its tip and merge back
-`--ff-only` when the loops are green. **The trunk stands at 7c48fda, four
-ahead of origin, and this session added nothing to that gap** — `rounding`
-was cut before the first commit, which is the rule the thirty-first session
-missed. `halves` and `judgement` are merged and older, with `gate`,
-`thesis`, `reader`, `research`, `score`, `publish`, `range`, `keys`,
-`node`, `filer`, `bridge`, `consolidate`, `selection`, `compliance` and
+`baseline-v1` is the trunk and stands level with `origin/baseline-v1` at
+**33769f6**. `intents` is this session's branch, eleven commits, unmerged.
+**`intents-parked` is cut at addfbc7**, the parent of the first deletion
+commit: it holds the tree that still had the three intents. `rounding`,
+`halves` and `judgement` are merged and older, with `gate`, `thesis`,
+`reader`, `research`, `score`, `publish`, `range`, `keys`, `node`,
+`filer`, `bridge`, `consolidate`, `selection`, `compliance` and
 `vocabulary`. `wip/phase7-snapshot` holds rejected Compliance/IPS code.
 `wip/rag-early` and tag `rag-early-parked` hold the RAG code.
 `quant-inventory-parked` at 8d87455 holds the tree before the seventeenth
-session's quant deletions. **`intents-parked` does not exist yet and is the
-deletion session's first act.**
+session's quant deletions.
 
 ### Database
 
 `data/portfolio.db` is untracked runtime state. Alembic head
 **`2445c12e728c`**, 26 migrations, linear, all applied; no migration this
-session. No reseed. **What this session wrote:**
-- `daily_prices`: **7,009, unchanged**, the last close still 2026-09-18.
-  Ten provider calls were made and each returned one bar, Friday the 18th,
-  upserted onto the row already there. **yfinance's `end` is exclusive**
-  and the fetch asks `history(start=2026-09-18, end=2026-09-21)`, so an
-  in-progress Monday was never stored as a close. Worth knowing before the
-  next paid loop: that is what stops an unfinished day entering the store.
-- `asset_fetch_metadata`: the nine holdings stamped **2026-09-21 14:24:06
-  to 14:24:09**, GOOGL **14:28:40**. **So the price interval runs out on 22
-  September at 14:24 and 14:28.**
-- `api_call_logs`: 2,467 to **2,480** — nine holdings, one GOOGL, three
-  macro indicators. `api_quotas` row 30, `daily_yfinance_2026-09-21`: 6 to
-  **19**.
-- `macro_data`: **209, unchanged**. The macro question asked for three
-  indicators and no trading day had closed since Friday.
-- `document_readings`: **5 rows, unchanged.** Item 1 under `1b2d86a8ba32`,
-  `ba9a7051eeca` and `a64f51fde1eb` (the one the node serves); Item 1A
-  under `903e89b123b5`; Item 7 under `54b0dba223f4`. Four research answers
-  were rendered and all four were served from these rows.
-- **No EDGAR fetch.** `filers` three rows pulled 2026-09-16 between 00:03
-  and 01:38, `filed_facts` 28,787, `ticker_ciks` 10,422, `filed_documents`
-  one row, `filed_fetch_metadata` two, 2026-09-15 22:17 and 2026-09-16
-  01:38. **The filings intervals run out on 22 September at 22:17 and on
-  23 September between 00:03 and 01:38 — they had not run out today.** The
-  previous handoff said they "ran out on" those dates and that wording read
-  as past tense in the session brief; they are expiry dates in the future.
+session. No reseed. **What this session wrote: nothing.** Five paid runs
+— two golden, one runner, four single cases — and every table is where it
+was:
+
+- `daily_prices` **7,009, unchanged**, last close still 2026-09-18.
+- `asset_fetch_metadata`: the nine holdings still stamped **2026-09-21
+  14:24:06 to 14:24:09**, GOOGL **14:28:40**. **The one-day price
+  interval ran out on 22 September at 14:24 and 14:28** — every run this
+  session was before that, which is why nothing was fetched. **The next
+  session's first paid run will fetch**, and Monday the 21st has closed
+  since, so a close will be stored.
+- `api_call_logs` **2,480, unchanged**. `api_quotas`'s last row is still
+  `daily_yfinance_2026-09-21` at 19; **no row exists for the 22nd**.
+- `macro_data` **209, unchanged**, newest `created_at` still 2026-09-21
+  14:33:47 from the previous session's CLI batch. **A golden run no
+  longer writes here at all** — three KNOWN_GAPS entries closed on that
+  measurement.
+- `document_readings` **5 rows, unchanged**; `filed_facts` 28,787,
+  `filers` three rows, `filed_documents` one, `filed_fetch_metadata` two.
+  **The seven-day filings intervals ran out on 22 September at 22:17 and
+  run out on 23 September between 00:03 and 01:38** — the first of them
+  after this session ended.
 
 Unchanged: `assets` ten rows, GOOGL the tenth and not held, its asset
-class, sector and instrument type still blank — the watchlist entry states
-them (decision 63); `financial_statements` 65 and `shares_history` 947,
-neither a source.
+class, sector and instrument type still blank — the watchlist entry
+states them (decision 63); `financial_statements` 65 and `shares_history`
+947, neither a source.
 
 **There is no holdings table.** Portfolio 3, "Benchmark Portfolio", is the
-only portfolio: nine ledger rows, cost basis 284,500 plus 15,500 cash, USD,
-policy `ips.toml`. GOOGL is not held. Adobe has no assets row and no facts.
+only portfolio: nine ledger rows, cost basis 284,500 plus 15,500 cash,
+USD, policy `ips.toml`. GOOGL is not held. Adobe has no assets row and no
+facts.
 
-**The live figures, recomputed by hand this session and held:** invested
-**392,947.50**, cash 15,500.00, total **408,447.50**, Equity 284,332.50,
-Technology 116,604.00, all at the 2026-09-18 closes.
+**The live figures, from the thirty-second session's hand recomputation
+and not re-checked here:** invested **392,947.50**, cash 15,500.00, total
+**408,447.50**, Equity 284,332.50, Technology 116,604.00, at the
+2026-09-18 closes.
 
 ### The documents and their tests
 
@@ -308,18 +279,7 @@ Technology 116,604.00, all at the 2026-09-18 closes.
 |---|---|---|---|
 | `docs/IPS.md` | `ips.toml` | `test_ips.py` | the compliance node, per portfolio row; the gate, over the portfolio as it would be |
 | `docs/PHILOSOPHY.md` | `philosophy.toml` | `test_philosophy.py`, `test_philosophy_loader.py`, `test_screening.py` | the screening node, by `nodes.PHILOSOPHY_PATH` (decision 30) |
-| `docs/WATCHLIST.md` | `watchlist.toml` | `test_watchlist.py`, `test_watchlist_loader.py`, `test_watchlist_predictions_loader.py` | the screening node, the candidates and their growth pairs; the ledger node, the prediction rows; the research node, the candidate, its thesis, its entry condition and its entered predictions; the gate node, the classification and the weight |
-
-### The research agent, the screen and the ledger, as they stand
-
-Unchanged this session and exercised live four times.
-`screening_agent_node`, intent `research`, plan `[ScreeningAgent]` alone
-when `asks` is unset. On Alphabet the screen stops at PHI-2.1 for FY2021
-(decision 48, D36); the range publishes regardless, 129.39 to 205.62 on
-FY2025, with GOOGL's last close 349.54 on 2026-09-18.
-**`research_agent_node` answers `asks` "thesis" and "position"**.
-`ledger_agent_node`, intent `ledger`, unchanged: four predictions, none due
-until 2027-02-01.
+| `docs/WATCHLIST.md` | `watchlist.toml` | `test_watchlist.py`, `test_watchlist_loader.py`, `test_watchlist_predictions_loader.py` | the screening node, the ledger node, the research node, the gate node |
 
 ---
 
@@ -330,15 +290,12 @@ until 2027-02-01.
   `src/observability` → `observability`, `src/config.py` → `config`. Never `from src.…`.
 - `.env` holds keys. Never print it. A permission rule denies sessions the
   shell and the editor on `.env*` files.
-- **Anthropic has credits again**, topped up on 21 September. The check in
-  §9 is one line, costs nothing and answers in a second; run it before
-  spending a loop on finding out. **When the balance is empty the check
-  fails with a 400 `invalid_request_error` naming the credit balance and
-  carrying a request id** — not a 401, so the key is fine and the balance
-  is not. **From inside the system it looks like nothing of the sort:**
-  every question returns `intent: None`, `plan: None`, `steps=0` and the
-  answer `Router error: 'NoneType' object has no attribute 'intent'`, which
-  names nothing real (KNOWN_GAPS).
+- **Anthropic has credits.** The one-line check in §9 costs nothing; run it
+  before spending a loop on finding out. **When the balance is empty it
+  fails with a 400 `invalid_request_error` naming the credit balance** —
+  not a 401. **From inside the system it looks like nothing of the sort:**
+  every question returns `intent: None` and `Router error: 'NoneType'
+  object has no attribute 'intent'` (KNOWN_GAPS).
 - `ACTIVE_LLM_CONFIG = ANTHROPIC_HAIKU` for the router. **`ANTHROPIC_SONNET`
   is `claude-sonnet-5`**, used by the reader, the proposer and the view, and
   **it refuses a temperature**; none of the three sends one. The router's
@@ -349,34 +306,33 @@ until 2027-02-01.
 - **yfinance is 1.7.0 and its `end` is exclusive**, which is why a fetch on
   an open trading day stores nothing new.
 - **EDGAR.** `config.edgar_user_agent()` reads `EDGAR_USER_AGENT` and raises
-  when it is missing. **Nothing was fetched from EDGAR this session.**
-- **What a model call costs.** `claude-sonnet-5` is $2 and $10 a million.
-  **Spent this session: on the order of $0.10** — twenty-eight Haiku
-  routings across three CLI batches and the runner, and Sonnet on 4.3's
-  proposal and view, 4.4's proposal and the runner's own. Treat it as an
-  estimate: **nothing records a model call's tokens** and `api_call_logs`
-  is provider calls only (KNOWN_GAPS).
+  when it is missing. Nothing was fetched from EDGAR this session.
+- **What this session cost.** Five paid runs: two golden at about $0.039
+  each, one runner at about $0.039, and four single-case runs at roughly
+  $0.001. **On the order of $0.12.** Treat it as an estimate: **nothing
+  records a model call's tokens** and `api_call_logs` is provider calls
+  only (KNOWN_GAPS).
 - **The price provider** is `nodes.price_provider()`; **the models** are
   `nodes.reading_model()`, `nodes.proposal_model()` and
   `nodes.view_model()`; the EDGAR provider is `nodes.edgar_provider()`.
-- **The allocation question fetches prices** when the one-day interval has
-  run out. **It runs out next on 22 September at 14:24**, GOOGL at 14:28.
 - `config.toml` carries five fetch intervals: prices 1 day, filings 7,
   earnings 7, profile 30, shares 30. A missing key raises at its reader.
+  **Its `[macro]`, `[optimization]` and `[backtest]` sections stand**
+  although two of the three now have no consumer — left deliberately, and
+  `hawkish_threshold`/`dovish_threshold` moved to decision 52.
 - `portfolio_tool/__init__.py` opens a DB connection at import; `config` reads
   `DATABASE_URL` at import; `config.toml` is read relative to the project
   root, so scripts run from the root.
 - `alembic.ini` names the database by a relative path: run from the project root.
 - The CLI's quit command is `:q`; `exit` goes to the router.
 - **Several questions can be sent to one CLI process** with
-  `printf '%s\n' 'q1' 'q2' ':q' | python src/agents/cli.py --portfolio 3`,
-  which is how all three batches were run. Each is its own graph run with
-  its own request id, and **the CLI's identical-answer check works across
-  them** — that is how 2.2/2.3 and 4.1/4.2 were both caught. Use
-  `printf '%s\n'` with each question as its own argument: a question
-  containing an apostrophe breaks a single-quoted format string.
-- **Import order, for any commit sequence.** The last sessions' order
-  stands; nothing was added to it this session.
+  `printf '%s\n' 'q1' 'q2' ':q' | python src/agents/cli.py --portfolio 3`.
+  Each is its own graph run with its own request id, and **the CLI's
+  identical-answer check works across them**. Use `printf '%s\n'` with each
+  question as its own argument: a question containing an apostrophe breaks a
+  single-quoted format string.
+- **A single benchmark case runs with `--case`**, one Haiku routing, about
+  $0.001 — far cheaper than repeating the whole runner to chase one case.
 - **Tests import from other tests.** The last sessions' imports stand.
 - **Tests delete rows from the suite's copy they did not write**:
   `test_screening_node.py` Alphabet's and JPMorgan's facts, filers and the
@@ -391,247 +347,261 @@ until 2027-02-01.
   tests' names come back as colour codes.
 - **`nodes.utc_today()`** is the ledger node's clock; the screening node
   reads the clock inline, so **a research answer's as-of is the day of the
-  run**, and the research node reads the screen's as-of. All four research
-  answers this session carried 2026-09-21.
+  run**.
 - **zsh does not split an unquoted variable into words**, and **has no
   `tac`**. **A `grep -c` that finds nothing exits 1 and stops a `&&`
   chain.** **A `%` inside a `printf` format is written `%%`.** **BSD `sed`'s
   `0,/re/` first-occurrence form is a GNU extension and silently matches
   nothing on macOS.** **`cat -A` is GNU; BSD `cat` has no `-A`.** **A
   backslash inside an f-string expression is a syntax error in 3.10.**
-- **What is no longer in the tree** (do not look for it): `portfolio_tool/rag/`,
-  `tools/data_tools.py`, `tools/macro_tools.py`, `tools/analytics_tools.py`,
+  **`awk`'s POSIX regex has no `\s`** — use `[ \t]*`, or a pattern anchored
+  with `^\s*` silently matches every line.
+  **`--include='*.py'` must be quoted in zsh** or it is glob-expanded and
+  grep reports "no matches found".
+- **What is no longer in the tree** (do not look for it). From earlier
+  sessions: `portfolio_tool/rag/`, `tools/data_tools.py`,
+  `tools/macro_tools.py`, `tools/analytics_tools.py`,
   `portfolio_tool/analytics/`, `scripts/run_metrics_update.py`,
   `scripts/update_all_assets.py`, `agents/risk_manager_agent.py`,
   `optimization/risk_parity.py`, `tests/test_design_violations.py`,
   `tests/violation_detector.py`; and inside surviving files, VaR, CVaR,
   drawdown, Sharpe, Sortino, Calmar and `RiskMetricsCalculator` from
-  `quant/risk_metrics.py`, shrinkage and exponential covariance, the frontier,
-  min-vol, target-return and target-volatility optimisers,
+  `quant/risk_metrics.py`, shrinkage and exponential covariance, the
+  frontier, min-vol, target-return and target-volatility optimisers,
   `DataAgent.get_risk_metrics_tool`, and the two `marketable_securities`
-  fields of the figures block. **Note that Sharpe and Max Drawdown still
-  print in the backtest answer** from `portfolio_tool/backtest/metrics.py`,
-  which that deletion did not reach; decision 51 removes the path.
+  fields of the figures block. **New on 22 September, decision 51:**
+  `agents/macro_agent.py`, `agents/optimization_agent.py`,
+  `agents/backtest_agent.py`, `portfolio_tool/backtest/` and
+  `portfolio_tool/optimization/` whole; `tests/test_macro_node.py`;
+  `macro_agent_node`, `optimization_agent_node`, `backtest_agent_node`,
+  `_format_macro_response`, `_format_optimization_response` and
+  `_format_backtest_response` in `nodes.py`; `protocols.BacktestMetrics`,
+  `RegimeType`, `RegimeSignal`, `TaskType.BACKTEST`,
+  `TaskType.ANALYZE_REGIME`, `TaskType.MACRO_ANALYSIS`,
+  `AgentRole.BACKTEST`, `AgentRole.OPTIMIZATION`, `AgentRole.MACRO`; and
+  four router-prompt teachings, two German one-liners and two few-shots.
+  **No live answer path computes or prints Sharpe or Max Drawdown any
+  more** — the backtest answer was the last, and it went with
+  `portfolio_tool/backtest/metrics.py`. Checked rather than assumed:
+  what survives is `PortfolioResult.to_summary` in the BaseAgent DTO
+  layer, which would print a Sharpe line if it were ever called with one,
+  and nothing in the graph calls it (decision 54); and `config`'s dead
+  `target_sharpe_ratio`, `calculate_rolling_sharpe` and
+  `max_drawdown_threshold`, left standing with their sections. The risk
+  formatter states in words that VaR, expected shortfall and drawdown are
+  not computed, which is Part 3b working.
 
 ---
 
-## 4. What the thirty-second session did
+## 4. What the thirty-third session did
 
-`git log --oneline 7c48fda..HEAD`, 4 commits and 5 with this file. The
-session finished the full test that the thirty-first began, took two
-decisions and wrote nothing but markdown.
+`git log --oneline 33769f6..HEAD`, **eleven commits**, 36 files, 566
+insertions and 5,844 deletions. Three tasks, in the owner's order.
 
-**The loops, first.** pytest 1943 at session start and unchanged
-throughout. The credit check failed once at the start with a new request
-id, the balance was topped up, and the check then answered. The runner ran
-once at the end: 16/18. The golden set did not run and had no reason to.
+**The loops.** pytest at session start 1943, at the end **1926**, run
+after every deletion commit. The golden set ran **twice** at 12:43 and
+12:45, byte-identical. The runner ran **once** at 12:51, then four single
+cases to chase what had moved. **Every paid run's table prediction was
+exact, and the prediction was "nothing".**
 
-**Under the word, in order.**
-- **b3c56d9** decision 75, the rounding of a distance to a limit. Taken
-  after Part 7 was opened and read: all five of its currency distances
-  reproduce from `market_value - limit * total`, two of them land on exact
-  halves and both are stated rounded up. The code computes the same
-  quantity from the share, which is why case 2.1 printed two halves
-  opposite ways. Not implemented.
-- **27bea4c** the record: three entries and an addendum.
-- **695af4e** decision 51, delete three intents and keep rebalancing, with
-  all four failures as its evidence and what the deletion session owes.
-- **9fe59a0** benchmark.md's status note for the full test's completion.
+**Task 1 — the why and the arc, recorded.**
+- **3ac93ea** one KNOWN_GAPS entry carrying the four reasons for pausing,
+  the eight steps of the interlude, and how the corpus is built: inside
+  benchmark.md and expected_values.md, five kinds not to be mixed, the
+  size discipline, what is pinned exactly against what is pinned by
+  invariants. **Step 6's count was stated as absent rather than carried**:
+  "22 German debug strings across five files" could not be reproduced, a
+  grep finding German console text in seven files under `src/`.
+- **d221a8a** DIRECTION.md gains the interlude as an **unnumbered**
+  paragraph under Order 4. Unnumbered so that nothing already written
+  about Order 5 has to be read twice: decision 45, this file, benchmark.md
+  and the new entry all name it.
+- **0c4dba9** the owner's correction, and the better rule came from it.
+  Reason 3 was written as recorded runs "that make a hiring manager
+  interested". That is a reaction standing in for a specification: it
+  carries the quality bar by implication and leaves it unwritten. **The
+  record names the requirement, not the audience** — the bar is that the
+  runs stand without narration, and both terms are out of the repository.
 
-**Two commits after this document was first written and merged**, and this
-is the patch that records them rather than a regeneration:
-- **e3283eb** a correction to decision 75's entry. Checking the store for
-  decision 76 turned up that `daily_prices` holds AAPL's close as
-  `336.130004882813` and that `data_agent.py:525` rounds it to two decimals
-  before anything computes. The entry had claimed no rounded figure is
-  published, which is false at fifteen `round(` calls in the
-  block-publishing stretch. **The decision stands and is better supported
-  for it** — the value path reads an exact two-decimal amount, which is why
-  Part 7 reproduces — but the claim was written without checking the code
-  and the correction is dated in place.
-- **decision 76**, numbered on the owner's word, with the shape, the
-  evidence, three uncosted candidates and no recommendation.
+**Task 2 — the correction owed.**
+- **addfbc7** the claim that the runner discards every answer is false.
+  `_answer(state)` at `run_cases.py:160` is `state["final_response"]` and
+  the checks read it at thirty-two sites. `redirect_stdout` discards the
+  printed console trace. The true part survives on its own: the answer
+  reaches the checks and reaches no person. The entry was retitled, its
+  old title having been the false claim, and §0, §1, §7 and §9 of the
+  previous handoff corrected.
 
-**The full test, batches 1 to 3.** Batch 1 at 14:24, cases 3.2 to 3.5, the
-last of them two turns. Batch 2 at 14:28, cases 4.1 to 4.6. Batch 3 at
-14:33, the four out-of-roster intents. **Every figure in all fourteen
-answers recomputed by hand**, in decimal where a half was in reach: the
-nine positions' P&L, the gate's sixteen distances, the new money and the
-total, the proposed threshold from the filed facts, and GOOGL's close
-against the store's own row.
+**Task 3 — decision 51's deletion.**
+- **`intents-parked`** cut at addfbc7 before the first deletion commit.
+- **The measurement first.** Thirty collected tests touched the three
+  intents, not the nine the entry estimated — `test_rebalance.py` has zero
+  references to any of them and all seven of its tests survive.
+  **Sixteen of the thirty had no subject left; fourteen were edited in
+  place.** Predicted 1926 after one correction mid-session; measured
+  **1926**.
+- **7e27d47** backtest first, because `backtest_agent_node` reads
+  `optimal_weights` and cannot outlive the optimiser. **The prediction for
+  the golden set was written into this message before anything ran.**
+- **aa6ed13** optimisation. Its one non-deletion is
+  `rebalance_agent_node`'s target read, rewritten to
+  `shared["target_weights"]` so the raise stops naming a deleted agent.
+- **868e9f5** macro, with the `taa_signal` block, flagged and scoped
+  rather than swept in.
+- **4f7ca89** `expected.txt`, six lines across two queries, on the owner's
+  yes after the diff was judged an improvement.
+- **bb163b3** the finding: the runner falls to 15/18.
+- **2cbecca** decision 51's two arithmetic errors corrected: 4,458 from
+  its own components and 4,459 measured, not 4,094; eleven intents to
+  eight, not seven.
+- **ea68a7d** the sweep: eleven of the sixteen "pending decision 51"
+  entries RESOLVED, five moved to decisions 13, 45 and 52.
 
-**What the readings found.** Three new entries — the stale out-of-scope
-refusal, case 3.3's three exact halves printed three ways, and the 4.1/4.2
-identity — and one addendum, because case 3.4's malformed sentence had been
-logged on 9 September and a duplicate was two keystrokes away.
+**What the deletion was wider than.** The entry named five files. The
+first commit needed seventeen, because `agents/__init__.py` re-exports
+each agent and deleting the file without the export gives **34 collection
+errors**, not a working tree. The rest of each agent's surface came with
+it: DTOs in `protocols.py`, enum members, the tracer's colours, the router
+prompt's teachings, and two module docstrings describing packages that no
+longer exist.
 
-**Two corrections to the previous handoff**, both checked before they were
-written. Its §1 said the same distance is computed two ways in the
-codebase; `distance_value` has one writer. Its §5 listed a selection axis
-as new and unnumbered; **the axis is decision 17** and has been since 8
-September, with three values logged and `filter` never built, so nothing
-needed numbering and the pending list simply falls by one.
-
-**And a correction of my own.** I recommended deleting all four
-out-of-roster intents before opening benchmark.md's Part 2, which puts
-drift and trades to a stated target in scope in words. The recommendation
-was wrong on that quarter and the decision that was taken is delete three.
-The lesson is in §8 and in the entry.
-
-**CLAUDE.md**, on the owner's word and this time applied by the session:
-"Twenty" to "Twenty-one" in the golden-set section, and the pending list
-line from eleven members to ten. It is untracked, so nothing was committed.
-
-**Not done, on purpose.** Decision 51's deletion, which is its own session.
-Decision 75's implementation, which changes answer text and wants the
-runner. The six findings from the first half and the four from this one,
-none of which are to be fixed before their decisions. The seven emoji
-headers; decisions 52 and 54; the currency; the philosophy topic lookup;
-the CIK confirmation; formulas for `operating_margin` and
-`free_cash_flow`; the loader's `author` and Part 15 F9.
+**Not done, on purpose.** The corpus, which is the next session. Decision
+75's implementation. Decisions 17, 75 and 76, all out of scope by the
+owner's word. The rebalancing dependency-table bug, the owner's and not
+this session's. The four remaining glyphed headers. `config`'s three dead
+sections and `validators.validate_optimization_request`, left by the
+owner's scoping. **And no CLI run at all**, so nothing in this session
+read an answer by hand.
 
 ---
 
 ## 5. Decisions taken, and decisions pending
 
-**Taken this session: two.**
+**Executed this session: one.**
 
-- **75. A distance to a limit, and how a figure rounds.** The distance is
-  the currency figure computed from the market value — `market_value -
-  limit * total` against a ceiling, the reverse against a floor — and the
-  percentage-point figure is derived from it so that one line's two numbers
-  are one quantity in two units. A figure is rounded **half-up on a
-  Decimal where it is printed**, in one helper. Not implemented; the entry
-  states what moves when it is (Technology's distance 14,492.12 to
-  14,492.13) and what it does not reach (every percentage that is a ratio).
-- **51. The four intents outside the benchmark roster.** **Delete
-  `macro_analysis`, `optimization` and `backtest`** with their agents and
-  the two packages only they import, 4,094 lines; **keep `rebalancing`**,
-  because benchmark.md Part 2 puts drift in scope. The deletion is its own
-  session and the entry lists what it owes.
+- **51. The four intents outside the benchmark roster.** Decided on the
+  21st, executed on the 22nd in three commits. `macro_analysis`,
+  `optimization` and `backtest` deleted with their agents and the two
+  packages only they imported; `rebalancing` kept, because benchmark.md
+  Part 2 puts drift in scope in words. **Cost: one benchmark case.**
 
-**Pending — decide before writing code. Eleven by count: one closed, one
-opened.** CLAUDE.md's line now reads "The list stands at 11 on 21
-September: 10, 12, 13, 16, 17, 22, 45, 48, 52, 54 and 76". The cap is 25.
-**76 was numbered after this document was first written**, which is why the
-count moves twice in one session: eleven, then ten when 51 closed, then
-eleven again.
+**Pending — decide before writing code. Eleven by count, unchanged:**
+10, 12, 13, 16, 17, 22, 45, 48, 52, 54 and 76. The cap is 25. **Nothing
+was opened and nothing closed**: 51 was decided rather than pending when
+this session began.
 
 10. A window return as a measure with a reference.
 12. The hypothetical mode's instrument type.
 13. A target-weights clause and `OUT_OF_SCOPE_RESPONSE` moving into the
-    IPS. **Its text is now wrong as well as misplaced** (KNOWN_GAPS).
-16. Company names, German phrasings, the softer 3.5.
-17. **The selection axis.** `group_by` as the subject kind of a compliance
-    finding, absorbing 35 — and the wider axis the entries name. **Four
-    sites now**: the allocation formatter (1.4), the compliance formatter
-    (2.2 against 2.3), the screening formatter (4.1 against 4.2), and the
-    P&L formatter's one-figure questions. Three values are logged and
-    `filter` has never been built.
+    IPS. **Now carrying more weight than before:** `rebalance_agent_node`
+    reads `shared["target_weights"]`, which nothing publishes, and the
+    out-of-scope text has a third question reaching it whose subject it
+    does not name.
+16. Company names, German phrasings, the softer 3.5. **The corpus session
+    is where this is written out**, extraction variations generously.
+17. **The selection axis.** Four sites. Three values logged, `filter`
+    never built. **Case 2.1 now lands in the synthesizer's stub**, which
+    is that entry's neighbourhood.
 22. Volatility over as-traded closes or a total-return series.
 45. The tool-boundary pass, tagged Order 5. Absorbs 9, 11 and 36.
-48. Part 13 E's item 7, second half only: the price and a filer with more
-    than one class. Items 3, 4, 6 and 7's first half decided.
-52. The Yahoo-fed tables: delete or keep.
+    **`ExtractedParameters` moved onto this trigger**: `portfolio_value`
+    and `max_volatility` both lost their last reader to the deletion.
+48. Part 13 E's item 7, second half only.
+52. The Yahoo-fed tables: delete or keep. **`hawkish_threshold` and
+    `dovish_threshold` moved onto this trigger.**
 54. BaseAgent's tool loop and the three `AgentConfig` fields: delete, its
-    own sitting.
+    own sitting. `protocols.OptimizationMethod`, `PortfolioConstraints`
+    and `TAARule` survive here.
+76. Whether money and ratios are computed in decimal. Three candidate
+    shapes, none costed, no recommendation attached.
 
-76. **Whether money and ratios are computed in decimal.** Numbered at the
-    end of the session, after the list above was written. What case
-    1.2's +74.83% and case 3.3's three halves need, and what decision 75
-    deliberately does not reach. **Smaller than "decimal from the ledger
-    up" sounds**: `data_agent.py:525` already rounds the close to two
-    decimals before anything computes, so the arithmetic starts exact and
-    it is the float type that loses the tie. Three candidate shapes in the
-    entry, none of them costed, so no recommendation is attached to it.
-
-- **The full test at the end of Order 4** (owner's): **complete.** Order
-  4's closing condition is met and Order 5 may be opened.
+- **The interlude between Orders 4 and 5** (owner's): **step 1 of eight
+  done.** Step 2, the corpus, is the next session.
 
 ---
 
 ## 6. Where we stand against the benchmark
 
-Levels 1 to 3: 12/12. Level 4: 4.2, 4.4, 4.5 and 4.6 PASS; 4.1 BLOCKED by
-decision, the runner's reason naming D36; 4.3 BLOCKED at the policy, with
-nothing left to build for it. **16/18, confirmed by a run at 14:45 on 21
-September.**
+Levels 1 to 3: **11/12**, 2.1 newly BLOCKED. Level 4: 4.2, 4.4, 4.5 and
+4.6 PASS; 4.1 BLOCKED by decision naming D36; 4.3 BLOCKED at the policy.
+**15/18, confirmed by a run at 12:51 on 22 September.**
 
-**And the number now has eighteen readings behind it saying what it is
-worth.** Every one of the twelve Level 1 to 3 cases and all six Level 4
-cases have been read by hand, and eight defects came out of them. 1.4 is
-scored a pass while omitting both figures its reference asks for; 2.3 is
-scored a pass while printing another case's answer; 4.2 is scored a pass
-while printing a philosophy check under its own headline; 3.2 is scored a
-pass while telling the user the system cannot do something it does.
+**The fall from 16 is a routing regression and not a lost capability.**
+`ComplianceAgent` runs, its arithmetic is unchanged, and the three
+compliance wordings the golden set pins still reach it. One wording of one
+case does not. The runner's own message says so: *the agent exists, the
+routing for this wording does not*.
 
 What the runner cannot see, unchanged: whether the view is a defensible
 read of the claims it cites; whether the gate's arithmetic is right, which
 is pytest's against Part 17; whether the range's ends are right; any due
-prediction until 2027; whether a quote supports its claim; whether a
-proposal's reasons bear on the metric it names; and **every word of every
-answer it renders**.
+prediction until 2027; whether a quote supports its claim; and whether any
+answer it renders reads well — its checks ask for a date, a clause id, a
+trade line or a percentage, and no more.
+
+**The eight findings from the full test are all still open**, none of
+them fixed this session and none of them meant to be.
 
 ---
 
 ## 7. Next steps, in order
 
-**1. The deletion session for decision 51.** In order: the tag
-`intents-parked` at the deletion's parent; the three agents and the two
-packages; the registrations in `schemas.AGENTS`, `graph.AGENT_NODES`, the
-dependency table and the terminal-agent table; **the three intent
-descriptions, which makes it a prompt change** — a written line-by-line
-prediction first, then two golden runs, because the macro line and the
-optimisation line must route somewhere once their intents are gone and
-where is not known; `expected.txt` as its own commit with its own yes; the
-runner against it; and the test sweep, whose count is measured rather than
-estimated. Nothing outside the three agents imports either package. **Read
-the sixteen entries whose trigger reads "pending decision 51" first.**
+**1. The corpus — step 2 of the interlude, and the next session.** Prompts
+with the answers the owner wants back, hand-written before any are run,
+grown inside `docs/benchmark.md` and `tests/golden/expected_values.md`.
+Five kinds, not mixed: the eighteen spine cases unchanged; extraction
+variations generously and intent-classification variations sparingly;
+refusals; questions nothing handles, grown into the existing entry;
+and **multi-turn sequences, which matter most and barely exist** — one
+benchmark case is two turns. **Read the interlude entry in KNOWN_GAPS
+first.** **And it owes case 2.1 a pinned wording**, this session having
+shown that a spine case can move on a prompt change that does not mention
+it.
 
 **2. Decision 75's implementation.** The check written first against Part
 7, then `compliance._finding` taking the line's market value and raising
 without it, then the rounding helper. Answer text changes, so the runner
-runs against it. pytest is the loop that can see the arithmetic.
+runs against it.
 
-**3. Then Order 5 may be opened**, or decision 17 taken first — the
-selection axis is what three of the eight findings are.
+**3. Then the rest of the interlude**, or decision 17 taken first.
 
 ### Later, with reasons
 
-- **The trunk.** `git switch baseline-v1 && git merge --ff-only rounding`.
-  `baseline-v1` carries four commits origin does not, from yesterday.
+- **The trunk.** `git switch baseline-v1 && git merge --ff-only intents`.
+  Eleven commits, and the runner is 15/18 on them.
+- **The first paid run of the next session will fetch prices.** The
+  one-day interval ran out at 14:24 and 14:28 on 22 September, and Monday
+  the 21st has closed since, so a close will be stored.
+- **The filings intervals ran out on 22 September at 22:17 and run out on
+  23 September between 00:03 and 01:38.**
 - **The router's swallowed exception** — a failed model call should raise
-  with the provider's own message. It cost an hour yesterday.
-- **The emoji**: seven headers in the answer text, an eighth on no list,
-  fifteen answer-text lines in all. One commit, the runner run against it.
-  The console glyphs are a separate session; the glyphed STRICT comment in
-  `nodes.py`'s backtest node goes free with decision 51, and
-  `docs/workflow.md` belongs to that session too.
+  with the provider's own message.
+- **The emoji**: **four** answer-text headers now, not seven — the
+  out-of-scope header, the policy lookup at two sites, the compliance
+  check at two sites, and the rebalancing header. One commit, the runner
+  run against it. The console glyphs are a separate session, and
+  `docs/workflow.md` belongs to it.
 - **`check_4_3`'s weight_source assertion cannot fail** while the
   candidate's id is printed (KNOWN_GAPS).
 - **`outcome.compose` is stricter than `check_4_3`** on a screen with no
   finding, named in both (KNOWN_GAPS).
-- **An event entry condition stops** and no candidate states one
-  (KNOWN_GAPS).
+- **An event entry condition stops** and no candidate states one.
 - **A buy question about a company on no entry reads as an error**, not as
-  a refusal (KNOWN_GAPS).
+  a refusal.
 - **IPS-2.1 would pass an instrument the policy forbids**, being a
-  statement clause (Part 17 G, KNOWN_GAPS).
+  statement clause (Part 17 G).
 - **IPS-5.3's second limb** is not computed; its trigger is the first
   portfolio state with no limit breached (decision 71).
 - **Nothing records a model call's tokens**, so no figure in this
-  repository would warn that the balance was running out (KNOWN_GAPS).
-- **The golden set costs about $0.039 a run** since the twenty-first line,
-  which asks the stronger model twice; a prompt change wants two runs, so
-  budget about $0.08 for the deletion session.
-- **The loader's `author`**, with my sentence in WATCHLIST.md, before the
-  first system prediction is entered; Part 15 F9 comes with it. **Two
-  W-1.3 proposals were printed this session and neither was entered.**
+  repository would warn that the balance was running out.
+- **The golden set costs about $0.039 a run**; a prompt change wants two.
+- **The loader's `author`**, with the owner's sentence in WATCHLIST.md,
+  before the first system prediction is entered; Part 15 F9 comes with it.
 - **1 February 2027**: W-2.1 and W-2.2 fall due. **1 March 2027**: W-1.1
   and W-1.2.
-- Three stale statements, mine to fix on my word: `watchlist.toml`'s
-  header and `test_watchlist.py`'s docstring, "read by nothing yet"; Part
-  11 D38's "D46".
+- Three stale statements, the owner's to fix on the owner's word:
+  `watchlist.toml`'s header and `test_watchlist.py`'s docstring, "read by
+  nothing yet"; Part 11 D38's "D46".
 - A philosophy topic lookup; the CIK confirmation; decisions 52 and 54.
 - `operating_margin` and `free_cash_flow` get formulas, and
   `return_on_invested_capital` its tax rate, when a prediction names one.
@@ -640,78 +610,89 @@ selection axis is what three of the eight findings are.
 
 ## 8. Rules learned the hard way
 
-**Open the definition of done before recommending that something be deleted
-for not being in it.** I recommended deleting four intents because no
-benchmark case asks for them. benchmark.md's Part 2 says in words that
-drift and trades to a stated target are in scope. A roster and a statement
-of scope are two different things in one document, and the case list is not
-the whole of it.
+**A prompt change can move a question it does not mention.** Deleting
+three intent descriptions moved case 2.1, which mentions none of them,
+from `compliance` to `risk_analysis` — while the descriptions of both
+those intents stayed byte for byte identical. With an LLM classifier there
+is no local change to the prompt: every question's routing depends on
+every other option in the list. **Predict the lines you changed, then run
+the loop that asks the wordings you did not.**
 
-**Search the record before logging a finding.** Case 3.4's malformed
-sentence was logged on 9 September, quoting the same sentence word for
-word. Twelve days later it read as new. An entry that is already there gets
-a dated line saying it is still true, not a second entry.
+**The loop you ran the change against may not be the loop that sees it.**
+The golden set was run twice, moved exactly where predicted, and said
+nothing about case 2.1, whose wording it does not carry. pytest held every
+table and derivation and was green. Only the runner asks that wording, and
+only the runner moved.
 
-**A defect found once in one figure is not one figure.** Case 1.2's exact
-half looked like a curiosity. The same answer shape over nine positions
-carries three of them, rounded three different ways, one matching half-up,
-one half-even and one neither. Count the instances before deciding how big
-something is.
+**Do not filter the output of a paid run.** The runner's output was piped
+through `tail -30`, which cut off the five cases containing the finding,
+and three further runs were spent recovering what one unfiltered run had
+already printed.
 
-**A byte-identical pair is one missing axis, and it appears once per
-formatter.** 2.2 against 2.3 in the compliance formatter, 4.1 against 4.2
-in the screening formatter, 1.4 in the allocation formatter. The CLI's own
-identical-answer check found two of the three unprompted and it is the only
-loop that can.
+**Chase the evidence, not the story you already have.** The first guess at
+which case had moved was 1.3, reasoned from the golden set's documented
+blindness to `measure`. It was a good story and the wrong case.
 
-**An intent that answers is not an intent that works.** All four
-out-of-roster intents answered. One printed a raw double and no as-of, one
-a forward return, one an error with an empty header, and one an answer
-about a portfolio the owner does not hold. "It answers now" was the note
-under three of them since 15 September.
+**Grep the package, not three files.** The first deletion commit was
+verified against `nodes.py`, `graph.py` and `schemas.py` and gave 34
+collection errors, because `agents/__init__.py` re-exports every agent.
 
-**Write a prediction where it cannot be edited afterwards.** The runner's
-prediction went into a file at 14:36 with a timestamp, and the run started
-after it. When a prediction and its result land in the same message, the
-prediction has to have a place of its own or it is worth nothing.
+**Measure a deletion before taking it, and say the number twice.** The
+decision estimated nine tests from two files; thirty collected tests
+touched the three intents, sixteen had no subject left, and
+`test_rebalance.py` — named in the estimate — had zero references to any
+of them.
 
-**A reference written before the code decides the code.** Part 7 was
-hand-computed on 7 September, before the checker existed. Fourteen days
-later its five distances settled which arithmetic the checker should have
-been doing. That is what "references before code" buys, and it pays out
-late.
+**A decision's own arithmetic goes stale too.** Decision 51 stated 4,094
+lines across five components that sum to 4,458, and an intent vocabulary
+falling from eleven to seven when three of eleven leave eight.
+
+**The record names the requirement, not the audience.** A sentence about
+who is to be impressed is a reaction standing in for a specification: it
+carries the quality bar by implication and leaves the bar unwritten.
+
+**Delete the surface, not the file.** An agent is its module, its node,
+its formatter, its registrations, its package exports, its DTOs, its enum
+members, its tracer colour, its prompt teachings and the docstrings that
+describe it.
 
 Still true, from earlier sessions: **a scoreboard that scores
 well-formedness will score a wrong answer a pass**; **recompute the
 answer's arithmetic rather than reading it**; **an exact half is where a
 rounding rule announces that it does not exist**; **an exception swallowed
-into a `None` crashes somewhere that cannot explain it**; **when everything
-fails at once, change one thing and rerun the thing that worked**; **cut
-the branch before the first commit**; **a golden line can be identical to
-another in four of its five fields**; **grep the writer the reader reads**;
-**a test parametrized over the constant it is checking cannot catch a wrong
-constant**; **a check that looks for a word anywhere passes a line that
-lost it**; **a wrong version that changes nothing is a finding**; **a
-statement clause can carry a finding**; **a rule already implemented is not
-implemented again**; **a type guard written against `Sequence` lets a
-string through**; **a figure measured before a prompt changed is not a
-figure about the call being made**; **a cost you cannot measure is a cost
-you will misstate**; **take the shapes a caller actually has**; **hand
-arithmetic is checked, and the check is part of the work**; **a statement
-about the code goes stale four commits after it was true**; **a guard that
-cannot fire is not a guard**; **pass `--color=no` to a captured pytest
-run**; **look at a path before writing to it**; **a refusal that is right
-can still be shaped wrong**; **a test over the suite's copy owns the rows
-it reads**; **a number is measured before it is written**; **a brief's
-claim about an interval is checked against the clock**; **a count in a
-message is counted**; **sight a new case before writing its golden line**;
-**the registry's descriptions are the prompt**; **add up the pending
-list**; **the owner's documents are written on a separate word**; **say
-which loop cannot see a change**; **a formatter states what the data says
-and never what the system is**; **two paid loops on one SQLite file run one
-after the other**; **an instruction with words missing is read against the
-record**; **a wrong version checked in place can run the previous version's
-bytecode**.
+into a `None` crashes somewhere that cannot explain it**; **when
+everything fails at once, change one thing and rerun the thing that
+worked**; **cut the branch before the first commit**; **a golden line can
+be identical to another in four of its five fields**; **grep the writer
+the reader reads**; **a test parametrized over the constant it is checking
+cannot catch a wrong constant**; **a check that looks for a word anywhere
+passes a line that lost it**; **a wrong version that changes nothing is a
+finding**; **a statement clause can carry a finding**; **a rule already
+implemented is not implemented again**; **a type guard written against
+`Sequence` lets a string through**; **a figure measured before a prompt
+changed is not a figure about the call being made**; **a cost you cannot
+measure is a cost you will misstate**; **take the shapes a caller actually
+has**; **hand arithmetic is checked, and the check is part of the work**;
+**a statement about the code goes stale four commits after it was true**;
+**a guard that cannot fire is not a guard**; **pass `--color=no` to a
+captured pytest run**; **look at a path before writing to it**; **a
+refusal that is right can still be shaped wrong**; **a test over the
+suite's copy owns the rows it reads**; **a number is measured before it is
+written**; **a brief's claim about an interval is checked against the
+clock**; **a count in a message is counted**; **sight a new case before
+writing its golden line**; **the registry's descriptions are the prompt**;
+**add up the pending list**; **the owner's documents are written on a
+separate word**; **say which loop cannot see a change**; **a formatter
+states what the data says and never what the system is**; **two paid loops
+on one SQLite file run one after the other**; **an instruction with words
+missing is read against the record**; **a wrong version checked in place
+can run the previous version's bytecode**; **open the definition of done
+before recommending that something be deleted for not being in it**;
+**search the record before logging a finding**; **a defect found once in
+one figure is not one figure**; **a byte-identical pair is one missing
+axis**; **an intent that answers is not an intent that works**; **write a
+prediction where it cannot be edited afterwards**; **a reference written
+before the code decides the code**.
 
 ---
 
@@ -725,12 +706,10 @@ pytest -q
 python tests/golden/run_golden.py > /tmp/golden_now.txt 2>/tmp/golden_err.txt
 diff tests/golden/expected.txt /tmp/golden_now.txt
 python tests/benchmark/run_cases.py
-python tests/benchmark/run_cases.py --case 4.3
+python tests/benchmark/run_cases.py --case 2.1     # one Haiku call, ~$0.001
 
 python src/agents/cli.py --portfolio 3        # :q to quit
 # several questions through one process, which is how the full test is run.
-# printf '%s\n' with one argument per question: an apostrophe breaks a
-# single-quoted format string.
 printf '%s\n' 'Does GOOGL clear my philosophy?' 'What is GOOGL worth?' ':q' \
   | python src/agents/cli.py --portfolio 3
 
@@ -740,8 +719,11 @@ print(anthropic.Anthropic().messages.create(model='claude-haiku-4-5-20251001',\
 max_tokens=8,messages=[{'role':'user','content':'ok'}]).content[0].text)"
 
 git status --short
-git log --oneline 7c48fda..HEAD
-git rev-list --count 7c48fda..HEAD
+git log --oneline 33769f6..HEAD
+git rev-list --count 33769f6..HEAD
+
+# the tree that still had the three intents:
+git show intents-parked --stat | head -5
 
 # by hand, from the project root, after a migration or a seed change:
 alembic upgrade head
@@ -760,6 +742,9 @@ sqlite3 data/portfolio.db "select cik, pulled_at from filers; select * from file
 # what a paid loop wrote, against the prediction (the column is calls_consumed):
 sqlite3 data/portfolio.db "select bucket_key, calls_consumed from api_quotas order by id desc limit 1;"
 
+# the intent vocabulary and the roster, after decision 51:
+PYTHONPATH=src python -c "from agents.schemas import INTENTS, AGENTS; print(len(INTENTS), sorted(INTENTS)); print(len(AGENTS), sorted(AGENTS))"
+
 # a check run against an edited, deliberately wrong module:
 find src tests -name __pycache__ -type d -prune -exec rm -rf {} +
 PYTHONDONTWRITEBYTECODE=1 pytest -q -p no:cacheprovider --color=no tests/<file>.py
@@ -768,7 +753,7 @@ PYTHONDONTWRITEBYTECODE=1 pytest -q -p no:cacheprovider --color=no tests/<file>.
 lsof tests/golden/expected_values.xlsx
 
 # merge and push, by the owner only:
-git switch baseline-v1 && git merge --ff-only rounding
+git switch baseline-v1 && git merge --ff-only intents
 git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1
 ```
 ### The four loops
@@ -776,13 +761,14 @@ git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1
 | Loop | Cost | Answers |
 |---|---|---|
 | `pytest` | ~6s, no model calls | Do the components still work; does every reference Part reproduce; does each node fetch in order and publish its block; does the gate refuse what it must; does the outcome compose every row of the truth table |
-| CLI | ~2s and one Haiku call for most questions; **a thesis question about $0.014 and a position question about $0.025 on Sonnet**; **fetches prices past their interval, next on 22 September at 14:24** | What it is actually doing: the plan, the parameters, the reasoning line, the answer text. **The only loop that shows a live reading, proposal or view, the only one that shows an answer at all, and the only one that flags two questions answered identically** |
-| Golden set | ~2 min, **about $0.039 on Sonnet per run** since the twenty-first line, and Haiku; **writes price rows past their interval, the macro rows, the call log and the quota counter on every run** | Did routing change anywhere (twenty-one lines, one pinned failure). Blind to parameters and answer text; stderr kept to a file |
-| Benchmark runner | ~2 min, **about $0.039 on Sonnet** and Haiku | How many cases pass, n/18. Blind to whether a view or a proposal is any good, to whether a range's ends are right, and to any due prediction until 2027. **Its checks read each answer's text — a date, a clause id, a trade line, a percentage — and it shows the answer to nobody**, so whether the prose is right is still a reading by hand |
+| CLI | ~2s and one Haiku call for most questions; **a thesis question about $0.014 and a position question about $0.025 on Sonnet**; **fetches prices past their interval, which ran out on 22 September at 14:24** | What it is actually doing: the plan, the parameters, the reasoning line, the answer text. **The only loop that shows a live reading, proposal or view, the only one that shows an answer at all, and the only one that flags two questions answered identically** |
+| Golden set | ~50s, **about $0.039 on Sonnet per run** and Haiku. **It no longer writes to any table**: the macro line that rewrote `macro_data` on every run is deleted, and prices are fetched only past their interval | Did routing change anywhere (twenty-one lines, one pinned failure). **Blind to `measure`, `group_by`, `tickers` and answer text, and to any wording it does not carry** — which is how case 2.1 moved unseen; stderr kept to a file |
+| Benchmark runner | ~50s, **about $0.039 on Sonnet** and Haiku. `--case X` is one routing at about $0.001 | How many cases pass, n/18. Blind to whether a view or a proposal is any good, to whether a range's ends are right, and to any due prediction until 2027. **Its checks read each answer's text — a date, a clause id, a trade line, a percentage — and it shows the answer to nobody** |
 
 `golden set → change → golden set → decide → then update expected.txt, its own
 commit`. Prediction first, twice for a prompt change, stop at the second miss
 on a line. The runner is per capability commit that reaches the graph, and per
 commit that changes an answer's text. The two paid loops one after the other,
-never at once. **A live reading, proposal or view made on its own is not a
-loop**: it is asked for, said first, and read by hand.
+never at once. **Never pipe a paid run through a filter.** **A live reading,
+proposal or view made on its own is not a loop**: it is asked for, said
+first, and read by hand.
