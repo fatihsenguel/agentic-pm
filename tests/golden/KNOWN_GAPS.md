@@ -2331,6 +2331,14 @@ above: I said this session that no loop asserted the sentence.
 `test_allocation_formatter` asserted `"so all three are"`, a fragment, which
 a grep for the "Not done" label could not see. It moved with the line.
 
+**22 September 2026 (thirty-fifth session), the corpus run.** The
+hypothetical mode's instrument type, decision 12, is what corpus 3.1,
+V-3.1a and V-3.1c missed on (benchmark.md Part 3c.6): 15% refused under
+IPS-4.1 and IPS-4.2 with the right distances, IPS-4.2 applied to every
+instrument type; 12% admitted under IPS-4.1 at the limit, D9 holding, and
+refused under IPS-4.2 at +2.00 pp for a fund as for a share, where Part 18
+says a fund is allowed. Still pending, not taken.
+
 
 ### `ExtractedParameters` fields with no reader - grep, 8 September
 
@@ -2864,6 +2872,11 @@ expected_values.md, not an extraction rule; the clarification is what the
 system can say until it exists. The change-verb list that reads "today" as
 a span is in `extraction.py`; its miss is the since-purchase answer.
 
+**22 September 2026 (thirty-fifth session), the corpus run.** C-4, year to
+date, and C-5, "today", asked back as this entry says, naming the phrase
+and the five spans, and nothing was printed in their place (benchmark.md
+Part 3c.6). Confirmed; decision 10 still pending.
+
 ### `measure` set by the model under intent compliance is unread
 
 **Trigger:** pending decision 17, the selection axis.
@@ -2924,6 +2937,13 @@ extraction; item 16 is the path that would resolve it.
 **9 September (ninth sitting).** Decision 16 logged with its trigger, not
 taken; entry under Directions.
 
+**22 September 2026 (thirty-fifth session), the corpus run.** V-1.2a,
+V-2.1b, V-4.1a, V-4.2a and V-4.6a missed as reading gaps (benchmark.md
+Part 3c.6): JPMorgan and Apple went to the whole portfolio's answer, the
+nine positions and the full policy check; Alphabet and JPMorgan on a
+philosophy question went to an error naming an empty ticker list. Still
+logged, not taken.
+
 
 ### The four phrase rules in extraction read English
 
@@ -2953,6 +2973,12 @@ the English span rule prevents, in German.
 **9 September (ninth sitting).** Same: decision 16 logged, entry under
 Directions.
 
+**22 September 2026 (thirty-fifth session), the corpus run.** V-3.1b, a
+weight in words, and V-3.4b, the German policy question, both routed to
+the whole portfolio check; V-1.1a, the German allocation question, was
+answered, the ticker, period and percentage rules being language-free
+(benchmark.md Part 3c.6). Still logged, not taken.
+
 
 ### The lookup sentence quotes the whole question
 
@@ -2971,6 +2997,12 @@ line, or nothing at all. Logged, not chased.
 through the CLI and the sentence is unchanged, word for word, twelve days
 on. The clause count beside it is right: `ips.toml` holds 17 clauses and
 `docs/IPS.md` states 17 ids.
+
+**22 September 2026 (thirty-fifth session), the corpus run.** 3.4 and
+V-3.4a both read as matched on content, no clause invented and no
+nearest neighbour offered, and both print the whole question as the
+topic, word for word as above (benchmark.md Part 3c.6). Not fixed:
+wording, not arithmetic.
 
 ### One-figure questions get the whole block
 
@@ -6231,6 +6263,13 @@ holding being inside its price interval, and not free in general.
 Neither is fixed here. The first is a rendering decision and the second
 would mean deriving a plan from something extraction cannot see.
 
+**22 September 2026 (thirty-fifth session), the corpus run.** R-7,
+"Should I buy Nvidia?", arrived as the two errors this entry describes,
+the empty ticker list and the missing screening block, with the DataAgent
+and the PortfolioAnalysisAgent run first; V-4.1a, V-4.2a and V-4.6a
+arrived as the first error alone (benchmark.md Part 3c.6). Not fixed:
+routing and rendering, neither arithmetic, step 4's rule.
+
 ### IPS-2.1 would pass an instrument the policy forbids
 
 **Trigger:** a candidate whose instrument type is neither a share nor a fund.
@@ -6460,6 +6499,12 @@ routing fields, so no loop of the four sees this. It is the shape of the
 JNJ wrong face and of "What's my biggest position?": no per-position view
 is published, and a question that named one sector got all five.
 
+**22 September 2026 (thirty-fifth session), the corpus run.** 1.4 missed
+on exactly this: the five-sector table at the 2026-09-21 closes,
+Technology 117,957.00 and 29.81% of invested, AAPL and MSFT named and no
+figure for either (benchmark.md Part 3c.6). Not fixed: a formatter
+selection, not arithmetic.
+
 ### An exact half cent rounds by the order of the float operations - DECIDED 21 September (thirty-second session)
 
 **Trigger:** decided and not implemented. Read it before any commit that touches `_finding` or a formatter that prints a currency amount.
@@ -6552,6 +6597,14 @@ decision. **It is decision 76, numbered 21 September and pending.**
 check is written first. The runner sees an answer-text change and cannot
 tell the cents apart. The golden set is blind to it.
 
+**22 September 2026 (thirty-fifth session), the corpus run.** Two exact
+halves in one answer, rounded two ways: 2.2 at the 2026-09-21 closes
+prints IPS-3.1's distance, 286,857.50 less 65% of 411,238.50, which is
+19,552.475, as 19,552.47, and IPS-4.3's, 117,957.00 less 25% of the same
+total, 15,147.375, as 15,147.38 (benchmark.md Part 3c.6; the transcript).
+The one arithmetic finding of the run; decision 75 stays on step 4's
+list.
+
 ### Cases 2.2 and 2.3 return the same answer, and 2.1 no longer does
 
 **Trigger:** fired. The compliance-branch note said a measure-like axis for compliance is a decision when a case needs one; two cases need one.
@@ -6570,6 +6623,15 @@ that 2.2 and 2.3 are indistinguishable from each other. 2.3's content is
 not absent - both answers carry the "what would have to change" section -
 only identical. The runner passes 2.3 while it prints another case's
 answer, because it discards the text.
+
+**22 September 2026 (thirty-fifth session), the corpus run.** 2.2 and 2.3
+byte-identical again, the CLI's own check flagging it, and S-4's first
+turn the same. Both were routed with `status` breach, so the four section
+3 clauses inside their limits carry no figure, which Part 18's 2.2
+requires, and 2.3's overlap sentence is absent. Where the same check ran
+without `status`, V-2.1b, V-3.1b and V-3.4b, every within-limit figure
+was printed (benchmark.md Part 3c.6). Not fixed: routing and selection,
+not arithmetic.
 
 ### The router swallows the model call's own error and reports a null dereference
 
@@ -6622,6 +6684,11 @@ nothing hand-computed.** Allocation, P&L and the sector split could be
 checked back to a hand-computed Part at the same as-of only because Part
 17 happens to be priced 2026-09-18; volatility has no such Part.
 
+**22 September 2026 (thirty-fifth session), the corpus run.** 1.3 read as
+matched on figure and window, 10.55% over 2025-09-19 to 2026-09-21, 252
+closes, with the basis line still naming the covariance matrix; Part 3c.6
+records this entry beside the line. Not fixed: wording, not arithmetic.
+
 ### The out-of-scope answer names capabilities the system now has
 
 **Trigger:** pending decision 13, which moves `OUT_OF_SCOPE_RESPONSE` into the IPS, and any commit that touches the constant.
@@ -6643,6 +6710,14 @@ not the sentence. Two halves, and only one is plainly false - the "buy"
 clause is, while "screen" is ambiguous, the philosophy check being called
 screening in the code while screening for candidates stays out of scope by
 the same invariant.
+
+**22 September 2026 (thirty-fifth session), the corpus run.** 3.2, R-1,
+R-3, R-4, R-5 and R-6 all printed this answer and all missed on it: the
+boundary sentence is quoted, and the subject refused, a price forecast,
+whether to sell a holding, what to buy, a tax figure, an order, market
+conditions, is named in none of the six; the list of what the system does
+stands in its place (benchmark.md Part 3c.6). Not fixed: answer text, not
+arithmetic.
 
 ### Case 3.3's answer carries three exact halves and prints three different roundings
 
@@ -6714,6 +6789,11 @@ and a rank, logged 11 September from the owner's CLI session and not built.
 `filter` has never been built. What 21 September adds is a fourth site, the
 screening formatter, and a fourth kind of value: which of two published
 blocks answers the question that was asked.
+
+**22 September 2026 (thirty-fifth session), the corpus run.** 4.1 and 4.2
+byte-identical again, the CLI flagging it, and S-6's first turn the same;
+4.2 also names no accession beside the range (benchmark.md Part 3c.6).
+Not fixed: selection, not arithmetic.
 
 ### The four intents outside the benchmark roster - DECIDED 21 September (thirty-second session)
 
@@ -7206,3 +7286,8 @@ were spent working out which case had moved, and the first guess was
 wrong: I reasoned that 1.3 must be it because the golden set cannot see
 `measure`, which fitted a story I already had about that blind spot rather
 than the evidence. **Do not filter the output of a paid run.**
+
+**22 September 2026 (thirty-fifth session), the corpus run.** 2.1 routed
+to `risk_analysis` with the DataAgent alone and answered with per-holding
+volatilities over 756 closes; no concentration table, no clause
+(benchmark.md Part 3c.6). Still the pinned row; not fixed.
