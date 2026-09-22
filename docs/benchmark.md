@@ -748,6 +748,101 @@ no ticker from "it".**
    nothing from turn 1 reaches it. A memory that contaminates fails here.
    Answer: Part 18, 1.3.
 
+### 3c.6 — Runs
+
+One dated block per run of the corpus, the reading of every entry and
+turn against its Part 18 entry, by hand. A block opens with the date, the
+commit, the as-of the answers printed and what the run fetched, then one
+line per entry and turn in Part 3c's order: `matched`, or `missed` and
+what was missing in Part 18's words. Three kinds of miss stay distinct, as
+3c.5 names them: `missed, on the guess` for a follow-up routed as a new
+message, `missed, cannot be done` for a turn no rule reaches today, and
+`missed, reading gap` for a variation decision 16 leaves unread. Nothing
+here is a status column on the tables above; it is the record of what a
+run said, kept so that the run after Order 5 can be read beside it. The
+transcript of each run is kept whole beside `expected.txt`.
+
+**Run of 22 September 2026, commit e53475b, transcript
+`tests/golden/run_corpus_2026-09-22.txt`.** 65 turns through the CLI in
+fifteen processes, 17:11 to 17:13 UTC; R-8 and R-9 not sent. Every
+market figure printed as of 2026-09-21, the close the run fetched, one
+per holding and one for GOOGL; the screen and the ledger as of
+2026-09-22. Every fixed figure printed matched to the cent, and every
+market figure read against 2026-09-21. 30 turns matched, 35 missed: 4 on
+the guess, 3 cannot be done, 7 reading gaps, 21 misses proper. One
+arithmetic finding, on 2.2. The classes are logged in KNOWN_GAPS with
+their triggers; nothing was fixed.
+
+| Entry | Reading |
+| --- | --- |
+| 1.1 | matched |
+| 1.2 | matched |
+| 1.3 | matched; the basis line names a covariance matrix where Part 4 names the portfolio's own return series (KNOWN_GAPS, "Case 1.3's basis line states a different method than Part 4 states") |
+| 1.4 | missed: no per-position figure for AAPL or MSFT, the five-sector table printed |
+| 2.1 | missed: routed to per-holding volatilities; no concentration table, no clause cited |
+| 2.2 | missed: the four section 3 clauses inside their limits carry no figure; carries 2.3's conditions; 19,552.475 printed as 19,552.47 and 15,147.375 as 15,147.38, two exact halves two ways (decision 75) |
+| 2.3 | missed: byte-identical to 2.2; the overlap between AAPL's two clauses and Technology's excess not stated |
+| 3.1 | missed: figures, clauses and the refusal present; IPS-4.2's finding not conditioned on the instrument type |
+| 3.2 | missed: quotes the boundary; names no subject, lists capabilities instead |
+| 3.3 | matched |
+| 3.4 | matched; the topic echoed is the whole question |
+| 3.5 turn 1 | matched |
+| 3.5 turn 2 | matched |
+| 4.1 | matched |
+| 4.2 | missed: byte-identical to 4.1; the 10-K's accession not named beside the range |
+| 4.3 | missed: the gate's before column, the after shares and the currency distances absent; every other pinned item present |
+| 4.4 | missed: PHI-6.1 and PHI-6.2 not cited; every other pinned item present |
+| 4.5 | matched |
+| 4.6 | matched |
+| V-1.1a | matched |
+| V-1.2a | missed, reading gap: all nine positions printed |
+| V-1.3a | matched |
+| V-1.3b | matched |
+| V-1.3c | matched |
+| V-2.1a | matched |
+| V-2.1b | missed, reading gap: the whole portfolio check printed |
+| V-3.1a | missed, as 3.1 |
+| V-3.1b | missed, reading gap: the whole portfolio check printed |
+| V-3.1c | missed: IPS-4.1 admits 12.00% and IPS-4.2 refuses at +2.00 pp, D9 holding; refused for every instrument type, the fund not allowed |
+| V-3.4a | matched, as 3.4 |
+| V-3.4b | missed, reading gap: the whole portfolio check printed |
+| V-4.1a | missed, reading gap: an error naming an empty ticker list |
+| V-4.2a | missed, reading gap: the same error |
+| V-4.6a | missed, reading gap: the same error |
+| C-1 | matched |
+| C-2 | matched; the question asked back is the model's, not extraction's |
+| C-3 | matched |
+| C-4 | matched |
+| C-5 | matched |
+| C-6 | matched |
+| C-7 | matched |
+| R-1 | missed: refuses; names no subject, lists capabilities instead |
+| R-2 | missed: routed to the screen; Apple screened to a stop at PHI-4.1, its close printed |
+| R-3 | missed, as R-1 |
+| R-4 | missed, as R-1; no tax figure, JNJ's gain not printed |
+| R-5 | missed, as R-1; the ledger unchanged |
+| R-6 | missed, as R-1 |
+| R-7 | missed: two errors, an empty ticker list and no screening block, not a refusal naming the missing entry |
+| R-8 | not run |
+| R-9 | not run |
+| S-1 turn 1 | matched |
+| S-1 turn 2 | missed, on the guess: asked back |
+| S-1 turn 3 | missed, on the guess: asked back |
+| S-2 turn 1 | matched |
+| S-2 turn 2 | missed: the reply did not resolve, the rule failing on the comma after "no"; asked back by the model |
+| S-3 turn 1 | matched |
+| S-3 turn 2 | missed, cannot be done: asked back with "1Y" read as a period and no measure |
+| S-4 turn 1 | missed, as 2.2 |
+| S-4 turn 2 | missed, on the guess: asked back |
+| S-5 turn 1 | matched |
+| S-5 turn 2 | missed, on the guess: asked back |
+| S-6 turn 1 | missed, as 4.2 |
+| S-6 turn 2 | missed, cannot be done: asked which company |
+| S-7 turn 1 | matched |
+| S-7 turn 2 | missed, cannot be done: asked back |
+| S-8 turn 1 | matched |
+| S-8 turn 2 | matched: nothing of AAPL carried over |
+
 ---
 
 ## Part 4 — Order of work under time pressure
