@@ -633,9 +633,12 @@ be, not what it is.
 
 What is asked back when the question is outside a vocabulary. The answer
 is the question asked back, pinned by content: the phrase that could not
-be read, the vocabulary that could have been, and no figure. Every one of
-these is deterministic today and stays input validation at Order 5.
-Level 3's 3.5 is the same kind and stays in the spine.
+be read, the vocabulary that could have been, and no figure. Six of these
+are deterministic today, extraction's, and stay input validation at Order
+5; C-2's is not: no rule reads ZZZZFAKE, so the message reaches the model,
+which asked back on the first run (corrected 22 September 2026 after the
+run; the line said every one was deterministic). Level 3's 3.5 is the
+same kind and stays in the spine.
 
 | # | Prompt | Outside which vocabulary | Answer |
 | --- | --- | --- | --- |
