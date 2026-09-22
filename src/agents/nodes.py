@@ -2314,7 +2314,7 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
         lines = []
         
         if errors:
-            lines.append("⚠️ Some issues occurred during analysis:")
+            lines.append("Some issues occurred during analysis:")
             for err in errors[:3]:
                 lines.append(f"  - {err}")
             lines.append("")
@@ -2351,7 +2351,7 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
         else:
             lines.append("Analysis complete. See details below:")
             for agent, result in sub_results.items():
-                lines.append(f"\n{agent}: {'✓' if result.get('success') else '✗'}")
+                lines.append(f"\n{agent}: {'ok' if result.get('success') else 'failed'}")
         
         response = "\n".join(lines)
         return set_final_response(state, response)
@@ -2366,7 +2366,7 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
 # is a clause in the IPS, cited like any other; until the IPS lands it lives
 # here. tests/benchmark/run_cases.py asserts on the first sentence.
 OUT_OF_SCOPE_RESPONSE = [
-    "🚫 **OUT OF SCOPE**",
+    "**OUT OF SCOPE**",
     "",
     "This asks for something outside what this system does.",
     "",
@@ -2399,7 +2399,7 @@ def _format_compliance_response(decision: Dict, sub_results: Dict) -> List[str]:
     """
     result = sub_results.get("ComplianceAgent", {})
     if not result.get("success"):
-        return ["⚠️ Compliance check failed", "", result.get("error", "unknown error")]
+        return ["Compliance check failed", "", result.get("error", "unknown error")]
     block = result.get("compliance") or {}
     policy = block.get("policy") or {}
     findings = block.get("findings") or []
@@ -2422,14 +2422,14 @@ def _format_policy_lookup(block: Dict, policy: Dict) -> List[str]:
     clause_ids = (block.get("topic") or {}).get("clauses") or []
     if block.get("no_clause") or not clause_ids:
         return [
-            "📜 **INVESTMENT POLICY**",
+            "**INVESTMENT POLICY**",
             "",
             f"The investment policy contains nothing on {asked}.",
             "",
             f"It has {len(policy)} clauses and none of them is about this. "
             "Nothing is read into the nearest clause.",
         ]
-    lines = ["📜 **INVESTMENT POLICY**", "", f"What the policy says about {asked}:", ""]
+    lines = ["**INVESTMENT POLICY**", "", f"What the policy says about {asked}:", ""]
     for cid in clause_ids:
         lines.append(f"**{cid}** — {policy.get(cid, {}).get('text', '')}")
     return lines
@@ -2442,7 +2442,7 @@ def _format_hypothetical(findings: List[Dict], policy: Dict) -> List[str]:
     refused = [f for f in findings if f.get("status") == "refused"]
     weight = findings[0].get("observed")
     lines = [
-        "🚫 **NOT PERMITTED BY THE POLICY**" if refused else "✅ **PERMITTED BY THE POLICY**",
+        "**NOT PERMITTED BY THE POLICY**" if refused else "**PERMITTED BY THE POLICY**",
         "",
         f"A weight of {weight:.2%} of total value in one position:",
         "",
@@ -2505,7 +2505,7 @@ def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict],
         missing = [s for s in subjects if not any(f.get("subject") == s for f in findings)]
         if not selected:
             return [
-                "📋 **INVESTMENT POLICY CHECK**",
+                "**INVESTMENT POLICY CHECK**",
                 "",
                 f"The check has no finding on {', '.join(missing)}: not among the "
                 "holdings it covered. Nothing else was asked about.",
@@ -2521,7 +2521,7 @@ def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict],
         findings = [f for f in findings if f.get("status") == status]
         heading.append("breaches" if status == "breach" else status)
 
-    title = "📋 **INVESTMENT POLICY CHECK" + (" — " + " — ".join(heading) if heading else "") + "**"
+    title = "**INVESTMENT POLICY CHECK" + (" — " + " — ".join(heading) if heading else "") + "**"
     lines = [title, ""] + lines
 
     as_of = block.get("as_of") or {}
@@ -3254,7 +3254,7 @@ def _format_rebalance_response(sub_results: Dict) -> List[str]:
     sets it from transaction cost - which is a defect of the tool and belongs
     with decision 13 (KNOWN_GAPS).
     """
-    lines = ["⚖️ **REBALANCING ANALYSIS**", ""]
+    lines = ["**REBALANCING ANALYSIS**", ""]
 
     rebal = sub_results.get("RebalanceAgent", {})
     if rebal.get("success"):
