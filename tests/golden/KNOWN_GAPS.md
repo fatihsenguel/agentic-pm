@@ -6964,6 +6964,12 @@ sixth rather than after all eight — re-scoped 22 September, see below.**
    **Its content is decided by what survives the refactor**: the question,
    the figures the answer must carry, the clauses a refusal must cite, and
    the multi-turn sequences. Not the intent and not the plan.
+   **Written 22 September** (thirty-fourth session): benchmark.md Part 3c,
+   the eighteen spine wordings verbatim, fifteen extraction variations,
+   seven clarifications, nine refusals and eight sequences of seventeen
+   turns; expected_values.md Part 18, every answer pinned by required
+   content at the date its reference Part holds, no new arithmetic but
+   the two subtractions of the 12% row. Nothing was run.
 3. **Running the corpus**, and its purpose is narrower than it first read:
    **capture the baseline and confirm the answers I want are reachable**,
    not hunt for defects to fix. What it finds is **logged, not fixed**.
