@@ -15,12 +15,11 @@ from agents.schemas import (
 
 
 D, A, C = "DataAgent", "PortfolioAnalysisAgent", "ComplianceAgent"
-O, R, M = "OptimizationAgent", "RebalanceAgent", "MacroAgent"
+R, M = "RebalanceAgent", "MacroAgent"
 S = "ScreeningAgent"
 
 # intent, parameters, derived plan
 ROWS = [
-    ("optimization", {}, [D, O]),
     ("rebalancing", {}, [D, R]),
     ("macro_analysis", {}, [M]),
     ("data_fetch", {}, [D]),
@@ -102,10 +101,10 @@ def test_a_shared_requirement_appears_once_in_a_tuple_plan(monkeypatch):
     runs once and before both."""
     from agents import schemas
     row = dict(schemas.TERMINAL["research"])
-    row["asks=position"] = (("PortfolioAnalysisAgent", "OptimizationAgent"), True)
+    row["asks=position"] = (("PortfolioAnalysisAgent", "RebalanceAgent"), True)
     monkeypatch.setitem(schemas.TERMINAL, "research", row)
     assert derive_plan("research", {"asks": "position"}) == [
-        "DataAgent", "PortfolioAnalysisAgent", "OptimizationAgent"]
+        "DataAgent", "PortfolioAnalysisAgent", "RebalanceAgent"]
 
 
 @pytest.mark.parametrize("table,message", [

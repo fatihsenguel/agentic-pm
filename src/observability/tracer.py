@@ -445,7 +445,6 @@ class ConsoleFormatter:
         "RiskManager": "\033[93m",    # Yellow
         "DataAgent": "\033[94m",       # Blue
         "MacroAgent": "\033[92m",      # Green
-        "OptimizationAgent": "\033[95m", # Magenta
         "RebalanceAgent": "\033[96m",  # Cyan
     }
     RESET = "\033[0m"

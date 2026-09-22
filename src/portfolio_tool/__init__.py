@@ -13,10 +13,6 @@ Quantitative:
     - Returns calculation
     - Volatility, per series and per portfolio
 
-Optimization:
-    - Mean-variance optimization
-    - Constraints handling
-
 Tools (Agent Interface):
     - rebalance_tools: Drift, trades
 

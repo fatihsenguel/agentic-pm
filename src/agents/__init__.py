@@ -94,12 +94,6 @@ from .rebalance_agent import (
     create_rebalance_agent,
 )
 
-# Optimization Agent - Mean-variance, risk parity
-from .optimization_agent import (
-    OptimizationAgent,
-    create_optimization_agent,
-)
-
 # =============================================================================
 # VERSION & EXPORTS
 # =============================================================================
@@ -157,8 +151,4 @@ __all__ = [
     # Rebalance Agent
     "RebalanceAgent", 
     "create_rebalance_agent",
-    
-    # Optimization Agent
-    "OptimizationAgent",
-    "create_optimization_agent",
 ]

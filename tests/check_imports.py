@@ -33,7 +33,6 @@ except Exception as e:
 agents_to_test = [
     "data_agent",
     "macro_agent",
-    "optimization_agent",
     "rebalance_agent",
     "smart_router"
 ]

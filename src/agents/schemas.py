@@ -21,7 +21,6 @@ import re
 # holds to this set at import. The descriptions are the prompt's text, moved
 # and not edited; the prompt shrink is its own change with its own golden runs.
 INTENTS: Dict[str, str] = {
-    'optimization': 'User wants to create or optimize a portfolio',
     'macro_analysis': 'User asks about market conditions, VIX, yields',
     'rebalancing': 'User wants drift analysis or trade generation',
     'data_fetch': 'User wants raw price data or metrics',
@@ -53,7 +52,6 @@ IntentType = Enum(
 AGENTS: Dict[str, str] = {
     "DataAgent": "Fetches market prices, calculates covariance matrices, returns, volatility",
     "MacroAgent": "Analyzes VIX, yield curve, market regime (risk-on/risk-off)",
-    "OptimizationAgent": "Runs portfolio optimization (Mean-Variance, Risk Parity, etc.)",
     "RebalanceAgent": "Calculates drift, generates trade lists for rebalancing",
     "PortfolioAnalysisAgent": "Computes figures about an EXISTING portfolio's holdings: allocation by asset class and by sector, P&L per position since purchase, and the portfolio's own volatility from its weights and the covariance matrix. Needs DataAgent first (holdings, prices, cash, covariance).",
     "ComplianceAgent": "Checks an EXISTING portfolio against the owner's Investment Policy Statement: every clause with a numeric limit, breach or headroom per clause with the distance to the limit, citing clause ids. Needs DataAgent and PortfolioAnalysisAgent first.",
@@ -83,8 +81,7 @@ AgentName = Enum(
 # validator sees the plan before anything runs: an entry here turns a raise
 # discovered mid-run into a rejection the router is asked to repair. Each
 # entry is a raise verified at the node: PortfolioAnalysisAgent on missing
-# holdings, prices, as-of dates and cash; OptimizationAgent on missing
-# tickers, expected returns and covariance; RebalanceAgent on missing prices;
+# holdings, prices, as-of dates and cash; RebalanceAgent on missing prices;
 # ComplianceAgent on a missing allocation when it checks the portfolio.
 # RebalanceAgent's missing target is not an entry: the target is the IPS's
 # (KNOWN_GAPS, "Rebalance has no target allocation source"). ComplianceAgent's
@@ -92,7 +89,6 @@ AgentName = Enum(
 # ResearchAgent on a missing screening block (decision 66).
 REQUIRES: Dict[str, Tuple[str, ...]] = {
     "PortfolioAnalysisAgent": ("DataAgent",),
-    "OptimizationAgent": ("DataAgent",),
     "RebalanceAgent": ("DataAgent",),
     "ComplianceAgent": ("PortfolioAnalysisAgent",),
     "ResearchAgent": ("ScreeningAgent",),
@@ -202,7 +198,6 @@ class ExtractedParameters(BaseModel):
 # than one: `asks=position` needs the portfolio computed and the company
 # screened and read, and neither requires the other.
 TERMINAL: Dict[str, Dict[str, Tuple[Any, bool]]] = {
-    "optimization": {"": ("OptimizationAgent", True)},
     "macro_analysis": {"": ("MacroAgent", True)},
     "rebalancing": {"": ("RebalanceAgent", True)},
     "data_fetch": {"": ("DataAgent", True), "measure": ("PortfolioAnalysisAgent", True)},

@@ -66,9 +66,6 @@ CONFIDENCE GUIDELINES:
 
 EXAMPLES:
 
-User: "Optimiere mein Portfolio mit SPY, TLT, GLD bei maximal 12% Volatilität"
-→ intent: "optimization"
-
 User: "Wie ist die aktuelle Marktlage?"
 → intent: "macro_analysis", confidence: 0.95
 
@@ -157,15 +154,6 @@ ROUTER_SYSTEM_PROMPT = (
 # =============================================================================
 
 ROUTER_FEW_SHOT_EXAMPLES = [
-    {
-        "user": "Erstelle ein risiko-optimiertes Portfolio mit SPY, TLT, GLD, VWO",
-        "response": {
-            "intent": "optimization",
-            "confidence": 0.9,
-            "parameters": {"measure": None, "group_by": None},
-            "reasoning": "User wants a portfolio optimised over four ETFs.",
-        }
-    },
     {
         "user": "Was sagt der VIX gerade? Ist Risk-On oder Risk-Off?",
         "response": {

@@ -57,7 +57,7 @@ class TestRouterDecision:
     def test_invalid_agent_name(self):
         """Test that invalid agent names are rejected."""
         data = {
-            "intent": "optimization",
+            "intent": "rebalancing",
             "confidence": 0.9,
             "execution_order": ["FakeAgent"],
             "parameters": {},
@@ -227,23 +227,19 @@ class TestDependencies:
 
     def test_requires_is_what_the_nodes_raise_on(self):
         """Each entry is a raise verified at the node: PortfolioAnalysisAgent
-        on missing holdings, OptimizationAgent on missing returns and
-        covariance, RebalanceAgent on missing prices; ResearchAgent on a
-        missing screening block. The rebalance target is not an entry
+        on missing holdings, RebalanceAgent on missing prices; ResearchAgent
+        on a missing screening block. The rebalance target is not an entry
         (KNOWN_GAPS: the target is the IPS's, never the optimiser's)."""
         assert REQUIRES == {
             "PortfolioAnalysisAgent": ("DataAgent",),
-            "OptimizationAgent": ("DataAgent",),
             "RebalanceAgent": ("DataAgent",),
             "ComplianceAgent": ("PortfolioAnalysisAgent",),
             "ResearchAgent": ("ScreeningAgent",),
         }
 
     def test_plans_the_nodes_would_raise_on_are_rejected(self):
-        """The prompt's own example plans [OptimizationAgent] alone, which
-        raises at the node today."""
+        """A rebalance planned without DataAgent raises at the node today."""
         shapes = (
-            ("optimization", ["OptimizationAgent"], r"is \['DataAgent', 'OptimizationAgent'\], not"),
             ("rebalancing", ["RebalanceAgent"], r"is \['DataAgent', 'RebalanceAgent'\], not"),
         )
         for intent, order, message in shapes:
@@ -277,9 +273,9 @@ class TestDependencies:
     def test_an_order_disagreeing_with_the_task_list_is_rejected_not_rewritten(self):
         """The repair's own case: two tasks, an order naming one of them.
         It used to be overwritten from the task list and validate."""
-        data = self._plan("optimization", ["DataAgent", "OptimizationAgent"])
+        data = self._plan("rebalancing", ["DataAgent", "RebalanceAgent"])
         data["execution_order"] = ["DataAgent"]
-        with pytest.raises(ValueError, match=r"is \['DataAgent', 'OptimizationAgent'\], not \['DataAgent'\]"):
+        with pytest.raises(ValueError, match=r"is \['DataAgent', 'RebalanceAgent'\], not \['DataAgent'\]"):
             RouterDecision.model_validate(data)
 
     def test_execution_plan_is_not_an_alias(self):
@@ -320,11 +316,10 @@ class TestDependencies:
 
     def test_plans_still_accepted(self):
         """Shapes every node in them can run: rule 6's DataAgent alone, the
-        optimiser after data, the rebalance after data (its missing target is
-        the node's business, not a dependency)."""
+        rebalance after data (its missing target is the node's business, not
+        a dependency)."""
         shapes = (
             ("risk_analysis", ["DataAgent"]),
-            ("optimization", ["DataAgent", "OptimizationAgent"]),
             ("rebalancing", ["DataAgent", "RebalanceAgent"]),
             ("macro_analysis", ["MacroAgent"]),
             ("research", ["ScreeningAgent"]),

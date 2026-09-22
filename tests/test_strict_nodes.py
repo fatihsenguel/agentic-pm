@@ -22,7 +22,6 @@ from agents.nodes import (
     PortfolioContextError,
     DataCalculationError,
     data_agent_node,
-    optimization_agent_node,
     rebalance_agent_node,
 )
 from portfolio_tool.portfolio_manager import PortfolioManager
@@ -183,59 +182,6 @@ async def test_data_agent_with_valid_data():
         pm.delete_portfolio(portfolio_id)
 
 
-# ============================================================================
-# TEST 3: Matrix Alignment Validation
-# ============================================================================
-
-async def test_optimization_misaligned_matrices():
-    """OptimizationAgent should fail with misaligned matrices"""
-    state = create_initial_state("Test")
-    
-    # Simulate misaligned data from DataAgent
-    state["shared_data"] = {
-        "tickers": ["SPY", "TLT"],
-        "expected_returns": {
-            "SPY": 0.10,
-            # Missing TLT!
-        },
-        "covariance_matrix": {
-            "SPY": {"SPY": 0.04, "TLT": 0.01},
-            "TLT": {"SPY": 0.01, "TLT": 0.02},
-        }
-    }
-    
-    result = await optimization_agent_node(state)
-    
-    assert "error" in result.get("sub_results", {}).get("OptimizationAgent", {})
-    error_msg = str(result.get("errors", []))
-    assert "alignment" in error_msg.lower() or "mismatch" in error_msg.lower()
-    print("✓ OptimizationAgent correctly detected matrix misalignment")
-
-
-# ============================================================================
-# TEST 4: No Fallback Data
-# ============================================================================
-
-async def test_optimization_no_fallback_weights():
-    """OptimizationAgent should fail without weights, not use defaults"""
-    state = create_initial_state("Test")
-    
-    # Simulate missing optimization data
-    state["shared_data"] = {
-        "tickers": ["SPY", "TLT"],
-        # Missing expected_returns and covariance_matrix
-    }
-    
-    result = await optimization_agent_node(state)
-    
-    opt_result = result.get("sub_results", {}).get("OptimizationAgent", {})
-    assert opt_result.get("success") == False
-    
-    # Should NOT have used any default weights
-    assert "optimal_weights" not in opt_result or not opt_result["optimal_weights"]
-    print("✓ OptimizationAgent has no fallback weights")
-
-
 async def test_rebalance_no_fallback_prices():
     """RebalanceAgent should fail without prices, not use $100"""
     state = create_initial_state("Test")
@@ -246,15 +192,10 @@ async def test_rebalance_no_fallback_prices():
     
     state["shared_data"] = {
         "tickers": ["SPY"],
-        # Missing latest_prices
+        # Missing latest_prices. The node checks prices before it looks for a
+        # target, so the missing target raises nothing here.
     }
-    
-    state["sub_results"] = {
-        "OptimizationAgent": {
-            "optimal_weights": {"SPY": 1.0}
-        }
-    }
-    
+
     result = await rebalance_agent_node(state)
     
     rebal_result = result.get("sub_results", {}).get("RebalanceAgent", {})
@@ -263,58 +204,6 @@ async def test_rebalance_no_fallback_prices():
     error_msg = str(result.get("errors", []))
     assert "price" in error_msg.lower()
     print("✓ RebalanceAgent has no fallback prices")
-
-
-# ============================================================================
-# TEST 5: End-to-End Success Path
-# ============================================================================
-
-async def test_end_to_end_valid_workflow():
-    """Full workflow should succeed with all valid data"""
-    # Setup
-    pm = PortfolioManager()
-    dm = get_data_manager()
-    
-    end = datetime.now()
-    start = end - timedelta(days=1095)  # 3 years
-    
-    print("\n=== Setting up test portfolio ===")
-    for ticker in ["SPY", "TLT", "GLD"]:
-        print(f"  Fetching {ticker}...")
-        dm.fetch_price_data(ticker, start, end)
-    
-    portfolio_id = pm.create_portfolio("End-to-End Test", currency="USD", ips_path="ips.toml")
-    pm.record_transaction(portfolio_id, "SPY", date(2024, 1, 15), "buy", 100, 450.0, 0.0, 45_000.0)
-    pm.record_transaction(portfolio_id, "TLT", date(2024, 1, 15), "buy", 50, 88.0, 0.0, 4_400.0)
-    pm.record_transaction(portfolio_id, "GLD", date(2024, 1, 15), "buy", 20, 185.0, 0.0, 3_700.0)
-    
-    state = create_initial_state("Optimize my portfolio", portfolio_id=portfolio_id)
-    
-    try:
-        print("\n=== Running DataAgent ===")
-        state = await data_agent_node(state)
-        
-        data_result = state.get("sub_results", {}).get("DataAgent", {})
-        assert data_result.get("success") == True
-        print("✓ DataAgent succeeded")
-        
-        shared = state.get("shared_data", {})
-        print(f"  Tickers: {shared.get('tickers')}")
-        print(f"  Expected returns: {list(shared.get('expected_returns', {}).keys())}")
-        print(f"  Covariance: {list(shared.get('covariance_matrix', {}).keys())}")
-        
-        print("\n=== Running OptimizationAgent ===")
-        state = await optimization_agent_node(state)
-        
-        opt_result = state.get("sub_results", {}).get("OptimizationAgent", {})
-        assert opt_result.get("success") == True
-        print("✓ OptimizationAgent succeeded")
-        print(f"  Optimal weights: {opt_result.get('optimal_weights')}")
-        
-        print("\n✅ END-TO-END TEST PASSED")
-        
-    finally:
-        pm.delete_portfolio(portfolio_id)
 
 
 # ============================================================================
@@ -340,19 +229,10 @@ async def run_all_tests():
     await test_data_agent_empty_portfolio()
     await test_data_agent_with_valid_data()
     
-    print("\n📋 TEST SUITE 3: Matrix Alignment")
+    print("\n📋 TEST SUITE 3: No Fallback Data")
     print("-" * 80)
-    await test_optimization_misaligned_matrices()
-    
-    print("\n📋 TEST SUITE 4: No Fallback Data")
-    print("-" * 80)
-    await test_optimization_no_fallback_weights()
     await test_rebalance_no_fallback_prices()
-    
-    print("\n📋 TEST SUITE 5: End-to-End Success")
-    print("-" * 80)
-    await test_end_to_end_valid_workflow()
-    
+
     print("\n" + "="*80)
     print("✅ ALL STRICT MODE TESTS PASSED")
     print("="*80)
@@ -360,9 +240,7 @@ async def run_all_tests():
     print("\nKey Validations:")
     print("  ✓ Fails fast with clear errors")
     print("  ✓ No fallback data anywhere")
-    print("  ✓ Matrix alignment validated")
     print("  ✓ Data types strictly checked")
-    print("  ✓ End-to-end workflow succeeds with valid data")
 
 
 if __name__ == "__main__":

@@ -2219,207 +2219,6 @@ async def gate_node(state: AgentState) -> Dict[str, Any]:
 
 
 # =============================================================================
-# FIXED: OPTIMIZATION AGENT NODE
-# =============================================================================
-
-async def optimization_agent_node(state: AgentState) -> Dict[str, Any]:
-    """Optimization Agent node - runs portfolio optimization."""
-    tracer = get_tracer()
-    agent_ctx = None
-
-    # ✅ ROBUST TRACING START
-    try:
-        if tracer and hasattr(tracer, "get_current_request"):
-            req = tracer.get_current_request()
-            if req:
-                agent_ctx = req.trace_agent("OptimizationAgent")
-                agent_ctx.__enter__()
-    except Exception as e:
-        logger.warning(f"Tracing failed in OptimizationAgent (ignoring): {e}")
-
-    try:
-        # ✅ STRICT: Get required data
-        shared = state.get("shared_data", {})
-        
-        # Validate shared data exists
-        if not shared:
-            raise ValueError(
-                "No shared_data from DataAgent.\n"
-                "OptimizationAgent requires DataAgent to run first.\n"
-                "Check workflow execution order."
-            )
-        
-        # ✅ STRICT: Get tickers (NO fallback)
-        tickers = shared.get("tickers")
-        if not tickers:
-            raise ValueError(
-                "No tickers in shared_data.\n"
-                "DataAgent must provide tickers.\n"
-                "This indicates DataAgent failed or didn't run."
-            )
-        
-        # ✅ STRICT: Get expected returns (NO fallback)
-        expected_returns = shared.get("expected_returns")
-        if not expected_returns:
-            raise DataCalculationError(
-                "No expected_returns in shared_data.\n"
-                "Cannot optimize without return estimates.\n"
-                "DataAgent must calculate returns first."
-            )
-        
-        # ✅ STRICT: Get covariance (NO fallback)
-        covariance_matrix = shared.get("covariance_matrix")
-        if not covariance_matrix:
-            raise DataCalculationError(
-                "No covariance_matrix in shared_data.\n"
-                "Cannot optimize without risk estimates.\n"
-                "DataAgent must calculate covariance first."
-            )
-        
-        # Validate data types
-        if not isinstance(expected_returns, dict):
-            raise ValueError(f"expected_returns must be dict, got {type(expected_returns)}")
-        
-        if not isinstance(covariance_matrix, dict):
-            raise ValueError(f"covariance_matrix must be dict, got {type(covariance_matrix)}")
-        
-        # =========================================================================
-        # ⭐ STRICT: Matrix Alignment & Shape Validation (Input Contract)
-        # =========================================================================
-        
-        ret_tickers = set(expected_returns.keys())
-        cov_tickers = set(covariance_matrix.keys())
-
-        if ret_tickers != cov_tickers:
-            raise DataCalculationError(
-                f"Data alignment error:\n"
-                f"  Returns tickers: {sorted(ret_tickers)}\n"
-                f"  Covariance tickers: {sorted(cov_tickers)}\n"
-                f"All tickers must have both returns and covariance data."
-            )
-
-        # Validate Shape: Covariance matrix must be square (NxN)
-        for ticker in cov_tickers:
-            if ticker not in covariance_matrix:
-                raise DataCalculationError(f"Covariance missing entry for {ticker}")
-            
-            ticker_cov = covariance_matrix[ticker]
-            if not isinstance(ticker_cov, dict):
-                raise DataCalculationError(f"Covariance for {ticker} must be dict, got {type(ticker_cov)}")
-            
-            cov_inner_tickers = set(ticker_cov.keys())
-            if cov_inner_tickers != cov_tickers:
-                raise DataCalculationError(f"Covariance matrix for {ticker} is not square.")
-
-        print(f"  ✓ Matrix alignment validated: {len(ret_tickers)} tickers")
-        
-        # =========================================================================
-        
-        # Get optional parameters
-        router_decision = state.get("router_decision") or {}
-        params = router_decision.get("parameters", {})
-        max_vol = params.get("max_volatility")
-        
-        tickers_str = ",".join(tickers)
-        
-        print(f"  [DEBUG] Optimizing for tickers: {tickers}")
-        
-        # Import and run agent
-        try:
-            from .optimization_agent import create_optimization_agent
-            import json
-            
-            agent = create_optimization_agent(verbose=False)
-            
-            # Run optimization
-            result = agent.optimize_portfolio_tool(
-                tickers=tickers_str,
-                expected_returns=json.dumps(expected_returns),
-                covariance_matrix=json.dumps(covariance_matrix),
-                method="max_sharpe",
-                max_volatility=max_vol,
-                min_weight=0.0,
-                max_weight=0.40,
-            )
-
-            # =========================================================================
-            # ⭐ STRICT: Output Contract Enforcement (Bank-Grade Fix)
-            # Validate that the Agent returned compliant data before passing it on.
-            # =========================================================================
-            if result.get("success"):
-                weights = result.get("weights", {})
-                
-                # 1. Validate Types (Must be floats)
-                clean_weights = {}
-                total_weight = 0.0
-                
-                for ticker, weight in weights.items():
-                    # Strict Type Check
-                    if not isinstance(weight, (int, float)):
-                        # If we strictly forbid strings, we raise here.
-                        # However, JSON serialization might have converted to strings, so we parse carefully.
-                        if isinstance(weight, str):
-                            try:
-                                val = float(weight.replace("%", "")) / 100.0 if "%" in weight else float(weight)
-                            except ValueError:
-                                raise ValueError(f"Invalid weight format for {ticker}: {weight}")
-                        else:
-                            raise ValueError(f"Invalid weight type for {ticker}: {type(weight)}")
-                    else:
-                        val = float(weight)
-                        
-                    clean_weights[ticker] = val
-                    total_weight += val
-                
-                # 2. Validate Sum (Must be ~1.0 for a fully invested portfolio)
-                # Allow small floating point drift (0.99 - 1.01)
-                if not (0.99 <= total_weight <= 1.01):
-                    raise RuntimeError(f"Optimization weights sum to {total_weight:.4f}, expected 1.0")
-                
-                # Update result with clean, validated data
-                result["weights"] = clean_weights
-                # "optimal_weights" is the standard key used by downstream agents
-                result["optimal_weights"] = clean_weights
-            
-            # =========================================================================
-            
-            if not result.get("success"):
-                raise RuntimeError(f"Optimization failed: {result.get('error')}")
-            
-            return {
-                **mark_agent_complete(state, "OptimizationAgent", result),
-                "shared_data": {
-                    **shared,
-                    "optimal_weights": result.get("weights", {}),
-                },
-            }
-            
-        except ImportError as e:
-            raise RuntimeError(
-                f"OptimizationAgent module not available: {e}\n"
-                "Cannot run optimization without OptimizationAgent."
-            )
-    
-    except (ValueError, DataCalculationError, RuntimeError) as e:
-        logger.error(f"OptimizationAgent error: {e}")
-        return {
-            **mark_agent_complete(state, "OptimizationAgent", {"success": False, "error": str(e)}),
-            **add_error(state, f"OptimizationAgent: {str(e)}"),
-        }
-    
-    except Exception as e:
-        import traceback
-        logger.error(f"Unexpected error:\n{traceback.format_exc()}")
-        return {
-            **mark_agent_complete(state, "OptimizationAgent", {"success": False, "error": str(e)}),
-            **add_error(state, f"OptimizationAgent unexpected error: {str(e)}"),
-        }
-    
-    finally:
-        # ✅ ROBUST TRACING END
-        if agent_ctx:
-            agent_ctx.__exit__(None, None, None)
-# =============================================================================
 # REBALANCE AGENT NODE
 # =============================================================================
 
@@ -2468,15 +2267,20 @@ async def rebalance_agent_node(state: AgentState) -> Dict[str, Any]:
                 "DataAgent must fetch price data first."
             )
         
-        # ✅ STRICT: Get target weights from OptimizationAgent (NO fallback)
-        opt_result = state.get("sub_results", {}).get("OptimizationAgent", {})
-        target_weights = opt_result.get("optimal_weights") or opt_result.get("weights")
-        
+        # STRICT: a target to measure drift against, and no fallback. Nothing
+        # publishes this key: the target is the IPS's to state and no clause
+        # does so yet (pending decision 13; KNOWN_GAPS, "Rebalance has no
+        # target allocation source"). The optimiser published one until
+        # decision 51 deleted it, and it was never the right source: a target
+        # that moves with the covariance matrix is not a strategic allocation.
+        target_weights = shared.get("target_weights")
+
         if not target_weights:
             raise ValueError(
-                "No target weights from OptimizationAgent.\n"
-                "Cannot rebalance without target allocation.\n"
-                "OptimizationAgent must run before rebalancing."
+                "No target allocation.\n"
+                "Cannot measure drift without a target to measure it against.\n"
+                "The Investment Policy Statement states the target; no clause "
+                "does so yet."
             )
         
         # Extract current positions
@@ -2568,7 +2372,7 @@ async def rebalance_agent_node(state: AgentState) -> Dict[str, Any]:
 # branch - router_node writes its final_response and the graph exits before
 # the synthesizer (KNOWN_GAPS, "Clarification exits the graph on a proxy").
 SYNTHESIZER_INTENTS = frozenset({
-    "optimization", "macro_analysis", "rebalancing", "data_fetch",
+    "macro_analysis", "rebalancing", "data_fetch",
     "risk_analysis", "out_of_scope", "compliance", "research", "ledger",
 })
 _UNSYNTHESIZED_INTENTS = frozenset({"clarification_needed"})
@@ -2609,9 +2413,7 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             lines.append("")
         
         # Intent-specific formatting
-        if intent == "optimization":
-            lines.extend(_format_optimization_response(sub_results))
-        elif intent == "macro_analysis":
+        if intent == "macro_analysis":
             lines.extend(_format_macro_response(sub_results))
         elif intent == "rebalancing":
             lines.extend(_format_rebalance_response(sub_results))
@@ -3509,48 +3311,6 @@ def _format_thesis_response(sub_results: Dict) -> List[str]:
         "the investment policy was not consulted. No recommendation, and no price is "
         "forecast.",
     ]
-    return lines
-
-
-def _format_optimization_response(sub_results: Dict) -> List[str]:
-    """Format optimization results, without the allocation itself.
-
-    `optimal_weights` is a weight per instrument, and an answer that names
-    one states a position. Intent `optimization` derives
-    [DataAgent, OptimizationAgent]; `validate_compliance` rejects a plan that
-    puts ComplianceAgent there, so no clause is checked on this path and none
-    can be. DIRECTION.md invariant 2 says such an answer is not shown, so it
-    is not: the metrics the optimiser computed are its own figures and stay,
-    the weights they describe do not, and the answer says so rather than
-    truncating silently (benchmark.md Part 3b).
-
-    `tests/test_no_weight_outside_compliance.py` is the loop that sees this;
-    the golden set prints five routing fields and the runner has no
-    optimization case.
-    """
-    lines = ["📊 **PORTFOLIO OPTIMIZATION RESULTS**", ""]
-
-    opt = sub_results.get("OptimizationAgent", {})
-    if not opt.get("success"):
-        lines.append("⚠️ Optimization failed")
-        return lines
-
-    lines.append("**Expected Metrics:**")
-    
-    # ✅ TRUST THE CONTRACT: Metrics are guaranteed floats
-    ret = opt.get('expected_return', 0.0)
-    vol = opt.get('expected_volatility', 0.0)
-    sharpe = opt.get('sharpe_ratio', 0.0)
-    
-    lines.append(f"  • Return: {ret*100:.2f}%")
-    lines.append(f"  • Volatility: {vol*100:.2f}%")
-    lines.append(f"  • Sharpe Ratio: {sharpe:.2f}")
-
-    lines.append("")
-    lines.append("**Not shown:** the allocation these metrics describe. A weight per "
-                 "instrument states a position, and nothing on this path checks one "
-                 "against the policy.")
-
     return lines
 
 

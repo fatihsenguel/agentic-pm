@@ -143,7 +143,7 @@ SCOPE GUARDS:
             return state
         
         if not target_weights:
-            state.add_message("assistant", "❌ Missing target weights. Run optimization first or provide target_weights.")
+            state.add_message("assistant", "❌ Missing target weights. Provide target_weights.")
             return state
         
         # Perform analysis

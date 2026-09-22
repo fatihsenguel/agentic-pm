@@ -27,7 +27,6 @@ class AgentRole(str, Enum):
     """Roles available for agents in the multi-agent system."""
     SUPERVISOR = "supervisor"  # Risk Manager - coordinates other agents
     DATA = "data"              # Data Agent - fetches and processes market data
-    OPTIMIZATION = "optimization"  # Optimization Agent - portfolio optimization
     MACRO = "macro"            # Macro/RAG Agent - macro analysis
 
 

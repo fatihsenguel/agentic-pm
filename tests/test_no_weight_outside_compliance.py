@@ -4,12 +4,14 @@ No answer outside intent compliance states a position.
 docs/DIRECTION.md invariant 2: an answer that implies a position is checked
 against the IPS before it is shown, and the model cannot route around it.
 Until the fourteenth session that sentence read as a description of the
-system and was false. Intent `optimization` derives
+system and was false. Intent `optimization` derived
 [DataAgent, OptimizationAgent] and its formatter printed a weight per ticker
-with no clause checked, on the path the golden set pins, while
+with no clause checked, on the path the golden set pinned, while
 `validate_compliance` raises if ComplianceAgent is planned there at all.
-`rebalancing` carried the same surface, hidden only because RebalanceAgent
-errors on a missing target.
+`rebalancing` carries the same surface, hidden only because RebalanceAgent
+errors on a missing target. Decision 51 deleted the optimisation intent on
+21 September; `rebalancing` is the surface that remains and the assertion
+below is what is left of this file's question.
 
 It survived four sessions because every loop asks its own question. The
 runner's twelve cases are portfolio and policy questions and none names a
@@ -21,9 +23,9 @@ What is asserted is the narrow form the code can carry today: an intent that
 cannot plan the checker renders no proposed weight and no trade. A share of
 something the portfolio already holds is not a proposed position - the
 allocation answer's per-position table is the reference figure IPS-4.1 is one
-subtraction from, and it stays. So the assertions are against figures that
-reach a formatter as a proposal and nothing else: the optimiser's
-`optimal_weights` and the rebalancer's `trades`. The values below are
+subtraction from, and it stays. So the assertion is against figures that
+reach a formatter as a proposal and nothing else: the rebalancer's
+`trades`. The values below are
 distinctive so that a formatter printing them fails on the figure rather than
 on a wording, and the metrics beside them are asserted present so that this
 cannot be satisfied by a formatter that prints nothing at all.
@@ -31,7 +33,7 @@ cannot be satisfied by a formatter that prints nothing at all.
 
 import re
 
-from agents.nodes import _format_optimization_response, _format_rebalance_response
+from agents.nodes import _format_rebalance_response
 from agents.schemas import TERMINAL, derive_plan
 
 
@@ -42,18 +44,6 @@ DISCRIMINATORS = {
     "hypothetical_weight": 0.05,
     "policy_topic": "cash",
     "asks": "thesis",
-}
-
-PROPOSED_WEIGHTS = {"SPY": 0.55, "TLT": 0.27, "GLD": 0.18}
-
-OPTIMIZATION_SUCCESS = {
-    "OptimizationAgent": {
-        "success": True,
-        "optimal_weights": PROPOSED_WEIGHTS,
-        "expected_return": 0.0812,
-        "expected_volatility": 0.1043,
-        "sharpe_ratio": 0.78,
-    }
 }
 
 REBALANCE_SUCCESS = {
@@ -68,8 +58,6 @@ REBALANCE_SUCCESS = {
     }
 }
 
-# A ticker carrying a percentage of its own: the shape of a stated allocation.
-WEIGHT_LINE = re.compile(r"\b[A-Z]{2,5}\b[^\n]{0,20}\d+(?:\.\d+)?\s*%")
 TRADE = re.compile(r"\b(BUY|SELL|buy|sell)\b[^\n]{0,30}\b(SPY|TLT|GLD)\b")
 
 
@@ -96,23 +84,6 @@ def test_the_checker_is_reachable_from_one_intent_only():
             if "ComplianceAgent" in derive_plan(intent, parameters):
                 planned_by.add(intent)
     assert planned_by == {"compliance"}
-
-
-def test_the_optimisation_answer_states_no_allocation():
-    text = "\n".join(_format_optimization_response(OPTIMIZATION_SUCCESS))
-
-    for ticker in PROPOSED_WEIGHTS:
-        assert ticker not in text, f"{ticker} named in an answer no clause checked"
-    for weight in PROPOSED_WEIGHTS.values():
-        assert f"{weight * 100:.1f}" not in text, f"{weight:.0%} stated unchecked"
-    assert not WEIGHT_LINE.search(text), WEIGHT_LINE.search(text)
-
-    # Still an answer: the metrics the optimiser computed are not a position.
-    assert "8.12%" in text
-    assert "10.43%" in text
-    assert "0.78" in text
-    # Part 3b: what it did not do, where a scope boundary applies.
-    assert "Not shown" in text
 
 
 def test_the_rebalance_answer_states_no_trades():
