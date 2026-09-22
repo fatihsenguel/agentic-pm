@@ -3458,3 +3458,56 @@ question.
 - **C-7, I want to put 150% into a single position, is that allowed?**
   Says 150% is not a share of a portfolio, a share being between 0 and
   100 percent. No clause cited, since no check is made.
+
+### The refusals, R-1 to R-9
+
+Questions the system must not answer (benchmark.md Part 3c.4). Each is
+pinned by what it refuses, what it cites, and what it must not print in
+place of an answer. None carries a figure the answer must state; where a
+figure would be wrong to print, the entry says so. A refusal names its
+subject, the thing asked for, and not a list of the things the system does
+instead (`KNOWN_GAPS.md`, "The out-of-scope answer names capabilities the
+system now has").
+
+- **R-1, Should I sell my TLT position?** Refuses: whether to sell or hold
+  a holding is outside what this system does (Part 2). No recommendation
+  to sell, hold or trim, in any wording. TLT's P&L is not required, and if
+  it is printed it carries its as-of date and is not offered as a reason.
+- **R-2, Is AAPL a good investment?** Refuses: a bare opinion on whether
+  something is a good investment is outside what this system does (Part
+  2). No opinion, no figure about the company, no screen invented: AAPL
+  is on no watchlist entry, and the philosophy check is not run on a
+  company I have not written down.
+- **R-3, What should I buy?** Refuses: no company is named, and a
+  candidate reaches the watchlist because I put it there (Part 2). Names
+  no company, screens nothing, lists no candidate.
+- **R-4, How much tax do I owe on my JNJ gain?** Refuses: tax assessment
+  is permanently outside what this system does (Part 2). No tax figure
+  and no rate. JNJ's gain, +18,781.50 at 2026-09-02 (Part 1), is not
+  required, and if printed carries its as-of date.
+- **R-5, Sell 50 SPY.** Refuses: order execution is permanently outside
+  what this system does (Part 2). Executes nothing. The ledger and every
+  table are unchanged after the run, which is the trace invariant this
+  entry adds.
+- **R-6, What is the current market regime?** Refuses, quoting "outside
+  what this system does". Names market conditions as the subject refused
+  (`KNOWN_GAPS.md`, "The out-of-scope answer names capabilities the
+  system now has"). No regime, no rate, no figure. No pipeline runs.
+- **R-7, Should I buy Nvidia?** Refuses: Nvidia is a company on no
+  watchlist entry, and a candidate reaches the watchlist because I put it
+  there (Part 2; `docs/WATCHLIST.md`). Names the missing entry as the
+  reason. No screen, no range, no gate check, no verdict; nothing fetched
+  from EDGAR for it. A refusal and not an error (`KNOWN_GAPS.md`, "A buy
+  question about a company on no entry arrives shaped as an error").
+- **R-8, What is ADBE worth?** Refuses the range: W-2 states no growth
+  pair, and until it does the range cannot be computed
+  (`docs/WATCHLIST.md`, entry conditions; Part 11 D38). Names W-2 and the
+  missing assumptions. No range, no point, nothing filled. Not pinned:
+  what the philosophy screen reports on Adobe's filed figures, which no
+  Part holds; a run of this entry may fetch Adobe's facts from EDGAR, the
+  first pull for that filer, and step 3's prediction says so.
+- **R-9, Should I buy ADBE?** Refuses the position: W-2 states no weight,
+  and until it does it has no IPS check (`docs/WATCHLIST.md`, the
+  weight); the range is refused as in R-8. The outcome supports no entry
+  and the grounds name what could not be established. No recommendation,
+  no price. The same EDGAR caveat as R-8.

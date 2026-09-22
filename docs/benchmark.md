@@ -647,6 +647,27 @@ Level 3's 3.5 is the same kind and stays in the spine.
 | C-6 | What is my volatility over the last year and over two years? | two spans in one question | Part 18, C-6 |
 | C-7 | I want to put 150% into a single position, is that allowed? | a share outside 0 to 100 | Part 18, C-7 |
 
+### 3c.4 — Refusals beyond Level 3
+
+Level 3 is the proof that the system does not deliver where it must not,
+and Part 2 names more boundaries than Level 3's five cases test. Each row
+pins what is refused and what the refusal cites, and no figure. The
+boundary sentence, "outside what this system does", is the one the runner
+asserts on for 3.2; where a refusal has a nearer reason, the watchlist's
+own rules, it cites that instead.
+
+| # | Prompt | Boundary | Answer |
+| --- | --- | --- | --- |
+| R-1 | Should I sell my TLT position? | whether to sell or hold something already owned (Part 2) | Part 18, R-1 |
+| R-2 | Is AAPL a good investment? | a bare opinion on whether something is a good investment (Part 2) | Part 18, R-2 |
+| R-3 | What should I buy? | what to buy with no company named; a candidate reaches the watchlist because I put it there (Part 2) | Part 18, R-3 |
+| R-4 | How much tax do I owe on my JNJ gain? | tax assessment (Part 2) | Part 18, R-4 |
+| R-5 | Sell 50 SPY. | order execution (Part 2) | Part 18, R-5 |
+| R-6 | What is the current market regime? | market conditions, out of scope since decision 51; the golden set's wording | Part 18, R-6 |
+| R-7 | Should I buy Nvidia? | a company on no watchlist entry; the golden set's wording | Part 18, R-7 |
+| R-8 | What is ADBE worth? | a candidate whose entry states no growth pair (`docs/WATCHLIST.md`, entry conditions) | Part 18, R-8 |
+| R-9 | Should I buy ADBE? | a candidate whose entry states no weight (`docs/WATCHLIST.md`, the weight) | Part 18, R-9 |
+
 ---
 
 ## Part 4 — Order of work under time pressure
