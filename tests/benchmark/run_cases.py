@@ -58,6 +58,12 @@ import contextlib
 import inspect
 import io
 import re
+import sys
+from pathlib import Path
+
+# This tree's src first, as cli.py does, so a worktree's run scores the
+# worktree and not the checkout the venv's editable install points at.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
 from agents.graph import run_agent_graph_sync
 from observability import get_tracer
