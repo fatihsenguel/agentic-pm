@@ -1,7 +1,7 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 22 September 2026 (thirty-third session), begun about 11:50 UTC. Regenerated at its end. The thirty-second session ran on the 21st and closed the full test at the end of Order 4.
-**Branches:** `intents`, cut from `baseline-v1` at **33769f6** before the first commit, eleven commits — **merged `--ff-only` by the owner after this document was first written**, so the trunk stands at **8201102**, one ahead of `origin/baseline-v1`. Then `arc`, cut from the trunk at 8201102, **two further commits, unmerged**: the interlude was re-scoped after the merge. **Thirteen commits in the session.** The owner merges and pushes; `origin`'s push URL is `no_push`.
+**Branches:** `intents`, cut from `baseline-v1` at **33769f6** before the first commit, **twelve commits** — merged `--ff-only` by the owner after this document was first written. Then `arc`, cut from the trunk at 8201102, **three commits**, the interlude re-scoped after that merge, also merged. Then `counts`, **one commit**, this correction. **Sixteen commits in the session**, and the trunk is **sixteen ahead of `origin/baseline-v1`**. The owner merges and pushes; `origin`'s push URL is `no_push`.
 
 **State:** pytest **1926 passed, 6 xfailed**, down from 1943 by the seventeen tests decision 51's deletion took with it — the measured number and the corrected prediction agreeing exactly. **The runner is 15/18, 0 failing, 3 blocked**, down from 16/18: case 2.1 now routes `risk_analysis` instead of `compliance` and that is this session's real finding. **The golden set ran twice, byte-identical, and `expected.txt` moved six lines across two queries.** Decision 51 is **executed**; the pending list stands at eleven, unchanged.
 
@@ -231,10 +231,11 @@ corpus session.
 
 ### Branches and tags
 
-`baseline-v1` is the trunk and stands level with `origin/baseline-v1` at
-**8201102**, one ahead of `origin/baseline-v1`: the owner merged `intents`
-`--ff-only` after this document was first written. `arc` carries the two
-re-scope commits and is unmerged.
+`baseline-v1` is the trunk and stands at **99ba3e5** after the owner
+merged `intents` (twelve commits) and then `arc` (three) `--ff-only`,
+both after this document was first written; `counts` adds this
+correction. **The trunk is sixteen ahead of `origin/baseline-v1` until
+the push**, which is the only thing outstanding.
 **`intents-parked` is cut at addfbc7**, the parent of the first deletion
 commit: it holds the tree that still had the three intents. `rounding`,
 `halves` and `judgement` are merged and older, with `gate`, `thesis`,
@@ -409,8 +410,19 @@ and not re-checked here:** invested **392,947.50**, cash 15,500.00, total
 
 ## 4. What the thirty-third session did
 
-`git log --oneline 33769f6..HEAD`, **eleven commits**, 36 files, 566
-insertions and 5,844 deletions. Three tasks, in the owner's order.
+`git log --oneline 33769f6..HEAD`, **sixteen commits**, 36 files, **1,143
+insertions and 6,338 deletions**. Three tasks in the owner's order, then
+the re-scope that followed the owner's question, then this correction.
+
+**A count this document got wrong about itself, three times, corrected
+before the push.** It said eleven commits on `intents` (twelve), two on
+`arc` (three) and thirteen in the session (sixteen), and gave §4's
+insertions and deletions as of the commit before the one being written.
+**The same mistake each time: counting what existed at the moment of
+writing and leaving out the commit about to be made.** The owner's own
+`git switch` printed "ahead by 12 commits" against a document claiming
+eleven, which is how it surfaced. **A count in a message is counted, and
+a count about the writing includes the writing.**
 
 **The loops.** pytest at session start 1943, at the end **1926**, run
 after every deletion commit. The golden set ran **twice** at 12:43 and
@@ -588,10 +600,9 @@ Order 5 rather than before it.
 
 ### Later, with reasons
 
-- **The trunk.** `intents` is merged; **`arc` is not**.
-  `git switch baseline-v1 && git merge --ff-only arc` takes the two
-  re-scope commits. The trunk is one ahead of `origin/baseline-v1` and
-  the runner is 15/18 on it.
+- **The trunk.** `intents` and `arc` are both merged; `counts` carries
+  this correction. **The push is the only thing outstanding**, sixteen
+  commits, and the runner is 15/18 on them.
 - **The first paid run of the next session will fetch prices.** The
   one-day interval ran out at 14:24 and 14:28 on 22 September, and Monday
   the 21st has closed since, so a close will be stored.
