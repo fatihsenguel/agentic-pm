@@ -16,89 +16,87 @@ from ..provider_models import (
     ProviderFxRate,
 )
 
-# (1) WIR BEHALTEN SimpleRateLimiter für die FREQUENZ, safe_int und float für unsave int,float conversation fixes
+# SimpleRateLimiter bounds the call frequency; safe_int, safe_float and
+# safe_decimal guard the conversions of what the library returns.
 from .utils import SimpleRateLimiter, safe_float, safe_int, safe_decimal
-# (2) WIR IMPORTIEREN den NEUEN Manager für das VOLUMEN/LOGGIN
+# The database-backed manager bounds the daily volume and logs every call.
 from portfolio_tool.services.quota_manager import DatabaseQuotaManager
 
 import logging
 logger = logging.getLogger(__name__)
 
 
-# (3) Wir definieren eine eigene Fehlerklasse für Quota-Überschreitungen
+# Raised when the daily quota is exhausted.
 class QuotaExceededError(RuntimeError):
-    """Eigener Fehler, wenn das Quota überschritten wurde."""
+    """Raised when the daily quota has been exceeded."""
     pass
 
 
 class YFinanceProvider(DataProviderInterface):
     """
-    Konkrete Implementierung des DataProviderInterface für Yahoo Finance.
-    Nutzt SimpleRateLimiter für die Frequenz und DatabaseQuotaManager für das Volumen.
+    The DataProviderInterface implementation for Yahoo Finance.
+    SimpleRateLimiter bounds the frequency and DatabaseQuotaManager the volume.
     """
 
     name = "yfinance"
 
-    # (4) Der Konstruktor wird per Dependency Injection angepasst
-    def __init__(self, 
+    # The quota manager is injected, bound to its session and run.
+    def __init__(self,
                  quota_manager: DatabaseQuotaManager, 
                  per_minute_limit: int = 60):
         """
-        Initialisiert den Provider.
-        
         Args:
-            quota_manager: Ein bereits initialisierter Manager, der an eine 
-                           DB-Session und eine pipeline_run_id gebunden ist.
-            per_minute_limit: Das Frequenz-Limit für den SimpleRateLimiter.
+            quota_manager: an initialised manager bound to a DB session
+                           and a pipeline_run_id.
+            per_minute_limit: the frequency limit for the SimpleRateLimiter.
         """
-        # Zeitbasierter Limiter (Frequenz)
+        # Time-based limiter (frequency)
         self.limiter = SimpleRateLimiter(per_minute=per_minute_limit)
-        
-        # Datenbank-basierter Limiter (Volumen & Logging)
+
+        # Database-backed limiter (volume and logging)
         self.quota_manager = quota_manager
-        
-        print(f"[Provider] YFinanceProvider initialisiert mit {per_minute_limit} Aufrufen/Minute Limit.")
 
-    # (5) --- ALTE GLOBALE QUOTA-LOGIK WURDE VOLLSTÄNDIG ENTFERNT ---
-    # (kein _check_daily_quota(), keine globalen Variablen)
+        print(f"[Provider] YFinanceProvider initialised with a limit of {per_minute_limit} calls per minute.")
 
-    # (6) NEUE ZENTRALE HELFERMETHODE (DRY-Prinzip)
+    # There is no global quota state and no daily check of the provider's
+    # own: the volume limit is the manager's.
+
+    # The one wrapper every API call goes through.
     @contextmanager
     def _execute_api_call(self, endpoint_name: str, asset_ticker: str):
         """
-        Ein zentraler Wrapper für JEDEN API-Aufruf.
-        Handhabt:
-        1. Frequenz-Throttling (SimpleRateLimiter)
-        2. Volumen-Quota-Prüfung (DatabaseQuotaManager.can_consume_credit)
-        3. Logging (DatabaseQuotaManager.log_api_call)
+        The wrapper around every API call. It handles:
+        1. frequency throttling (SimpleRateLimiter)
+        2. the volume quota check (DatabaseQuotaManager.can_consume_credit)
+        3. logging (DatabaseQuotaManager.log_api_call)
         """
         credit_consumed_in_db = False
         try:
-            # 1. Frequenz-Limit (blockiert, falls nötig)
+            # 1. Frequency limit (blocks if necessary)
             self.limiter.wait_for_slot()
-            
-            # 2. Volumen-Limit (atomare DB-Prüfung)
+
+            # 2. Volume limit (an atomic check in the database)
             if not self.quota_manager.can_consume_credit():
-                # Quota ist voll. Loggen und Fehler auslösen.
+                # The quota is exhausted: log it and raise.
                 error_msg = "Daily quota limit reached"
-                print(f"   [Provider-FEHLER] {error_msg}. Call rejected: {endpoint_name} for {asset_ticker}")
+                print(f"   [Provider error] {error_msg}. Call rejected: {endpoint_name} for {asset_ticker}")
                 self.quota_manager.log_api_call(
                     endpoint_name=endpoint_name,
                     asset_ticker=asset_ticker,
                     success=False,
                     http_status_code=429, # HTTP 429: Too Many Requests
                     error_message=error_msg,
-                    credits_consumed=0 # Es wurde kein Credit verbraucht
+                    credits_consumed=0 # No credit was consumed
                 )
                 raise QuotaExceededError(error_msg)
-            
-            # Quota-Credit wurde erfolgreich in der DB gebucht
+
+            # The quota credit has been booked in the database
             credit_consumed_in_db = True
-            
-            # 3. 'yield' -> Führe den eigentlichen API-Aufruf aus (im 'try'-Block der aufrufenden Methode)
+
+            # 3. 'yield': the actual API call runs in the calling method's 'try' block
             yield
-            
-            # 4. Erfolg loggen (wird nur erreicht, wenn 'yield' keinen Fehler wirft)
+
+            # 4. Log the success (reached only if 'yield' raised nothing)
             self.quota_manager.log_api_call(
                 endpoint_name=endpoint_name,
                 asset_ticker=asset_ticker,
@@ -108,46 +106,45 @@ class YFinanceProvider(DataProviderInterface):
             )
             
         except QuotaExceededError:
-            # Quota-Fehler einfach weiterleiten
+            # A quota error is passed on as it is
             raise
-        
+
         except Exception as e:
-            # Anderer Fehler (z.B. Netzwerk, yfinance-Fehler)
-            print(f"   [Provider-FEHLER] bei {endpoint_name} für {asset_ticker}: {e}", file=sys.stderr)
-            
-            # Fehler loggen. WICHTIG: Wenn der Credit bereits gebucht wurde (Schritt 2),
-            # loggen wir den Aufwand als "verbraucht", auch wenn er fehlschlug.
+            # Any other error (network, yfinance)
+            print(f"   [Provider error] at {endpoint_name} for {asset_ticker}: {e}", file=sys.stderr)
+
+            # Log the error. If the credit was already booked (step 2), the
+            # call is logged as consumed even though it failed.
             self.quota_manager.log_api_call(
                 endpoint_name=endpoint_name,
                 asset_ticker=asset_ticker,
                 success=False,
-                http_status_code=500, # Annahme: 500 für Server/Netzwerkfehler
+                http_status_code=500, # 500 assumed for server and network errors
                 error_message=str(e),
                 credits_consumed=1 if credit_consumed_in_db else 0
             )
-            # Fehler weiterleiten, damit die aufrufende Methode ihn fangen kann
+            # Re-raise so the calling method can catch it
             raise
 
-    # (7) Alle öffentlichen Methoden werden an den neuen Wrapper angepasst
-    
+    # Every public method goes through the wrapper.
+
     def _get_stock_info(self, ticker: str) -> dict:
         """
-        Hilfsmethode, um das 'info'-Wörterbuch zu holen.
-        Dies ist der eigentliche API-Aufruf.
+        Fetches the 'info' dictionary. This is the actual API call.
         """
-        print(f"   [Provider] Rufe yf.Ticker({ticker}).info auf...")
-        # Der Context Manager wickelt Throttling, Quota und Logging ab
+        print(f"   [Provider] Calling yf.Ticker({ticker}).info...")
+        # The context manager handles throttling, quota and logging
         with self._execute_api_call(endpoint_name="info", asset_ticker=ticker):
             return yf.Ticker(ticker).info
 
     def get_asset_info(self, ticker: str) -> Optional[ProviderAssetInfo]:
-        """Holt Stammdaten für ein Asset (Snapshot, Typ 2)."""
+        """Fetches master data for an asset (snapshot, type 2)."""
         try:
-            # _get_stock_info enthält bereits den Wrapper
+            # _get_stock_info already carries the wrapper
             info = self._get_stock_info(ticker)
-            
+
             if not info or 'symbol' not in info:
-                print(f"   [Provider-WARNUNG] Keine 'info'-Daten für {ticker} gefunden.", file=sys.stderr)
+                print(f"   [Provider warning] No 'info' data found for {ticker}.", file=sys.stderr)
                 return None
 
             return ProviderAssetInfo(
@@ -158,7 +155,7 @@ class YFinanceProvider(DataProviderInterface):
                 long_name=info.get('longName')
             )
         except (QuotaExceededError, Exception) as e:
-            # Fehler wurde bereits im Wrapper geloggt. Einfach None zurückgeben.
+            # The error was logged in the wrapper. Return None.
             return None
 
     def get_daily_prices(self, ticker: str, start: date, end: date) -> List[ProviderPriceData]:
@@ -173,9 +170,9 @@ class YFinanceProvider(DataProviderInterface):
         read.
         """
         try:
-            # Wrapper für diesen spezifischen Aufruf
+            # The wrapper for this specific call
             with self._execute_api_call(endpoint_name="history", asset_ticker=ticker):
-                print(f"   [Provider] Rufe yf.Ticker({ticker}).history(start={start}, end={end}, auto_adjust=False) auf...")
+                print(f"   [Provider] Calling yf.Ticker({ticker}).history(start={start}, end={end}, auto_adjust=False)...")
                 stock = yf.Ticker(ticker)
                 df = stock.history(start=start, end=end, auto_adjust=False)
             
@@ -194,7 +191,7 @@ class YFinanceProvider(DataProviderInterface):
                 ))
             return results
         except (QuotaExceededError, Exception) as e:
-            # Fehler wurde bereits im Wrapper geloggt.
+            # The error was logged in the wrapper.
             return []
 
     def get_fx_rates(self, base: str, quote: str, start: date, end: date) -> List[ProviderFxRate]:
@@ -209,7 +206,7 @@ class YFinanceProvider(DataProviderInterface):
         symbol = f"{quote}{base}=X"
         try:
             with self._execute_api_call(endpoint_name="history", asset_ticker=symbol):
-                print(f"   [Provider] Rufe yf.Ticker({symbol}).history(start={start}, end={end}) auf...")
+                print(f"   [Provider] Calling yf.Ticker({symbol}).history(start={start}, end={end})...")
                 df = yf.Ticker(symbol).history(start=start, end=end)
 
             if df.empty:
@@ -220,14 +217,14 @@ class YFinanceProvider(DataProviderInterface):
                 for date_ts, row in df.iterrows()
             ]
         except (QuotaExceededError, Exception) as e:
-            # Fehler wurde bereits im Wrapper geloggt.
+            # The error was logged in the wrapper.
             return []
 
     def get_dividends(self, ticker: str, since: date | None = None) -> List[ProviderDividendData]:
-        """Holt die Dividenden-Historie (Zeitreihe, Typ 1)."""
+        """Fetches the dividend history (time series, type 1)."""
         try:
             with self._execute_api_call(endpoint_name="dividends", asset_ticker=ticker):
-                print(f"   [Provider] Rufe yf.Ticker({ticker}).dividends auf (since={since})...")
+                print(f"   [Provider] Calling yf.Ticker({ticker}).dividends (since={since})...")
                 tk = yf.Ticker(ticker)
                 dividends_data = tk.dividends
             
@@ -248,10 +245,10 @@ class YFinanceProvider(DataProviderInterface):
             return []
 
     def get_splits(self, ticker: str, since: date | None = None) -> List[ProviderSplitData]:
-        """Holt die Split-Historie (Zeitreihe, Typ 1)."""
+        """Fetches the split history (time series, type 1)."""
         try:
             with self._execute_api_call(endpoint_name="splits", asset_ticker=ticker):
-                print(f"   [Provider] Rufe yf.Ticker({ticker}).splits auf (since={since})...")
+                print(f"   [Provider] Calling yf.Ticker({ticker}).splits (since={since})...")
                 tk = yf.Ticker(ticker)
                 splits_data = tk.splits
             
@@ -272,10 +269,10 @@ class YFinanceProvider(DataProviderInterface):
             return []
 
     def get_shares_history(self, ticker: str, since: date | None = None) -> List[ProviderSharesData]:
-        """Holt die Historie der Aktienanzahl (Zeitreihe, Typ 1)."""
+        """Fetches the history of shares outstanding (time series, type 1)."""
         try:
             with self._execute_api_call(endpoint_name="get_shares_full", asset_ticker=ticker):
-                print(f"   [Provider] Rufe yf.Ticker({ticker}).get_shares_full auf (since={since})...")
+                print(f"   [Provider] Calling yf.Ticker({ticker}).get_shares_full (since={since})...")
                 stock = yf.Ticker(ticker)
                 shares_df = stock.get_shares_full(start="1900-01-01") 
             
@@ -290,7 +287,7 @@ class YFinanceProvider(DataProviderInterface):
                 try:
                     shares = safe_int(shares_val)
                     if shares is None:
-                        print(f"   [Provider-WARNUNG] Shares-Wert für {ticker} am {report_date} ist NaN/None, überspringe.", file=sys.stderr)
+                        print(f"   [Provider warning] Shares value for {ticker} on {report_date} is NaN or None, skipping.", file=sys.stderr)
                         continue
                     results.append(
                         ProviderSharesData(
@@ -299,16 +296,16 @@ class YFinanceProvider(DataProviderInterface):
                         )
                     )
                 except (TypeError, ValueError) as e:
-                    print(f"   [Provider-WARNUNG] Konnte Shares-Daten für {ticker} am {report_date} nicht parsen: {e}", file=sys.stderr)
+                    print(f"   [Provider warning] Could not parse the shares data for {ticker} on {report_date}: {e}", file=sys.stderr)
                     continue
             return sorted(results, key=lambda x: x.date)
         except (QuotaExceededError, Exception) as e:
             return []
 
     def get_fundamental_data(self, ticker: str) -> Optional[ProviderFundamentalData]:
-        """Holt einen Snapshot der Fundamentaldaten (beta)."""
+        """Fetches a snapshot of the fundamentals (beta)."""
         try:
-            # Nutzt _get_stock_info, das bereits den Wrapper enthält
+            # Uses _get_stock_info, which already carries the wrapper
             info = self._get_stock_info(ticker) 
             if not info:
                 return None
@@ -325,10 +322,10 @@ class YFinanceProvider(DataProviderInterface):
             return None
 
     def get_quarterly_earnings(self, ticker: str, since: date | None = None) -> List[ProviderEarningsData]:
-        """Holt die historische Zeitreihe der Quartalsberichte."""
+        """Fetches the historical series of quarterly reports."""
         try:
             with self._execute_api_call(endpoint_name="quarterly_financials", asset_ticker=ticker):
-                print(f"   [Provider] Rufe yf.Ticker({ticker}).quarterly_financials auf (since={since})...")
+                print(f"   [Provider] Calling yf.Ticker({ticker}).quarterly_financials (since={since})...")
                 stock = yf.Ticker(ticker)
                 q_earnings_df = stock.quarterly_financials.T
             
@@ -351,7 +348,7 @@ class YFinanceProvider(DataProviderInterface):
                         )
                     )
                 except (TypeError, ValueError, KeyError) as e:
-                    print(f"   [Provider-WARNUNG] Konnte Earnings-Daten für {ticker} am {report_date} nicht parsen: {e}", file=sys.stderr)
+                    print(f"   [Provider warning] Could not parse the earnings data for {ticker} on {report_date}: {e}", file=sys.stderr)
                     continue
             return sorted(results, key=lambda x: x.report_date)
         except (QuotaExceededError, Exception) as e:
@@ -365,9 +362,9 @@ class YFinanceProvider(DataProviderInterface):
         since: date | None = None,
     ) -> List[ProviderFinancialStatement]:
         """
-        Holt Financial Statements via yfinance:
+        Fetches financial statements via yfinance:
         - report_type: "income", "balance_sheet", "cash_flow"
-        - period_type: "annual" oder "quarterly"
+        - period_type: "annual" or "quarterly"
         """
         try:
             endpoint_name = f"{period_type}_{report_type}_statements"
@@ -388,7 +385,7 @@ class YFinanceProvider(DataProviderInterface):
 
             results: List[ProviderFinancialStatement] = []
 
-            # yfinance: Index = Line Items, Columns = Perioden (Timestamps)
+            # yfinance: index = line items, columns = periods (timestamps)
             for col in df.columns:
                 col_date = col.date() if hasattr(col, "date") else col
                 if since and isinstance(col_date, date) and col_date <= since:
@@ -397,7 +394,7 @@ class YFinanceProvider(DataProviderInterface):
                 series = df[col]
                 raw = series.to_dict()
 
-                # Basisfelder (wenn vorhanden)
+                # Base fields (where present)
                 revenue = (
                     raw.get("Total Revenue")
                     or raw.get("TotalRevenue")
@@ -493,7 +490,7 @@ class YFinanceProvider(DataProviderInterface):
     # =========================================================================
 
     def get_vix_data(self, start: date, end: date) -> List[ProviderMacroData]:
-        """Holt VIX (Volatility Index) Zeitreihe."""
+        """Fetches the VIX (volatility index) time series."""
         try:
             with self._execute_api_call(endpoint_name="vix_history", asset_ticker="^VIX"):
                 ticker = yf.Ticker("^VIX")
@@ -519,7 +516,7 @@ class YFinanceProvider(DataProviderInterface):
             return []
 
     def get_treasury_yields(self, start: date, end: date) -> Dict[str, List[ProviderMacroData]]:
-        """Holt Treasury Yields für mehrere Laufzeiten."""
+        """Fetches Treasury yields for several maturities."""
         yield_tickers = {
             "TNX_10Y": "^TNX",
             "TYX_30Y": "^TYX",
@@ -554,7 +551,7 @@ class YFinanceProvider(DataProviderInterface):
         return results
 
     def get_macro_snapshot(self) -> Optional[ProviderMacroSnapshot]:
-        """Holt aktuellen Snapshot aller Macro-Indikatoren."""
+        """Fetches the current snapshot of every macro indicator."""
         snapshot = ProviderMacroSnapshot(timestamp=datetime.utcnow())
         indicators = {
             "vix": "^VIX",
@@ -581,7 +578,7 @@ class YFinanceProvider(DataProviderInterface):
         return snapshot
 
     def get_macro_indicator(self, indicator: str, start: date, end: date) -> List[ProviderMacroData]:
-        """Holt einen spezifischen Macro-Indikator."""
+        """Fetches one macro indicator."""
         ticker_map = {
             "VIX": "^VIX",
             "TNX_10Y": "^TNX",
