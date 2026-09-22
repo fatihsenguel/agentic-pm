@@ -7053,12 +7053,35 @@ sixth rather than after all eight — re-scoped 22 September, see below.**
 3. **Running the corpus**, and its purpose is narrower than it first read:
    **capture the baseline and confirm the answers I want are reachable**,
    not hunt for defects to fix. What it finds is **logged, not fixed**.
+   **Run 22 September** (thirty-fifth session): 65 turns through the
+   CLI in fifteen processes, R-8 and R-9 not sent; 30 matched, 35 missed,
+   of which 4 on the model's guess, 3 cannot be done, 7 reading gaps and
+   21 misses proper. benchmark.md Part 3c.6 holds the reading, one line
+   per turn, and `tests/golden/run_corpus_2026-09-22.txt` the transcript
+   whole. Every fixed figure printed matched to the cent. Every miss is
+   logged by class with a trigger: thirteen existing entries grown, four
+   opened. The answers I want are reachable where a rule reaches them;
+   where the model guesses, it asks back.
 4. **A narrow fix list.** Only what is wrong in a pipeline's arithmetic,
    because that is what Order 5 leaves untouched. **Routing defects are
    not fixed** — the router is being deleted. **Formatter layout is not
    fixed** — the presentation is rebuilt afterwards. Decisions 75 and 76
    are arithmetic and belong here; decision 17 is a selection axis across
    four formatters and probably does not.
+   **The list, from the run of 22 September, each miss marked.**
+   Arithmetic, and so step 4's: decision 75, the exact half cent,
+   confirmed by 2.2 printing 19,552.475 as .47 and 15,147.375 as .38 in
+   one answer; decision 76, decimal money and ratios, if I put it here.
+   Not arithmetic, and so not step 4's, each under its own entry: 2.1's
+   routing and R-2's; the seven reading gaps under decision 16; the
+   2.2/2.3 and 4.1/4.2 pairs and 2.2's hidden within-limit figures; 1.4's
+   per-position figures; 1.3's basis line; the out-of-scope answer's
+   capability list on 3.2 and five refusals; R-7 shaped as an error;
+   decision 12's instrument type on 3.1 and V-3.1c; the lookup sentence;
+   the three Level 4 omissions; S-2's comma; the six follow-ups asked
+   back. One arithmetic item found, so step 4 is decision 75's
+   implementation, its check written first against Part 7, and 76 on my
+   word.
 5. **The cleanup:** the German debug strings under `src/`, and the glyphed
    answer headers of item 32. Independent of everything else and cheap, so
    it can happen whenever there is an hour for it.
