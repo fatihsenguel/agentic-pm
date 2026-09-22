@@ -53,7 +53,6 @@ from .protocols import (
     PortfolioConstraints,
     # Supporting DTOs
     TAARule,
-    BacktestMetrics,
     RiskDecomposition,
     CovarianceResult,
     RegimeSignal,
@@ -101,12 +100,6 @@ from .optimization_agent import (
     create_optimization_agent,
 )
 
-# Backtest Agent - Historical simulation
-from .backtest_agent import (
-    BacktestAgent,
-    create_backtest_agent,
-)
-
 # =============================================================================
 # VERSION & EXPORTS
 # =============================================================================
@@ -139,7 +132,6 @@ __all__ = [
     
     # === Protocols (Supporting DTOs) ===
     "TAARule",
-    "BacktestMetrics",
     "RiskDecomposition",
     "CovarianceResult",
     "RegimeSignal",
@@ -169,8 +161,4 @@ __all__ = [
     # Optimization Agent
     "OptimizationAgent",
     "create_optimization_agent",
-    
-    # Backtest Agent
-    "BacktestAgent",
-    "create_backtest_agent",
 ]

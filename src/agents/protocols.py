@@ -21,7 +21,6 @@ import uuid
 class TaskType(str, Enum):
     """Types of portfolio tasks agents can perform."""
     OPTIMIZE = "optimize"
-    BACKTEST = "backtest"
     ANALYZE_REGIME = "analyze_regime"
     REBALANCE = "rebalance"
     FETCH_DATA = "fetch_data"
@@ -204,45 +203,6 @@ class PortfolioTask:
 
 
 @dataclass
-class BacktestMetrics:
-    """Metrics from a backtest simulation."""
-    total_return: float
-    cagr: float  # Compound Annual Growth Rate
-    volatility: float  # Annualized
-    sharpe_ratio: float
-    sortino_ratio: Optional[float] = None
-    max_drawdown: float = 0.0
-    calmar_ratio: Optional[float] = None  # CAGR / Max Drawdown
-    win_rate: Optional[float] = None  # % of positive periods
-    
-    # Trade statistics
-    num_trades: int = 0
-    num_rebalances: int = 0
-    turnover: Optional[float] = None  # Average annual turnover
-    
-    # TAA specific
-    taa_triggers: int = 0
-    avg_time_in_taa: Optional[float] = None  # Days
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary."""
-        return {
-            "total_return": f"{self.total_return:.2%}",
-            "cagr": f"{self.cagr:.2%}",
-            "volatility": f"{self.volatility:.2%}",
-            "sharpe_ratio": f"{self.sharpe_ratio:.2f}",
-            "sortino_ratio": f"{self.sortino_ratio:.2f}" if self.sortino_ratio else None,
-            "max_drawdown": f"{self.max_drawdown:.2%}",
-            "calmar_ratio": f"{self.calmar_ratio:.2f}" if self.calmar_ratio else None,
-            "win_rate": f"{self.win_rate:.1%}" if self.win_rate else None,
-            "num_trades": self.num_trades,
-            "num_rebalances": self.num_rebalances,
-            "turnover": f"{self.turnover:.1%}" if self.turnover else None,
-            "taa_triggers": self.taa_triggers,
-        }
-
-
-@dataclass
 class RiskDecomposition:
     """Risk contribution breakdown by asset."""
     # Total portfolio volatility
@@ -307,9 +267,6 @@ class PortfolioResult:
     # Risk decomposition
     risk_decomposition: Optional[RiskDecomposition] = None
     
-    # Backtest specific (optional)
-    backtest_metrics: Optional[BacktestMetrics] = None
-    
     # Audit trail - CRITICAL for transparency
     optimization_method: Optional[str] = None  # "mean_variance", "risk_parity"
     constraints_applied: List[str] = field(default_factory=list)
@@ -322,7 +279,7 @@ class PortfolioResult:
     warnings: List[str] = field(default_factory=list)
     
     # NEW: For macro analysis results
-    result_type: Optional[str] = None  # "optimization", "macro_analysis", "backtest"
+    result_type: Optional[str] = None  # "optimization", "macro_analysis"
     data: Optional[Dict[str, Any]] = None  # Generic data container
     message: Optional[str] = None  # Human-readable summary
     metadata: Dict[str, Any] = field(default_factory=dict)
@@ -354,9 +311,6 @@ class PortfolioResult:
                 k: f"{v:.1%}" 
                 for k, v in self.risk_decomposition.risk_contributions.items()
             }
-        
-        if self.backtest_metrics:
-            result["backtest_metrics"] = self.backtest_metrics.to_dict()
         
         if self.result_type:
             result["result_type"] = self.result_type

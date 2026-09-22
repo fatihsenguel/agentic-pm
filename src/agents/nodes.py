@@ -2557,146 +2557,6 @@ async def rebalance_agent_node(state: AgentState) -> Dict[str, Any]:
             agent_ctx.__exit__(None, None, None)
 
 # =============================================================================
-# BACKTEST AGENT NODE
-# =============================================================================
-
-async def backtest_agent_node(state: AgentState) -> Dict[str, Any]:
-    """Backtest Agent node - runs historical simulation."""
-
-    tracer = get_tracer()
-    agent_ctx = None
-
-    # ✅ ROBUST TRACING START
-    try:
-        if tracer and hasattr(tracer, "get_current_request"):
-            req = tracer.get_current_request()
-            if req:
-                agent_ctx = req.trace_agent("BacktestAgent")
-                agent_ctx.__enter__()
-    except Exception as e:
-        logger.warning(f"Tracing failed in BacktestAgent (ignoring): {e}")
-    
-    try:
-        # ✅ STRICT: Get required data from shared_data
-        shared = state.get("shared_data", {})
-        
-        if not shared:
-            raise ValueError(
-                "No shared_data available.\n"
-                "BacktestAgent requires data from DataAgent and OptimizationAgent."
-            )
-        
-        # ✅ STRICT: Get tickers (NO fallback)
-        tickers = shared.get("tickers")
-        if not tickers:
-            raise ValueError(
-                "No tickers in shared_data.\n"
-                "DataAgent must provide tickers."
-            )
-        
-        # ✅ STRICT: Get optimal weights (NO fallback)
-        weights = shared.get("optimal_weights")
-        if not weights:
-            raise ValueError(
-                "No optimal_weights in shared_data.\n"
-                "Cannot backtest without target allocation.\n"
-                "OptimizationAgent must run before backtesting."
-            )
-        
-        # ✅ STRICT: Get price data (NO fallback)
-        price_data_json = shared.get("price_data_json")
-        if not price_data_json:
-            raise DataCalculationError(
-                "No price_data_json in shared_data.\n"
-                "Cannot backtest without historical price data.\n"
-                "DataAgent must fetch price history first."
-            )
-        
-        tickers_str = ",".join(tickers)
-        
-        print(f"  [DEBUG] Backtesting {len(tickers)} tickers")
-        print(f"  [DEBUG] Weights: {weights}")
-        
-        # Import and run agent
-        try:
-            from .backtest_agent import create_backtest_agent
-            import json
-            
-            agent = create_backtest_agent(verbose=False)
-            
-            # =========================================================================
-            # ⭐ STRICT: Dynamic Configuration
-            # Remove hardcoded financial assumptions. Use Config or User Input.
-            # =========================================================================
-            
-            # Get parameters from router (user intent) or fall back to system config
-            params = state.get("router_decision", {}).get("parameters", {})
-            
-            # 1. Initial Capital: User Input -> Config Default -> Safe Fallback
-            initial_capital = params.get("portfolio_value")
-            if initial_capital is None:
-                initial_capital = getattr(config.backtest, "default_initial_capital", 100000.0)
-            
-            # 2. Rebalance Frequency
-            rebalance_freq = params.get("rebalance_frequency")
-            if not rebalance_freq:
-                 rebalance_freq = getattr(config.backtest, "default_rebalance_frequency", "quarterly")
-                 
-            # 3. Drift Threshold
-            drift_threshold = params.get("drift_threshold")
-            if drift_threshold is None:
-                drift_threshold = getattr(config.backtest, "default_drift_threshold", 0.05)
-
-            print(f"  [DEBUG] Backtest config:")
-            print(f"    Initial capital: ${initial_capital:,.0f}")
-            print(f"    Rebalance: {rebalance_freq}")
-            print(f"    Drift threshold: {drift_threshold:.1%}")
-
-            # Run backtest with dynamic parameters
-            result = agent.run_backtest_tool(
-                tickers=tickers_str,
-                weights=json.dumps(weights),
-                price_data=price_data_json if isinstance(price_data_json, str) else json.dumps(price_data_json),
-                rebalance_frequency=rebalance_freq,
-                drift_threshold=drift_threshold,
-                taa_rules=None,
-                initial_capital=initial_capital,
-                signal_data=None,
-            )
-            
-            if not result.get("success"):
-                raise RuntimeError(f"Backtest failed: {result.get('error')}")
-            
-            return mark_agent_complete(state, "BacktestAgent", result)
-            
-        except ImportError as e:
-            raise RuntimeError(
-                f"BacktestAgent module not available: {e}\n"
-                "Cannot run backtest without BacktestAgent."
-            )
-    
-    except (ValueError, DataCalculationError, RuntimeError) as e:
-        logger.error(f"BacktestAgent error: {e}")
-        return {
-            **mark_agent_complete(state, "BacktestAgent", {"success": False, "error": str(e)}),
-            **add_error(state, f"BacktestAgent: {str(e)}"),
-        }
-    
-    except Exception as e:
-        import traceback
-        logger.error(f"Unexpected error:\n{traceback.format_exc()}")
-        return {
-            **mark_agent_complete(state, "BacktestAgent", {"success": False, "error": str(e)}),
-            **add_error(state, f"BacktestAgent unexpected error: {str(e)}"),
-        }
-    
-    finally:
-        # ✅ ROBUST TRACING END
-        if agent_ctx:
-            agent_ctx.__exit__(None, None, None)
-
-            
-# =============================================================================
 # SYNTHESIZER NODE
 # =============================================================================
 
@@ -2708,7 +2568,7 @@ async def backtest_agent_node(state: AgentState) -> Dict[str, Any]:
 # branch - router_node writes its final_response and the graph exits before
 # the synthesizer (KNOWN_GAPS, "Clarification exits the graph on a proxy").
 SYNTHESIZER_INTENTS = frozenset({
-    "optimization", "macro_analysis", "rebalancing", "backtest", "data_fetch",
+    "optimization", "macro_analysis", "rebalancing", "data_fetch",
     "risk_analysis", "out_of_scope", "compliance", "research", "ledger",
 })
 _UNSYNTHESIZED_INTENTS = frozenset({"clarification_needed"})
@@ -2755,8 +2615,6 @@ async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             lines.extend(_format_macro_response(sub_results))
         elif intent == "rebalancing":
             lines.extend(_format_rebalance_response(sub_results))
-        elif intent == "backtest":
-            lines.extend(_format_backtest_response(sub_results))
         elif intent == "data_fetch" and "PortfolioAnalysisAgent" in sub_results:
             lines.extend(_format_analysis_response(decision, sub_results))
         elif intent == "risk_analysis" and "PortfolioAnalysisAgent" in sub_results:
@@ -3757,41 +3615,6 @@ def _format_rebalance_response(sub_results: Dict) -> List[str]:
                      "states a position, and nothing on this path checks one against "
                      "the policy.")
 
-    return lines
-
-
-def _format_backtest_response(sub_results: Dict) -> List[str]:
-    """Format backtest results."""
-    lines = ["📈 **BACKTEST RESULTS**", ""]
-    
-    bt = sub_results.get("BacktestAgent", {})
-    if bt.get("success"):
-        # Handle flat vs nested metrics structure
-        backtest_metrics = bt.get("backtest_metrics", {})
-        metrics = backtest_metrics if backtest_metrics else bt
-        
-        # Use metrics dictionary for values, fallback to bt for top-level keys
-        lines.append(f"**Period:** {bt.get('period', metrics.get('start_date', 'N/A'))}")
-        lines.append("")
-        lines.append("**Performance:**")
-
-        # Helper to format safely (handles both float and string inputs)
-        def fmt(val, is_pct=True):
-            if isinstance(val, (int, float)):
-                return f"{val:.1%}" if is_pct else f"{val:.2f}"
-            return str(val)
-
-        lines.append(f"  • Total Return: {fmt(metrics.get('total_return', 0))}")
-        lines.append(f"  • CAGR: {fmt(metrics.get('cagr', 0))}")
-        lines.append(f"  • Volatility: {fmt(metrics.get('volatility', 0))}")
-        lines.append(f"  • Sharpe Ratio: {fmt(metrics.get('sharpe_ratio', 0), is_pct=False)}")
-        lines.append("")
-        lines.append("**Risk:**")
-        lines.append(f"  • Max Drawdown: {fmt(metrics.get('max_drawdown', 0))}")
-        lines.append(f"  • Drawdown Date: {metrics.get('max_drawdown_date', 'N/A')}")
-        lines.append("")
-        lines.append("⚠️ Past performance does not guarantee future results.")
-    
     return lines
 
 

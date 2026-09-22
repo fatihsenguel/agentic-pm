@@ -72,9 +72,6 @@ User: "Optimiere mein Portfolio mit SPY, TLT, GLD bei maximal 12% Volatilität"
 User: "Wie ist die aktuelle Marktlage?"
 → intent: "macro_analysis", confidence: 0.95
 
-User: "Backteste die Strategie über 5 Jahre"
-→ intent: "backtest"
-
 User: "What is my volatility over the past twelve months?"
 → intent: "risk_analysis", measure: "portfolio_volatility", confidence: 0.95
 

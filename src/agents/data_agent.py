@@ -498,7 +498,7 @@ Always include in your responses:
             self._prices_df_cache[cache_key] = prices
             self._cache_timestamps[cache_key] = datetime.now()
             
-            # Create JSON for downstream tools (like BacktestAgent)
+            # Create JSON for downstream tools
             price_data_json = prices.to_json(orient="index", date_format="iso")
             
             # Step 4: Build summary (Hot Potato - don't return raw data)

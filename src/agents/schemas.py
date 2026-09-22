@@ -24,7 +24,6 @@ INTENTS: Dict[str, str] = {
     'optimization': 'User wants to create or optimize a portfolio',
     'macro_analysis': 'User asks about market conditions, VIX, yields',
     'rebalancing': 'User wants drift analysis or trade generation',
-    'backtest': 'User wants historical simulation',
     'data_fetch': 'User wants raw price data or metrics',
     'risk_analysis': 'User wants risk metrics (VaR, volatility, drawdown)',
     'research': 'User asks whether one named company clears their investment philosophy, or how it screens against the philosophy\'s criteria (return on capital, margins, balance sheet, price against value). The philosophy is not the Investment Policy Statement: a question naming the philosophy is research even when the company is held, and compliance is only for the IPS and the portfolio. The company is screened clause by clause on its filed figures; no recommendation is made. It also covers what one named company is worth: the answer is a valuation range the pipeline computes from the owner\'s stated assumptions, never a forecast of a price, so a question about a company\'s worth or value is research, not out_of_scope. It also covers what has to be true for the owner\'s thesis on a company on their watchlist to be right: the company\'s latest annual report is read and one dated prediction about the business is proposed for the owner to enter or not, never a price and never a recommendation, so a question about the owner\'s thesis is research, not out_of_scope. It also covers whether to buy one named company: the company is screened clause by clause, valued as a range, and checked against the Investment Policy Statement at the weight the owner wrote down, and the answer says what those checks found and whether they support an entry, with its uncertainty and its reasons. That is not a bare opinion and not a price target, so "should I buy X" is research, not out_of_scope. Whether to sell or hold something already owned is not: that is out_of_scope, below.',
@@ -56,7 +55,6 @@ AGENTS: Dict[str, str] = {
     "MacroAgent": "Analyzes VIX, yield curve, market regime (risk-on/risk-off)",
     "OptimizationAgent": "Runs portfolio optimization (Mean-Variance, Risk Parity, etc.)",
     "RebalanceAgent": "Calculates drift, generates trade lists for rebalancing",
-    "BacktestAgent": "Runs historical simulations of portfolio strategies",
     "PortfolioAnalysisAgent": "Computes figures about an EXISTING portfolio's holdings: allocation by asset class and by sector, P&L per position since purchase, and the portfolio's own volatility from its weights and the covariance matrix. Needs DataAgent first (holdings, prices, cash, covariance).",
     "ComplianceAgent": "Checks an EXISTING portfolio against the owner's Investment Policy Statement: every clause with a numeric limit, breach or headroom per clause with the distance to the limit, citing clause ids. Needs DataAgent and PortfolioAnalysisAgent first.",
     "ScreeningAgent": "Screens ONE named company against the owner's investment philosophy on its filed figures from EDGAR: one finding per numeric clause, pass or fail with the distance, citing PHI ids; a bank or insurer is excluded on its SIC code before any figure is read. Needs no other agent.",
@@ -86,17 +84,15 @@ AgentName = Enum(
 # discovered mid-run into a rejection the router is asked to repair. Each
 # entry is a raise verified at the node: PortfolioAnalysisAgent on missing
 # holdings, prices, as-of dates and cash; OptimizationAgent on missing
-# tickers, expected returns and covariance; BacktestAgent on missing
-# optimal_weights; RebalanceAgent on missing prices; ComplianceAgent on a
-# missing allocation when it checks the portfolio. RebalanceAgent's missing
-# target is not an entry on the optimiser: the target is the IPS's to state
+# tickers, expected returns and covariance; RebalanceAgent on missing prices;
+# ComplianceAgent on a missing allocation when it checks the portfolio.
+# RebalanceAgent's missing target is not an entry: the target is the IPS's
 # (KNOWN_GAPS, "Rebalance has no target allocation source"). ComplianceAgent's
 # two portfolio-free modes skip its entry: TERMINAL marks those rows unclosed.
 # ResearchAgent on a missing screening block (decision 66).
 REQUIRES: Dict[str, Tuple[str, ...]] = {
     "PortfolioAnalysisAgent": ("DataAgent",),
     "OptimizationAgent": ("DataAgent",),
-    "BacktestAgent": ("DataAgent", "OptimizationAgent"),
     "RebalanceAgent": ("DataAgent",),
     "ComplianceAgent": ("PortfolioAnalysisAgent",),
     "ResearchAgent": ("ScreeningAgent",),
@@ -209,7 +205,6 @@ TERMINAL: Dict[str, Dict[str, Tuple[Any, bool]]] = {
     "optimization": {"": ("OptimizationAgent", True)},
     "macro_analysis": {"": ("MacroAgent", True)},
     "rebalancing": {"": ("RebalanceAgent", True)},
-    "backtest": {"": ("BacktestAgent", True)},
     "data_fetch": {"": ("DataAgent", True), "measure": ("PortfolioAnalysisAgent", True)},
     "risk_analysis": {"": ("DataAgent", True), "measure": ("PortfolioAnalysisAgent", True)},
     "compliance": {

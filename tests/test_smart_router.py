@@ -228,26 +228,22 @@ class TestDependencies:
     def test_requires_is_what_the_nodes_raise_on(self):
         """Each entry is a raise verified at the node: PortfolioAnalysisAgent
         on missing holdings, OptimizationAgent on missing returns and
-        covariance, BacktestAgent on missing optimal_weights, RebalanceAgent
-        on missing prices; ResearchAgent on a missing screening block. The
-        rebalance target is not an entry (KNOWN_GAPS: the target is the
-        IPS's, never the optimiser's)."""
+        covariance, RebalanceAgent on missing prices; ResearchAgent on a
+        missing screening block. The rebalance target is not an entry
+        (KNOWN_GAPS: the target is the IPS's, never the optimiser's)."""
         assert REQUIRES == {
             "PortfolioAnalysisAgent": ("DataAgent",),
             "OptimizationAgent": ("DataAgent",),
-            "BacktestAgent": ("DataAgent", "OptimizationAgent"),
             "RebalanceAgent": ("DataAgent",),
             "ComplianceAgent": ("PortfolioAnalysisAgent",),
             "ResearchAgent": ("ScreeningAgent",),
         }
 
     def test_plans_the_nodes_would_raise_on_are_rejected(self):
-        """The prompt's own examples plan [OptimizationAgent] alone and a
-        backtest with no optimiser; both raise at the node today."""
+        """The prompt's own example plans [OptimizationAgent] alone, which
+        raises at the node today."""
         shapes = (
             ("optimization", ["OptimizationAgent"], r"is \['DataAgent', 'OptimizationAgent'\], not"),
-            ("backtest", ["DataAgent", "BacktestAgent"], r"is \['DataAgent', 'OptimizationAgent', 'BacktestAgent'\], not"),
-            ("backtest", ["OptimizationAgent", "BacktestAgent"], r"not \['OptimizationAgent', 'BacktestAgent'\]"),
             ("rebalancing", ["RebalanceAgent"], r"is \['DataAgent', 'RebalanceAgent'\], not"),
         )
         for intent, order, message in shapes:
@@ -324,12 +320,11 @@ class TestDependencies:
 
     def test_plans_still_accepted(self):
         """Shapes every node in them can run: rule 6's DataAgent alone, the
-        optimiser after data, the backtest after both, the rebalance after
-        data (its missing target is the node's business, not a dependency)."""
+        optimiser after data, the rebalance after data (its missing target is
+        the node's business, not a dependency)."""
         shapes = (
             ("risk_analysis", ["DataAgent"]),
             ("optimization", ["DataAgent", "OptimizationAgent"]),
-            ("backtest", ["DataAgent", "OptimizationAgent", "BacktestAgent"]),
             ("rebalancing", ["DataAgent", "RebalanceAgent"]),
             ("macro_analysis", ["MacroAgent"]),
             ("research", ["ScreeningAgent"]),

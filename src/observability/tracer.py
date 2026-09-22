@@ -447,7 +447,6 @@ class ConsoleFormatter:
         "MacroAgent": "\033[92m",      # Green
         "OptimizationAgent": "\033[95m", # Magenta
         "RebalanceAgent": "\033[96m",  # Cyan
-        "BacktestAgent": "\033[91m",   # Red
     }
     RESET = "\033[0m"
     BOLD = "\033[1m"

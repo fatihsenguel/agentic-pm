@@ -17,11 +17,6 @@ Optimization:
     - Mean-variance optimization
     - Constraints handling
 
-Backtesting:
-    - Backtest engine
-    - Strategy definitions
-    - Performance reports
-
 Tools (Agent Interface):
     - rebalance_tools: Drift, trades
 

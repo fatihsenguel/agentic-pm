@@ -17,7 +17,6 @@ from .nodes import (
     rebalance_agent_node,
     portfolio_analysis_agent_node,
     compliance_agent_node,
-    backtest_agent_node,
     screening_agent_node,
     ledger_agent_node,
     research_agent_node,
@@ -43,7 +42,6 @@ AGENT_NODES = {
     "MacroAgent": macro_agent_node,
     "OptimizationAgent": optimization_agent_node,
     "RebalanceAgent": rebalance_agent_node,
-    "BacktestAgent": backtest_agent_node,
     "PortfolioAnalysisAgent": portfolio_analysis_agent_node,
     "ComplianceAgent": compliance_agent_node,
     "ScreeningAgent": screening_agent_node,
@@ -73,7 +71,7 @@ def route_next_step(state: AgentState) -> str:
     Universal Router: Decides the next step based on the execution plan.
     
     Why Dynamic? 
-    It allows the Smart Router to create any valid sequence (e.g., Data->Backtest)
+    It allows the Smart Router to create any valid sequence (e.g., Data->Analysis)
     without being forced into a rigid waterfall structure.
 
     Returns a key of the routing map built in build_graph: an agent name from

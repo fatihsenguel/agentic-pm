@@ -24,7 +24,6 @@ from agents.nodes import (
     data_agent_node,
     optimization_agent_node,
     rebalance_agent_node,
-    backtest_agent_node,
 )
 from portfolio_tool.portfolio_manager import PortfolioManager
 from portfolio_tool.data_manager import DataManager, get_data_manager
