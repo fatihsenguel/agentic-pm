@@ -25,10 +25,10 @@ from portfolio_tool.database_setup import (
 
 class DatabaseQuotaManager:
     """
-    Verwaltet zentral API-Quotas und loggt Aufrufe in der Datenbank.
-    
-    WICHTIG: Diese Klasse verwendet EIGENE Sessions für alle DB-Operationen,
-    um Konflikte mit dem DataManager zu vermeiden (SQLite Locking).
+    Manages the API quotas centrally and logs every call in the database.
+
+    This class uses sessions of its OWN for every database operation, to
+    avoid conflicts with the DataManager (SQLite locking).
     """
     
     def __init__(self, 
@@ -48,26 +48,26 @@ class DatabaseQuotaManager:
         self.provider_name = provider_name
         self.daily_limit = daily_limit
         self.pipeline_run_id = pipeline_run_id
-        print(f"DEBUG [QuotaManager]: Initialisiert für '{provider_name}', Run ID {pipeline_run_id}, Limit {daily_limit}")
+        print(f"DEBUG [QuotaManager]: Initialised for '{provider_name}', run ID {pipeline_run_id}, limit {daily_limit}")
 
     def _get_session(self) -> Session:
         """Create a new independent session for this operation."""
         return SessionLocal()
 
     def _get_current_bucket_key(self) -> str:
-        """Erzeugt den eindeutigen Schlüssel für das heutige tägliche Quota-Fenster."""
+        """Builds the unique key of today's daily quota window."""
         today = datetime.date.today()
         return f"daily_{self.provider_name}_{today.strftime('%Y-%m-%d')}"
 
     def _get_window_start(self) -> datetime.datetime:
-        """Gibt den UTC-Startzeitpunkt des aktuellen Tages zurück."""
+        """Returns the UTC start of the current day."""
         return datetime.datetime.now(datetime.timezone.utc).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
 
     def can_consume_credit(self) -> bool:
         """
-        Prüft atomar, ob ein Aufruf getätigt werden darf und verbraucht ein Credit.
+        Checks atomically whether a call may be made, and consumes a credit.
         
         Uses its own session to avoid conflicts with DataManager.
         
@@ -84,7 +84,7 @@ class DatabaseQuotaManager:
             ).first()
             
             if not quota:
-                print(f"DEBUG [QuotaManager]: Erstelle neuen Quota-Bucket: {bucket_key}")
+                print(f"DEBUG [QuotaManager]: Creating a new quota bucket: {bucket_key}")
                 quota = ApiQuota(
                     provider_name=self.provider_name,
                     bucket_key=bucket_key,
@@ -96,19 +96,19 @@ class DatabaseQuotaManager:
             
             # 2. Check limit
             if quota.calls_consumed >= self.daily_limit:
-                print(f"WARN [QuotaManager]: Tägliches Limit erreicht für {bucket_key} ({self.daily_limit})")
+                print(f"WARN [QuotaManager]: Daily limit reached for {bucket_key} ({self.daily_limit})")
                 session.rollback()
                 return False
             
             # 3. Consume credit
             quota.calls_consumed += 1
-            print(f"DEBUG [QuotaManager]: Credit verbraucht. Neuer Stand für {bucket_key}: {quota.calls_consumed}/{self.daily_limit}")
+            print(f"DEBUG [QuotaManager]: Credit consumed. New count for {bucket_key}: {quota.calls_consumed}/{self.daily_limit}")
             
             session.commit()
             return True
             
         except Exception as e:
-            print(f"ERROR [QuotaManager]: Fehler bei der Quota-Prüfung: {e}")
+            print(f"ERROR [QuotaManager]: Error in the quota check: {e}")
             try:
                 session.rollback()
             except:
@@ -125,7 +125,7 @@ class DatabaseQuotaManager:
                      error_message: str = None,
                      credits_consumed: int = 1):
         """
-        Protokolliert den Ausgang eines API-Aufrufs in der ApiCallLog-Tabelle.
+        Records the outcome of an API call in the ApiCallLog table.
         
         Uses its own session to avoid conflicts with DataManager.
         """
@@ -152,7 +152,7 @@ class DatabaseQuotaManager:
             session.commit()
             
         except Exception as e:
-            print(f"WARN [QuotaManager]: Logging des API-Aufrufs fehlgeschlagen: {e}")
+            print(f"WARN [QuotaManager]: Logging the API call failed: {e}")
             try:
                 session.rollback()
             except:
@@ -164,17 +164,17 @@ class DatabaseQuotaManager:
 
 class MockQuotaManager:
     """
-    Mock QuotaManager für Tests.
-    Erlaubt alle API-Calls ohne echte Quota-Prüfung und DB-Logs.
+    A mock QuotaManager for tests.
+    Allows every API call, with no real quota check and no database log.
     """
     
     def __init__(self, session=None):  # session param kept for backwards compatibility
         print("   ℹ️  Using MockQuotaManager (Testing Mode)")
     
     def can_consume_credit(self, cost: int = 1) -> bool:
-        """Immer erlauben (für Tests)."""
+        """Always allowed (for tests)."""
         return True
     
     def log_api_call(self, **kwargs):
-        """Nichts loggen (für Tests)."""
+        """Logs nothing (for tests)."""
         pass
