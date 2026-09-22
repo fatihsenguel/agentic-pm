@@ -7483,9 +7483,9 @@ wrong answer. What it is: the baseline for the dimension Order 5 exists
 to add. The run after Order 5 reads these same ten turns, and the pinned
 answers are the spine entries Part 3c.5 points at.
 
-### The unknown-ticker correction fails on the comma after "no"
+### The unknown-ticker correction fails on the comma after "no" - RESOLVED 23 September (thirty-eighth session)
 
-**Trigger:** the next change to `extraction.resolve`, or the commit that opens Order 5, whichever comes first.
+**Trigger:** none: closed by b430a0a, the change to `extraction.resolve` the trigger named.
 
 Recorded 22 September 2026 (thirty-fifth session), from the corpus's
 first run. S-2's second turn, "no, I meant MSFT.", did not resolve
@@ -7501,6 +7501,37 @@ a comma defeats it. Extraction, so it survives Order 5 as input
 validation; not arithmetic, so not step 4's. A one-line fix when it is
 taken: collapse runs of whitespace before the comparison, with the test
 written first on the corpus wording.
+
+**Closed 23 September (thirty-eighth session), and the cause above was
+half of it.** The test went in first on the corpus wording and was red;
+the whitespace collapse went in and it stayed red. The full stop was a
+second defeat: `_TOKEN` allows a trailing dot, so the reply's ticker was
+matched as "MSFT." and was no held ticker, and the bare reply "MSFT."
+resolved nothing either. b430a0a is two lines in `resolve`: the collapse,
+and a trailing dot stripped from each matched token before the
+membership test. pytest 1935. The golden set cannot see it, a reply
+being the second turn; the runner's 3.5 replies "yes", the confirmation
+path; the corpus's S-2 turn 2 is what it fixes, in the next run. The
+regex itself feeds every first turn too, its own entry below.
+
+### A ticker followed by a full stop is not a ticker in a first turn
+
+**Trigger:** the next change to `_TOKEN` in `extraction.py`, the next corpus run's reading of R-5, or the commit that opens Order 5, whichever comes first.
+
+Recorded 23 September 2026 (thirty-eighth session), found while
+closing the entry above. `_TOKEN` is `[A-Z][A-Z0-9.]{0,5}`, which
+matches "MSFT." whole when a ticker ends a sentence, and `_tickers`
+tests the match against the holdings and the known list as it is, so
+"How is MSFT doing." names no ticker and, the match not being alphabetic,
+gets no near-miss question either. b430a0a strips the dot in `resolve`
+only, for the reply path; the first turn still loses it. The corpus has
+one wording that ends a ticker with a full stop, R-5 "Sell 50 SPY.",
+and its refusal names no subject regardless, so the run of 22 September
+cannot show whether SPY was seen. Extraction, so it survives Order 5 as
+input validation. The fix when taken is in the regex, not per caller,
+so that a dotted ticker such as BRK.B still matches: end the token on an
+alphanumeric, with a test first on "Sell 50 SPY." and on BRK.B; the
+golden set then runs, since every question's tickers pass through it.
 
 ### Three Level 4 answers leave out content Part 18 pins
 
