@@ -846,6 +846,17 @@ their triggers; nothing was fixed.
 | S-8 turn 1 | matched |
 | S-8 turn 2 | matched: nothing of AAPL carried over |
 
+**Run of 22 September 2026, 2.2 alone, commit 2c43ad0, transcript
+`tests/golden/run_2.2_2026-09-22.txt`.** One turn through the CLI at
+18:49 UTC, after decision 75's implementation, read against Part 18's 2.2
+for the two exact halves the block above found. Nothing fetched: every
+figure as of 2026-09-21, the closes the run above stored. The answer is
+the block above's 2.2 to the byte but for the two cents.
+
+| Entry | Reading |
+| --- | --- |
+| 2.2 | matched on the two halves: 19,552.475 printed 19,552.48 and 15,147.375 printed 15,147.38, in the findings line and the condition line alike; the rest as read above, the four section 3 clauses inside their limits still carry no figure and 2.3's conditions are still carried |
+
 ---
 
 ## Part 4 — Order of work under time pressure
