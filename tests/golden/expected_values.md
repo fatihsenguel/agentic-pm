@@ -3140,6 +3140,22 @@ the four entries below carry the same figures and pin content, not text.
   Which pipelines produce it is not pinned: this is the entry Part 3c
   pins the wording of, and the answer is this whatever routes it.
 
+### 2.1a — Is my AAPL position too big?
+
+- **Figures.** AAPL 64,992.00, 15.84% of 410,200.50. IPS-4.1: breach,
+  3.84 pp = 15,767.94. IPS-4.2: breach, 5.84 pp = 23,971.95 (Part 7 §4,
+  the AAPL rows of the IPS-4.1 and IPS-4.2 tables).
+- **As of.** 2026-09-02.
+- **Cites.** IPS-4.1 and IPS-4.2. IPS-4.3 is a finding about Technology
+  and not about the position; if it is reported it is reported as the
+  sector's (Part 7 §4).
+- **States.** Too big under both clauses, each with its distance in
+  percentage points of total and in currency at unchanged total (Part 7,
+  "Distances").
+- **Not done.** No recommendation, no trade (IPS-5.2). Whether the other
+  holdings' findings appear beside AAPL's is the selection axis, pending
+  decision 17, and is not pinned.
+
 ### 2.2 — Does my current allocation violate any rule of my investment policy?
 
 - **Figures.** Section 3: IPS-3.1 Equity 284,713.50, 69.41% against 40% to
@@ -3193,6 +3209,25 @@ the four entries below carry the same figures and pin content, not text.
   15% is allowed in any.
 - **Not done.** No size recommended. An instrument that is a fund is
   pending decision 12 and is not this entry.
+
+### 3.1c — I want to put 12% into a single position, is that allowed?
+
+- **Figures.** 12% against IPS-4.1's "no more than 12%": at the limit,
+  admitted, 0.00 pp (D9: a breach is strictly over a max, on the unrounded
+  figure). Against IPS-4.2's 10%: 2.00 pp over, if the position would be
+  a directly held share. The two subtractions, the only arithmetic in this
+  Part and written out for that reason: 12.00 − 12.00 = 0.00; 12.00 −
+  10.00 = 2.00.
+- **As of.** None required: no market figure is derived.
+- **Cites.** IPS-4.1, allowed at the limit; IPS-4.2, breached if a share,
+  exempt if a fund.
+- **Refuses.** Not allowed for a directly held share, citing IPS-4.2 with
+  the distance; allowed for a fund, IPS-4.1 admitting 12.00% and IPS-4.2
+  not applying. Conditional on the instrument type and on nothing else.
+  A checker that rounds before comparing, or compares with the wrong
+  inequality, refuses the fund too and fails this row (D9's falsifier in
+  the hypothetical mode).
+- **Not done.** No size recommended.
 
 ### 3.2 — What will Nvidia's share price be at the end of next year?
 
@@ -3388,3 +3423,38 @@ the four entries below carry the same figures and pin content, not text.
   no other clause was checked; no verdict on the company (Part 10, the
   4.6 answer).
 - **Refuses.** Nothing invented.
+
+### The clarifications, C-1 to C-7
+
+The question asked back when a question is outside a vocabulary
+(benchmark.md Part 3c.3). Each is pinned by content: the phrase it could
+not read, the vocabulary it has, and no figure. The period vocabulary is
+1Y, 2Y, 3Y, 5Y and 10Y (`config.DataConfig.period_days`). The text is
+`agents/extraction.py`'s today and is not pinned. In every entry the trace
+is the same: no pipeline runs, and no figure is printed in place of the
+question.
+
+- **C-1, How has my JMP position performed since I bought it?** Asks
+  back: JMP named as the token it does not know, JPM named as the holding
+  within one edit of it (a transposition), the holdings listed. A record
+  of the question is kept for the next turn, as in 3.5.
+- **C-2, Analyze ZZZZFAKE for me.** Asks back naming ZZZZFAKE. No holding
+  is guessed: the token is within one edit of nothing held, and no rule
+  reads it.
+- **C-3, What is my volatility over the last 6 months?** Names the
+  phrase, "the last 6 months", and the spans it can measure over. No
+  volatility at the nearest span (`KNOWN_GAPS.md`, "last week becomes
+  1Y").
+- **C-4, How has my portfolio done year to date?** Names "year to date"
+  and the spans. No P&L since purchase printed in its place. A window
+  return is also a capability the system lacks (pending decision 10), so
+  the honest answer is a refusal even once the span is read.
+- **C-5, How much did AAPL gain today?** Names "today" as a one-day move
+  it cannot measure, and the spans. AAPL is read and not used. No
+  since-purchase P&L printed in its place.
+- **C-6, What is my volatility over the last year and over two years?**
+  Names both phrases, "the last year" and "two years", and asks which.
+  Both are in the vocabulary; the question is which one.
+- **C-7, I want to put 150% into a single position, is that allowed?**
+  Says 150% is not a share of a portfolio, a share being between 0 and
+  100 percent. No clause cited, since no check is made.

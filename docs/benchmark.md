@@ -598,6 +598,55 @@ tables of Part 7 §4, every finding citing its clause, whatever routes it.
 The intent and the plan are not part of the entry. Order 5 is where this
 class of defect ends, and this row is what it is judged against.
 
+### 3c.2 — Extraction variations
+
+A variation exercises what extraction reads before any model sees the
+question: a company name for a ticker, a period phrase, a weight in words,
+a German wording. Its answer is a spine case's, by pointer, and nothing is
+restated. Extraction becomes the tools' input validation at Order 5, so
+these survive it. An intent-classification variation is not written here:
+routing does not survive. The rows marked "reading gap" fail today by
+design, decision 16 being logged and not taken (`KNOWN_GAPS.md`, "The
+extraction bridge reads symbols, not company names" and "The four phrase
+rules in extraction read English"); the corpus says what the answer must
+be, not what it is.
+
+| # | Prompt | Exercises | Answer |
+| --- | --- | --- | --- |
+| V-1.1a | Wie ist meine Allokation nach Anlageklasse? | German; the ticker, period and percentage rules are language-free | Part 18, 1.1 |
+| V-1.2a | How has my JPMorgan position performed since I bought it? | a company name for a ticker; reading gap | Part 18, 1.2 |
+| V-1.3a | What is my volatility over the last twelve months? | twelve months read as a year | Part 18, 1.3 |
+| V-1.3b | What is my volatility over the past year? | an uncounted span | Part 18, 1.3 |
+| V-1.3c | What is my 1Y volatility? | the vocabulary's own token | Part 18, 1.3 |
+| V-2.1a | Is my AAPL position too big? | a held ticker in a compliance question; the golden set's wording | Part 18, 2.1a |
+| V-2.1b | Is my Apple position too big? | a company name; reading gap | Part 18, 2.1a |
+| V-3.1a | Can I put 15 percent into one position? | the word percent | Part 18, 3.1 |
+| V-3.1b | I want to put fifteen percent into a single position, is that allowed? | a weight in words; reading gap | Part 18, 3.1 |
+| V-3.1c | I want to put 12% into a single position, is that allowed? | a weight exactly at a limit (D9) | Part 18, 3.1c |
+| V-3.4a | Is there anything in my policy about currency risk? | a lookup without a saying verb, the pattern's second form | Part 18, 3.4 |
+| V-3.4b | Was sagt meine Anlagerichtlinie zum Währungsrisiko? | German; the saying-verb rule reads English; reading gap | Part 18, 3.4 |
+| V-4.1a | Does Alphabet clear my philosophy? | a company name for a candidate; reading gap | Part 18, 4.1 |
+| V-4.2a | What is Alphabet worth? | the same; reading gap | Part 18, 4.2 |
+| V-4.6a | Does JPMorgan clear my philosophy? | the same; reading gap | Part 18, 4.6 |
+
+### 3c.3 — Clarifications
+
+What is asked back when the question is outside a vocabulary. The answer
+is the question asked back, pinned by content: the phrase that could not
+be read, the vocabulary that could have been, and no figure. Every one of
+these is deterministic today and stays input validation at Order 5.
+Level 3's 3.5 is the same kind and stays in the spine.
+
+| # | Prompt | Outside which vocabulary | Answer |
+| --- | --- | --- | --- |
+| C-1 | How has my JMP position performed since I bought it? | a token one edit from a holding | Part 18, C-1 |
+| C-2 | Analyze ZZZZFAKE for me | a token no rule reads; the golden set's wording | Part 18, C-2 |
+| C-3 | What is my volatility over the last 6 months? | a span in months | Part 18, C-3 |
+| C-4 | How has my portfolio done year to date? | year to date | Part 18, C-4 |
+| C-5 | How much did AAPL gain today? | a one-day move; the golden set's wording | Part 18, C-5 |
+| C-6 | What is my volatility over the last year and over two years? | two spans in one question | Part 18, C-6 |
+| C-7 | I want to put 150% into a single position, is that allowed? | a share outside 0 to 100 | Part 18, C-7 |
+
 ---
 
 ## Part 4 — Order of work under time pressure
