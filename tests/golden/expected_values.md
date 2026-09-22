@@ -3238,7 +3238,8 @@ the four entries below carry the same figures and pin content, not text.
   scope (benchmark.md Part 2; `docs/DIRECTION.md` invariant 7).
 - **Refuses.** Gives no forecast. Names the thing refused, a forecast of a
   price, as the subject of the refusal; a list of what the system does
-  instead is not that (`KNOWN_GAPS.md`, the 3.2 defect of 21 September).
+  instead is not that (`KNOWN_GAPS.md`, "The out-of-scope answer names
+  capabilities the system now has").
 - **Trace.** No pipeline runs.
 
 ### 3.3 — How is my position doing today?
