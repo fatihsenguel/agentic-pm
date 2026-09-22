@@ -6011,6 +6011,9 @@ it has been named five ways across four sessions without being designed once:
 | "which of my positions are over the limit" | the subject kind of a compliance finding, which is exactly `group_by`'s three values | pending 17 |
 | "11% into a new ETF" | an instrument type on the hypothetical mode, so a fund is not refused as an issuer | pending 12 |
 | volatility between two stated dates | an absolute window; `ExtractedParameters.period` is `^\d+[YMD]$`, relative and anchored to now | "The router cannot express an absolute date range" |
+| "What if I bought GOOGL at 15%?" | a weight for a named candidate read from the question: the gate takes the entry's weight (decision 65) and the question's percentage is the hypothetical mode's, a check of one unnamed position; Part 17 computes 15% by hand and nothing can ask for it. Added 22 September, corpus session | Part 17 A and C; decision 65 |
+| "What if AAPL were 12%?" | a named holding at a hypothetical weight: the ticker is read and `compliance.refuse` checks the weight in no particular position. Added 22 September | Part 17 A; pending 12 is the neighbouring gap |
+| "Compare AAPL and MSFT against my policy" | two tickers as a selection over the compliance findings. Added 22 September | pending 17 |
 
 **Capability.** Nothing here is a schema problem and none of it should reach
 the schema before its reference exists.
@@ -6023,14 +6026,19 @@ the schema before its reference exists.
 | "what is X worth" | the valuation pipeline and Part 11 | Order 4 |
 | "how have my predictions done" | prediction scoring and its reference | Order 4; the 4.5 before-face in the prompt batch |
 | "does X clear my philosophy" | the `research` intent and its node; the screen exists as pure modules | pending 29 |
+| "1Y", replying to "I can measure over 1Y, 2Y, ..." | a record for the span clarification, so the reply stands for the question at that span; `extraction.py`'s docstring says the span and percentage clarifications get theirs when a case asks, and corpus sequence S-3 now asks. Added 22 September; not built inside the interlude | benchmark.md Part 3c.5, S-3 |
 
-**Reading.** All three are one decision, 16, logged and not taken.
+**Reading.** All three are one decision, 16, logged and not taken. The two
+added 22 September are conversation memory, not decision 16, and dissolve
+the same way, when Order 5 replaces the bridge.
 
 | Question | What is missing | Entry |
 |---|---|---|
 | "my Apple Inc. position" | a name resolved to a symbol; extraction reads symbols only | "The extraction bridge reads symbols, not company names" |
 | "wie lief mein Portfolio im letzten Monat" | German in the four phrase rules that read English | "The four phrase rules in extraction read English" |
 | a typo more than one edit from a holding | `_within_one_edit` is the rule, by design | read from `extraction.py`, not from an entry |
+| "Should I buy it?", after "What is GOOGL worth?" | a pronoun resolved against the previous turn; extraction reads no ticker from "it". Added 22 September | benchmark.md Part 3c.5, S-6 |
+| "And GOOGL?", after "Does JPM clear my philosophy?" | a question frame carried from the previous turn. Added 22 September | benchmark.md Part 3c.5, S-7 |
 
 **What this list is not.** It is not an argument that a wider schema is a
 stronger system. `INTENTS` and `TERMINAL` being closed is why 3.4 passes on
