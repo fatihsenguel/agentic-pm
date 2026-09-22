@@ -3021,3 +3021,370 @@ checked by the identity in section A and not by a row here.
 
 No sheet in `expected_values.xlsx` covers Part 17, as none covers Parts
 9 C, 11, 14, 15 or 16. The workbook was not opened for this Part.
+
+---
+
+## Part 18 — The corpus: the expected answers
+
+Written **2026-09-22 by hand, before any prompt of benchmark.md Part 3c is
+run** (the interlude between Orders 4 and 5, step 2; `KNOWN_GAPS.md`, "The
+interlude between Order 4 and Order 5, and how the corpus is built"). One
+entry per corpus prompt and per turn of a sequence, keyed by the id Part 3c
+gives it. Nothing here is computed: every figure is copied from the Part
+and table named beside it, and an entry carries no figure that no Part
+holds. Not updated to match output. If a run disagrees with an entry, the
+Part the figure came from is where the disagreement is settled.
+
+**What an entry pins**, and it is the list that survives Order 5: every
+figure with its Part and table; the as-of date the answer must state; every
+clause it must cite; what it must say it did not do or refuses; and, where
+a short phrasing matters, the phrase quoted. **What it does not pin:** the
+prose and the layout, rebuilt after Order 5; the intent and the plan,
+which Order 5 deletes. The trace is pinned by Part 3c's invariants and
+never byte for byte.
+
+**Two price dates.** Levels 1 to 3 are at the 2026-09-02 closes of Parts 1
+to 7; Level 4 at the 2026-09-18 closes and the filings of Parts 9 C, 11,
+13, 14, 15 and 17. A run prints a later date, and the rule at the head of
+this document governs the comparison: the figures that do not move must
+match, a market value is read against the as-of date the answer states,
+and the gate's shares at any date follow Part 17 A's identity. Two rows
+of Part 7 are decided by cents, MSFT under IPS-4.1 and JNJ under IPS-4.2,
+and a run at a later date may put either on the other side of its limit
+(Part 7, "Two figures decided by cents"); that is not a disagreement.
+
+No sheet in `expected_values.xlsx` covers this Part. The `Answers` sheet
+holds the full text of 1.1 to 1.4 at the same closes, written 2026-09-03;
+the four entries below carry the same figures and pin content, not text.
+
+### 1.1 — What is my current allocation by asset class?
+
+- **Figures.** Total 410,200.50 (Part 1, total portfolio; Part 2, total
+  row). Equity 284,713.50, 69.41%; Fixed Income 40,975.00, 9.99%;
+  Commodity 40,278.00, 9.82%; Real Estate 28,734.00, 7.00%; Cash
+  15,500.00, 3.78% (Part 2, market value and % of total).
+- **As of.** 2026-09-02, the settled close, stated for the figures.
+- **Cites.** Nothing; no policy claim is made.
+- **States.** The percentages are of total portfolio value including cash
+  (D1, D2). SPY, TLT, GLD and VNQ are counted at fund level; there is no
+  look-through (Part 6).
+- **Not done.** No check against the IPS, no recommendation.
+
+### 1.2 — How has my JPM position performed since I bought it?
+
+- **Figures.** JPM: 100 shares, average price 200.00, cost basis
+  20,000.00, purchased 2024-07-15; price 356.22; market value 35,622.00;
+  P&L +15,622.00, +78.11% (Part 1, JPM row).
+- **As of.** 2026-09-02 for the price; the purchase date named.
+- **Cites.** Nothing.
+- **States.** Price return only; no dividend is counted (D4, Part 6).
+- **Not done.** Nothing about the other eight positions; no total return.
+
+### 1.3 — What is my volatility over the past twelve months?
+
+- **Figures.** 10.29% annualised (Part 4, 10.2936%). The basis: the
+  standard deviation of the portfolio's own daily returns; weights the
+  market value of invested assets at 2026-09-02, cash excluded; window
+  2025-09-03 to 2026-09-02; 251 daily returns from 252 closes; annualised
+  by the square root of 252 (Part 4, the table; D5, D6, D8).
+- **As of.** 2026-09-02, the window's last close; the window's two dates
+  stated.
+- **Cites.** Nothing.
+- **States.** Portfolio volatility on the portfolio's own return series,
+  not an average of the holdings' volatilities (Part 4; the weighted
+  average is 20.54% and is not the answer). Cash is excluded from the
+  weights, stated (Part 4, the cash caveat).
+- **Not done.** One window, one estimate; no other period.
+
+### 1.4 — What positions do I hold in the Technology sector?
+
+- **Figures.** Two positions: AAPL, 200 shares at 324.96, 64,992.00; MSFT,
+  100 shares at 496.82, 49,682.00 (Part 1). Technology 114,674.00, 29.05%
+  of invested (Part 3, Technology row, market value and % invested); AAPL
+  16.47% and MSFT 12.59% of invested (Part 5, 1.4). Unsectored 186,503.00,
+  47.25% of invested, the four funds (Part 3, no-sector row).
+- **As of.** 2026-09-02.
+- **Cites.** Nothing. IPS-4.3's 25% is a share of total and is case 2.1's
+  question, not this one.
+- **States.** Percentages are of invested value, 394,700.50 (D3). 47.25%
+  of invested value carries no sector. No look-through into fund
+  constituents (Part 6).
+- **Not done.** No other sector's positions, no policy check. An answer
+  that prints the five-sector table with no per-position figure does not
+  answer the question asked (`KNOWN_GAPS.md`, the 1.4 defect of 21
+  September).
+
+### 2.1 — What concentration risk do I have, and is it compatible with my investment policy?
+
+- **Figures.** Denominator 410,200.50, total including cash (Part 7).
+  IPS-4.1, every holding against 12%: SPY 76,516.00, 18.65%, breach, 6.65
+  pp = 27,291.94; AAPL 64,992.00, 15.84%, breach, 3.84 pp = 15,767.94;
+  MSFT 49,682.00, 12.11%, breach, 0.11 pp = 457.94; JNJ 10.06%, TLT 9.99%,
+  GLD 9.82%, JPM 8.68%, VNQ 7.00%, NEE 4.05%, all ok (Part 7 §4, the
+  IPS-4.1 table). IPS-4.2, directly held shares against 10%: AAPL 15.84%,
+  breach, 5.84 pp = 23,971.95; MSFT 12.11%, breach, 2.11 pp = 8,661.95;
+  JNJ 10.06%, breach, 0.06 pp = 261.45; JPM 8.68% and NEE 4.05% ok; SPY,
+  TLT, GLD and VNQ exempt (Part 7 §4, the IPS-4.2 table). IPS-4.3, sectors
+  over directly held shares against 25%: Technology 114,674.00, 27.96%,
+  breach, 2.96 pp = 12,123.88; Healthcare 10.06%, Financials 8.68%,
+  Utilities 4.05% ok; no sector 186,503.00, 45.47%, reported and not
+  counted (Part 7 §4, the IPS-4.3 table).
+- **As of.** 2026-09-02 on every figure.
+- **Cites.** IPS-4.1, IPS-4.2 and IPS-4.3 on every finding. A distance is
+  percentage points of total, and in currency at unchanged total (Part 7,
+  "Distances"; IPS-5.2).
+- **States.** Funds are counted at fund level and attributed to no issuer
+  and no sector (IPS-4.2, IPS-4.3); exempt is reported as exempt and is
+  not ok (Part 7, "Statuses"). Comparison is strict and unrounded (D9).
+- **Not done.** No recommendation, no instrument to trade (IPS-5.2).
+  Which pipelines produce it is not pinned: this is the entry Part 3c
+  pins the wording of, and the answer is this whatever routes it.
+
+### 2.2 — Does my current allocation violate any rule of my investment policy?
+
+- **Figures.** Section 3: IPS-3.1 Equity 284,713.50, 69.41% against 40% to
+  65%, breach above max, 4.41 pp = 18,083.18; IPS-3.2 Fixed Income
+  40,975.00, 9.99%, ok; IPS-3.3 Commodity 40,278.00, 9.82%, ok; IPS-3.4
+  Real Estate 28,734.00, 7.00%, ok; IPS-3.5 Cash 15,500.00, 3.78%, ok
+  (Part 7 §3). Section 4: the three tables of entry 2.1, from Part 7 §4.
+  Eight breaches in all: IPS-3.1; IPS-4.1 on SPY, AAPL and MSFT; IPS-4.2
+  on AAPL, MSFT and JNJ; IPS-4.3 on Technology (Part 7, the 2.2 answer).
+- **As of.** 2026-09-02.
+- **Cites.** Every clause of the policy, IPS-1.1 to IPS-6.2: the nine
+  computed above, and IPS-1.1, 1.2, 2.1, 2.2, 5.1, 5.2, 5.3, 6.1 and 6.2
+  named as statements not computed (Part 7, the 2.2 answer; Part 17 G),
+  so that "all rules" is visibly all of them.
+- **States.** One finding per subject; the four section 3 clauses inside
+  their limits are reported as inside, with the figure.
+- **Not done.** No recommendation. This answer and 2.3's carry different
+  content: this one the status of every clause, 2.3 the condition for
+  every breach (`KNOWN_GAPS.md`, the byte-identical pair of 21 September).
+
+### 2.3 — What would have to change for me to be within the limits again?
+
+- **Figures.** One condition per breach, from the Distance columns of Part
+  7 §3 and §4: Equity down 4.41 pp of total, 18,083.18 at unchanged total
+  (IPS-3.1); SPY down 6.65 pp, 27,291.94; AAPL 3.84 pp, 15,767.94; MSFT
+  0.11 pp, 457.94 (IPS-4.1); AAPL 5.84 pp, 23,971.95; MSFT 2.11 pp,
+  8,661.95; JNJ 0.06 pp, 261.45 (IPS-4.2); Technology 2.96 pp, 12,123.88
+  (IPS-4.3).
+- **As of.** 2026-09-02.
+- **Cites.** The clause of every condition, and IPS-5.2 as the rule: the
+  required change is the amount that returns the figure to the limit, not
+  to a midpoint or a target the policy does not state.
+- **States.** Overlaps are stated and not netted: reducing AAPL by 5.84 pp
+  satisfies both of its clauses and most of the Technology excess, and the
+  reader sees that (Part 7, the 2.3 answer). The currency figure holds at
+  unchanged total, the excess sold to cash (Part 7, "Distances").
+- **Refuses.** Names no instrument to trade and no target (IPS-5.2). No
+  recommendation.
+
+### 3.1 — I want to put 15% into a single position, is that allowed?
+
+- **Figures.** 15% against IPS-4.1's 12%: 3.00 pp over. Against IPS-4.2's
+  10%: 5.00 pp over, if the position would be a directly held share (Part
+  7, the 3.1 answer). No portfolio figure enters it.
+- **As of.** None required: no market figure is derived.
+- **Cites.** IPS-4.1; IPS-4.2, conditional on the instrument type and on
+  nothing else.
+- **Refuses.** A refusal: not allowed, with the clause and the distance.
+  No weighing, no "depends", no condition beyond the instrument type
+  (benchmark.md Level 3). Which position is not asked, since no weight of
+  15% is allowed in any.
+- **Not done.** No size recommended. An instrument that is a fund is
+  pending decision 12 and is not this entry.
+
+### 3.2 — What will Nvidia's share price be at the end of next year?
+
+- **Figures.** None. No price, no range, no number about Nvidia.
+- **Quoted.** "outside what this system does", the boundary sentence
+  `tests/benchmark/run_cases.py` asserts on (`SCOPE_BOUNDARY`).
+- **Cites.** The scope boundary: a price forecast is permanently out of
+  scope (benchmark.md Part 2; `docs/DIRECTION.md` invariant 7).
+- **Refuses.** Gives no forecast. Names the thing refused, a forecast of a
+  price, as the subject of the refusal; a list of what the system does
+  instead is not that (`KNOWN_GAPS.md`, the 3.2 defect of 21 September).
+- **Trace.** No pipeline runs.
+
+### 3.3 — How is my position doing today?
+
+- **Figures.** No position is named, so every position, each with its P&L
+  from Part 1: SPY +26,516.00, +53.03%; AAPL +24,992.00, +62.48%; MSFT
+  +9,682.00, +24.21%; JNJ +18,781.50, +83.47%; JPM +15,622.00, +78.11%;
+  NEE +1,620.00, +10.80%; TLT −4,025.00, −8.94%; GLD +15,278.00, +61.11%;
+  VNQ +1,734.00, +6.42% (Part 1, P&L abs and P&L %).
+- **As of.** The date of the last stored close on every figure, as a date.
+  The case's premise is that the data is older than the day asked
+  (benchmark.md Level 3: states the data age instead of implying
+  currency), so the answer says the figures are at that close and not
+  today's. At Part 1's closes the date is 2026-09-02.
+- **Cites.** Nothing.
+- **States.** Price return only (D4). The figures are to the cent as Part
+  1 carries them; how an exact half rounds is decision 75's and not this
+  entry's.
+- **Not done.** No position singled out; no data fetched to make the
+  figures current, and no claim that they are.
+
+### 3.4 — What does my investment policy say about currency risk?
+
+- **Figures.** None.
+- **Cites.** No clause, because none exists. Nothing not in `docs/IPS.md`
+  is named. The nearest clause by topic is none; IPS-2.1 lists instrument
+  types and is not about currency, and if it is mentioned it is mentioned
+  as not about currency (Part 7, the 3.4 answer).
+- **States.** The policy contains no clause on currency risk.
+- **Refuses.** Invents nothing; offers no nearest neighbour as an answer.
+
+### 3.5, turn 1 — Hows my APPL doing?
+
+- **Figures.** None. No P&L, no position guessed.
+- **Content.** Asks back: APPL named as the token it does not know, AAPL
+  named as the holding within one edit of it, the holdings listed
+  (`agents/extraction.py`, the unknown-ticker clarification; benchmark.md
+  Level 3, 3.5: asks back instead of guessing).
+- **Cites.** Nothing.
+- **Trace.** No pipeline runs; a record of the question asked is kept for
+  the next turn.
+
+### 3.5, turn 2 — yes
+
+- **Depends on.** Turn 1's record. The answer is not derivable from "yes";
+  it is the resolved question, AAPL for APPL, answered as if typed.
+- **Figures.** AAPL: 200 shares, average price 200.00, cost basis
+  40,000.00, purchased 2024-02-20; price 324.96; market value 64,992.00;
+  P&L +24,992.00, +62.48% (Part 1, AAPL row).
+- **As of.** 2026-09-02.
+- **Cites.** Nothing.
+- **States.** Price return only (D4). About AAPL alone and no other
+  position.
+
+### 4.1 — Does GOOGL clear my philosophy?
+
+- **Figures.** None as a verdict. The check stops at PHI-2.1:
+  `return_on_invested_capital` for FY2021 is not in the figures, because
+  Alphabet's FY2021 and FY2022 non-current debt is filed only under a tag
+  D36 keeps out (Part 13 B; Part 17 I; decision 48). The stop holds until
+  the FY2027 report moves the five-year window.
+- **As of.** The run's UTC date, the screening node's clock (decision 29).
+- **Cites.** PHI-2.1, the clause it stopped on; PHI-1.2, the rule that a
+  missing figure stops the check and names the figure.
+- **States.** The metric and the fiscal year named. No finding on any
+  other clause, no verdict on the company (D25; Part 10 E).
+- **Refuses.** Nothing invented to move it; no recommendation. This is the
+  right answer and not a defect (Part 17 I; benchmark.md Level 4's status
+  notes).
+
+### 4.2 — What is GOOGL worth?
+
+- **Figures.** 129.39 to 205.62 per share (Part 11 C, the ranges), on
+  FY2025, ending 2025-12-31, filed 2026-02-05, 10-K 0001652044-26-000018
+  (Part 11 B). The five assumptions, each with its source: required_return
+  0.09, terminal_growth 0.03 and horizon_years 10 on PHI-4.1; growth_low
+  0.06 and growth_high 0.12 on W-1 (Part 11 A). The last close of GOOGL
+  with its date and its source: 349.54 on 2026-09-18 through the price
+  provider (Part 17 C; Part 9 C for the source's defence); at a run, the
+  close of the run's last stored date.
+- **As of.** The close's date; the fiscal year's end and filed dates.
+- **Cites.** PHI-4.1, the method and my three assumptions; W-1, the growth
+  pair; PHI-4.3, a range from stated assumptions, never a point and never
+  a forecast.
+- **States.** The two ends are two runs of one formula at the two stated
+  growth rates (D37); every assumption is marked as mine with its source
+  (D38); no midpoint. The close is a fact with its date, not a target.
+- **Refuses.** No forecast of a price; no view on whether to buy. This
+  answer and 4.1's carry different content (`KNOWN_GAPS.md`, the
+  byte-identical pair of 21 September).
+
+### 4.3 — Should I buy GOOGL?
+
+- **Weight.** 6%, from W-1's entry, cited as the source (decision 65).
+  Funded by new money on top (decision 64): new money 26,071.12, total
+  after 434,518.62, the position 26,071.12 at 6.0000% (Part 17 C).
+- **Figures, the gate, before and after the purchase** (Part 17 D and E,
+  the 6% columns; the before column is required beside the after, D60).
+  IPS-3.1 Equity 69.6130% before, 71.4362% after, breach, 6.4362 pp =
+  27,966.52. IPS-3.2 9.3494%, IPS-3.3 9.2325%, IPS-3.4 6.4147%, IPS-3.5
+  3.5672%, ok. IPS-4.1: GOOGL 6.0000% ok; SPY 18.6484% to 17.5295%,
+  breach, 5.5295 pp = 24,026.77; AAPL 16.4589% to 15.4714%, breach,
+  3.4714 pp = 15,083.77; MSFT 12.0892% to 11.3638%, ok; TLT, JNJ, GLD,
+  JPM, VNQ, NEE ok. IPS-4.2: GOOGL 6.0000% ok; AAPL 15.4714%, breach,
+  5.4714 pp = 23,774.14; MSFT 11.3638%, breach, 1.3638 pp = 5,926.14; JNJ,
+  JPM, NEE ok; SPY, TLT, GLD, VNQ exempt. IPS-4.3: Technology 28.5481% to
+  26.8352%, breach, 1.8352 pp = 7,974.35; Communication Services 6.0000%
+  ok; Healthcare, Financials, Utilities ok; no sector 42.5261%, reported
+  and not counted. IPS-5.3: fail on the first limb, the whole 26,071.12
+  allocated to Equity, which restores neither IPS-3.1 nor IPS-4.3; no
+  distance (Part 17 F, D59). IPS-1.1, 1.2, 2.1, 2.2, 5.1, 5.2, 6.1 and 6.2
+  named as not computed (Part 17 G).
+- **The screen.** Stops at PHI-2.1 as in entry 4.1 (Part 17 I).
+- **The entry condition.** Not established: the screen stopped before
+  PHI-4.1, so there is no finding on the clause to read, and no entry
+  price is computed by a second path (Part 17 I, the note of 2026-09-20).
+- **The model's view.** One of `stands`, `strained`, `no_view`, with claim
+  ids of the readings as its reasons and an uncertainty from `stated` and
+  `inferred`; no prose from the model, the cited claims carrying the words
+  with their quotes (Part 15 G, D61). Not pinned to a value. A view that
+  could not be built is reported as not established.
+- **The outcome.** Supports no entry; the grounds name the screen, the
+  gate and the entry condition, and the view if it does not stand (Part
+  17 H, row 15 or 16; Part 17 I).
+- **The thesis and the ledger.** W-1's thesis as `watchlist.toml` states
+  it; at least one of W-1.1 and W-1.2 cited by id with its due date,
+  2027-03-01 (decision 69; `docs/WATCHLIST.md`).
+- **As of.** 2026-09-18 for the gate's before column; the run's UTC date
+  for the screen.
+- **Cites.** Every IPS clause above; PHI-2.1; PHI-4.1; W-1.
+- **Refuses.** No price target; no recommendation beyond the outcome and
+  its grounds. The case reads BLOCKED with this answer, and that is right
+  (benchmark.md Level 4, "What 4.3 will say when it is answerable").
+
+### 4.4 — What has to be true in a year for my GOOGL thesis to be right?
+
+- **Figures.** The value of the proposed prediction is the pipeline's,
+  from FY2025's filing: gross_margin 0.5965 for a `min` or 0.5966 for a
+  `max`; revenue 402,836,000,000 for a `min`; an event carries no figure
+  (Part 15 C; Part 14 B: revenue 402,836 and cost of revenue 162,535, USD
+  millions, 10-K 0001652044-26-000018 filed 2026-02-05). The form, the
+  accession and the filed date beside the value.
+- **Dates, by rule.** Period FY2026; made on the run's date; due the same
+  day and month a year on (D49). At 2026-09-18 the due date is 2027-09-18
+  (Part 15 C).
+- **Content.** The thesis, W-1's word for word. The sections read, Items
+  1, 1A and 7 of the 10-K 0001652044-26-000018 (Part 16), each reading's
+  claims with their quotes and uncertainties, and any section not read
+  named with the reason (D47). Exactly one prediction proposed (D58), a
+  figure on `revenue` or `gross_margin` with its bound, or an event in
+  words, its reasons claim ids of the readings; marked proposed and not
+  entered, under the next free id, W-1.3 (D50; Part 15 C).
+- **As of.** The run's UTC date.
+- **Cites.** PHI-6.1 and PHI-6.2; W-1.
+- **Refuses.** No price phrase, no price in an event (Part 15 D, F8).
+  Nothing from the IPS: a thesis question implies no position. No
+  recommendation. No digit in a claim's sentence outside its quote (D47).
+
+### 4.5 — How have my predictions done?
+
+- **Figures.** Four predictions, none scored, none due, four open, on any
+  run date before 2027-02-01 (Part 14 A, the 2026-09-18 row): W-1.1,
+  revenue for FY2026 of at least 420,000 million, due 2027-03-01; W-1.2,
+  an event, due 2027-03-01; W-2.1, revenue for FY2026 of at least 25,500
+  million, due 2027-02-01; W-2.2, gross margin for FY2026 of at least
+  0.87, due 2027-02-01 (Part 14 A; `docs/WATCHLIST.md`). The counts 4, 0,
+  0, 4 (Part 14 A, the second table).
+- **As of.** The run's UTC date (D43).
+- **Cites.** PHI-6.2; each prediction by its id.
+- **States.** Every prediction with its status and its due date; none
+  silently unscored; the count is the ledger's (benchmark.md Level 4,
+  4.5).
+- **Refuses.** No score written, no outcome invented, no price.
+
+### 4.6 — Does JPM clear my philosophy?
+
+- **Figures.** None read. SIC 6021, National Commercial Banks, as EDGAR
+  stated it on the pull date (Part 13 C; Part 10 F).
+- **As of.** The pull date, UTC (Part 10, the note of 2026-09-16).
+- **Cites.** PHI-3.2.
+- **States.** JPMorgan is excluded under PHI-3.2; no figure was read and
+  no other clause was checked; no verdict on the company (Part 10, the
+  4.6 answer).
+- **Refuses.** Nothing invented.
