@@ -208,14 +208,14 @@ def resolve(reply: str, pending: Optional[Dict[str, str]], held_tickers: Sequenc
     token, candidate, message = pending["token"], pending["candidate"], pending["message"]
     held = {t.upper() for t in held_tickers}
     words = re.sub(r"[^\w\s']", " ", reply).strip()
-    named = [t for t in _TOKEN.findall(reply) if t in held or t in _KNOWN]
+    named = [t for t in (m.rstrip(".") for m in _TOKEN.findall(reply)) if t in held or t in _KNOWN]
 
     if words.lower() in _CONFIRM:
         chosen = candidate
     elif named and (len(named) == 1):
         chosen = named[0]
         # "yes, AAPL" and "AAPL" confirm; "no, MSFT" and "I meant JPM" choose.
-        rest = re.sub(rf"\b{chosen}\b", " ", words).strip(" ,.")
+        rest = " ".join(re.sub(rf"\b{chosen}\b", " ", words).split())
         if rest and rest.lower() not in _CONFIRM | {"no", "i meant", "no i meant", "i mean", "no i mean"}:
             return None
     else:

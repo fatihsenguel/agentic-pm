@@ -282,6 +282,7 @@ REPLIES = [
     ("correct", RESOLVED),
     ("no, MSFT", "Hows my MSFT doing?"),      # a different holding named
     ("I meant JPM", "Hows my JPM doing?"),
+    ("no, I meant MSFT.", "Hows my MSFT doing?"),  # the corpus's S-2 wording: a comma after "no", a full stop after the ticker
     ("no", None),                              # no ticker to substitute: a new message
     ("What is my allocation?", None),          # a new question
     ("yes please, and my allocation too", None),  # not a plain confirmation
