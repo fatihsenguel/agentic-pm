@@ -6941,35 +6941,92 @@ interlude.**
    prompts need rethinking, rather than discovering it halfway through Order
    5.
 
-**The arc. Eight steps, each its own session or more.**
+**The arc. Eight steps, and Order 5 now sits between the fifth and the
+sixth rather than after all eight — re-scoped 22 September, see below.**
+
+*Before Order 5:*
 
 1. **The deletion.** Decision 51: shrink the surface first — 4,459 lines
    as measured on the day, the decision's own total of 4,094 being 365
    short of its own five components —
    three intents, and four of the answers that would embarrass a demo.
+   **Done 22 September**, and it cost a benchmark case.
 2. **The corpus:** prompts and the answers I want back, grown inside
    benchmark.md and expected_values.md, written before any of it is run.
-3. **Running the corpus:** the actual test of the whole system, read by hand.
-4. **What it finds:** decide the gaps, and only then whether any capability
-   is added. Decisions 17, 75 and 76 are already waiting in that queue.
-5. **The CLI as the client.** `src/agents/cli.py` is the only way anyone uses
+   **Its content is decided by what survives the refactor**: the question,
+   the figures the answer must carry, the clauses a refusal must cite, and
+   the multi-turn sequences. Not the intent and not the plan.
+3. **Running the corpus**, and its purpose is narrower than it first read:
+   **capture the baseline and confirm the answers I want are reachable**,
+   not hunt for defects to fix. What it finds is **logged, not fixed**.
+4. **A narrow fix list.** Only what is wrong in a pipeline's arithmetic,
+   because that is what Order 5 leaves untouched. **Routing defects are
+   not fixed** — the router is being deleted. **Formatter layout is not
+   fixed** — the presentation is rebuilt afterwards. Decisions 75 and 76
+   are arithmetic and belong here; decision 17 is a selection axis across
+   four formatters and probably does not.
+5. **The cleanup:** the German debug strings under `src/`, and the glyphed
+   answer headers of item 32. Independent of everything else and cheap, so
+   it can happen whenever there is an hour for it.
+
+*Then Order 5.*
+
+*After Order 5, built against the system that will actually ship:*
+
+6. **The CLI as the client.** `src/agents/cli.py` is the only way anyone uses
    this program, and today it is a developer console: it prints the
    `SHARED_DATA` keys, truncated raw payloads, `steps=2 request_id=... 1.8s`
    and `:r raw`. It has to become the product surface, with the trace as a
    designed view rather than a debug dump — today `:v` only removes a
    200-character truncation and dumps 160,000 characters of price data, which
-   is worse for a demo and not better. This is both the product gap and the
-   demo's substance.
-6. **The cleanup:** the German debug strings under `src/`, and the glyphed
-   answer headers of item 32.
+   is worse for a demo and not better.
 7. **The front door:** the README, 71 lines and stale on purpose, and the
    demo recordings.
 8. **Last, a cleaned public repository** that keeps KNOWN_GAPS, the
    hand-computed references and the blocked cases. This repository stays the
    workshop until then.
 
-**The interlude closes when the full test is run again and finds nothing the
-loops could not already have caught.** Then Order 5.
+**Re-scoped 22 September (thirty-third session), from my own question after
+the deletion landed: if Order 5 changes so much, why test and fix things
+that will change?** The answer is that a corpus entry is not one thing, and
+its parts have different lifespans. The question survives entirely. The
+figures survive entirely - Equity is 284,332.50 at the 18 September closes
+whether a router or a tool call reaches it. The clauses a refusal cites
+survive entirely. The multi-turn sequences survive and matter more
+afterwards. The prose survives in part. **The intent and the plan survive
+not at all** - that is the golden set, and it dies with the refactor. So
+pinning routing is investment in something Order 5 deletes, and pinning
+figures is the only instrument that can say whether Order 5 worked.
+
+**What moved, and why.** Steps 2 and 3 stay before Order 5 because a
+refactor with no before-and-after cannot be verified, and the loop that
+would verify it is the one being deleted. Step 4 shrank: fixing a
+formatter now, when the presentation is rebuilt at step 6, is paying
+twice, and fixing routing is paying for something about to be thrown away.
+Steps 5, 6 and 7 moved because **Order 5 changes what a trace is** - from
+a plan and a list of agents to tool calls inside a conversation - so a
+designed trace view built now is designed twice, and a demo recorded now
+is recorded twice.
+
+**The evidence for doing steps 2 and 3 at all, and it is from this session
+rather than from an argument.** Deleting three intents moved case 2.1,
+which mentions none of them, from `compliance` to `risk_analysis`. No loop
+caught it: the golden set does not carry that wording, pytest holds the
+tables and they were correct, and only the runner asks it. If removing
+three descriptions can do that unseen, replacing the whole routing layer
+will do it at scale. **And the eight defects the full test found are
+almost all figures and answers rather than routing** - 1.4 omitting both
+figures its reference asks for, 2.3 printing another case's answer, 3.3's
+three halves rounded three ways, 4.1 byte-identical to 4.2. None of those
+is touched by Order 5, and none of them is measured by anything today.
+
+**The closing condition changes with the scope.** It used to read: the
+interlude closes when the full test is run again and finds nothing the
+loops could not already have caught. That cannot hold once step 4 defers
+most fixes - the full test will find things, by design. **It now closes
+when the corpus exists, has been run once end to end, and everything it
+found is either fixed under step 4's narrow rule or logged with a
+trigger.** Then Order 5.
 
 **How the corpus is built, decided with the arc.**
 
@@ -7015,11 +7072,14 @@ loops could not already have caught.** Then Order 5.
   benchmark.md Part 2 decides what is in scope.
 - **benchmark.md Part 5 already holds the demo plan**, written earlier:
   runnable offline, show a failure, have the specification to hand, set the
-  frame. The demo work executes it rather than replacing it.
+  frame. The demo work executes it rather than replacing it, and after the
+  22nd's re-scope that work is step 7, after Order 5.
 
-**One count in this entry is deliberately absent.** Step 6 was described to
-me as 22 German debug strings across five files under `src/`. A grep on 21
-September finds German console and docstring text in `data_manager.py`,
+**One count in this entry is deliberately absent.** The cleanup - step 6
+when this was written on the 21st, **step 5 after the 22nd's re-scope** -
+was described to me as 22 German debug strings across five files under
+`src/`. A grep on 21 September finds German console and docstring text in
+`data_manager.py`,
 `providers/yfinance_provider.py`, `services/quota_manager.py`,
 `scripts/run_backfill.py`, `api/main.py`, `database_setup.py` and one
 clarification sentence in `smart_router.py` — seven files, and the string
