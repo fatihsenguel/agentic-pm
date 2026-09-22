@@ -21,7 +21,7 @@ balance that is empty when this happens.
 **What the full test cost me to learn, which is the point of it.** Eighteen
 cases, eight findings, and **the runner calls every one of those cases a
 pass, or blocks it for an unrelated reason**. Every finding is invisible to
-all four loops: the runner discards the answers, the golden set prints five
+all four loops: the runner shows nobody an answer, the golden set prints five
 routing fields, pytest holds components, and only a hand reading through
 the CLI sees them. **n/18 counts well-formed answers and cannot count right
 ones.**
@@ -36,7 +36,7 @@ ones.**
 | `docs/benchmark.md` | **The definition of done.** Levels 1 to 3: 12 cases, 12 pass. Level 4: 4.2, 4.4, 4.5 and 4.6 pass; 4.1 and 4.3 blocked. **16/18, as the runner reported it at 14:45 on 21 September.** Twelve dated status notes under Level 4, **one added this session** recording the full test's completion. **Read Part 2, not only the case list:** it states what is in scope in words, and drift and trades to a stated target are in it. That sentence is why decision 51 kept the rebalancing intent. |
 | `tests/golden/expected_values.md` | Hand-computed reference, Parts 1 to 17. **Unchanged this session and Part 7 read hard.** All five of its currency distances reproduce exactly from `market_value - limit * total`, and two of them land on exact halves, both stated rounded up. That is what settled decision 75. Never update it to match code output. |
 | `tests/golden/expected.txt` | **Twenty-one lines**, unchanged this session, one pinned failure. |
-| `tests/benchmark/run_cases.py` | **The scoreboard.** Eighteen cases, unchanged, **run once at 14:45**. **It discards every answer** through `contextlib.redirect_stdout` (lines 2501 and 2515), which is why every finding costs a CLI run. |
+| `tests/benchmark/run_cases.py` | **The scoreboard.** Eighteen cases, unchanged, **run once at 14:45**. **Its checks read every answer** — `_answer(state)` at line 160 is `state["final_response"]`, read at thirty-two sites — but it **shows** nobody one: `contextlib.redirect_stdout` (2501, 2515) discards the printed console trace, and the run prints verdict lines alone. That is why every finding costs a CLI run. **Corrected 21 September (thirty-third session); this row said it discards the answer, which is false** (KNOWN_GAPS). |
 | `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **169 lines start `**Trigger:**`**, up from 165 by the four added this session. **Sixteen entries carry "pending decision 51"; all sixteen are now the deletion session's reading list.** |
 | `tests/golden/expected_values.xlsx` | The workbook, eleven sheets, **not opened this session**. Saved in Excel at b07bc33 by the owner at the end of the twenty-ninth session. Parts 9 C, 11, 14, 15, 16 and 17 have no sheet. |
 | `docs/IPS.md` | The policy, synthetic, 17 clauses. Unchanged. |
@@ -138,7 +138,7 @@ readings add is marked.
   12:56 where I had called it fresh. **The runner's prediction was written
   to a file at 14:36 before the run rather than said afterwards**, which is
   the form to keep when a prediction and its result land in one message.
-- **Read a live model output by hand.** The runner discards it.
+- **Read a live model output by hand.** The runner never shows it.
 - **Recompute the answer's arithmetic rather than reading it.** Every
   rounding defect this project has found was invisible to a reading.
 - **Grep the caller, not the registration**, and **grep the writer the
@@ -778,7 +778,7 @@ git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1
 | `pytest` | ~6s, no model calls | Do the components still work; does every reference Part reproduce; does each node fetch in order and publish its block; does the gate refuse what it must; does the outcome compose every row of the truth table |
 | CLI | ~2s and one Haiku call for most questions; **a thesis question about $0.014 and a position question about $0.025 on Sonnet**; **fetches prices past their interval, next on 22 September at 14:24** | What it is actually doing: the plan, the parameters, the reasoning line, the answer text. **The only loop that shows a live reading, proposal or view, the only one that shows an answer at all, and the only one that flags two questions answered identically** |
 | Golden set | ~2 min, **about $0.039 on Sonnet per run** since the twenty-first line, and Haiku; **writes price rows past their interval, the macro rows, the call log and the quota counter on every run** | Did routing change anywhere (twenty-one lines, one pinned failure). Blind to parameters and answer text; stderr kept to a file |
-| Benchmark runner | ~2 min, **about $0.039 on Sonnet** and Haiku | How many cases pass, n/18. Blind to whether a view or a proposal is any good, to whether a range's ends are right, to any due prediction until 2027, and **to every answer it renders, which it discards** |
+| Benchmark runner | ~2 min, **about $0.039 on Sonnet** and Haiku | How many cases pass, n/18. Blind to whether a view or a proposal is any good, to whether a range's ends are right, and to any due prediction until 2027. **Its checks read each answer's text — a date, a clause id, a trade line, a percentage — and it shows the answer to nobody**, so whether the prose is right is still a reading by hand |
 
 `golden set → change → golden set → decide → then update expected.txt, its own
 commit`. Prediction first, twice for a prompt change, stop at the second miss

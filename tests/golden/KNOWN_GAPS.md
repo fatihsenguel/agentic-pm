@@ -6175,19 +6175,33 @@ built and working. The runner is 16/18, the same count as before, and
 4.3 is blocked at a third place: `out_of_scope` for four sessions, the
 research node's refusal for one, and now the policy.
 
-### The runner discards every answer, so a live model output is read only through the CLI
+### The runner shows nobody an answer, though its checks read every one
 
 **Trigger:** the next session that reads a live reading, proposal or view by hand.
 
+**Retitled and corrected 21 September (thirty-third session). The first
+sentence of this entry was false and it had been quoted into the handoff.**
+It said the runner discards every answer. It does not. `_answer(state)` at
+`tests/benchmark/run_cases.py:160` is `state.get("final_response") or ""`,
+the checks read it at thirty-two sites - thirty as `_answer(state)` and two
+over case 3.5's turns at 1145 and 1168. Among them: `_date_reaches_answer` at
+222, which every case with a stated as-of goes through, the scope-boundary
+check at 485, the price-return check at 519, the trade-line scan at 644, the
+percentage figures at 754 and 1398, and the clause citations at 1432. The
+rendered answer reaches the scoreboard and is asserted on. What
+`contextlib.redirect_stdout` discards at lines 2501 and 2515 is **the printed
+console trace** — the nodes' progress lines — into a buffer nothing reads.
+
+**What is true, and it is the thing worth keeping.** The answer reaches the
+checks and reaches no person: the runner prints the verdict lines alone, and
+nothing stores a view or a proposal either - D50 keeps the system's
+predictions out of the database and the view follows it - so there is no row
+to read afterwards. The checks can ask whether a date or a clause id appears
+in the text; they cannot ask whether the view is a defensible read of the
+claims it cites. That still takes a reading by hand.
+
 Logged 21 September (thirtieth session), after a runner run that produced
 the first live view and showed neither of us a word of it.
-`tests/benchmark/run_cases.py` wraps each case in
-`contextlib.redirect_stdout` into a buffer it uses for nothing (lines
-2501 and 2515), so the nodes' console lines and the rendered answer are
-gone when the run ends; the output is the verdict lines alone. Nothing
-stores a view or a proposal either - D50 keeps the system's predictions
-out of the database and the view follows it - so there is no row to read
-afterwards.
 
 **So a live model output costs its own CLI run to read.** On the 21st
 that was a second pair of Sonnet calls, about $0.025, for a view and a
