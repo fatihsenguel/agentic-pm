@@ -1,9 +1,9 @@
 # AGENTIC_FINANCE — Session Handoff
 
-**Session date:** 22 September 2026 (thirty-fifth session), begun about 16:40 UTC. Regenerated at its end. The thirty-third and thirty-fourth sessions ran earlier the same day.
-**Branch:** `corpus-run`, cut from `baseline-v1` at **630dc42** before the first commit, in a worktree under `.claude/worktrees/` because this session's harness rejects edits outside one; **eight commits**, merged `--ff-only` by the owner after this document was first written and **pushed the same evening, b308b71 to 5a2ab7b**, the worktree removed; then `handoff`, cut from the trunk at 5a2ab7b, **one commit**, this correction. **Nine commits in the session.** `origin`'s push URL is `no_push` and the push goes by URL, so the local `origin/baseline-v1` ref stays at b308b71 and `git rev-list --count origin/baseline-v1..baseline-v1` says thirty-seven when the remote holds everything; the push output is the record.
+**Session date:** 22 September 2026 (thirty-sixth session), begun about 18:25 UTC. Regenerated at its end. The thirty-third, thirty-fourth and thirty-fifth sessions ran earlier the same day.
+**Branch:** `half-cent`, cut from `baseline-v1` at **dfbc7d2** before the first commit, in a worktree under `.claude/worktrees/` because this session's harness rejects edits outside one; **seven commits with this one**, not merged, not pushed. The brief named 5a2ab7b as the branch point; the trunk had moved to dfbc7d2 by the handoff correction the brief itself called done, and a branch from 5a2ab7b could not have merged fast-forward, so the cut was taken from the trunk head and said so. `origin`'s push URL is `no_push` and the push goes by URL, so the local `origin/baseline-v1` ref lags: it stands at **33769f6**, the "Decision 76" commit, not at b308b71 as the previous handoff said (b308b71 was the first commit of that evening's push, sixteen past the ref); `git rev-list --count origin/baseline-v1..baseline-v1` says thirty-eight for the trunk at dfbc7d2 and forty-four for this branch. The push output is the record.
 
-**State:** pytest **1929 passed, 6 xfailed**, up three from 1926 by the one test this session wrote; run at session start in the checkout and in the worktree, and again at the end. **One paid loop ran: the corpus, once, through the CLI**, 65 turns in fifteen processes, 17:11 to 17:13 UTC, R-8 and R-9 not sent. **The golden set and the runner were not run; the runner is 15/18 by the thirty-third session's run.** Step 3 of the interlude is **done**: the corpus's baseline is captured in benchmark.md Part 3c.6 and `tests/golden/run_corpus_2026-09-22.txt`, **30 of 65 turns matched**, every miss logged by class with a trigger, nothing fixed. The pending list stands at eleven, unchanged.
+**State:** pytest **1934 passed, 6 xfailed**, up five from 1929 by the five tests of the one check this session wrote; run at session start in the worktree and again at the end. **Two paid loops ran, one after the other: the runner once at 18:42 UTC, 15/18, every verdict as predicted and as at 12:51; and 2.2 alone through the CLI at 18:49, one Haiku call.** The golden set was not run: no prompt changed. **Step 4 of the interlude is done but for decision 76**: decision 75, the exact half cent, is implemented, its check written first against Part 7 and red for one commit, and the record says what the check found before any code was written. The pending list stands at eleven, unchanged.
 
 Written for whoever picks this up cold, myself included.
 
@@ -11,15 +11,16 @@ Written for whoever picks this up cold, myself included.
 **Check every claim here against the code before acting on it, including
 this file.** Sections whose claims were checked again this session and
 still hold are kept word for word; the rest is rewritten. This session
-checked the counts, the clocks, the store before and after the run, and
-the reading cache; it did not re-check §3's library versions or the
-migration count beyond the head.
+checked the counts, the clocks, the store before and after each paid
+loop, the origin ref, and which source tree each loop imports from a
+worktree; it did not re-check §3's library versions or the migration
+count beyond the head.
 
-**This was a running and reading session.** One test was written before
-the run and nothing else that runs was touched. The run's answers were
-read by hand against expected_values.md Part 18, content against content,
-and Part 18 was not changed by a character. What the run found is in the
-record, by class, and step 4's list has one arithmetic item on it.
+**This was a one-item session.** The interlude's rule says only a
+pipeline's arithmetic is fixed before Order 5, the corpus run found one
+arithmetic miss, and this session fixed it and nothing else: two commits
+of code and tests, four of record. Nothing else the run logged was
+touched.
 
 ---
 
@@ -28,13 +29,15 @@ record, by class, and step 4's list has one arithmetic item on it.
 | File | What it is |
 |---|---|
 | `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1 to 4 are built. The interlude between Orders 4 and 5 is its unnumbered paragraph under Order 4, last revised 22 September. Unchanged this session. |
-| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **176 lines start `**Trigger:**`**, up from 172: four entries opened this session, all at the end of the file. **Start with "The interlude between Order 4 and Order 5, and how the corpus is built"**, whose step 3 now says run and whose step 4 carries the list. Then the four new entries, by title: A follow-up that depends on the previous turn is asked back by the model; The unknown-ticker correction fails on the comma after "no"; Three Level 4 answers leave out content Part 18 pins; A bare opinion on a company is routed to the philosophy screen. Thirteen older entries carry a dated line headed "22 September 2026 (thirty-fifth session), the corpus run". |
-| `docs/benchmark.md` | **The definition of done, the corpus, and now its first run.** Part 3c unchanged in its five subsections but for one dated correction in 3c.3 (C-2's clarification is the model's). **New 3c.6, Runs**: one dated block per run, one line per entry and turn, `matched` or `missed` and what was missing. The run of 22 September is its first block. **Read Part 2, Part 3c and 3c.6 before Part 3's tables.** |
-| `tests/golden/expected_values.md` | Hand-computed reference, Parts 1 to 18. **Unchanged this session, and compared for the first time**: every entry of Part 18 was read against an answer. Never update it to match code output. |
-| `tests/golden/run_corpus_2026-09-22.txt` | **The transcript**, 5,887 lines, the CLI's stdout and stderr whole for the 65 turns, each process headed by the printf line that produced it. Captured, not written: it carries the console glyphs and the German debug strings the source prints, request ids and timings. Evidence for the reading, not a reference. |
-| `tests/test_corpus_spine.py` | **New.** Holds that Part 3c.1's eighteen wordings are the runner's `CASES`, character for character, 3.5's two turns included. Written before the run. |
+| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **176 lines start `**Trigger:**`**, unchanged in count: one changed its text, decision 75's, to "none: implemented". **Start with "The interlude between Order 4 and Order 5, and how the corpus is built"**, whose step 4 now says done but for 76. Then "An exact half cent rounds by the order of the float operations - DECIDED 21 September (thirty-second session)", whose last paragraph is this session's: what the check found that the decision had not anticipated. "Case 3.3's answer carries three exact halves and prints three different roundings" carries a dated line saying its trigger fired on 2c43ad0 and nothing there changes. "Whether money and ratios are computed in decimal - decision 76, pending" is unchanged and reads decision 75's entry. |
+| `docs/benchmark.md` | **The definition of done, the corpus, and its runs.** Part 3c.6 now holds two blocks: the run of 22 September at 17:11, 65 turns, and **a second block of one line, 2.2 alone at 18:49 after decision 75**, matched on the two halves. Nothing else changed. **Read Part 2, Part 3c and 3c.6 before Part 3's tables.** |
+| `tests/golden/expected_values.md` | Hand-computed reference, Parts 1 to 18. **Unchanged this session.** Part 7 is now pinned to the printed cent by `tests/test_half_cent.py`; before this session no test asserted a printed cent against a Part, and the answer at Part 7's own closes printed IPS-3.1's distance as 18,083.17 against the Part's .18 without anything noticing. Never update it to match code output. |
+| `tests/test_half_cent.py` | **New.** Decision 75 held to Part 7 at 2026-09-02, Part 17 B at 2026-09-18 and the corpus run's closes at 2026-09-21: the distance in currency exact as a decimal, the points derived from it, the raise on a line with no market value, and the printed cents at both print sites. Five tests, each one test over its figures so the share-first path fails it whole. Written before the code; sat one commit as xfail strict. |
+| `tests/golden/run_corpus_2026-09-22.txt` | **The corpus transcript**, 5,887 lines, the run of 17:11. Unchanged. |
+| `tests/golden/run_2.2_2026-09-22.txt` | **New, 187 lines.** 2.2 alone at 18:49, captured whole with the corpus transcript's header shape. Differs from the corpus run's 2.2 answer in exactly two lines, IPS-3.1's 19,552.47 to 19,552.48, checked by diff. |
+| `tests/test_corpus_spine.py` | Part 3c.1's eighteen wordings are the runner's `CASES`. Unchanged. |
 | `tests/golden/expected.txt` | Twenty-one lines, one pinned failure. Unchanged; not run this session. |
-| `tests/benchmark/run_cases.py` | **The scoreboard.** Eighteen cases, unchanged, not run. |
+| `tests/benchmark/run_cases.py` | **The scoreboard.** Eighteen cases, unchanged, **run once this session: 15/18.** |
 | `tests/golden/expected_values.xlsx` | The workbook, eleven sheets. Not opened this session. |
 | `docs/IPS.md`, `docs/PHILOSOPHY.md`, `docs/WATCHLIST.md`, `watchlist.toml` | The owner's. Unchanged, not edited. |
 | `docs/PM-Assistant — Roadmap.md` | Stale; DIRECTION.md's Order supersedes it. |
@@ -68,84 +71,83 @@ A first demo is a test: recorded runs that stand without narration. And
 what is actually missing should be known before anything is added.
 **What belongs in the interlude is decided by what survives the refactor**:
 the question, the figures, the clauses, the sequences; not the intent and
-not the plan. The corpus is written on that rule, and now run on it.
+not the plan. The corpus is written on that rule, run on it, and now the
+one arithmetic miss it found is fixed on it.
 
-### What the run showed, in one paragraph
+### What this session found, in one paragraph
 
-The answers the owner wants are reachable wherever a rule reaches them:
-every fixed figure printed matched Part 18 to the cent, every market
-figure read correctly against the 2026-09-21 close the run fetched, the
-seven clarifications and the Level 4 stop, exclusion and ledger came back
-as pinned, and the one sequence that rests on nothing carrying over,
-S-8, held. Where the model decides, it asks back: every follow-up that
-depends on the previous turn became a clarification, which is the honest
-failure and the baseline Order 5 is judged against. The misses proper are
-routing (2.1, R-2, R-7), selection (1.4, the 2.2/2.3 and 4.1/4.2 pairs,
-three Level 4 omissions), wording (the out-of-scope list, the lookup
-sentence, 1.3's basis line), the pending decisions 12 and 16, and one
-extraction defect (S-2's comma). **One arithmetic finding**: 2.2 prints
-two exact half-cents two ways in one answer, which is decision 75, already
-on step 4's list.
-
-### The record's shape, decided this session
-
-The owner's, brought as a recommendation with the rejected alternatives
-and taken on a yes before the first prompt was sent. **Where a run is
-read:** benchmark.md Part 3c.6, one dated block per run, one line per
-entry and turn, three kinds of miss kept distinct (on the guess, cannot
-be done, reading gap); not a status column, not in Part 18, not only in
-KNOWN_GAPS, not a document of its own. **The transcript:** kept whole
-beside `expected.txt`, dated, one file per run, as the three `run_*.txt`
-files of 1 September already are. **A miss is logged by class**, an
-existing entry grown with a dated line before a new one is opened, each
-new entry with a trigger naming when its class ends: step 4's commit for
-arithmetic, the commit that opens Order 5 for routing and memory, the
-presentation rebuild for layout. **The step 4 list** lives under step 4
-in the interlude entry's arc and is restated in §7.
+Decision 75 said two things: a distance to a limit is the market value
+less the limit's share of total, and where it prints it is rounded half-up
+on a Decimal built from the figure. The check, written first, showed the
+second cannot reach the first as recorded: the float subtraction does not
+land on the half either. 0.65 times 410,200.50 is 266,630.325, which a
+double does not hold, so Part 7's Equity distance comes out
+18083.17499999999 and the corpus run's 19552.474999999977, and a Decimal
+built from either rounds to .17. The 09-18 pair the decision's entry
+verified lands on the half exactly by the luck of that product. So the one
+subtraction is done in decimal inside `_finding` from the block's three
+amounts as they print, the float published is that decimal's nearest
+double, whose repr is the decimal again, and the print-site helper rounds
+that. Read as inside decision 75 and not 76, on the owner's word after
+the shape was brought with the rejected alternatives. The runner scored
+15/18 afterwards, every verdict as before; the one answer read, 2.2,
+traced in every figure, and its two halves printed .48 and .38.
 
 ### Design principles
 
-Unchanged in the code. What the run found against them:
+Unchanged in the code. What this session touched against them:
 
-- **Raise, do not repair.** Held everywhere it was tested: no figure was
-  guessed, no span rounded to the nearest, no ticker inferred from a
-  company name; the model's clarifications guessed nothing. R-7 and the
-  three company-name Level 4 variations arrive as errors rather than
-  refusals, the shape already logged.
-- **A formatter states what the data says and never what the system
-  is.** The out-of-scope answer still lists capabilities on six corpus
-  prompts; logged, pending decision 13.
-- **Policy lives in config.** The period vocabulary printed by C-3 to C-6
-  is still `config.DataConfig.period_days`, a default in code.
-- **Every number traces to a tool output.** Every figure in 65 answers
-  did, the model's proposal and view included.
+- **Raise, do not repair.** A line with no market value raises in
+  `_finding`, as one with no share already did. The verdict stays on the
+  published share (D9) and the distance on the published market value;
+  in a consistent block they agree, and the checker does not cross-check
+  them, which is a guard nobody asked for and is noted here rather than
+  built.
+- **A formatter does no arithmetic.** `_cents` rounds; it does not
+  compute. The distance reaches it unrounded, as the block carries it.
+- **One helper, not each call site.** Two sites print a distance in
+  currency and both go through `_cents`. The other 44 currency amounts
+  formatted to the cent across `nodes.py`, `rebalance_tools.py` and
+  `seed_portfolio.py` are totals, market values and prices the block
+  already rounds, and were counted and left.
+- **A value nobody would set differently is not policy.** The rounding
+  rule is in code, not `config.toml`, as the decision's entry says.
+- **Every number traces to a tool output.** Held in both paid loops.
 
 ### How I work on this
 
 - Every change starts as a written decision in plain words: what it is,
   what changes on a yes, the rejected alternatives, which loop sees it.
-  **This session's one decision, the record's shape in three parts, was
-  brought and taken before a prompt was sent.**
-- **The reference before the code**, each time. **The corpus before the
-  run, and the run before the reading**: Part 18 was not touched, and
-  where an answer and an entry disagreed the entry's source Part was the
-  arbiter, not the answer.
+  **This session's one decision, whether the decimal subtraction is 75's
+  or 76's, was brought with the arithmetic that forced it, a
+  recommendation and three rejected alternatives, and taken before the
+  check was committed.**
+- **The reference before the code**, each time. **The check before the
+  implementation**: five tests, red on the current code, sat one commit
+  as xfail strict, the mark removed in the implementing commit.
+- **The blast radius before writing anything, and the number said
+  twice**: 46 currency amounts on 43 lines in 3 files, 15 `round(` calls
+  in the block-publishing stretch, one `_finding` with five callers, 7
+  assertions on a printed or rounded cent in 4 files. Two lines and one
+  fixture moved.
 - **A paid loop says first what it will fetch and store, table by table,
-  and afterwards what moved.** Predicted and held to the row: prices
-  7,009 to 7,019, the quota bucket at 10, the call log 2,480 to 2,490,
-  every EDGAR table and the readings unchanged. Cost estimated before at
-  under 0.20 dollars and stated after at about 0.15 by the handoff's
-  per-call figures; nothing records tokens.
-- **Its own yes for a first fetch.** R-8 and R-9 name Adobe, a filer with
-  no facts stored; they were left out of the run and are still to be run
-  on their own yes.
-- **A count in a message is counted.** The brief's 67 turns were 65 once
-  the two Adobe prompts were left out; the reading's 30 and 35 were
-  counted by grep on the table before the commit message named them.
-- **Grep the heading before citing it, and grep the class before opening
-  an entry.** "The lookup sentence quotes the whole question" already
-  existed and was found in the diff of the confirmation commit, so the
-  echoed topic got a dated line and not a duplicate entry.
+  and afterwards what moved.** Predicted by the clock and held to the
+  row: nothing fetched, nothing stored, every count and every clock the
+  same before and after both loops. The runner's eighteen verdicts were
+  predicted one by one and every one held.
+- **A brief's clock is read against the interval's arithmetic.** The
+  brief's "having run out on the 23rd" described tonight's state, not the
+  session's; at 18:40 UTC on the 22nd no clock had run out, and the
+  prediction was written for each branch of the clock.
+- **Which source tree a loop imports is checked before it is paid for.**
+  See §3: from a worktree the runner imports the checkout's code unless
+  told otherwise.
+- **The capture is never filtered.** Both paid loops wrote their whole
+  output to a file under the job's temporary directory; the 2.2 capture
+  is committed beside `expected.txt`.
+- **A count in a message is counted.** The runner's 15/18 and the 2.2
+  diff's two lines were read from the files before the message named
+  them.
 - No emoji in anything newly written; the transcript is captured, not
   written.
 
@@ -166,7 +168,8 @@ cap, no third wording after two misses. No exception swallowed into a
 `None`. No forward return as a number. No sentence in the record that names
 an audience instead of a requirement. **No corpus entry fitted to an answer
 after the run, and no fix inside the interlude that is not a pipeline's
-arithmetic.**
+arithmetic.** **No second rounding rule to make a float land on a half,
+and no rounded figure published in a block.**
 
 ---
 
@@ -185,78 +188,73 @@ python tests/benchmark/run_cases.py
 python src/agents/cli.py --portfolio 3
 ```
 
-**Two of the five ran.** pytest: **1929 passed, 6 xfailed**, about 7
-seconds, at session start (1926) and at the end (1929, the new test's
-three). The CLI: the corpus, once, 65 turns. The golden set and the
-runner were not run.
+**Three of the five ran.** pytest: **1934 passed, 6 xfailed**, about 6
+seconds, at session start (1929) and at the end (1934). The runner:
+once, 15/18. The CLI: 2.2 alone, once. The golden set was not run.
 
 **Golden set: twenty-one lines, one pinned failure**, `expected.txt` at
 4f7ca89. Not run.
 
-**The runner: 15/18, 0 failing, 3 blocked** by the thirty-third session's
-run at 12:51. Not rerun. 2.1 blocked on routing, 4.1 and 4.3 on the
-PHI-2.1 stop.
+**The runner: 15/18, 0 failing, 3 blocked** by this session's run at
+18:42 UTC on the 22nd, from the worktree with `PYTHONPATH=src`. 2.1
+blocked on routing, 4.1 and 4.3 on the PHI-2.1 stop. Every verdict as at
+12:51.
 
 **The corpus: 30 of 65 turns matched**, by the run at 17:11 and the
-reading in benchmark.md Part 3c.6. Of the 35 misses, 4 are on the model's
-guess (S-1's two follow-ups, S-4's, S-5's), 3 cannot be done (S-3, S-6,
-S-7), 7 are the reading gaps under decision 16, and 21 are misses proper.
-R-8 and R-9 not run.
+reading in benchmark.md Part 3c.6, unchanged. **2.2 alone at 18:49:
+matched on the two halves**, 19,552.48 and 15,147.38 in both places, the
+rest of the answer byte-identical to the run's; its two other omissions
+stand as logged. R-8 and R-9 not run.
 
 ### Branches and tags
 
-`baseline-v1` is the trunk at **5a2ab7b** with `corpus-run` merged, and
-**pushed to that commit on 22 September**; `handoff` is cut from it and
-carries this one commit. The `corpus-run` worktree is removed. While it
-stood it held a symlink `data/portfolio.db` to the checkout's database,
+`baseline-v1` is the trunk at **dfbc7d2**, pushed to that commit on 22
+September; `half-cent` is cut from it and carries this session's seven
+commits, **to be merged `--ff-only` by the owner**. The `half-cent`
+worktree holds a symlink `data/portfolio.db` to the checkout's database,
 gitignored, so pytest and the CLI there ran against the real store, and
 `.env` was found by walking up from the worktree; the same arrangement
 serves any later worktree.
 `intents-parked` at addfbc7 holds the tree that still had the three
-intents. `rounding`, `halves`, `judgement`, `gate`, `thesis`, `reader`,
-`research`, `score`, `publish`, `range`, `keys`, `node`, `filer`,
-`bridge`, `consolidate`, `selection`, `compliance`, `vocabulary`,
-`intents`, `arc`, `counts`, `corpus` and `direction` are merged and
-older. `wip/phase7-snapshot` holds rejected Compliance/IPS code.
-`wip/rag-early` and tag `rag-early-parked` hold the RAG code.
-`quant-inventory-parked` at 8d87455 holds the tree before the seventeenth
-session's quant deletions.
+intents. `corpus-run`, `handoff`, `rounding`, `halves`, `judgement`,
+`gate`, `thesis`, `reader`, `research`, `score`, `publish`, `range`,
+`keys`, `node`, `filer`, `bridge`, `consolidate`, `selection`,
+`compliance`, `vocabulary`, `intents`, `arc`, `counts`, `corpus` and
+`direction` are merged and older. `wip/phase7-snapshot` holds rejected
+Compliance/IPS code. `wip/rag-early` and tag `rag-early-parked` hold the
+RAG code. `quant-inventory-parked` at 8d87455 holds the tree before the
+seventeenth session's quant deletions.
 
 ### Database
 
 `data/portfolio.db` is untracked runtime state. Alembic head
-**`2445c12e728c`**, checked; no migration this session. No reseed. **What
-the run wrote, read at 17:14 UTC and again at 17:39:**
+**`2445c12e728c`**, checked; no migration this session. No reseed. **Read
+before and after each paid loop, at 18:40, 18:43 and 18:49 UTC: nothing
+moved.**
 
-- `daily_prices` **7,009 to 7,019**, last close **2026-09-21**: one row
-  per holding for the 21st and one for GOOGL, the 18th's rows upserted
-  unchanged. No row for the 22nd, yfinance's end being exclusive.
-- `asset_fetch_metadata`: the nine holdings restamped **2026-09-22
-  17:11:38 to 17:11:39**, GOOGL **17:12:02**. The one-day interval runs
-  out at those minutes on the 23rd.
-- `api_call_logs` **2,480 to 2,490**. `api_quotas` has a new row
-  `daily_yfinance_2026-09-22` at **10**: nine holdings and GOOGL. EDGAR
-  is not quota-counted.
-- `filers` 3, `filed_facts` 28,787, `filed_fetch_metadata` 2,
-  `ticker_ciks` 10,422, `filed_documents` 1, `document_readings` 5,
-  `assets` 10, `transactions` 9, `macro_data` 209: **all unchanged.** The
-  run finished before any filings interval ran out, and the three stored
-  reading prompt versions equal the current ones, so 4.3 and 4.4 read
-  from the cache.
-- **The filings clocks have now run out or run out tonight**: Apple's
-  facts at 22:17 UTC on the 22nd, JPM's filer row and the SEC ticker file
-  at 01:33 on the 23rd, Alphabet's filer row and facts at 01:38. The
-  interval test is whole days, `(now - pulled_at).days < 7`. **The next
-  paid run of any Level 4 question refetches the ticker file, the filer
-  it touches and, for Alphabet, its facts**, which should store zero new
-  rows or raise on a changed figure. **R-8 and R-9 still name ADBE, a
-  filer with no facts stored**: the ticker file already maps it to
-  796343; a run would fetch its submissions document, its company facts
-  unless EDGAR's SIC for it is one of PHI-3.2's seven codes, create an
-  `assets` row from the watchlist's currency with about five closes and
-  one yfinance call, and R-9 may fetch its latest 10-K and read three
-  sections on Sonnet before refusing on W-2's missing weight. Their own
-  yes.
+- `daily_prices` **7,019**, last close **2026-09-21**. No fetch: the
+  one-day interval, `(utcnow - last).days >= 1` in `data_manager.py`,
+  runs out at **17:11 UTC on the 23rd** for the nine holdings and 17:12
+  for GOOGL.
+- `asset_fetch_metadata` unchanged, stamped 2026-09-22 17:11:38 to
+  17:12:02. `api_call_logs` **2,490**. `api_quotas` last row
+  `daily_yfinance_2026-09-22` at **10**.
+- `filers` 3, `filed_facts` 28,787 (Apple 15,132, Alphabet 13,655),
+  `filed_fetch_metadata` 2, `ticker_ciks` 10,422, `filed_documents` 1,
+  `document_readings` 5, `assets` 10: **all unchanged.**
+- **The filings clocks, as stored and against the whole-days test
+  `(now - pulled_at).days < 7` in `filings.py`**: Apple's facts pulled
+  2026-09-15 22:17 UTC, so run out at **22:17 UTC on the 22nd**; Apple's
+  filer row 09-16 00:03, JPM's filer row 09-16 01:33 and the ticker file
+  09-16 01:33, Alphabet's filer row and facts 09-16 01:38, so those run
+  out at **00:03, 01:33 and 01:38 UTC on the 23rd**. No runner case reads
+  Apple's facts. **The next paid run of a Level 4 question after 01:38
+  on the 23rd refetches the ticker file, JPM's and Alphabet's filer rows
+  and Alphabet's facts**, which should store zero new rows or raise on a
+  changed figure; after 17:11 it also fetches ten closes for the 22nd.
+  **R-8 and R-9 still name ADBE, a filer with no facts stored**, and are
+  their own yes: the previous handoff's prediction of what that first
+  fetch does stands.
 
 Unchanged: `assets` ten rows, GOOGL the tenth and not held; portfolio 3
 the only portfolio, nine ledger rows, cost basis 284,500 plus 15,500 cash,
@@ -267,211 +265,222 @@ USD, policy `ips.toml`. There is no holdings table.
 ## 3. Environment
 
 Not re-checked this session except where marked; kept from the
-thirty-fourth session's handoff.
+thirty-fifth session's handoff.
 
 - Python 3.10.21, `.venv`. `pyproject.toml` pins `>=3.10,<3.11`. `asyncio_mode = "auto"`.
 - src-layout: `src/agents` → `agents`, `src/portfolio_tool` → `portfolio_tool`,
   `src/observability` → `observability`, `src/config.py` → `config`. Never `from src.…`.
+- **The venv holds an editable install of the checkout's `src`**
+  (`__editable__.agentic_finance-0.1.0.pth`), checked this session.
+  From a worktree: pytest imports the worktree's tree because
+  `tests/conftest.py` inserts its own `src` first; the CLI does because
+  `cli.py` inserts its own parent directory; **`tests/benchmark/run_cases.py`
+  inserts nothing and imports the checkout's code**, so from a worktree
+  it scores the trunk, not the branch, unless run with `PYTHONPATH=src`.
+  This session's runner ran that way, and the import was checked to
+  resolve to the worktree before the loop was paid for.
 - `.env` holds keys. Never print it. A permission rule denies sessions the
-  shell and the editor on `.env*` files. **`load_dotenv()` in `config.py`
+  shell and the editor on `.env*` files. `load_dotenv()` in `config.py`
   finds it by walking up from the calling file, so a worktree nested
-  under the checkout reads the checkout's `.env`** (checked: the key and
-  the EDGAR contact resolve from the worktree without a copy).
-- **Anthropic has credits**; the run cost about 0.15 dollars. An empty
-  balance fails with a 400 `invalid_request_error` naming the credit
-  balance, and from inside the system every question returns `intent:
-  None`.
+  under the checkout reads the checkout's `.env` (checked again: both
+  paid loops ran from the worktree).
+- **Anthropic has credits**; the two loops cost about 0.04 dollars by the
+  per-call figures below. An empty balance fails with a 400
+  `invalid_request_error` naming the credit balance, and from inside the
+  system every question returns `intent: None`.
 - `ACTIVE_LLM_CONFIG = ANTHROPIC_HAIKU` for the router. `ANTHROPIC_SONNET`
   is `claude-sonnet-5`, used by the reader, the proposer and the view, and
-  refuses a temperature. **The reader's cache is keyed by accession,
-  section, model and prompt version** (`reader.prompt_version`); the
-  five stored readings match the current versions.
+  refuses a temperature. The reader's cache is keyed by accession,
+  section, model and prompt version; the five stored readings still match
+  the current versions, since nothing touched the reader; 4.3 and 4.4
+  read from the cache.
 - The `anthropic` SDK is 1.2.0; yfinance 1.7.0 with an exclusive `end`.
 - **EDGAR.** `config.edgar_user_agent()` reads `EDGAR_USER_AGENT` and raises
   when it is missing. Nothing was fetched from EDGAR this session.
-- **The period vocabulary** (checked): `config.DataConfig.period_days`,
-  a default in code, keys `1Y, 2Y, 3Y, 5Y, 10Y`, passed to extraction by
+- **The period vocabulary**: `config.DataConfig.period_days`, a default in
+  code, keys `1Y, 2Y, 3Y, 5Y, 10Y`, passed to extraction by
   `smart_router.py`. Not in `config.toml`.
-- **Extraction** (checked, `src/agents/extraction.py`): tickers by symbol
-  only; a one-edit typo of a holding asks back with a record; spans in
-  years and "twelve months" resolve, months, weeks, days, "since 2025",
-  year to date and a change verb with "today" ask back; a percentage next
-  to "vol" is a cap, any other single one the hypothetical weight,
-  outside 0 to 100 asks back; the policy lookup's topic reaching the node
-  is the whole message; `resolve` handles only the unknown-ticker record,
-  a reply outside its vocabulary is routed as typed, and **a comma after
-  "no" defeats it** (KNOWN_GAPS, the new entry). A message that no rule
-  reads, ZZZZFAKE, goes to the model, which asked back.
+- **Extraction** (`src/agents/extraction.py`): as the thirty-fifth
+  session's handoff described it, unchanged; a comma after "no" still
+  defeats `resolve` (KNOWN_GAPS).
 - `config.toml` carries five fetch intervals: prices 1 day, filings 7,
   earnings 7, profile 30, shares 30. Its `[macro]`, `[optimization]` and
   `[backtest]` sections stand although two have no consumer.
+- **Decimal in the code, checked this session**: `proposals.py` builds a
+  Decimal from a float's repr and quantizes it, and `compliance.py` and
+  `nodes.py` now do the same for a distance and its printed cent. As the
+  record says and this session did not re-check, the `daily_prices`
+  closes carry provider noise and `data_agent.py` rounds the last close
+  to two decimals before anything computes with it, so every amount the
+  blocks publish is an exact cent, which is what makes a Decimal built
+  from its repr the figure itself.
 - `portfolio_tool/__init__.py` opens a DB connection at import; `config` reads
   `DATABASE_URL` at import; scripts run from the root. The URL in `.env`
   is relative, so from the worktree it resolves through the symlink.
 - The CLI's quit command is `:q`; `exit` goes to the router. Several
   questions go through one process with `printf '%s\n' 'q1' 'q2' ':q' |
-  python src/agents/cli.py --portfolio 3`, each its own graph run, and the
-  identical-answer check works across them: **it flagged 2.3 against 2.2,
-  4.2 against 4.1, and the three variations that fell to the same error.**
-  The CLI passes the previous turn's final state to the next, which is
-  what a corpus sequence needs and what the run used. `input()` at end of
-  input returns, so a piped process ends cleanly after `:q`.
+  python src/agents/cli.py --portfolio 3`, each its own graph run. The
+  CLI passes the previous turn's final state to the next. `input()` at
+  end of input returns, so a piped process ends cleanly after `:q`.
 - A single benchmark case runs with `--case`, one Haiku routing.
 - zsh does not split an unquoted variable into words and has no `tac`; a
   `grep -c` that finds nothing exits 1; `%` in a `printf` format is `%%`;
   BSD `sed` has no `0,/re/`; BSD `cat` has no `-A`; `awk` has no `\s`;
-  `--include='*.py'` must be quoted. **This session's harness refused
-  compound shell commands with `source`, `awk -v` or a computed path
-  inside the worktree; a script file under the job's temp directory,
-  invoked by path, ran.**
+  `--include='*.py'` must be quoted. **This session's harness refused, in
+  the worktree, compound commands with a `{ …; }` group, a `for` loop
+  ending in a `git` call, and a `sed -n` range built from a shell
+  variable; the same work split into plain commands ran.**
 - **What is no longer in the tree**: as the thirty-third session's handoff
   listed it, unchanged; nothing was deleted this session.
 
 ---
 
-## 4. What the thirty-fifth session did
+## 4. What the thirty-sixth session did
 
-`git log --oneline 630dc42..HEAD`, **eight commits** with this one, the
-first seven touching four files, **6,266 insertions and 3 deletions**, of
-which the transcript is 5,887 lines; this handoff is a rewrite of one
-file on top. In the owner's order: the shape, the drift test, the run,
-the reading, the record.
+`git log --oneline dfbc7d2..HEAD`, **seven commits** with this one, the
+first six touching eight files, **513 insertions and 28 deletions**, of
+which the transcript is 188 lines and the check 191; this handoff is a
+rewrite of one file on top. In the owner's order: the blast radius, the
+check, the implementation, the two paid loops, the record.
 
 **Read first, and only what the brief named**: DIRECTION.md, the previous
-handoff and its §0, the interlude entry, benchmark.md Part 3c whole,
-expected_values.md Part 18 whole and the head of the document. Then, for
-the prediction, the runner's `CASES`, the CLI, the data manager's
-interval, the filings module, the screening node's fetch order, the
-reader's cache and the store. **The brief's claims, checked**: pytest's
-number held; the price clocks held; **the filings clocks were right as
-times but lay in the future**, not the past, since the interval test is
-whole days, so the run refetched nothing from EDGAR; ADBE's absence from
-`filers` and `filed_facts` held, and the ticker file already maps it.
+handoff and its §0, then by grep on their headings the decision 75 entry
+whole, the 3.3 halves entry, the interlude entry's step 4, and decision
+76's entry when the finding made it necessary; Part 7 at its own as-of,
+Part 18's 2.2, Part 3c.6's 2.2 line, the transcript's 2.2 answer. Then
+the code: `compliance.py` whole, the compliance formatter, the
+block-publishing stretch, the gate's synthetic allocation, every fixture
+that builds an allocation line, every test that asserts on a cent.
+**The brief's claims, checked**: pytest's number held; the branch point
+did not (above); the filings clocks were tonight's, not past; the
+handoff's origin ref name was wrong and its count right.
 
-**The shape decision (the owner's, brought and taken):** §1 above.
+**The blast radius, measured before writing** (§1). Counted, then
+counted again by a second command before the message named it.
 
 **The commits.**
-- **e53475b** `tests/test_corpus_spine.py`: Part 3c.1's eighteen wordings
-  are the runner's `CASES`, 3.5's two turns included. Checked to fail on
-  a drifted copy with two wordings changed. pytest 1926 to 1929.
-- **a98da9b** the transcript, `tests/golden/run_corpus_2026-09-22.txt`,
-  captured whole.
-- **13bc6ba** benchmark.md Part 3c.6: the run's block, 65 lines, 30
-  matched and 35 missed, counted by grep before the message named them.
-- **3132875** benchmark.md Part 3c.3: C-2's clarification is the model's,
-  not extraction's; a statement about the code corrected and dated.
-- **9b45532** KNOWN_GAPS: dated confirmation lines on thirteen existing
-  entries, every heading found by grep before the line was written.
-- **ebe4bcc** KNOWN_GAPS: four entries opened, one per class with none.
-- **cb12f66** KNOWN_GAPS: the interlude entry's step 3 marked run, the
-  step 4 list under step 4.
+- **0bbde46** `tests/test_half_cent.py`, the check: five tests, all red
+  on the current code, marked xfail strict for this one commit. The file
+  alone: 5 xfailed with the mark, 5 failed without it; the suite was not
+  rerun whole at this commit.
+- **2c43ad0** the implementation: `compliance.py` (`_finding` takes the
+  line's market value, computes the distance in decimal, derives the
+  points, raises on a line with none; docstrings), `nodes.py` (`_cents`
+  and the two print sites; the `decimal` import), the mark off the
+  check, `test_compliance_formatter.py` asserting through `_cents`,
+  `test_compliance.py`'s at-the-limit fixture setting the market value
+  with the share. pytest 1934 passed, 6 xfailed. The runner's reconcile
+  tolerances checked offline first over three blocks: 4.4e-15 against
+  1e-6 on the points, 1.5e-11 against a cent on the value.
+- **2688ea6** benchmark.md Part 3c.6: the second block, 2.2 alone.
+- **0cb6bd7** `tests/golden/run_2.2_2026-09-22.txt`, captured whole.
+- **f98b9c0** KNOWN_GAPS: decision 75's trigger to "none: implemented",
+  the paragraph on what the check found, the dated line on the 3.3 entry.
+- **42ce7ba** KNOWN_GAPS: the interlude's step 4 done but for 76.
 
-**The run, as it was driven.** Fifteen CLI processes from the worktree
-against the real store: the eleven single-turn spine cases; 3.5's two
-turns; 4.1 to 4.6; the fifteen variations; the seven clarifications; R-1
-to R-7; each sequence in its own process. A shell script under the job's
-temporary directory, not in the repository, wrote the header lines and
-appended each process's stdout and stderr; the printf line for every
-process is in the transcript's headers, so the run is reproducible from
-the file alone.
+**The two paid loops, as they were driven.** The runner from the
+worktree with `PYTHONPATH=src`, output whole to a file under the job's
+temporary directory, 18:42:13 to 18:43:11 UTC: 15/18, every verdict as
+predicted. Then 2.2 alone through the CLI, one process, 18:49:14 to
+18:49:17, output whole to a file and committed with a four-line header
+in the corpus transcript's shape; the answer diffed against the corpus
+transcript's 2.2 answer by line range, two lines different.
 
-**What was found and not fixed, by the rule of the interlude.** Twenty-one
-misses proper, four on the guess, three that cannot be done, seven reading
-gaps; §1's paragraph and Part 3c.6 list them. One arithmetic finding,
-decision 75's. Two facts about the code not previously recorded: the
-comma in S-2's reply, and C-2's clarification being the model's.
+**What was found and not fixed, by the rule of the interlude.** The
+answer at Part 7's own closes had printed 18,083.17 against the Part's
+.18 since the formatter existed, unnoticed because the formatter test
+formatted the float itself; fixed by the same commit, since it is the
+same defect. Nothing else. Decision 76's question, whether a ratio is
+computed in decimal, is sharper now: `distance_pp` is derived from an
+exact currency figure, but as a float, and a ratio's stored double can
+still sit below a tie; 76's entry says so and is unchanged.
 
-**Not done, on purpose.** Fixing anything. R-8 and R-9. Decision 75's
-implementation and the rest of step 4. The cleanup. Decisions 17, 75 and
-76 as work, the rebalancing dependency-table bug, Order 5, the CLI, the
-README, the demo recordings, and the owner's four documents, all out of
-scope by the owner's word. The span clarification's record for S-3,
-which the corpus names and step 4 does not cover.
+**Not done, on purpose.** Decision 76. Every other miss the run logged,
+S-2's comma included, all waiting on their triggers. R-8 and R-9. The
+cleanup. Order 5, the CLI, the README, the demo recordings. Decisions
+12, 13, 16 and 17 as work. The owner's four documents. A cross-check in
+`_finding` between the published share and the published market value,
+noted in §1 and not built.
 
 ---
 
 ## 5. Decisions taken, and decisions pending
 
-**Taken this session, the owner's, small and recorded where it applies:**
-the record's shape (benchmark.md Part 3c.6; a dated transcript beside
-`expected.txt`; misses logged by class, existing entries grown first).
+**Taken this session, the owner's, small and recorded in decision 75's
+entry:** the decimal subtraction inside `_finding` is decision 75's, not
+76's. Brought with the arithmetic that forced it, a recommendation and
+three rejected alternatives (the letter of the decision, which fails
+Part 7's own half; a second rounding before the Decimal; waiting for 76).
 
 **Pending — decide before writing code. Eleven by count, unchanged:**
 10, 12, 13, 16, 17, 22, 45, 48, 52, 54 and 76. The cap is 25. Nothing was
-opened and nothing closed. What the run added to each:
+opened and nothing closed.
 
-10. A window return as a measure with a reference. **C-4 and C-5 asked
-    back as pinned; confirmed.**
-12. The hypothetical mode's instrument type. **3.1, V-3.1a and V-3.1c
-    missed on it: IPS-4.2 applied to every instrument type, the fund
-    refused at 12%.**
+10. A window return as a measure with a reference.
+12. The hypothetical mode's instrument type.
 13. A target-weights clause and `OUT_OF_SCOPE_RESPONSE` moving into the
-    IPS. **3.2 and five refusals printed the capability list; R-2's
-    refusal would be this answer too.**
-16. Company names, German phrasings, the softer 3.5. **Seven reading gaps
-    missed as written; V-1.1a, the German allocation question, answered.**
-17. The selection axis. **V-2.1a answered AAPL's two clauses alone and
-    matched; not pinned either way.**
+    IPS.
+16. Company names, German phrasings, the softer 3.5.
+17. The selection axis.
 22. Volatility over as-traded closes or a total-return series.
 45. The tool-boundary pass, tagged Order 5. Absorbs 9, 11 and 36.
 48. Part 13 E's item 7, second half only.
 52. The Yahoo-fed tables: delete or keep.
 54. BaseAgent's tool loop and the three `AgentConfig` fields.
-76. Whether money and ratios are computed in decimal. **On step 4's list
-    on the owner's word.**
+76. Whether money and ratios are computed in decimal. **Not put on step
+    4; stays pending.** What this session adds: the distance is now
+    computed in decimal and published as its nearest float, which is
+    exact for any amount of two decimals; the ratios the entry names are
+    untouched, and its three candidate shapes stand.
 
 - **The interlude between Orders 4 and 5** (owner's): steps 1, 2 and 3
-  done. **Step 4 is next**: decision 75's implementation, its check
-  written first against Part 7; decision 76 if the owner puts it there;
-  nothing else, by the list under step 4 in the entry. Step 5 the
-  cleanup; then Order 5.
+  done; **step 4 done but for 76.** Step 5 the cleanup; then Order 5.
 
 ---
 
 ## 6. Where we stand against the benchmark
 
 Levels 1 to 3: **11/12**, 2.1 BLOCKED on routing. Level 4: 4.2, 4.4, 4.5
-and 4.6 PASS; 4.1 and 4.3 BLOCKED at the PHI-2.1 stop. **15/18, by the run
-at 12:51 on 22 September; not rerun.**
+and 4.6 PASS; 4.1 and 4.3 BLOCKED at the PHI-2.1 stop. **15/18, by this
+session's run at 18:42 UTC on 22 September.**
 
 **Against the corpus: 30 of 65, by the run at 17:11 on 22 September**,
-benchmark.md Part 3c.6. The spine's 19 turns: 10 matched (1.1, 1.2, 1.3,
-3.3, 3.4, both turns of 3.5, 4.1, 4.5, 4.6), 9 missed. The variations: 6
-of 15, seven reading gaps and the two instrument-type rows. The
-clarifications: 7 of 7. The refusals: 0 of 7 run, on the capability list,
-the screen and the error shape, with every refusal itself right. The
-sequences: 7 of 17 turns, S-8 whole.
+benchmark.md Part 3c.6, unchanged; **and 2.2 alone at 18:49 matched on
+the two halves**, the second block. The spine's 19 turns: 10 matched, 9
+missed. The variations: 6 of 15. The clarifications: 7 of 7. The
+refusals: 0 of 7 run, every refusal itself right. The sequences: 7 of 17
+turns, S-8 whole.
 
 What the runner cannot see and the reading now has: whether an answer
 carries the figures its entry pins, whether it cites the clauses, whether
-it says what it did not do. What neither sees, unchanged: whether the view
-is a defensible read of the claims it cites; whether the range's ends are
-right; any due prediction until 2027; whether a quote supports its claim;
-and whether any answer reads well.
+it says what it did not do, **and now whether a printed cent is the
+reference's cent, which pytest sees for Part 7 and no loop saw before.**
+What neither sees, unchanged: whether the view is a defensible read of
+the claims it cites; whether the range's ends are right; any due
+prediction until 2027; whether a quote supports its claim; and whether
+any answer reads well.
 
 ---
 
 ## 7. Next steps, in order
 
-**1. Step 4, the narrow fix list, and it is short.** Decision 75, the
-exact half cent: the check first, against Part 7 at its own as-of, then
-the implementation; the runner runs against it since answer text
-changes, and 2.2's two halves at the 2026-09-21 closes, 19,552.475 and
-15,147.375, are the falsifier the corpus adds. Decision 76 only on the
-owner's word. Nothing else on the list is arithmetic.
+**1. The merge.** `half-cent` onto the trunk, `--ff-only`, then the push
+by URL; the worktree removed after.
 
 **2. R-8 and R-9, on their own yes**, the first EDGAR pull for Adobe,
-with the prediction in §2 said again against the clocks of the day.
-Read against Part 18's R-8 and R-9 and appended to Part 3c.6's block as
-two lines dated the day they run.
+with §2's prediction said again against the clocks of the day. Read
+against Part 18's R-8 and R-9 and appended to Part 3c.6 as a third
+block, two lines, dated the day they run.
 
 **3. Step 5, the cleanup**, then Order 5 may open. When it does, the
-record's four new entries and the interlude entry close on its commit,
-and the run after it is Part 3c.6's second block.
+record's four entries from the corpus run and the interlude entry close
+on its commit, and the run after it is Part 3c.6's next block.
 
 ### Later, with reasons
 
-- **The push.** Done for `corpus-run`; `handoff` adds one commit after it.
+- **Decision 76**, on the owner's word only; its entry lists what it
+  owes before it is taken, and this session's finding about the float
+  product belongs in that reading.
 - **S-2's comma**, one line in `extraction.resolve`, the test first on
   the corpus wording; extraction survives Order 5, so it is worth a
   commit before it, and it is not step 4's.
@@ -480,15 +489,18 @@ and the run after it is Part 3c.6's second block.
 - **The router's swallowed exception** — a failed model call should raise
   with the provider's own message.
 - **The emoji**: the answer-text headers, one commit, the runner run
-  against it. The console glyphs are a separate session; the transcript
-  shows how many there are.
+  against it. The console glyphs are a separate session; the transcripts
+  show how many there are.
 - **`check_4_3`'s weight_source assertion cannot fail** while the
   candidate's id is printed (KNOWN_GAPS).
 - **IPS-2.1 would pass an instrument the policy forbids**, being a
   statement clause (Part 17 G).
 - **IPS-5.3's second limb** is not computed (decision 71).
-- **Nothing records a model call's tokens**; the run's cost is an
-  estimate from per-call figures.
+- **Nothing records a model call's tokens**; a run's cost is an estimate
+  from per-call figures.
+- **`run_cases.py` could insert its own `src`** as `cli.py` does, so a
+  worktree's runner scores the worktree without `PYTHONPATH`; one line,
+  not this session's.
 - **1 February 2027**: W-2.1 and W-2.2 fall due. **1 March 2027**: W-1.1
   and W-1.2.
 - Three stale statements, the owner's to fix on the owner's word:
@@ -499,46 +511,53 @@ and the run after it is Part 3c.6's second block.
 
 ## 8. Rules learned the hard way
 
-**A brief's clock is checked against the interval's arithmetic, not its
-date.** The filings intervals "ran out at 22:17 on the 22nd" read as past
-and were future: the test is whole days, so 22:17 tonight, and the run
-fetched nothing from EDGAR. Had the prediction taken the brief's tense,
-the after-run store would have looked wrong for the right reason.
+**A rounding rule at the print site cannot round a half the arithmetic
+never produced.** Decision 75 said half-up on a Decimal built from the
+figure, and the figure was a float that sat a few billionths below the
+half. The check written first, at the reference's own as-of, is what
+showed it; the entry's own verification had been done at one day's
+closes where the float product happened to be exact. **Check a
+decision's arithmetic at the reference's as-of, not only at the day's.**
 
-**Grep the class before opening an entry.** The lookup sentence's entry
-was found in the diff of another commit, one grep short of a duplicate.
-Thirteen entries grew and four opened; a fourteenth grew instead of a
-fifth opening.
+**A test that formats the float itself pins nothing.** The formatter test
+asserted `f"{value:,.2f}"` was in the answer and passed in every session
+since it was written while the answer printed Part 7's Equity distance a
+cent short.
+A printed figure is pinned against the reference's string, or it is not
+pinned.
 
-**A rule that exists can still fail on the corpus wording.** S-2 rests on
-a rule, Part 3c says so, and a comma defeated it; the corpus is the test
-the rule never had. Check the rule directly after the run, in the shell,
-before writing what failed.
+**Which tree a loop imports is checked before the loop is paid for.** The
+editable install points at the checkout; a script with no path insert of
+its own, run from a worktree, scores the trunk and reports it as the
+branch. pytest and the CLI insert their own paths and were safe; the
+runner was not.
 
-**Count the turns before the run, and count them again after.** 67 in the
-brief, 65 sent: the two Adobe prompts. The reading's 30 and 35 were
-counted by grep on the table before the message named them.
+**A brief's branch point is checked against the trunk head.** The brief
+named the commit before the handoff correction it called done; a branch
+from it would have been one commit short and could not have merged
+fast-forward.
 
-**The capture is never filtered; the reading may be.** The transcript is
-kept whole, and the run was read through a display script that dropped
-the provider's repeated lines, which is not the same thing. What was
-dropped is in the file.
+**The harness's refusals in a worktree are about shape, not intent.** A
+`{ …; }` group, a loop ending in `git`, a `sed` range from a variable:
+each was refused as too complex to verify, and each ran when split into
+plain commands. Split first; do not reach for a script.
 
-**A worktree nested under the checkout finds the checkout's `.env` and
-can share its database through a symlink.** pytest copies the file it
-finds at `data/portfolio.db`, so the symlink is safe there; the CLI writes
-through it to the real store, which is what a paid run must do.
-
-Still true, from earlier sessions: **a brief can carry a line the re-scope
-already retired**; **cite an entry by its title, and grep the title
-before showing the diff**; **say which sequences work today, and by what
-rule**; **a count about the writing includes the writing**; **measure the
-cost before the first prompt**; **a pointer is cheaper than a copy and
-cannot drift**; **a prompt change can move a question it does not
-mention**; **the loop you ran the change against may not be the loop that
-sees it**; **do not filter the output of a paid run**; **chase the
-evidence, not the story you already have**; **grep the package, not three
-files**; **measure a deletion before taking it, and say the number
+Still true, from earlier sessions: **a brief's clock is checked against
+the interval's arithmetic, not its date**; **grep the class before
+opening an entry**; **a rule that exists can still fail on the corpus
+wording**; **count the turns before the run, and count them again
+after**; **the capture is never filtered; the reading may be**; **a
+worktree nested under the checkout finds the checkout's `.env` and can
+share its database through a symlink**; **a brief can carry a line the
+re-scope already retired**; **cite an entry by its title, and grep the
+title before showing the diff**; **say which sequences work today, and
+by what rule**; **a count about the writing includes the writing**;
+**measure the cost before the first prompt**; **a pointer is cheaper
+than a copy and cannot drift**; **a prompt change can move a question it
+does not mention**; **the loop you ran the change against may not be the
+loop that sees it**; **do not filter the output of a paid run**; **chase
+the evidence, not the story you already have**; **grep the package, not
+three files**; **measure a deletion before taking it, and say the number
 twice**; **a decision's own arithmetic goes stale too**; **the record
 names the requirement, not the audience**; **delete the surface, not the
 file**; **a scoreboard that scores well-formedness will score a wrong
@@ -563,9 +582,8 @@ statement about the code goes stale four commits after it was true**;
 captured pytest run**; **look at a path before writing to it**; **a
 refusal that is right can still be shaped wrong**; **a test over the
 suite's copy owns the rows it reads**; **a number is measured before it
-is written**; **a brief's claim about an interval is checked against the
-clock**; **a count in a message is counted**; **sight a new case before
-writing its golden line**; **the registry's descriptions are the
+is written**; **a count in a message is counted**; **sight a new case
+before writing its golden line**; **the registry's descriptions are the
 prompt**; **add up the pending list**; **the owner's documents are
 written on a separate word**; **say which loop cannot see a change**;
 **a formatter states what the data says and never what the system is**;
@@ -593,6 +611,8 @@ python tests/golden/run_golden.py > /tmp/golden_now.txt 2>/tmp/golden_err.txt
 diff tests/golden/expected.txt /tmp/golden_now.txt
 python tests/benchmark/run_cases.py
 python tests/benchmark/run_cases.py --case 2.1     # one Haiku call, ~$0.001
+# from a worktree the runner needs the worktree's src, or it scores the checkout:
+PYTHONPATH=src python tests/benchmark/run_cases.py
 
 python src/agents/cli.py --portfolio 3        # :q to quit
 # several questions through one process; a corpus sequence is consecutive turns here.
@@ -607,16 +627,18 @@ print(anthropic.Anthropic().messages.create(model='claude-haiku-4-5-20251001',\
 max_tokens=8,messages=[{'role':'user','content':'ok'}]).content[0].text)"
 
 git status --short
-git log --oneline 630dc42..HEAD
-git rev-list --count 630dc42..HEAD
+git log --oneline dfbc7d2..HEAD
+git rev-list --count dfbc7d2..HEAD
 
-# the corpus: prompts, answers, and the run's reading
+# the corpus: prompts, answers, and the runs' readings
 grep -n '^### 3c\|^| [VCRS]-\|^\*\*S-' docs/benchmark.md
 grep -n '^## Part 18\|^### [0-9]\|^- \*\*[CRS]-' tests/golden/expected_values.md | sed -n '/Part 18/,$p'
-sed -n '/^### 3c.6/,/^## Part 4/p' docs/benchmark.md | grep -c '| matched'
+grep -n '^\*\*Run of' docs/benchmark.md
 
-# the spine's wordings in the two places they live, held by pytest:
-pytest -q tests/test_corpus_spine.py
+# decision 75's check, and the two halves at the print site:
+pytest -q tests/test_half_cent.py
+python -c "from decimal import Decimal; print(Decimal(repr(286857.5 - 0.65 * 411238.5)))"   # the float misses the half
+PYTHONPATH=src python -c "from agents.nodes import _cents; print(_cents(19552.475), _cents(18083.175))"
 
 # what the database says it is at (expected 2445c12e728c):
 sqlite3 data/portfolio.db "select version_num from alembic_version;"
@@ -637,17 +659,17 @@ PYTHONPATH=src python -c "from agents.schemas import INTENTS, AGENTS; print(len(
 lsof tests/golden/expected_values.xlsx
 
 # merge and push, by the owner only:
-git switch baseline-v1 && git merge --ff-only handoff
+git switch baseline-v1 && git merge --ff-only half-cent
 git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1
 ```
 ### The four loops
 
 | Loop | Cost | Answers |
 |---|---|---|
-| `pytest` | ~7s, no model calls | Do the components still work; does every reference Part reproduce; does each node fetch in order and publish its block; does the gate refuse what it must; does the outcome compose every row of the truth table; **do Part 3c.1's wordings match the runner's**. Sees nothing of the corpus's answers. |
-| CLI | ~2s and one Haiku call for most questions; 4.3 about 15s and two Sonnet calls, 4.4 about 14s and one; a deterministic clarification free; **fetches prices past their interval, which runs out on the 23rd at 17:11** | What it is actually doing: the plan, the parameters, the reasoning line, the answer text. **The only loop that shows an answer, and therefore the only loop that can be read against Part 18.** The whole corpus is 65 turns, 2 minutes 19 seconds and about 0.15 dollars. |
+| `pytest` | ~6s, no model calls | Do the components still work; does every reference Part reproduce; does each node fetch in order and publish its block; does the gate refuse what it must; does the outcome compose every row of the truth table; do Part 3c.1's wordings match the runner's; **does the compliance answer print Part 7's cents**. Sees nothing of the corpus's answers. |
+| CLI | ~2s and one Haiku call for most questions; 4.3 about 15s and two Sonnet calls, 4.4 about 14s and one; a deterministic clarification free; **fetches prices past their interval, which runs out on the 23rd at 17:11 UTC** | What it is actually doing: the plan, the parameters, the reasoning line, the answer text. **The only loop that shows an answer, and therefore the only loop that can be read against Part 18.** The whole corpus is 65 turns, 2 minutes 19 seconds and about 0.15 dollars. |
 | Golden set | ~50s, about $0.039 per run; writes to no table since decision 51, prices aside | Did routing change anywhere (twenty-one lines, one pinned failure). Blind to `measure`, `group_by`, `tickers`, answer text, and any wording it does not carry |
-| Benchmark runner | ~50s, about $0.039; `--case X` is one routing at about $0.001 | How many cases pass, n/18. Its checks read each answer's text and show it to nobody. **Carries none of the 41 corpus additions** |
+| Benchmark runner | ~60s, about $0.039; `--case X` is one routing at about $0.001; **from a worktree, `PYTHONPATH=src`** | How many cases pass, n/18. Its checks read each answer's text and show it to nobody, and cannot tell one cent from another. **Carries none of the 41 corpus additions** |
 
 `golden set → change → golden set → decide → then update expected.txt, its own
 commit`. Prediction first, twice for a prompt change, stop at the second miss
