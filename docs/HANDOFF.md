@@ -1,7 +1,7 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 22 September 2026 (thirty-fifth session), begun about 16:40 UTC. Regenerated at its end. The thirty-third and thirty-fourth sessions ran earlier the same day.
-**Branch:** `corpus-run`, cut from `baseline-v1` at **630dc42** before the first commit, in a worktree under `.claude/worktrees/` because this session's harness rejects edits outside one; **eight commits with this one**. The owner merges and pushes; `origin`'s push URL is `no_push`. **The trunk is twenty-nine ahead of `origin/baseline-v1`**, and `corpus-run` adds eight on top of it.
+**Branch:** `corpus-run`, cut from `baseline-v1` at **630dc42** before the first commit, in a worktree under `.claude/worktrees/` because this session's harness rejects edits outside one; **eight commits**, merged `--ff-only` by the owner after this document was first written and **pushed the same evening, b308b71 to 5a2ab7b**, the worktree removed; then `handoff`, cut from the trunk at 5a2ab7b, **one commit**, this correction. **Nine commits in the session.** `origin`'s push URL is `no_push` and the push goes by URL, so the local `origin/baseline-v1` ref stays at b308b71 and `git rev-list --count origin/baseline-v1..baseline-v1` says thirty-seven when the remote holds everything; the push output is the record.
 
 **State:** pytest **1929 passed, 6 xfailed**, up three from 1926 by the one test this session wrote; run at session start in the checkout and in the worktree, and again at the end. **One paid loop ran: the corpus, once, through the CLI**, 65 turns in fifteen processes, 17:11 to 17:13 UTC, R-8 and R-9 not sent. **The golden set and the runner were not run; the runner is 15/18 by the thirty-third session's run.** Step 3 of the interlude is **done**: the corpus's baseline is captured in benchmark.md Part 3c.6 and `tests/golden/run_corpus_2026-09-22.txt`, **30 of 65 turns matched**, every miss logged by class with a trigger, nothing fixed. The pending list stands at eleven, unchanged.
 
@@ -205,12 +205,13 @@ R-8 and R-9 not run.
 
 ### Branches and tags
 
-`baseline-v1` is the trunk at **630dc42**, twenty-nine ahead of
-`origin/baseline-v1`, unpushed. **`corpus-run` is cut from it in a
-worktree at `.claude/worktrees/corpus-run` and carries eight commits**,
-this handoff the eighth. The worktree holds a symlink `data/portfolio.db`
-to the checkout's database, gitignored, so pytest and the CLI there run
-against the real store; `.env` is found by walking up from the worktree.
+`baseline-v1` is the trunk at **5a2ab7b** with `corpus-run` merged, and
+**pushed to that commit on 22 September**; `handoff` is cut from it and
+carries this one commit. The `corpus-run` worktree is removed. While it
+stood it held a symlink `data/portfolio.db` to the checkout's database,
+gitignored, so pytest and the CLI there ran against the real store, and
+`.env` was found by walking up from the worktree; the same arrangement
+serves any later worktree.
 `intents-parked` at addfbc7 holds the tree that still had the three
 intents. `rounding`, `halves`, `judgement`, `gate`, `thesis`, `reader`,
 `research`, `score`, `publish`, `range`, `keys`, `node`, `filer`,
@@ -470,8 +471,7 @@ and the run after it is Part 3c.6's second block.
 
 ### Later, with reasons
 
-- **The push.** The trunk is twenty-nine ahead, and `corpus-run` adds
-  eight.
+- **The push.** Done for `corpus-run`; `handoff` adds one commit after it.
 - **S-2's comma**, one line in `extraction.resolve`, the test first on
   the corpus wording; extraction survives Order 5, so it is worth a
   commit before it, and it is not step 4's.
@@ -637,7 +637,7 @@ PYTHONPATH=src python -c "from agents.schemas import INTENTS, AGENTS; print(len(
 lsof tests/golden/expected_values.xlsx
 
 # merge and push, by the owner only:
-git switch baseline-v1 && git merge --ff-only corpus-run
+git switch baseline-v1 && git merge --ff-only handoff
 git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1
 ```
 ### The four loops
