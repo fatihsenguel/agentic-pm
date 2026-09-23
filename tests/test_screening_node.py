@@ -345,11 +345,15 @@ async def test_the_range_on_the_fixture_is_part_11_c(provider):
     assert block["stopped"]["clause"] == "PHI-2.1"
 
 
-async def test_the_price_is_the_last_stored_close_on_a_row_the_node_creates(provider):
+async def test_the_price_is_the_last_stored_close_on_a_row_the_node_creates(provider, monkeypatch):
     """Decision 57: the existing price path, on an assets row made from the
     ticker asked, EDGAR's name and the watchlist entry's currency, nothing
     else filled; the last stored close with its date and its source. The
-    figure is Part 9 C's."""
+    figure is Part 9 C's. The date the node runs at is pinned, so that the
+    seven-day window it asks the provider for is the same on every day the
+    test runs (KNOWN_GAPS, "A screening-node test is pinned to the
+    calendar")."""
+    monkeypatch.setattr(nodes, "utc_today", lambda: dt.date(2026, 9, 22))
     out = await nodes.screening_agent_node(state_with(["GOOGL"]))
     block = _block(out)
     assert block["price"] == {"ticker": "GOOGL", "value": 342.87, "as_of": "2026-09-16",

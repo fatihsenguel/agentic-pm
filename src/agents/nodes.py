@@ -1347,7 +1347,7 @@ async def screening_agent_node(state: AgentState) -> Dict[str, Any]:
         philosophy = load_philosophy(PHILOSOPHY_PATH)
         print(f"  philosophy: {philosophy.path}")
         provider = edgar_provider()
-        as_of = dt.datetime.utcnow().date()
+        as_of = utc_today()
         session = get_session()
 
         cik = cik_for(session, provider, ticker)
