@@ -1416,7 +1416,7 @@ intent is still the correct build.
 
 ### The router cannot express an absolute date range
 
-**Trigger:** pending decision 45, the tool-boundary pass.
+**Trigger:** decision 45 was taken 23 September (thirty-ninth session) without adding a window; the `period` input of the volatility tool after Order 5, when a case asks for a defined window.
 
 `ExtractedParameters.period` is `Optional[str]` with pattern `^\d+[YMD]$`, so a
 period is always relative and always anchored to the moment of the query. "My
@@ -2109,7 +2109,7 @@ Trigger unchanged.
 
 ### Two router few-shot examples are benchmark prompts verbatim
 
-**Trigger:** pending decision 45, the tool-boundary pass, which retires the prompt and its few-shots; decision 11 merged into it 15 September (eighteenth session).
+**Trigger:** the Order 5 commit that deletes `router_prompts.py`; decision 45 was taken 23 September (thirty-ninth session), and its rule survives the prompt: a tool's description quotes no benchmark or corpus prompt verbatim. Decision 11 merged into it 15 September (eighteenth session).
 
 "What is my current allocation by asset class?" and "What is my volatility
 over the past twelve months?" appear in `router_prompts.py` word for word as
@@ -2247,7 +2247,7 @@ the helper existed, the call existed, the value went nowhere.
 
 ### Four wrong-faced answers behind 11/12, from the CLI, 8 September
 
-**Trigger:** pending decision 12; every other half has its own entry.
+**Trigger:** the first commit of the `hypothetical_weight` tool in Order 5, which takes the instrument type as an input; decision 12 was taken with decision 45 on 23 September (thirty-ninth session). Every other half has its own entry.
 
 Recorded 8 September (seventh sitting, after the merge). The owner ran nine
 prompts in `cli.py` against portfolio 3. Four came back correct, one was the
@@ -2329,6 +2329,11 @@ the `hypothetical_weight` tool takes the type as an input and asks back
 when the message states none, and 45's entry says how. Trigger
 unchanged.
 
+**23 September 2026 (thirty-ninth session), later the same day: decision
+12 taken with decision 45.** A fund is checked against IPS-4.1 alone, a
+share against IPS-4.1 and IPS-4.2, and a message that states neither is
+asked which. The entry closes on the tool's first commit.
+
 **11 September (fifteenth session), the "Not done" line.** The quotation
 above is stale twice over and stays as written: the line read "both are
 shown" when this entry was written and "all three are shown" after the
@@ -2360,7 +2365,7 @@ says a fund is allowed. Still pending, not taken.
 
 ### `ExtractedParameters` fields with no reader - grep, 8 September
 
-**Trigger:** the next grep over `ExtractedParameters`, and pending decision 45, the tool-boundary pass, which is where extraction's fields become the tools' input validation.
+**Trigger:** the next grep over `ExtractedParameters`, and the Order 5 commit that splits it into the tools' input models, where `max_volatility` and `portfolio_value` go; decision 45 was taken 23 September (thirty-ninth session).
 
 **Corrected 22 September (thirty-third session): this entry's last line
 is now false.** It ends "`portfolio_value` keeps its reader in the
@@ -2575,7 +2580,7 @@ RebalanceAgent change. No reader.
 
 ### The first `out_of_scope` definition moved "Should I rebalance?" to clarification
 
-**Trigger:** pending decision 45, which retires the prompt; decision 11 merged into it 15 September (eighteenth session). The verbatim golden query in the prompt goes with the two few-shots.
+**Trigger:** the Order 5 commit that deletes `router_prompts.py`; decision 45 was taken 23 September (thirty-ninth session). Decision 11 merged into it 15 September (eighteenth session). The verbatim golden query in the prompt goes with the two few-shots.
 
 Recorded 7 September (third sitting). The first wording listed in-scope
 mechanics as "drift, rebalancing trades to a target" and closed with "if a
@@ -6109,7 +6114,7 @@ dates is where their difference becomes a sentence.
 
 ### Questions the system cannot express, and which kind each is
 
-**Trigger:** pending decision 45, the tool-boundary pass.
+**Trigger:** decision 45 was taken 23 September (thirty-ninth session); the expression rows close on the Order 5 tool contracts that give each a field or a selection, the capability and reading rows on their own entries. A line is added here when one is found.
 
 **Started 12 September (fifteenth session), from the owner's question:
 whether strengthening the system means a deliberate session over the schemas
@@ -6203,7 +6208,7 @@ that layer will not be able to ask either.
 
 ### What is `reasoning` for: a debugging artifact, or something checked?
 
-**Trigger:** pending decision 45, the tool-boundary pass; decision 36, the router's field, merged into it 15 September (eighteenth session).
+**Trigger:** the Order 5 commit that deletes `RouterDecision`, where the field goes and the rule it wanted is stated for the model's narration instead; decision 45 was taken 23 September (thirty-ninth session). Decision 36, the router's field, merged into it 15 September (eighteenth session).
 
 **Recorded 11 September (fourteenth session), from an outside reading, with
 one claim corrected against the code.** The router emits `reasoning`, free
@@ -7166,9 +7171,9 @@ float boundary regardless of what the Python layer does.
 Part whose ratio lands on a half; no Part does yet. The runner and the
 golden set are blind to every figure in this entry.
 
-### The tool-boundary pass, which opens Order 5 - decision 45, pending
+### The tool-boundary pass, which opens Order 5 - decision 45, TAKEN 23 September (thirty-ninth session)
 
-**Trigger:** pending decision 45. Read it before the commit that opens Order 5, and with the six entries that trigger on it: "The router cannot express an absolute date range", "Two router few-shot examples are benchmark prompts verbatim", "`ExtractedParameters` fields with no reader - grep, 8 September", "The first `out_of_scope` definition moved "Should I rebalance?" to clarification", "Questions the system cannot express, and which kind each is" and "What is `reasoning` for: a debugging artifact, or something checked?".
+**Trigger:** decision 45 taken; its debts, listed under "What it owes", come before the first code commit of Order 5, and that commit is the one the record means by "the commit that opens Order 5". Read it with the six entries that trigger on it: "The router cannot express an absolute date range", "Two router few-shot examples are benchmark prompts verbatim", "`ExtractedParameters` fields with no reader - grep, 8 September", "The first `out_of_scope` definition moved "Should I rebalance?" to clarification", "Questions the system cannot express, and which kind each is" and "What is `reasoning` for: a debugging artifact, or something checked?".
 
 **Written 23 September 2026 (thirty-ninth session), in my words, on
 paper and not taken.** Decision 45 has stood on the pending list since
@@ -7182,6 +7187,21 @@ axis, 54, BaseAgent's loop and the config fields that describe it, and
 the scope half of 13, the out-of-scope text; 13's target-weights half
 stays its own decision after Order 5. Taking it is my word, and the
 first code commit of Order 5 is not the session's that wrote it.
+
+**Taken 23 September 2026 (thirty-ninth session), on my yes, as the
+entry stands, its two marked calls included: the per-holding volatility
+row becomes no tool, and extraction stays a pre-pass in front of the
+model as well as each tool's validation.** Order 5 is open on paper and
+no code moves until the debts below are paid, each its own session or
+part of one. With it decision 12 is taken, the instrument type an input
+the `hypothetical_weight` tool asks back for; 17 and 54 close on the
+commits that make selection the layer's and delete the loop; 13's scope
+half is the IPS clause I write, its target-weights half still pending.
+The six entries that triggered on this decision now trigger on the
+Order 5 commits that retire what each describes, named in each. The
+interlude entry, the bare-opinion entry and decision 16's two close on
+the first code commit and the corpus run after it, as their triggers
+say.
 
 **What it is.** DIRECTION.md's end state is a conversation with a
 strong model that calls the deterministic pipelines as tools. Today one
