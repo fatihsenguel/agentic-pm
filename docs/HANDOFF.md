@@ -1,9 +1,9 @@
 # AGENTIC_FINANCE — Session Handoff
 
-**Session date:** 23 September 2026 (thirty-ninth session), begun before noon UTC and ending about 13:00 UTC; the first commit at 12:08 UTC. Regenerated at its end. The thirty-eighth session ran on the evening of the 22nd and past midnight local.
-**Branch:** `boundary`, cut from `baseline-v1` at **495b845** before the first commit, in a worktree under `.claude/worktrees/`; **four commits with this one**, all to `tests/golden/KNOWN_GAPS.md` and this file, no code, not merged, not pushed, **to be merged `--ff-only` by the owner**. The trunk at 495b845 is the thirty-eighth session's second handoff commit, merged `--ff-only` from `cleanup` and pushed on the evening of the 22nd; `git ls-remote` showed the remote's `baseline-v1` at that commit this session. `origin`'s push URL is `no_push` and the push goes by URL, so the local `origin/baseline-v1` ref lags, not re-checked this session; `git rev-list --count origin/baseline-v1..HEAD` says seventy-two for this branch with this commit, sixty-eight of them the trunk's.
+**Session date:** 23 September 2026 (thirty-ninth session), begun before noon UTC and ending about 19:45 UTC. Regenerated at its end, twice: once at 13:00 UTC when the paper work was done and merged, and again now, the session having continued on the owner's word into the extraction work the first handoff listed as the next session's. The thirty-eighth session ran on the evening of the 22nd and past midnight local.
+**Branch:** `extraction`, cut from `baseline-v1` at **5ca4fd6** before its first commit, in a worktree under `.claude/worktrees/`; **eight commits with this one**, not merged, not pushed, **to be merged `--ff-only` by the owner**. The trunk at 5ca4fd6 is this session's first handoff commit, merged `--ff-only` from `boundary` and pushed by the owner at about 13:10 UTC; `git ls-remote` showed the remote's `baseline-v1` at that commit after the push. `origin`'s push URL is `no_push` and the push goes by URL, so the local `origin/baseline-v1` ref lags; `git rev-list --count origin/baseline-v1..HEAD` says eighty for this branch with this commit, seventy-two of them the trunk's.
 
-**State:** pytest **1934 passed, 1 failed, 6 xfailed**, run once at session start in the worktree, before anything was written; nothing this session touched code, so it was not run again. The failure is a test pinned to the calendar, logged with its cause and its fix in the record (677dbcd) and not fixed: no code this session. **No paid loop ran.** The store was read, every one of its thirteen counts, and nothing moved. **Decision 45, the tool-boundary pass that opens Order 5, is written on paper in the record (88a768f), pending until the owner's yes.** 12, 17 and 54 are marked folded into it in their nine entries (b6bfe38), triggers unchanged. The pending list stands at eleven, unchanged. **Taking decision 45 and opening Order 5 is the owner's word, and the first code commit of Order 5 is not this branch's.**
+**State:** pytest **1941 passed, 6 xfailed**, run after every code commit; 1934 passed and 1 failed at the session's start, the failure a test pinned to the calendar, fixed on 59d5239. **The golden set ran twice, once by accident against the checkout's tree with its output lost, once on the owner's yes from the worktree with its own `src`: twenty-one lines, unchanged, as predicted in the commit message before the run.** The runner and the corpus were not run. The store's counts were read before and after and nothing moved. **Decision 45, the tool-boundary pass that opens Order 5, is written on paper in the record (88a768f), pending until the owner's yes; decision 16 is closed, nothing built (102e539); the token regex is fixed (2616a80) and the calendar test with it.** The pending list stands at ten. **Taking decision 45 and opening Order 5 is the owner's word.**
 
 Written for whoever picks this up cold, myself included.
 
@@ -11,20 +11,25 @@ Written for whoever picks this up cold, myself included.
 **Check every claim here against the code before acting on it, including
 this file.** Sections whose claims were checked again this session and
 still hold are kept word for word; the rest is rewritten. This session
-checked the trunk and the remote ref, pytest's number and the failure's
-cause, the store's thirteen counts, the golden set's size, the runner's
-probes by name, the router-touching tests by file and by collection,
-every reader of the intent and the plan under `src/` and `tests/`, and
-the line of every path the decision entry cites; it did not re-check
-§3's library versions, the filings' pull timestamps, or the local
-`origin` ref.
+checked the trunk and the remote ref, pytest's number and the one
+failure's cause, the store's counts three times, the golden set's size
+and its result, the runner's probes by name, the router-touching tests
+by file and by collection, every reader of the intent and the plan under
+`src/` and `tests/`, the line of every path the decision entry cites,
+and which tree each of pytest and the golden script imports from a
+worktree; it did not re-check §3's library versions, the filings' pull
+timestamps, or the local `origin` ref.
 
-**This was a paper session and changed no code.** One count before
-anything was written, said twice and corrected against the previous
-handoff; one record entry for a test the calendar broke; the decision
-that opens Order 5 written in the owner's words, then reassessed against
-an outside reading's proposal and six questions, two additions and two
-rejections going into the entry; nine fold lines; and this.
+**Two halves, both on the owner's word.** The paper half, merged at
+13:10 UTC: the count of what Order 5 takes, corrected against the
+previous handoff; the calendar test logged; decision 45 written in the
+owner's words and reassessed against an outside reading's proposal and
+six questions; 12, 17 and 54 marked folded; a handoff. The code half,
+this branch: the token regex fixed tests first, the golden set run once
+against a written prediction, the dead strip in the reply path dropped,
+the calendar test's clock pinned and the node's clock made injectable,
+the two record entries closed, decision 16 closed without a build, and
+this.
 
 ---
 
@@ -33,14 +38,15 @@ rejections going into the entry; nine fold lines; and this.
 | File | What it is |
 |---|---|
 | `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1 to 4 are built. The interlude between Orders 4 and 5 is its unnumbered paragraph under Order 4, last revised 22 September. Unchanged this session. |
-| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **Start with "The tool-boundary pass, which opens Order 5 - decision 45, pending"**, about 350 lines beside decision 76's entry, which is the written decision this session produced; then "The interlude between Order 4 and Order 5, and how the corpus is built", whose closing condition is met and whose closing commit is Order 5's opening. One entry opened: "A screening-node test is pinned to the calendar", triggered on the next change to the screening node's window or clock or the first commit of the extraction session. Nine entries grew a dated fold line. **179 lines start `**Trigger:**`**, two up. |
+| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **Start with "The tool-boundary pass, which opens Order 5 - decision 45, pending"**, about 350 lines beside decision 76's entry; then "The interlude between Order 4 and Order 5, and how the corpus is built", whose closing commit is Order 5's opening. Two entries closed this session: "A ticker followed by a full stop is not a ticker in a first turn", RESOLVED on 2616a80 with its own example corrected, and "A screening-node test is pinned to the calendar", opened and RESOLVED the same day on 59d5239. Two entries on decision 16, "The extraction bridge reads symbols, not company names" and "The four phrase rules in extraction read English", stay open with their triggers moved to Order 5's opening commit and the corpus run after it. Nine entries grew a dated fold line on 12, 17 and 54. **179 lines start `**Trigger:**`**, 8,047 lines. |
 | `docs/benchmark.md` | **The definition of done, the corpus, and its runs.** Part 3c.6 holds three blocks: the run of 22 September at 17:11, 65 turns; 2.2 alone at 18:49; and R-8 and R-9 at 20:35 and 21:06. Unchanged this session. **Read Part 2, Part 3c and 3c.6 before Part 3's tables.** |
 | `tests/golden/expected_values.md` | Hand-computed reference, Parts 1 to 18. **Unchanged this session, by a character.** Never update it to match code output. |
 | `tests/golden/run_R-8_R-9_2026-09-22.txt`, `run_corpus_2026-09-22.txt`, `run_2.2_2026-09-22.txt` | The three transcripts, 285, 5,887 and 187 lines. Unchanged; records. |
-| `tests/test_screening_node.py` | Carries the calendar failure at line 359: the node's as-of is today's UTC date, the window seven days, the assertion wants a start before 16 September. Fails from the 23rd. |
-| `tests/test_extraction.py` and `tests/test_derived_plans.py` | The tests that survive Order 5 as the tools' input validation and dependency table: 28 functions, 168 collected. |
-| `tests/golden/expected.txt` | Twenty-one lines, one pinned failure. Unchanged; not run. Dies whole with the router. |
-| `tests/benchmark/run_cases.py` | **The scoreboard.** Eighteen cases, unchanged; **15/18 by the run at 21:49 UTC on the 22nd**. Ten of its twenty-eight probes and checks read `router_decision`, by name in §6; not run this session. |
+| `tests/test_extraction.py` | Three rows added to the clean table: "Sell 50 SPY.", the corpus's R-5, and "I hold too much MSFT." read their ticker; "Compare BRK.B with SPY" keeps a dotted ticker whole. 146 tests in the file. |
+| `tests/test_screening_node.py` | The last-close test now pins its date, 22 September, by monkeypatching `nodes.utc_today`, so it no longer rots by the calendar. |
+| `tests/test_derived_plans.py` | With `test_extraction.py`, the tests that survive Order 5 as the tools' dependency table and input validation: 28 functions, 174 collected now. |
+| `tests/golden/expected.txt` | Twenty-one lines, one pinned failure. **Run this session, unchanged.** Dies whole with the router. |
+| `tests/benchmark/run_cases.py` | **The scoreboard.** Eighteen cases, unchanged; **15/18 by the run at 21:49 UTC on the 22nd**. Ten of its twenty-eight probes and checks read `router_decision`; not run this session. |
 | `tests/golden/expected_values.xlsx` | The workbook, eleven sheets. Not opened this session. |
 | `docs/IPS.md`, `docs/PHILOSOPHY.md`, `docs/WATCHLIST.md`, `watchlist.toml` | The owner's. Unchanged, not edited. W-2 still states no growth pair and no weight. The scope clause decision 45 wants in the IPS is the owner's to write. |
 | `docs/PM-Assistant — Roadmap.md` | Stale; DIRECTION.md's Order supersedes it. |
@@ -84,56 +90,59 @@ owner's word.
 The count Order 5 takes with the router, measured in the tree and said
 against the previous handoff: the golden set whole, ten runner probes
 at eleven sites and not twelve, 71 tests and not about 89, so 1864
-passed to expect after and not 1846. The grep for the router's names
-matched nine test files, one of them `test_extraction.py` on a comment,
-so eight by what their tests touch and the ninth a survivor by
-judgement. One test fails since today for no change in the code: the
-screening node reads the clock and its test asserts against a fixed
-date. The record's BaseAgent entry named two callers of the loop and
-there are none. The record's "three AgentConfig fields" are two
-comment lines and one field on another dataclass. The router prompt
-carries twelve examples, eleven inline and one appended. An outside
-reading's proposal for Order 5 put the model in charge of the
-philosophy screen, the valuation's assumptions and the ledger, and
-would gate on a regex over prose; checked against the files it named,
-none of it is this system's shape, and its questions moved two things
-into the decision: the tracing check at output time, and the client
-ending a turn on a tool's validation error.
+passed to expect after and not 1846; with this branch's six new rows,
+1870. One test failed since the morning for no change in the code, the
+screening node reading the clock while its test asserted a fixed date;
+fixed the same day, the node's clock injectable. The record's BaseAgent
+entry named two callers of the loop and there are none; its "three
+AgentConfig fields" are two comment lines and a field on another
+dataclass; the regex entry's own example, "How is MSFT doing.", was
+never a case of its defect, the full stop there following "doing". The
+token regex took a ticker's full stop into the token and is fixed, the
+golden set unchanged as predicted. An outside reading's proposal for
+Order 5 put the model in charge of the philosophy screen, the
+valuation's assumptions and the ledger, and would gate on a regex over
+prose; none of it is this system's shape, and its questions moved two
+things into the decision. And one paid loop ran by accident: the golden
+script has no argument parsing, so a verbose import check with `--help`
+ran it whole against the checkout's tree.
 
 ### Design principles
 
-Unchanged in the code. What this session held them to, on paper:
+Unchanged in the code. What this session held them to:
 
-- **Nothing that reaches an answer changed.** Two files, both records.
-- **A count is measured twice and said twice before anything is
-  written**, and against the previous handoff's figures, each
-  difference explained: helpers counted as probes, a survivor missed.
-- **Decisions are surfaced, not taken.** Decision 45 is written in the
-  owner's words with a recommendation and the rejected alternatives on
-  every part the brief listed, and stays pending.
-- **Raise, do not repair, at the model's boundary too.** The decision
-  puts extraction in front of the model as well as inside the tools,
-  and ends the turn on a validation error, so a model cannot repair an
-  input it was refused.
-- **Every number in an answer traces to a tool output**, made mechanical
-  in the decision: the digit scan at output time, a raise and not a
-  redaction.
+- **References before code.** Every fix on this branch went in test
+  first and red: the three extraction rows, the pinned date.
+- **A paid loop is predicted first and read against the store after.**
+  The golden set's prediction, no line moves, was in the commit message
+  before the run; the run was from the worktree with its own `src`,
+  verified by the verbose import's path; the store was read after and
+  had not moved.
+- **Raise, do not repair.** The regex fix widens what a token excludes
+  by one character and guesses at nothing; decision 16 builds no
+  bridge; the decision entry ends a turn on a validation error.
+- **Decisions are surfaced, not taken.** Decision 45 is written with a
+  recommendation and the rejected alternatives and stays pending;
+  decision 16 was brought in plain words with both options and closed
+  on the owner's yes.
+- **Nothing that reaches an answer changed but one token's boundary.**
+  A ticker that ends a sentence is now read; every other extraction is
+  as it was, the 146 rows of the table say so.
 - **No emoji in anything newly written**, and no name of any assistant
   anywhere in the repository: the outside reading is "an outside
-  reading" in the record, as the fourteenth session's was.
+  reading" in the record.
 
 ### How I work on this
 
 - Every change starts as a written decision in plain words: what it is,
   what changes on a yes, the rejected alternatives, which loop sees it.
-  This session's whole output is one such decision and the record around
-  it.
+  The code half of this session was one such shape, eight commits in an
+  order agreed before the first.
 - **The brief's claims are checked before they are acted on, including
   the owner's.** The brief named four entries on decision 45 and there
-  are six; it said pytest is 1935 and it is 1934 and one failure; the
-  owner's correction that `test_extraction.py` matches no pattern was
-  itself checked and held by substance and not by the letter, the grep
-  matching a comment.
+  are six; it said pytest is 1935 and it was 1934 and one failure; the
+  owner's correction that `test_extraction.py` matches no pattern held
+  by substance and not by the letter.
 - **A count is measured twice and said twice before anything is
   written.** Test functions and collected tests, both said; probes by
   name and by site, both said.
@@ -145,10 +154,10 @@ Unchanged in the code. What this session held them to, on paper:
   the brief's list.
 - **A claim about the code inside an entry is re-grepped before the
   entry is cited**: the BaseAgent entry's callers, the config fields'
-  home.
-- **An outside proposal is read against the files it names**: the clause
-  ids, the assumption sources, the writers of the watchlist and the
-  ledger.
+  home, the regex entry's example.
+- **Which tree a loop imports is checked before it is paid for**, and
+  the check itself must not be the loop: importing a script's module
+  is safe, running it with `--help` is not when it parses no arguments.
 - **One question per message; a yes answers the last question asked.**
 
 ### What I do NOT want
@@ -174,7 +183,8 @@ written on W-2 to make an answer pass: the entry is mine.** **No emoji in
 anything newly written, and no comment about the writing of the code.**
 **No reasoning playbook in the model's context for the judgement half,
 and no interceptor over the model's prose standing in for the gate:**
-decision 45's rejected list says why.
+decision 45's rejected list says why. **No name list, no German rows in
+the phrase patterns, no two-edit typo rule:** decision 16, closed.
 
 ---
 
@@ -193,61 +203,69 @@ python tests/benchmark/run_cases.py
 python src/agents/cli.py --portfolio 3
 ```
 
-**One of the five ran.** pytest: **1934 passed, 1 failed, 6 xfailed**,
-7 seconds, once at session start in the worktree; no code changed after
-it. The failure is `tests/test_screening_node.py:359`, calendar-driven,
-its entry in the record: the number a session says until the node's
-clock is injectable is 1934 passed, 1 failed, 6 xfailed. The runner, the
-golden set and the CLI were not run: no paid loop this session.
+**Two of the five ran.** pytest: **1941 passed, 6 xfailed**, 6 to 7
+seconds, after each of the three code commits; 1934 passed and 1 failed
+at the session's start, 1940 and 1 after the regex, 1941 once the
+calendar test's clock was pinned. The golden set once on the owner's
+yes, at about 13:30 UTC, from the worktree with `PYTHONPATH=src`:
+**twenty-one lines, unchanged**, the diff against `expected.txt` empty,
+as the commit message predicted. **And once by accident, before that,
+without a yes**: `python -v tests/golden/run_golden.py --help`, meant to
+show which tree the script imports, ran the whole set against the
+checkout's tree because the script parses no arguments; its output went
+into a grep and is lost; about four cents. The runner and the CLI were
+not run.
 
 **Golden set: twenty-one lines, one pinned failure**, `expected.txt` at
-4f7ca89. Not run. Nothing this session could move it.
+4f7ca89, unchanged by the regex fix.
 
 **The runner: 15/18, 0 failing, 3 blocked** by the thirty-eighth
-session's run at 21:49 UTC on the 22nd. 2.1 blocked on routing, 4.1 and
-4.3 on the PHI-2.1 stop. Not run this session.
+session's run at 21:49 UTC on the 22nd. Not run this session; nothing
+on this branch changes an answer's text or a plan.
 
 **The corpus: 67 of 67 sent, 31 matched.** Unchanged: benchmark.md Part
-3c.6's three blocks. S-2 turn 2 is fixed by b430a0a and is read again in
-the next run, which is the run after Order 5, predicted line by line
-before it as decision 45's entry requires.
+3c.6's three blocks. S-2 turn 2 is fixed by b430a0a and R-5's ticker is
+now read by 2616a80; both are read again in the next run, which is the
+run after Order 5, predicted line by line before it as decision 45's
+entry requires.
 
 ### Branches and tags
 
-`baseline-v1` is the trunk at **495b845**, pushed to that commit on the
-evening of 22 September and confirmed at the remote by `git ls-remote`
-this session; `boundary` is cut from it and carries this session's four
-commits, **to be merged `--ff-only` by the owner**. The `boundary`
-worktree holds a symlink `data/portfolio.db` to the checkout's
-database, gitignored, created after `mkdir data`, since the worktree
-has no `data/` directory of its own; pytest there ran against the
-conftest's own SQLite file as always, and `.env` was found by walking up
-from the worktree. `cleanup` is merged and its worktree removed. `adobe`,
-`half-cent`, `intents-parked` at addfbc7 (the tree that still had the
-three intents), `corpus-run`, `handoff`, `rounding`, `halves`,
-`judgement`, `gate`, `thesis`, `reader`, `research`, `score`, `publish`,
-`range`, `keys`, `node`, `filer`, `bridge`, `consolidate`, `selection`,
-`compliance`, `vocabulary`, `intents`, `arc`, `counts`, `corpus` and
-`direction` are merged and older. `wip/phase7-snapshot` holds rejected
-Compliance/IPS code. `wip/rag-early` and tag `rag-early-parked` hold the
-RAG code. `quant-inventory-parked` at 8d87455 holds the tree before the
-seventeenth session's quant deletions. Decision 45's entry asks for one
-more tag when Order 5 opens: the golden set parked behind it.
+`baseline-v1` is the trunk at **5ca4fd6**, pushed to that commit at
+about 13:10 UTC on 23 September; `extraction` is cut from it and carries
+this session's eight commits, **to be merged `--ff-only` by the owner**.
+The `extraction` worktree holds a symlink `data/portfolio.db` to the
+checkout's database, gitignored, created after `mkdir data`; pytest
+there runs against the conftest's own SQLite file, the golden set
+against the store through the symlink, and `.env` is found by walking
+up from the worktree. `boundary` is merged and its worktree removed.
+`cleanup`, `adobe`, `half-cent`, `intents-parked` at addfbc7 (the tree
+that still had the three intents), `corpus-run`, `handoff`, `rounding`,
+`halves`, `judgement`, `gate`, `thesis`, `reader`, `research`, `score`,
+`publish`, `range`, `keys`, `node`, `filer`, `bridge`, `consolidate`,
+`selection`, `compliance`, `vocabulary`, `intents`, `arc`, `counts`,
+`corpus` and `direction` are merged and older. `wip/phase7-snapshot`
+holds rejected Compliance/IPS code. `wip/rag-early` and tag
+`rag-early-parked` hold the RAG code. `quant-inventory-parked` at 8d87455
+holds the tree before the seventeenth session's quant deletions.
+Decision 45's entry asks for one more tag when Order 5 opens: the golden
+set parked behind it.
 
 ### Database
 
 `data/portfolio.db` is untracked runtime state. Alembic head
 **`2445c12e728c`**, not re-checked this session; no migration. No reseed.
-**Every count below was read this session, at 12:50 UTC on the 23rd,
-and matched the thirty-eighth session's handoff exactly; nothing ran
-that could write.**
+**Read at 12:50 UTC, after the golden runs at about 13:30, and at 19:41
+UTC; every count matched the thirty-eighth session's handoff each time.
+The golden set writes no table, and both runs came before the price
+clock ran out.**
 
 - `daily_prices` **7,024**, last close **2026-09-21**. The one-day
-  interval, `(utcnow - last).days >= 1` in `data_manager.py`, runs out at
-  **17:11 UTC on the 23rd** for the nine holdings, 17:12 for GOOGL and
-  **20:35 on the 23rd for ADBE**; still ahead when this was written. The
-  provider is asked through today exclusive, so a fetch on the 23rd
-  stores the 22nd's close and not the 23rd's.
+  interval, `(utcnow - last).days >= 1` in `data_manager.py`, **ran out
+  at 17:11 UTC on the 23rd** for the nine holdings, 17:12 for GOOGL and
+  20:35 for ADBE, all past now; nothing fetched since. The provider is
+  asked through today exclusive, so the next paid run that touches
+  prices stores the closes up to the day before it runs.
 - `assets` **11**, `asset_fetch_metadata` **11**, `api_call_logs`
   **2,491**, `api_quotas` **31** rows. `pipeline_runs` **5**: only the
   backfill script creates a run.
@@ -258,13 +276,13 @@ that could write.**
 - **The filings clocks, as the thirty-eighth session's handoff stored
   them and not re-read**: Apple's facts ran out at 22:17 UTC on the 22nd
   and are read by no runner case; Apple's filer row, JPM's filer row,
-  the ticker file and Alphabet's filer row and facts ran out at **00:03,
-  01:33 and 01:38 UTC on the 23rd, so all are out now**; **Adobe's filer
-  row and facts run out at 20:35 UTC on the 29th.** The next paid run of
-  a Level 4 question refetches the ticker file, JPM's and Alphabet's
-  filer rows and Alphabet's facts, which should store zero new rows or
-  raise on a changed figure; after 17:11 UTC it also fetches the closes
-  for the 22nd. Say so before the run, table by table.
+  the ticker file and Alphabet's filer row and facts ran out at 00:03,
+  01:33 and 01:38 UTC on the 23rd; **Adobe's filer row and facts run out
+  at 20:35 UTC on the 29th.** The next paid run of a Level 4 question
+  refetches the ticker file, JPM's and Alphabet's filer rows and
+  Alphabet's facts, which should store zero new rows or raise on a
+  changed figure, and the closes since the 21st. Say so before the run,
+  table by table.
 
 Unchanged: portfolio 3 the only portfolio, nine ledger rows, cost basis
 284,500 plus 15,500 cash, USD, policy `ips.toml`. There is no holdings
@@ -283,22 +301,25 @@ thirty-eighth session's handoff.
 - **The venv holds an editable install of the checkout's `src`**
   (`__editable__.agentic_finance-0.1.0.pth`). From a worktree: pytest
   imports the worktree's tree because `tests/conftest.py` inserts its
-  own `src` first (checked again this session: the warning paths were
-  the worktree's); the CLI does because `cli.py` inserts its own parent
-  directory; and since 9d9ca39 `tests/benchmark/run_cases.py` inserts
-  its own tree's `src` the same way, so a worktree's runner scores the
-  worktree with or without `PYTHONPATH=src`.
+  own `src` first (checked again this session); the CLI does because
+  `cli.py` inserts its own parent directory; since 9d9ca39
+  `tests/benchmark/run_cases.py` inserts its own tree's `src` the same
+  way; **`tests/golden/run_golden.py` inserts nothing and imports the
+  checkout's tree from a worktree, so it needs `PYTHONPATH=src` in
+  front of it there** (checked this session by a verbose import, the
+  expensive way: the script has no argument parsing, so `--help` runs
+  it whole).
 - `.env` holds keys. Never print it. A permission rule denies sessions the
   shell and the editor on `.env*` files. `load_dotenv()` in `config.py`
   finds it by walking up from the calling file, so a worktree nested
   under the checkout reads the checkout's `.env`.
-- **Anthropic has credits**; nothing was spent this session. Nothing in
-  the tree records a model call's tokens; decision 45's entry makes
-  recording `usage` per call the client's first duty, and states the
-  current first-party rates it reasoned from: Haiku 4.5 one dollar per
-  million input and five per million output, Sonnet 5 two and ten, Opus 5
-  five and twenty-five; cache prefix minimums 4,096 tokens on Haiku 4.5,
-  1,024 on Sonnet 5, 512 on Opus 5.
+- **Anthropic has credits**; two golden runs this session, about eight
+  cents. Nothing in the tree records a model call's tokens; decision
+  45's entry makes recording `usage` per call the client's first duty,
+  and states the current first-party rates it reasoned from: Haiku 4.5
+  one dollar per million input and five per million output, Sonnet 5
+  two and ten, Opus 5 five and twenty-five; cache prefix minimums 4,096
+  tokens on Haiku 4.5, 1,024 on Sonnet 5, 512 on Opus 5.
 - `ACTIVE_LLM_CONFIG = ANTHROPIC_HAIKU` for the router. `ANTHROPIC_SONNET`
   is `claude-sonnet-5`, used by the reader, the proposer and the view, and
   refuses a temperature; decision 45 recommends it as the conversation
@@ -311,10 +332,14 @@ thirty-eighth session's handoff.
 - **The period vocabulary**: `config.DataConfig.period_days`, a default in
   code, keys `1Y, 2Y, 3Y, 5Y, 10Y`, passed to extraction by
   `smart_router.py`. Not in `config.toml`.
-- **Extraction** (`src/agents/extraction.py`): `extract` at line 160,
-  `resolve` at 196, `_TOKEN` at 100 still letting a full stop ride on a
-  ticker that ends a sentence, its own record entry. Unchanged this
-  session.
+- **Extraction** (`src/agents/extraction.py`): `_TOKEN` at line 102 is
+  now `[A-Z](?:[A-Z0-9.]{0,4}[A-Z0-9])?` between the same lookarounds,
+  a token that ends on a letter or digit (2616a80); `resolve` at 198 no
+  longer strips a dot from a reply's tokens (da79aef); `extract` at
+  162. Nothing else in the module changed.
+- **The screening node's clock**: `nodes.py:1350` reads `utc_today()`,
+  the function at 1481 the ledger node already used, so a test pins the
+  date (59d5239).
 - **The router, as it stands until Order 5**: `smart_router.py` 516
   lines, `router_prompts.py` 240 with twelve examples, `schemas.py` 512
   with `INTENTS` at 23, `AGENTS` at 51, `REQUIRES` at 88,
@@ -350,140 +375,80 @@ thirty-eighth session's handoff.
   the worktree, a `for` loop over file names whose `sed` took its target
   from the loop variable; `awk -v` with a shell variable, `sqlite3
   -readonly` on the symlinked store, `../../../.venv/bin/python` with a
-  heredoc, and literal paths ran.** The Edit tool drops trailing
-  whitespace on blank lines inside an edited block: count with `git diff
-  -w --numstat` beside `git diff --numstat` and say both; this session's
-  four diffs had no whitespace-only line.
+  heredoc, `PYTHONPATH=src` in front of it, and literal paths ran.** The
+  Edit tool drops trailing whitespace on blank lines inside an edited
+  block: count with `git diff -w --numstat` beside `git diff --numstat`
+  and say both; none of this session's diffs had a whitespace-only line.
 - **What is no longer in the tree**: as the thirty-third session's handoff
-  listed it, unchanged; nothing was deleted this session.
+  listed it, unchanged; nothing was deleted this session but one dot
+  strip.
 
 ---
 
 ## 4. What the thirty-ninth session did
 
-`git log --oneline 495b845..HEAD`, **four commits** with this one, two
-files, no code. In the owner's order: the count, said and corrected;
-the calendar entry; the decision; the fold lines; this.
+Two halves. **The paper half, four commits on `boundary`, merged at
+5ca4fd6**: 677dbcd logged the calendar test; 88a768f wrote decision 45's
+entry; b6bfe38 marked 12, 17 and 54 folded into it in their nine
+entries; 5ca4fd6 regenerated this file. What that half measured and
+found is in decision 45's entry and in §6, and is not restated here
+beyond the count: the golden set whole, ten runner probes at eleven
+sites, 71 tests in nine files going and 1864 passed to expect after,
+now 1870 with this branch's six new rows; every reader of the intent
+and the plan by file and line; the BaseAgent entry's callers gone; the
+prompt's twelve examples. **The code half, `git log --oneline
+5ca4fd6..HEAD`, eight commits with this one**, on the owner's yes to a
+written shape, in the order the shape gave:
 
-**Read first, and only what the brief named**: DIRECTION.md, the
-previous handoff and its §0, the six entries whose trigger names
-decision 45, found by grepping the trigger lines rather than trusting
-the brief's four; the entries on 12, 17, 54 and 13; decision 76's entry
-as the shape; the interlude entry. Then the code the count and the
-decision needed: `schemas.py` and `graph.py` whole, the router's `route`
-and `_with_extraction`, the prompt whole, extraction's header and
-function list, `config.py` and `base_agent.py`'s definitions, the
-synthesizer's dispatch, the gate's record and `require_gate`, the
-runner's probes and `run_case`, the golden runner's fields, the eleven
-node and formatter tests that build a synthetic decision, the corpus's
-clarifications, refusals and sequences, the IPS's concentration clauses
-and `compliance.refuse`, the philosophy's clause ids and the valuation's
-assumption sources, the reading and proposal models' docstrings.
-**The brief's claims, checked**: the trunk at 495b845 and the remote
-there; the pending list eleven; pytest not 1935 but 1934 and one
-failure; four entries on 45 not four but six.
-
-**The count, before the writing, in two units where two exist.**
-- **The golden set**: 21 queries, 147 lines, five routing fields of
-  which only `period` is extraction's. Whole.
-- **The runner**: 28 probes and checks, 18 `check_` and 10 `blocked_on_`.
-  Ten read `router_decision` at eleven sites: check_1_3 (measure,
-  period), check_1_2 (measure, tickers), check_3_3 (measure, tickers),
-  check_3_2 (intent, plan), check_2_1 (plan, and the trace's handovers
-  through the handover probe), check_3_5 (both turns' intent, the
-  decision record), blocked_on_compliance, blocked_on_screen,
-  blocked_on_ledger and blocked_on_research (plan and intent). The
-  previous handoff's twelve counted the helpers `_intent` and
-  `_trace_shows_handovers`.
-- **pytest**: nine files match the grep for smart_router, router_prompts,
-  IntentType, INTENTS, the few-shots or RouterDecision, 129 test
-  functions, 269 collected; 71 go and 58 functions, 198 collected, stay.
-  By file: test_smart_router 56, 31 go and 25 stay; test_router_prompt
-  13 go; test_router_extraction 12 go; test_router_plans 6 go;
-  test_router_warnings 4 go; test_request_span 1 goes;
-  test_conversation_state 9, 4 go and 5 stay; test_derived_plans 11
-  functions and 28 collected, stay; test_extraction 17 and 140, stay,
-  matched on one comment at line 59 and a survivor by judgement. The six
-  xfails are all in test_provider_names_its_source.py. **After the
-  router goes: 1864 passed, 6 xfailed**, before the new layer's own
-  tests; the previous handoff's "about 89" and "roughly 1846" are
+- **c879e5f** `tests/test_extraction.py`: three rows in the clean table,
+  two red, "Sell 50 SPY." and "I hold too much MSFT.", one green,
+  "Compare BRK.B with SPY". A first row, "How is MSFT doing.", was
+  replaced before the commit: its full stop follows "doing", so it read
+  MSFT already and was no test of the defect; the record's entry used
+  the same wording as its example.
+- **2616a80** `extraction.py`: `_TOKEN` ends on a letter or digit.
+  pytest 1940 passed, 1 failed, 6 xfailed. The golden set then, on its
+  own yes, from the worktree with `PYTHONPATH=src`, the verbose import
+  showing the worktree's `extraction.py`: twenty-one lines unchanged,
+  the diff empty, as the commit message predicted.
+- **da79aef** `extraction.py`: the dot strip in `resolve` dropped, dead
+  since the regex; S-2's reply still resolves, 146 passed in the file.
+- **dbcded0** KNOWN_GAPS: the regex entry RESOLVED, its example
   corrected.
-- **Readers of intent and execution_order outside those files**:
-  `nodes.py` 369, 393, 400, 2308 to 2349, and the parameters readers at
-  77, 460, 1032, 1320, 1825, 2381 to 2415 and 3274 to 3300; `state.py`
-  110 to 111, 142, 233 to 241; `graph.py` 96 to 104; `cli.py` 60 to 68
-  and 88; `run_golden.py` 105 to 108; and eleven node and formatter
-  tests that feed a synthetic `router_decision` to a node, which read
-  nothing the router decides and survive as the tools' inputs.
-
-**The commits.**
-- **677dbcd** KNOWN_GAPS: "A screening-node test is pinned to the
-  calendar". `test_screening_node.py:359` asserts the price window
-  starts before 16 September; the node's as-of is `utcnow().date()` at
-  `nodes.py:1350` and the window `LAST_CLOSE_WINDOW_DAYS = 7` at 1177,
-  so the start is the 16th today and the assertion fails; from the 24th
-  the stand-in's two closes fall outside the window and the node stops
-  instead. The test runs on the conftest's own database; the store is
-  untouched. Fix named, not taken: the node's clock injectable as the
-  ledger node's `utc_today` is, and the test pinning its date. Trigger:
-  the next change to the node's window or clock, or the first commit of
-  the extraction session.
-- **88a768f** KNOWN_GAPS: "The tool-boundary pass, which opens Order 5 -
-  decision 45, pending", about 350 lines after decision 76's entry, in
-  the owner's words. What a tool is and returns; which node becomes which
-  tool, eleven tools from ten rows and two rows becoming none;
-  extraction as a pre-pass in front of the model and as each tool's
-  validation, the client ending the turn on a validation error; the
-  plan from `TERMINAL` rekeyed by tool; the gate inside the `position`
-  tool's run with `require_gate` in its contract; Sonnet 5 recommended
-  with the cost per turn estimated and what replaces the estimate;
-  memory as a record resolved by a rule and a referent as a tool call
-  the runner can read; the roster and the vocabulary surfaced; 12's
-  instrument type as an input asked back for; 17's selection as the
-  layer's over whole blocks; 54's loop and fields deleted with the
-  router; 13's scope text as an IPS clause; 9, 11 and 36 absorbed; the
-  pytest count after and the runner's probes rewritten, plus the tracing
-  check at output time; four rejected shapes; what it owes; which loop
-  sees each part. Two of its parts came from the reassessment against
-  an outside reading's six questions, answered in the session and not
-  in the repository: the tracing check running in the client and
-  refusing, and the turn ending on a validation error; and two of its
-  rejections likewise, the reasoning playbook and the prose
-  interceptor.
-- **b6bfe38** KNOWN_GAPS: 12, 17 and 54 marked as folded into 45 in
-  their nine entries, a dated line at the end of each, triggers
-  unchanged; the BaseAgent entry corrected on the same line, the loop
-  now having no caller anywhere.
+- **59d5239** `nodes.py` and `tests/test_screening_node.py`: the test
+  pins 22 September by monkeypatching `utc_today`, red against the
+  inline `utcnow()`; the node reads `utc_today()`; pytest 1941 passed,
+  6 xfailed.
+- **5f8e34d** KNOWN_GAPS: the calendar entry RESOLVED.
+- **102e539** KNOWN_GAPS: decision 16 closed, nothing built; the two
+  entries' triggers moved to Order 5's opening commit and the corpus
+  run after it, which reads the seven reading-gap lines.
 - **This commit**: the handoff, regenerated.
 
-**What was found and not fixed.** The calendar test, above. The
-BaseAgent entry's two callers, gone: `.process(` is called nowhere
-under `src/` or `tests/`, `tests/test_phase5_4_integration.py` no longer
-mentions it, `risk_manager_agent.py` does not exist. The record's
-"three AgentConfig fields": `log_tool_calls` and `max_tool_calls_per_turn`
-are comment lines at `base_agent.py:44` to `45`, `max_conversation_history`
-sits on `AgentSettings` in `config.py:95` to `108` beside two more fields
-nothing reads. `INTENTS`' descriptions are 4,104 characters of the
-prompt's 9,568, and the roster's 1,484. All of it is in the decision
-entry and none of it is code this session's.
+**What was found and not fixed.** The golden script parses no
+arguments, so `--help` runs it; a note in §3 and §9, no code. The
+record's decision-16 entries stay open by design: the gaps are the
+conversation layer's. Every miss the runs logged waits on its trigger.
 
-**Not done, on purpose.** Any code. Taking decision 45; Order 5's first
-commit. Decision 76. Decision 16 and the token regex, their own session
-before Order 5's code. 10, 13's target clause, 22, 48 and 52, after
-Order 5. Every miss the runs logged. The console glyphs. W-2. The CLI,
-the README, the demo recordings. The owner's four documents. The
-calendar test's fix.
+**Not done, on purpose.** Taking decision 45; Order 5's first commit.
+Decision 76. 10, 13's target clause, 22, 48 and 52, after Order 5. The
+console glyphs. W-2. The CLI, the README, the demo recordings. The
+owner's four documents. The router prompt's two German strings, which
+go with the prompt.
 
 ---
 
 ## 5. Decisions taken, and decisions pending
 
-**Taken this session:** none of the numbered kind. Two small shapes on
-the owner's yes: the calendar entry logged now rather than at a sweep,
-and the nine fold lines as one commit rather than three.
+**Taken this session:** decision 16, closed on the owner's yes, nothing
+built: names, German phrasings and a two-edit typo rule are the
+conversation layer's to read, checked by the corpus's seven reading-gap
+lines after Order 5. Small shapes on the owner's yes: the calendar
+entry logged at once rather than at a sweep; the nine fold lines as one
+commit; the code half's eight commits in the order shown.
 
-**Pending — decide before writing code. Eleven by count, unchanged:**
-10, 12, 13, 16, 17, 22, 45, 48, 52, 54 and 76. The cap is 25.
+**Pending — decide before writing code. Ten by count, one down:**
+10, 12, 13, 17, 22, 45, 48, 52, 54 and 76. The cap is 25.
 
 10. A window return as a measure with a reference.
 12. The hypothetical mode's instrument type. **Folded into 45 on
@@ -491,19 +456,15 @@ and the nine fold lines as one commit rather than three.
 13. A target-weights clause and `OUT_OF_SCOPE_RESPONSE` moving into the
     IPS. **The scope half is in 45's entry**; the target-weights half
     stays its own, after Order 5. Its entries are not marked.
-16. Company names, German phrasings, the softer 3.5. The router prompt's
-    two German strings are this decision's. Extraction, so it survives
-    Order 5; the owner's brief puts it, with the token regex, in its own
-    session before Order 5's code.
 17. The selection axis. **Folded into 45 on paper**, marked in its four
     entries; they close on Order 5's commit.
 22. Volatility over as-traded closes or a total-return series.
-45. **The tool-boundary pass, written on paper this session, pending
-    until the owner's yes.** Absorbs 9, 11 and 36; folds in 12, 17, 54
-    and 13's scope half. Its entry states what it owes before it is
-    taken: the eleven tool contracts on paper, the scope clause's text,
-    the corpus prediction line by line, the golden set parked behind a
-    tag, the client recording `usage`, the runner rewritten first.
+45. **The tool-boundary pass, written on paper, pending until the
+    owner's yes.** Absorbs 9, 11 and 36; folds in 12, 17, 54 and 13's
+    scope half. Its entry states what it owes before it is taken: the
+    eleven tool contracts on paper, the scope clause's text, the corpus
+    prediction line by line, the golden set parked behind a tag, the
+    client recording `usage`, the runner rewritten first.
 48. Part 13 E's item 7, second half only.
 52. The Yahoo-fed tables: delete or keep. After Order 5 is cheaper than
     through it.
@@ -524,12 +485,16 @@ and the nine fold lines as one commit rather than three.
 Levels 1 to 3: **11/12**, 2.1 BLOCKED on routing. Level 4: 4.2, 4.4, 4.5
 and 4.6 PASS; 4.1 and 4.3 BLOCKED at the PHI-2.1 stop. **15/18, by the
 run at 21:49 UTC on 22 September**; nothing this session could move a
-verdict.
+verdict, and the runner was not run.
 
 **Against the corpus: 31 of 67, all 67 sent**, benchmark.md Part 3c.6's
 three blocks, unchanged. S-2 turn 2 should match in the next run, which
-makes 32 the number to expect from the same code; decision 45's entry
-names the lines the refactor is predicted to move beyond that.
+makes 32 the number to expect from the same code; R-5's refusal names
+no subject either way, so the regex fix moves no corpus line; decision
+45's entry names the lines the refactor is predicted to move.
+
+**Against the golden set: twenty-one of twenty-one lines as pinned**,
+by this session's run after the regex fix.
 
 What the runner cannot see and the reading has: whether an answer
 carries the figures its entry pins, whether it cites the clauses, whether
@@ -542,41 +507,36 @@ reads well.
 
 **What Order 5 takes with the router, measured this session**: the
 golden set whole; ten of the runner's twenty-eight probes and checks, by
-name in §4; 71 of pytest's tests in nine files, the 168 collected
+name in decision 45's entry; 71 of pytest's tests in nine files, the
 extraction and derivation tests surviving as the tools' input validation
-and dependency table. **What Order 5 adds to the loops, by the
-decision**: the tool-call log the probes read, the digit-tracing check
-in the client and the runner, and one test per tool contract.
+and dependency table, 174 collected now. **What Order 5 adds to the
+loops, by the decision**: the tool-call log the probes read, the
+digit-tracing check in the client and the runner, and one test per tool
+contract.
 
 ---
 
 ## 7. Next steps, in order
 
-**1. The merge.** `boundary` onto the trunk, `--ff-only`, then the push by
-URL; the worktree removed after.
+**1. The merge.** `extraction` onto the trunk, `--ff-only`, then the push
+by URL; the worktree removed after.
 
 **2. The owner's yes on decision 45**, read against its entry, or the
 changes the owner wants in it. Until then nothing about Order 5 is
 taken.
 
-**3. Decision 16 and the token regex, their own session before Order 5's
-code**, as the owner's brief for this session put them: extraction, so
-it survives Order 5 and can go either side of it; the regex fix in
-`_TOKEN` with tests first on "Sell 50 SPY." and a dotted ticker, then
-the golden set, since every question's tickers pass through it. The
-calendar test's fix can ride in that session under its trigger.
-
-**4. Order 5's first commit**, on the owner's word, after the decision's
+**3. Order 5's first commit**, on the owner's word, after the decision's
 debts are paid: the eleven tool contracts on paper, the scope clause in
 the IPS, the runner's ten probes and the tracing check rewritten first,
 the corpus's sixty-seven turns predicted line by line, the golden set
 parked behind a tag on the opening commit, `usage` recorded from the
 client's first call. When it opens, the record's entries that close on
-it are the interlude's, the four on 17, the four on 54 for the deletion,
-the bare-opinion entry and the token-regex entry if not fixed before.
-**The closes of the 22nd and the refetch of the ticker file and two
-filers' rows and facts come with the first paid Level 4 run**: say so
-before it, table by table.
+it are the interlude's, the four on 17, the four on 54 for the deletion
+and the bare-opinion entry; the two on decision 16 close on the corpus
+run after it if the layer reads their seven lines. **The closes since
+the 21st and the refetch of the ticker file and two filers' rows and
+facts come with the first paid run that touches them**: say so before
+it, table by table.
 
 ### Later, with reasons
 
@@ -613,11 +573,22 @@ before it, table by table.
 
 ## 8. Rules learned the hard way
 
+**A check that runs the script is the loop.** The benchmark runner
+parses arguments, so `--help` under a verbose import shows its imports
+and exits; the golden script does not, and the same check ran it whole,
+paid, against the wrong tree, its output lost. Read whether a script
+parses arguments before handing it one; import the module to see its
+paths.
+
 **A test can rot by the calendar.** A test that asserts against a fixed
 date while the node reads the clock passes until the date arrives and
-fails after it with no change in the code; the failure is found on the
-first pytest of the day and its cause is a subtraction. Inject the
-clock and pin the date the test runs at.
+fails after it with no change in the code. Inject the clock and pin the
+date the test runs at; the ledger node had the function already.
+
+**An entry's example is checked before it becomes a test.** The regex
+entry's example put the full stop after "doing", not after the ticker,
+and the row written from it was green before the fix. The corpus's own
+wording, R-5, was the case.
 
 **A grep match is not a touch.** The grep for the router's names matched
 `test_extraction.py` on a comment; the count by what the tests touch is
@@ -644,7 +615,9 @@ reads as the plan and not as breakage when it comes.
 
 **A regeneration is written whole and every carried section is a
 claim.** This file was written with the editor's whole-file write, not
-patched; the sections kept word for word are the ones re-checked.
+patched; the sections kept word for word are the ones re-checked, and
+the first regeneration of the day dropped a tail it had not read, found
+only because the diff was read before the yes.
 
 Still true, from earlier sessions: **a recorded cause is a hypothesis
 until the test goes green**; **a word list undercounts, and the remainder
@@ -724,9 +697,12 @@ code**.
 cd "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE"
 source .venv/bin/activate
 
-pytest -q          # 1934 passed, 1 failed, 6 xfailed until the calendar test's clock is fixed
+pytest -q          # 1941 passed, 6 xfailed
 python tests/golden/run_golden.py > /tmp/golden_now.txt 2>/tmp/golden_err.txt
 diff tests/golden/expected.txt /tmp/golden_now.txt
+# from a worktree the golden script imports the checkout's tree unless told otherwise,
+# and it parses no arguments, so never hand it --help; from a worktree:
+PYTHONPATH=src ../../../.venv/bin/python tests/golden/run_golden.py > /tmp/golden_now.txt 2>/tmp/golden_err.txt
 python tests/benchmark/run_cases.py
 python tests/benchmark/run_cases.py --case 2.1     # one Haiku call, ~$0.001
 # from a worktree the runner scores the worktree since 9d9ca39; to see which tree it loads:
@@ -745,8 +721,8 @@ print(anthropic.Anthropic().messages.create(model='claude-haiku-4-5-20251001',\
 max_tokens=8,messages=[{'role':'user','content':'ok'}]).content[0].text)"
 
 git status --short
-git log --oneline 495b845..HEAD
-git rev-list --count 495b845..HEAD
+git log --oneline 5ca4fd6..HEAD
+git rev-list --count 5ca4fd6..HEAD
 
 # a worktree needs the store linked before pytest or the runner:
 mkdir data && ln -s ../../../../data/portfolio.db data/portfolio.db
@@ -791,7 +767,7 @@ PYTHONPATH=src python -c "from agents.schemas import INTENTS, AGENTS; print(len(
 lsof tests/golden/expected_values.xlsx
 
 # merge and push, by the owner only:
-git switch baseline-v1 && git merge --ff-only boundary
+git switch baseline-v1 && git merge --ff-only extraction
 git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1
 ```
 ### The four loops
@@ -799,7 +775,7 @@ git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1
 | Loop | Cost | Answers |
 |---|---|---|
 | `pytest` | ~7s, no model calls | Do the components still work; does every reference Part reproduce; does each node fetch in order and publish its block; does the gate refuse what it must; does the outcome compose every row of the truth table; do Part 3c.1's wordings match the runner's; does the compliance answer print Part 7's cents; does S-2's reply resolve. Sees nothing of the corpus's answers and nothing of a header's text. |
-| CLI | ~2s and one Haiku call for most questions; a screen of a new filer about 5s and two EDGAR fetches; a position or thesis question about a filer with no cached reading about 55s and four Sonnet calls, about 15 cents; a deterministic clarification free; **fetches prices past their interval, which runs out on the 23rd at 17:11 UTC** | What it is actually doing: the plan, the parameters, the reasoning line, the answer text. **The only loop that shows an answer, and therefore the only loop that can be read against Part 18.** The whole corpus is 67 turns, about 3 and a half minutes and about 0.30 dollars. |
+| CLI | ~2s and one Haiku call for most questions; a screen of a new filer about 5s and two EDGAR fetches; a position or thesis question about a filer with no cached reading about 55s and four Sonnet calls, about 15 cents; a deterministic clarification free; **fetches prices past their interval, which ran out on the 23rd at 17:11 UTC** | What it is actually doing: the plan, the parameters, the reasoning line, the answer text. **The only loop that shows an answer, and therefore the only loop that can be read against Part 18.** The whole corpus is 67 turns, about 3 and a half minutes and about 0.30 dollars. |
 | Golden set | ~50s, about $0.039 per run; writes to no table since decision 51, prices aside | Did routing change anywhere (twenty-one lines, one pinned failure). Blind to `measure`, `group_by`, `tickers`, answer text, a reply to a record, and any wording it does not carry |
 | Benchmark runner | ~60s, about $0.039 plus the Level 4 cases' Sonnet; `--case X` is one routing at about $0.001; **scores its own tree since 9d9ca39** | How many cases pass, n/18. Its checks read each answer's text and show it to nobody, discard the console, and cannot tell one cent from another, nor a refusal from a failure, nor a glyphed header from a plain one. **Carries none of the 41 corpus additions** |
 
