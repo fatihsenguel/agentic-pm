@@ -7916,9 +7916,23 @@ being the second turn; the runner's 3.5 replies "yes", the confirmation
 path; the corpus's S-2 turn 2 is what it fixes, in the next run. The
 regex itself feeds every first turn too, its own entry below.
 
-### A ticker followed by a full stop is not a ticker in a first turn
+### A ticker followed by a full stop is not a ticker in a first turn - RESOLVED 23 September (thirty-ninth session)
 
-**Trigger:** the next change to `_TOKEN` in `extraction.py`, the next corpus run's reading of R-5, or the commit that opens Order 5, whichever comes first.
+**Trigger:** none: fixed in the regex on 2616a80, tests first on c879e5f, the reply path's strip dropped on da79aef.
+
+**Resolved 23 September 2026 (thirty-ninth session), the fix this entry
+names.** Tests first: "Sell 50 SPY." and "I hold too much MSFT." red,
+"Compare BRK.B with SPY" green (c879e5f). Then `_TOKEN` ends on a letter
+or digit, `[A-Z](?:[A-Z0-9.]{0,4}[A-Z0-9])?`, so the full stop after a
+ticker stays out of the token and a dotted ticker matches whole; pytest
+1940 passed, 1 failed, the calendar test, 6 xfailed (2616a80). The golden
+set run once from the worktree with its own `src`, predicted unchanged
+because no golden query has a ticker before a full stop: all twenty-one
+lines unchanged. The dot strip b430a0a put into `resolve` was then dead
+and is gone; S-2's reply still resolves (da79aef). One correction to the
+text below: its example "How is MSFT doing." was never a case of the
+defect, the full stop there following "doing" and not the ticker; the
+case is a ticker that ends the sentence, as R-5 does.
 
 Recorded 23 September 2026 (thirty-eighth session), found while
 closing the entry above. `_TOKEN` is `[A-Z][A-Z0-9.]{0,5}`, which
