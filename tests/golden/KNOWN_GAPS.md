@@ -7538,6 +7538,185 @@ before. The corpus run after Order 5 is the only instrument for the
 sequences, the refusals and the selections, and it is read by hand.
 The golden set sees nothing and dies. The CLI shows the answer.
 
+### The eleven tool contracts of Order 5, on paper - decision 45's first debt
+
+**Trigger:** Order 5's first code commit, which is written against this entry; a commit that departs from a contract corrects the contract here first, dated. Read with decision 45's entry above.
+
+**Written 24 September 2026 (thirty-ninth session, past midnight local),
+the first of the debts decision 45 lists, on paper and before any code.**
+Every key below is read from the block a node publishes today and from
+the test that pins it, `tests/test_analysis_node.py`,
+`test_compliance_node.py`, `test_screening_node.py`,
+`test_research_node.py`, `test_ledger_node.py`; every input is what the
+node reads from `parameters` today, less the rendering-only fields
+decision 45 moves to the conversation layer. The corpus entries a tool
+answers are the check the code is held to after it lands; the pointers
+are benchmark.md Part 3c's ids.
+
+**What every contract shares.**
+
+- **A tool is one row of `TERMINAL`, run as today's graph with the plan
+  set instead of routed**, `agents_to_run` from `derive_plan` on the
+  tool's row, `route_next_step` and the gate edge unchanged, one run's
+  `shared_data` emptied at the start as `create_initial_state` does now.
+- **It returns a record for the tool-call log**: the tool's name, its
+  validated inputs, the block under its key, the rendered text the
+  formatter makes of the block, and the block's as-of. That record is
+  what the runner's rewritten probes read and what the model sees. It
+  never returns an array: `latest_prices`, `price_window`, the
+  covariance matrix and a filing's text stay in the run's `shared_data`
+  and stop at the boundary (invariant 3).
+- **Its input model validates and raises** (invariant 5): a ticker
+  neither held nor known, a span outside the vocabulary, a weight
+  outside (0, 1], two weights, an instrument type outside share and
+  fund, a missing input the row needs. It repairs nothing and carries no
+  default for anything the user must state. The client ends the turn on
+  a raise and shows the error unchanged.
+- **Where a clarification is the answer**, the tool returns it with the
+  record `resolve` reads on the next turn, kind, token, candidate and
+  message, so a reply stands for the question with the missing piece;
+  the pre-pass in front of the model returns the same clarification
+  before any model call when the message itself shows the gap (C-1, C-3
+  to C-7).
+- **The formatter moves into the tool.** Each contract names the
+  function in `nodes.py` that renders its block today; the tool calls it
+  and returns the text. What the model shows of that text is the
+  layer's selection (decision 17); the figures it quotes must be in the
+  text (invariant 1, the tracing check).
+- **A block is whole.** `group_by`, `status` and the rendering use of
+  `tickers` are no inputs; the block carries every view and every
+  finding and the layer selects.
+
+**The eleven, by row.**
+
+1. **`allocation`** (`data_fetch` with measure `allocation`, plan
+   DataAgent, PortfolioAnalysisAgent). Inputs: none. Block `allocation`:
+   `base_currency`; `by_asset_class`, `by_sector` and `by_position`, each
+   with `lines`, `invested_value` and `total_value`, the class and
+   position views with `cash_balance`, the sector view with
+   `sectored_value`; `as_of` with `worst_case`, `stalest` and `uniform`.
+   Rendered by `_format_allocation_response`, all three views. Answers
+   1.1, 1.4, V-1.1a, S-5 turn 1, and the expression rows "how much is my
+   portfolio worth", "my two biggest holdings" and "what share is
+   technology", each a selection over this block.
+2. **`position_pnl`** (the same row, measure `position_pnl`, the same
+   plan). Inputs: `tickers`, a list of held tickers, empty for every
+   position; a token one edit from a holding asks back with the record.
+   Block `position_pnl`: per ticker `quantity`, `average_price`, `price`,
+   `currency`, `cost_basis`, `market_value`, `pnl_abs`, `pnl_pct`,
+   `purchase_date`, `as_of`, `rate`, `rate_as_of`. Rendered by
+   `_format_pnl_response`. Answers 1.2, 3.3, 3.5 turn 2, S-1's three
+   turns, S-2 turn 2, the golden "How much has AAPL gained?", and the
+   expression row "what did I pay for my JPM shares"; V-1.2a once the
+   layer reads the name. C-1 and C-5 are its ask-backs, a typo and a
+   one-day move.
+3. **`portfolio_volatility`** (the `risk_analysis` row with measure
+   `portfolio_volatility`, the same plan). Inputs: `period` from the
+   vocabulary `config.DataConfig.period_days`, absent meaning
+   `config.DataConfig.default_period`, 3Y today, which is policy in
+   config and not a repair; a span the vocabulary lacks asks back naming
+   the spans. Block `portfolio_volatility`: `annualised`, `weights_basis`,
+   `weights`, `weights_as_of`, `window`, `covariance_method`,
+   `annualisation`. Rendered by `_format_portfolio_volatility_response`.
+   Answers 1.3, V-1.3a, V-1.3b, V-1.3c, S-3 turn 2, S-8 turn 2; C-3, C-4
+   and C-6 are its ask-backs. The absolute window stays outside it, its
+   own entry.
+4. **`compliance_check`** (`compliance` with nothing set, plan
+   DataAgent, PortfolioAnalysisAgent, ComplianceAgent). Inputs: none.
+   Block `compliance`: `policy`, `statements`, `total_value`, `as_of`,
+   `findings`, `no_clause`, `topic`, `base_currency`, every clause
+   checked on every run. Rendered by `_format_policy_check`, every
+   finding. Answers 2.1, 2.2, 2.3, V-2.1a, S-4 both turns, S-5 turn 2,
+   S-8 turn 1, the golden AAPL compliance lines, and the expression rows
+   "which of my positions are over the limit" and "compare AAPL and
+   MSFT against my policy", selections over its findings; V-2.1b once
+   the layer reads the name.
+5. **`hypothetical_weight`** (`compliance` with `hypothetical_weight`,
+   ComplianceAgent alone, unclosed). Inputs: `weight`, a fraction in
+   (0, 1] read from the one percentage in the message, two asking back
+   and a figure outside asking back; `instrument_type`, share or fund,
+   read from the message when it states one and asked back when it
+   does not (decision 12). A fund is checked against IPS-4.1, a share
+   against IPS-4.1 and IPS-4.2. Block: `compliance` with `total_value`
+   None and the findings of those clauses. Rendered by
+   `_format_hypothetical`. Answers 3.1, V-3.1a, V-3.1c, "Could I put 11%
+   into a new ETF?"; C-7 is its ask-back; V-3.1b once the layer reads a
+   weight in words.
+6. **`policy_lookup`** (`compliance` with `policy_topic`, ComplianceAgent
+   alone, unclosed). Inputs: `topic`, the user's words, matched against
+   the topics `ips.toml` carries; no match is not a raise but the block's
+   `no_clause`, the answer being that the policy contains nothing on it.
+   Block: `compliance` with `topic` carrying `asked` and `clauses`, and
+   `no_clause`. Rendered by `_format_policy_lookup`. Answers 3.4, V-3.4a,
+   and, once decision 13's scope clause is in the IPS, the citation
+   behind R-1 to R-6; V-3.4b once the layer reads German.
+7. **`philosophy_screen`** (`research` with nothing asked, ScreeningAgent
+   alone). Inputs: `ticker`, exactly one, a company with a CIK; a bank
+   stops at PHI-3.2 and a missing figure at PHI-1.2, inside the block and
+   not as a raise. Block `screening`: `philosophy`, `statements`,
+   `subject`, `as_of`, `sic`, `sic_description`, `sic_as_of`, `years`,
+   `findings`, `stopped`, `source`, `facts_as_of`, `price`,
+   `price_stopped`, `valuation` with `low`, `high`, `as_of`, `year`,
+   `ends`, `filed`, `source` and `assumptions`, and `valuation_stopped`.
+   Rendered by `_format_research_response`, findings and range together;
+   4.1 and 4.2 are the layer's two selections over one block. Answers
+   4.1, 4.2, 4.6, S-6 turn 1, S-7 both turns, R-8's refusal of a range
+   for want of a growth pair; V-4.1a, V-4.2a and V-4.6a once the layer
+   reads the names. R-2, a bare opinion, reaches no tool: the layer
+   refuses on the scope clause.
+8. **`thesis`** (`research` with `asks` thesis, plan ScreeningAgent,
+   ResearchAgent). Inputs: `ticker`, one, on the watchlist; a company
+   with no entry raises. Block `research`: `asks`, `subject`, `as_of`,
+   `thesis`, `models`, `readings`, `not_read`, `predictions`,
+   `proposal_stopped`. Rendered by `_format_thesis_response`. Answers
+   4.4.
+9. **`position`** (`research` with `asks` position, plan DataAgent,
+   PortfolioAnalysisAgent, ScreeningAgent, ResearchAgent, then the gate
+   on the edge). Inputs: `ticker`, one, on the watchlist; the weight is
+   the entry's and never the message's (decision 65), and an entry that
+   states none raises, which is R-9. Block `research` with the position
+   keys `weight`, `weight_source`, `entry_condition`,
+   `entry_condition_stopped`, `judgement`, `view_stopped`, `entered` and
+   `outcome`, beside the block `gate`: `ticker`, `weight`,
+   `weight_source`, the funding, `sector`, `instrument_type`,
+   `new_money`, `total_before`, `total_after`, `base_currency`, `as_of`,
+   `policy`, `statements`, `findings`, `findings_before`,
+   `first_limb_binds`, `unrestored`, `permits`. **The contract returns
+   no block without a gate block for the same ticker at the same
+   weight** (`require_gate`, invariant 2). Rendered by
+   `_format_position_response`. Answers 4.3, S-6 turn 2; R-7 and R-9 are
+   its raises, no entry and no weight.
+10. **`rebalance`** (`rebalancing`, plan DataAgent, RebalanceAgent).
+    Inputs: none. Block: the agent's result with `decision` carrying
+    `recommendation` and `max_drift`; today the node raises on the
+    missing target, decision 13's other half, and the contract says so
+    rather than defaulting a target. Rendered by
+    `_format_rebalance_response`, the drift verdict and the max drift,
+    the trades withheld. Answers the golden "Should I rebalance my
+    portfolio?", which pins the error; no corpus entry asks it.
+11. **`ledger`** (`ledger`, LedgerAgent alone). Inputs: none; the as-of
+    is `utc_today()`. Block `ledger`: `as_of`, `watchlist`, `records`
+    each with `id`, `candidate`, `kind`, `statement`, `made_on`, `due`,
+    `status`, `metric`, `bound`, `value`, `period`, `score`, `filing`,
+    `unscored`, `agrees`; `summary`; `figures`. Rendered by
+    `_format_ledger_response`. Answers 4.5.
+
+**What is deliberately no tool**, from decision 45: DataAgent alone, raw
+prices; the `risk_analysis` row with no measure, per-holding
+volatilities no case asks for; the gate, a node on `position`'s edge;
+the synthesizer, each tool rendering its own block. A question that
+reaches none of the eleven is refused by the layer on the scope clause,
+which is R-1 to R-6.
+
+**What this entry owes.** The tool-call log's exact shape, decided with
+the runner's rewrite; and the system prompt that lists these eleven,
+which quotes no benchmark or corpus prompt verbatim.
+
+**Which loop sees it.** None until the code. pytest gains one test per
+contract that the block has these keys and no array; the corpus entries
+named above are read against Part 18 in the run after the first code
+commit.
+
 ### The interlude between Order 4 and Order 5, and how the corpus is built
 
 **Trigger:** the start of every session until Order 5 is opened; the commit that opens Order 5 closes this entry.
