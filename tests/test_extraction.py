@@ -65,6 +65,12 @@ CLEAN = [
     ("three years of prices for GLD", NONE, ["GLD"], "3Y", None, None),
     ("my returns over the last year", P3, [], "1Y", None, None),
     ("Compare SPY with SPY", NONE, ["SPY"], None, None, None),
+    # a ticker that ends a sentence keeps its full stop out of the token
+    # (KNOWN_GAPS, "A ticker followed by a full stop is not a ticker in a
+    # first turn"); a dotted ticker still matches whole.
+    ("Sell 50 SPY.", P3, ["SPY"], None, None, None),                  # corpus R-5
+    ("I hold too much MSFT.", P3, ["MSFT"], None, None, None),
+    ("Compare BRK.B with SPY", NONE, ["BRK.B", "SPY"], None, None, None),
 ]
 
 
