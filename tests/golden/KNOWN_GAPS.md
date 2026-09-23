@@ -7994,9 +7994,17 @@ and a stop the question never asked for, which is not. A routing miss
 that Order 5 ends, logged and not fixed; the same run routed R-1, R-3 to
 R-6 and 3.2 to the out-of-scope answer as pinned.
 
-### A screening-node test is pinned to the calendar
+### A screening-node test is pinned to the calendar - RESOLVED 23 September (thirty-ninth session)
 
-**Trigger:** the next change to the screening node's window or clock, or the first commit of the extraction session, whichever comes first.
+**Trigger:** none: fixed on 59d5239, the fix this entry named.
+
+**Resolved 23 September 2026 (thirty-ninth session), in the extraction
+session this entry's trigger named.** The test pins 22 September by
+monkeypatching `nodes.utc_today`, red while the node read
+`utcnow().date()` inline, green once the node reads `utc_today()` as the
+ledger node does (59d5239). pytest 1941 passed, 6 xfailed, the number a
+session says again. The window and the closes the test asserts are
+unchanged; only the day the test runs at is fixed.
 
 Recorded 23 September 2026 (thirty-ninth session), from the session's
 first pytest, run in the worktree before anything was written: 1934
