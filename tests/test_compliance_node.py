@@ -51,7 +51,7 @@ async def test_publishes_the_compliance_block():
     assert out.get("errors") is None
     block = out["shared_data"]["compliance"]
     assert set(block) == BLOCK_KEYS
-    assert len(block["policy"]) == 17
+    assert len(block["policy"]) == 18
     assert {c for c, e in block["policy"].items() if e["type"] == "statement"} == \
         {s["clause"] for s in block["statements"]}
     assert block["total_value"] == TOTAL
@@ -127,7 +127,7 @@ async def test_topic_the_policy_is_silent_on_sets_no_clause():
     assert block["topic"] == {"asked": "currency risk", "clauses": []}
     assert block["total_value"] is None and block["as_of"] is None
     assert block["base_currency"] is None
-    assert len(block["policy"]) == 17   # nothing, said over a visibly full policy
+    assert len(block["policy"]) == 18   # nothing, said over a visibly full policy
 
 
 async def test_topic_the_policy_has_names_its_clauses():

@@ -4,7 +4,8 @@
 the compliance layer can be built and tested against it. It is the policy the
 committed benchmark checks are computed against, the same way portfolio 3 is
 the portfolio they are computed against. A personal IPS replaces it later, as
-a local file, without changing the code.
+a local file, without changing the code. IPS-1.3, the scope of the questions
+this document answers, was added on 24 September 2026.
 
 **How to read it.** Every clause has an identifier. A compliance check cites
 the identifier, not a paraphrase. Percentages are of total portfolio value
@@ -25,6 +26,16 @@ risk the owner can hold through a drawdown without selling.
 **IPS-1.2** The portfolio is judged against this document, not against a
 market index. Underperforming an index while inside every limit is not a
 policy failure. Being outside a limit while outperforming is.
+
+**IPS-1.3** This document governs what is held. The questions it answers are
+about the portfolio as it stands, its allocation, its positions, its risk and
+its compliance with these clauses, and about one named company on the
+watchlist against the philosophy at the weight the entry states. It makes no
+forecast of a price, a return or the market's regime, assesses no tax, sizes
+or places no order, gives no opinion on whether something is a good
+investment, and says neither what to buy with no company named nor whether
+to sell or hold what is already owned. A question of that kind is answered by
+citing this clause, with no figure beside it.
 
 ## 2. Permitted instruments
 

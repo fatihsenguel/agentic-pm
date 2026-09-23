@@ -37,7 +37,7 @@ CHECKABLE = {
     "IPS-4.2": ("max_issuer_weight", {"max": 0.10}),
     "IPS-4.3": ("max_sector_weight", {"max": 0.25}),
 }
-STATEMENTS = {"IPS-1.1", "IPS-1.2", "IPS-2.1", "IPS-2.2",
+STATEMENTS = {"IPS-1.1", "IPS-1.2", "IPS-1.3", "IPS-2.1", "IPS-2.2",
               "IPS-5.1", "IPS-5.2", "IPS-5.3", "IPS-6.1", "IPS-6.2"}
 
 
@@ -46,8 +46,8 @@ def ips():
     return load_ips("ips.toml")
 
 
-def test_document_has_seventeen_clauses():
-    assert len(_document_clauses()) == 17
+def test_document_has_eighteen_clauses():
+    assert len(_document_clauses()) == 18
 
 
 def test_same_clause_ids_as_the_document(ips):
@@ -136,7 +136,7 @@ def test_a_relative_path_is_anchored_to_the_project_root(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     ips = load_ips("ips.toml")
     assert ips.path == str(ROOT / "ips.toml")
-    assert len(ips) == 17
+    assert len(ips) == 18
 
 
 def test_the_loader_takes_no_default():
