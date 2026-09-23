@@ -2934,7 +2934,7 @@ each later change to the block.
 
 ### The extraction bridge reads symbols, not company names
 
-**Trigger:** pending decision 16.
+**Trigger:** the commit that opens Order 5, and the corpus run after it, which reads V-1.2a, V-2.1b, V-4.1a, V-4.2a and V-4.6a. Decision 16 was closed 23 September (thirty-ninth session): nothing is built in extraction.
 
 Recorded 9 September (between sittings), from conversation with the owner.
 `agents/extraction.py` recognises a holding by its symbol only: an all-caps
@@ -2974,10 +2974,17 @@ nine positions and the full policy check; Alphabet and JPMorgan on a
 philosophy question went to an error naming an empty ticker list. Still
 logged, not taken.
 
+**23 September 2026 (thirty-ninth session): decision 16 closed, not
+built.** The name list this entry rejected stays rejected. Under
+decision 45's shape the conversation model reads the name and calls the
+tool with the ticker, which the tool validates, so this gap is the
+layer's to close and the five corpus lines above are its check in the
+run after Order 5. The entry stays open until that run reads them.
+
 
 ### The four phrase rules in extraction read English
 
-**Trigger:** pending decision 16.
+**Trigger:** the commit that opens Order 5, and the corpus run after it, which reads V-3.1b and V-3.4b. Decision 16 was closed 23 September (thirty-ninth session): nothing is built in extraction.
 
 Recorded 9 September (between sittings). Intent in German works: the
 prompt's few-shots are German and the model reads it. Tickers, percentages
@@ -3008,6 +3015,15 @@ weight in words, and V-3.4b, the German policy question, both routed to
 the whole portfolio check; V-1.1a, the German allocation question, was
 answered, the ticker, period and percentage rules being language-free
 (benchmark.md Part 3c.6). Still logged, not taken.
+
+**23 September 2026 (thirty-ninth session): decision 16 closed, not
+built.** German rows in the four patterns stay rejected, and so does a
+two-edit typo rule, the third thing the decision named, which would ask
+whether "ETF" means TLT. Under decision 45's shape the conversation
+model reads the German sentence and calls the tool with its inputs, so
+the gap is the layer's and V-3.1b and V-3.4b are its check in the run
+after Order 5; the prompt's two German strings go with the prompt. The
+entry stays open until that run reads them.
 
 
 ### The lookup sentence quotes the whole question
