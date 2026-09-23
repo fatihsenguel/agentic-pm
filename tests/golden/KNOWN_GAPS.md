@@ -1073,6 +1073,12 @@ years" ran DataAgent, OptimizationAgent and BacktestAgent, the optimiser
 failed, and the answer was a header with nothing under it (its own entry
 under Hygiene, "Optimization failed: None").
 
+**23 September 2026 (thirty-ninth session).** Decision 17's part of this
+trigger folded into decision 45, the tool-boundary pass, on paper: the
+stub is the synthesizer's dispatch on intent, which goes with the
+router, each tool rendering its own block, and 45's entry says so.
+Closes on Order 5's commit. Trigger unchanged.
+
 
 ### `shared_data` carries 160KB of raw prices — hot potato violated
 
@@ -2091,6 +2097,12 @@ describe intended behaviour the dedup work should implement.
 `model_name` (defaulting to `gpt-4o-mini`) and `custom_settings` were deleted in
 ae6f220 — model identity lives in `agents/config.py`.
 
+**23 September 2026 (thirty-ninth session).** Folded into decision 45,
+the tool-boundary pass, on paper: the loop, the supervisor, the role
+enum and the `AgentSettings` fields go with the router, and 45's entry
+says which. The two fields above are comment lines in the tree today.
+Trigger unchanged.
+
 ---
 
 ## Hygiene
@@ -2311,6 +2323,12 @@ axis, above).
 **9 September (ninth sitting).** The JNJ half is closed by c0886c2: its two
 rows and one condition, no other holding named.
 
+**23 September 2026 (thirty-ninth session).** The instrument type,
+decision 12, folded into decision 45, the tool-boundary pass, on paper:
+the `hypothetical_weight` tool takes the type as an input and asks back
+when the message states none, and 45's entry says how. Trigger
+unchanged.
+
 **11 September (fifteenth session), the "Not done" line.** The quotation
 above is stale twice over and stays as written: the line read "both are
 shown" when this entry was written and "all three are shown" after the
@@ -2412,6 +2430,13 @@ depends on `BaseAgent.process`, `get_system_prompt` or `tool_map`.
 is called at four sites in `risk_manager_agent.py`, which is itself never
 instantiated (its own entry). The conclusion stands: nothing the graph runs
 reaches the loop.
+
+**23 September 2026 (thirty-ninth session).** Folded into decision 45,
+the tool-boundary pass, on paper: the loop goes with the router, and
+45's entry says what else goes with it. Corrected the same day: grepped
+in the tree at 495b845, `.process(` is called nowhere under `src/` or
+`tests/`; the test file named above no longer mentions it, and
+`risk_manager_agent.py` is gone. Trigger unchanged.
 
 
 ### Roster sites the registry does not read - CLOSED 15 September (seventeenth session), cosmetic
@@ -2893,6 +2918,11 @@ selection axis for the compliance report would give the field a reader.
 report gained is `status`, not `measure`; a `measure` set under
 compliance stays a sign of the rule's wording and nothing else.
 
+**23 September 2026 (thirty-ninth session).** Folded into decision 45,
+the tool-boundary pass, on paper: `measure` becomes the tool's name and
+the tool returns the whole block, and 45's entry says how. Closes on
+Order 5's commit. Trigger unchanged.
+
 ### No pytest reached the analysis node's allocation call - RESOLVED 8 September (eighth sitting)
 
 Found when `allocation_by_sector` gained a parameter (4b003be): the suite
@@ -3026,6 +3056,11 @@ selection axis: a total and a cost are selections on the allocation and
 P&L renderings, read from a parameter, never new measures. Not built
 until a case asks.
 
+**23 September 2026 (thirty-ninth session).** Folded into decision 45,
+the tool-boundary pass, on paper: the tool returns the whole block and
+the conversation layer selects the total or the cost from it, and 45's
+entry says how. Closes on Order 5's commit. Trigger unchanged.
+
 ### CLI session, 9 September: twenty-seven prompts - CLOSED 15 September (seventeenth session), history
 
 **Trigger:** none: history; each miss has its own entry.
@@ -3071,6 +3106,10 @@ Recorded 9 September (ninth sitting), seen while deleting
 `conversation_history` from the router path (1320913). `AgentConfig`
 (`agents/config.py`) carries it with a default of 10; no reader. Same
 family as `log_tool_calls`. Logged, not chased.
+
+**23 September 2026 (thirty-ninth session).** Folded into decision 45,
+the tool-boundary pass, on paper: the `AgentSettings` dataclass goes
+whole with the router, and 45's entry says so. Trigger unchanged.
 
 ### The `transactions` table has no portfolio - RESOLVED 10 September (tenth sitting)
 
@@ -3900,6 +3939,11 @@ volatility "does not exist yet (D7)", false since 7 September; and
 description of code in a reference file, which the owner decides whether to
 annotate. **15 September (eighteenth session): decision 55, yes**; the note
 is in Part 13 C, dated.
+
+**23 September 2026 (thirty-ninth session).** The task loop's remains,
+decision 54's part of this trigger, folded into decision 45, the
+tool-boundary pass, on paper; 45's entry says what goes. The rest of
+the trigger unchanged.
 
 ### The macro answer, now that it prints - RESOLVED 22 September (thirty-third session)
 
@@ -6905,6 +6949,12 @@ blocks answers the question that was asked.
 byte-identical again, the CLI flagging it, and S-6's first turn the same;
 4.2 also names no accession beside the range (benchmark.md Part 3c.6).
 Not fixed: selection, not arithmetic.
+
+**23 September 2026 (thirty-ninth session).** Folded into decision 45,
+the tool-boundary pass, on paper: `philosophy_screen` returns the
+findings and the range together and the conversation layer shows the
+one asked for, and 45's entry says how. Closes on Order 5's commit.
+Trigger unchanged.
 
 ### The four intents outside the benchmark roster - DECIDED 21 September (thirty-second session)
 
