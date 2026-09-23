@@ -7577,3 +7577,31 @@ gives no opinion, which is right, and prints a figure about the company
 and a stop the question never asked for, which is not. A routing miss
 that Order 5 ends, logged and not fixed; the same run routed R-1, R-3 to
 R-6 and 3.2 to the out-of-scope answer as pinned.
+
+### A screening-node test is pinned to the calendar
+
+**Trigger:** the next change to the screening node's window or clock, or the first commit of the extraction session, whichever comes first.
+
+Recorded 23 September 2026 (thirty-ninth session), from the session's
+first pytest, run in the worktree before anything was written: 1934
+passed, 1 failed, 6 xfailed, where the thirty-eighth session's handoff
+says 1935 passed. The failure is `tests/test_screening_node.py:359`,
+"test_the_price_is_the_last_stored_close_on_a_row_the_node_creates",
+decision 57's test. The screening node takes its as-of from the clock,
+`dt.datetime.utcnow().date()` at `nodes.py:1350`, and asks the price
+provider from `LAST_CLOSE_WINDOW_DAYS` before it, seven days
+(`nodes.py:1177`). The test's stand-in provider carries two closes, 15
+and 16 September, and the test asserts that the window's start falls
+before the 16th. On the 22nd the start was the 15th and the assertion
+held; on the 23rd it is the 16th and fails; from the 24th both stand-in
+closes fall outside the window, the node stops on a missing close, and
+the test fails on its first assertion instead. Nothing in the code
+changed: the calendar did. The test runs on the conftest's own database
+(`tests/conftest.py:61`), so the store is not touched: the store's GOOGL
+rows carry yfinance as their source and `daily_prices` stands at 7,024
+rows through 2026-09-21. The fix, not taken here because this session
+writes no code: the node's clock made injectable, as the ledger node's
+is through `utc_today`, and the test pinning the date it runs at, so
+that the assertion is about the window and not about today. Until then
+the number a session says is 1934 passed, 1 failed, 6 xfailed, and this
+entry is why.
