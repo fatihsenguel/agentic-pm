@@ -7100,6 +7100,358 @@ float boundary regardless of what the Python layer does.
 Part whose ratio lands on a half; no Part does yet. The runner and the
 golden set are blind to every figure in this entry.
 
+### The tool-boundary pass, which opens Order 5 - decision 45, pending
+
+**Trigger:** pending decision 45. Read it before the commit that opens Order 5, and with the six entries that trigger on it: "The router cannot express an absolute date range", "Two router few-shot examples are benchmark prompts verbatim", "`ExtractedParameters` fields with no reader - grep, 8 September", "The first `out_of_scope` definition moved "Should I rebalance?" to clarification", "Questions the system cannot express, and which kind each is" and "What is `reasoning` for: a debugging artifact, or something checked?".
+
+**Written 23 September 2026 (thirty-ninth session), in my words, on
+paper and not taken.** Decision 45 has stood on the pending list since
+the triage of 15 September as "the tool-boundary pass, tagged Order 5",
+absorbing 9, the span and two-weights clarification rules, 11, the two
+verbatim few-shots, and 36, what `reasoning` is for. The interlude is
+closed but for decision 76, and the assessment of 22 September said
+what comes next is not a build but a written decision: this one. It
+folds in 12, the hypothetical mode's instrument type, 17, the selection
+axis, 54, BaseAgent's loop and the config fields that describe it, and
+the scope half of 13, the out-of-scope text; 13's target-weights half
+stays its own decision after Order 5. Taking it is my word, and the
+first code commit of Order 5 is not the session's that wrote it.
+
+**What it is.** DIRECTION.md's end state is a conversation with a
+strong model that calls the deterministic pipelines as tools. Today one
+Haiku call reads a prose prompt of rules and twelve examples and
+returns an intent; extraction has already read the tickers, the span,
+the percentages and the compliance mode from the message, and the plan
+is derived from the intent through `TERMINAL` and `REQUIRES`
+(`schemas.py:198`, `:88`). The pass deletes that call and the prompt,
+makes each terminal row of the table a tool with a typed input, and
+puts a model in front of the tools that decides which to call and
+narrates around what they return. The pipelines do not change: every
+node, every block, every formatter's arithmetic and every reference Part
+stand. What changes is who decides that a pipeline runs, and what the
+answer is made of.
+
+**The count, before the writing, checked in the worktree at 495b845.**
+The golden set goes whole: twenty-one queries, 147 lines, five routing
+fields of which only `period` is extraction's. The runner's twenty-eight
+probes and checks: ten read `router_decision`, at eleven sites, and the
+other eighteen read blocks and answer text and survive as they are.
+pytest: 129 test functions, 269 collected, in nine files, of which 71
+go and 58 functions, 198 collected, stay. The survivors are all of
+`tests/test_extraction.py`, 17 functions and 140 collected, all of
+`tests/test_derived_plans.py`, 11 and 28, the seven `ExtractedParameters`
+tests, the two on `REQUIRES` and the sixteen on `validators.py` in
+`tests/test_smart_router.py`, and the five on the previous turn's state
+in `tests/test_conversation_state.py`. `test_extraction.py` is in the
+count by judgement and not by the grep: the grep for the router's names
+matches it on one comment at line 59, and nothing in it touches the
+router. So the number to expect after the router goes is 1934 passed
+today, plus the calendar test below when its clock is fixed, minus 71:
+**1864 passed, 6 xfailed**, before the new layer's own tests. The
+thirty-eighth session's handoff said twelve probes, eight files, about
+89 tests and roughly 1846; the twelve counted two helpers, the eight
+missed the survivor, and the two figures follow from those.
+
+**The shape, as I want it, each part with its reason against the
+invariants.**
+
+- **What a tool is, and what its contract returns.** A tool is one row
+  of `TERMINAL`: a fixed plan closed through `REQUIRES`, run through the
+  graph with no router node, publishing one block under one
+  `shared_data` key. Its contract returns that block, a summary of typed
+  figures with their as-of dates and sources, and the rendered text the
+  formatter makes of it; it never returns an array, a price series, a
+  covariance matrix or a filing's text (invariant 3, hot potato: those
+  move through `shared_data` inside the tool and stop at its boundary).
+  The tool's name is its block's key, the rule `measure` already
+  follows, so the model's vocabulary, the block and the runner's probes
+  share one word. Twelve rows carry an agent: ten become tools, and
+  they make eleven, because the two measure rows are one tool per
+  measure value, three in all, and the other two rows become none.
+  `data_fetch` with no measure, DataAgent alone, is raw prices and
+  becomes no tool: a raw series is not an answer anyone may see, and
+  today it reaches the stub. `risk_analysis` with no measure, the
+  per-holding volatilities, is the one row I am not sure of: no
+  benchmark case and no corpus entry asks for it, so under the rule that
+  code no question reaches is deleted behind a tag, it becomes no tool
+  either; if I want it back it is a tool with a reference.
+- **Which node becomes which tool, and which become none.** By row:
+  `allocation`, `position_pnl` and `portfolio_volatility` from the two
+  analysis rows, `compliance_check`, `hypothetical_weight` and
+  `policy_lookup` from the three compliance rows, `philosophy_screen`
+  from the research row with nothing asked, `thesis` and `position`
+  from the two `asks` rows, `rebalance` and `ledger`. DataAgent becomes
+  no tool: it is the first step inside every portfolio tool, the data
+  layer the plan closes over. The gate becomes no tool: it stays a node
+  on the edge inside the `position` tool's run (decision 62). The
+  synthesizer becomes no tool: its dispatch chain on intent
+  (`nodes.py:2308` to `2349`) goes, and each formatter is called by its
+  tool on its own block. The router becomes the model's choice of tool.
+  `clarification_needed` becomes what a tool's input validation returns
+  when it asks back, and `out_of_scope` becomes a clause, below.
+- **Where extraction sits, and what it raises on.** In two places, and
+  the first is the one that keeps the corpus's clarifications
+  deterministic. First, as today, a pre-pass over the message before any
+  model sees it (`extraction.extract`, `extraction.py:160`): tickers
+  against the holdings and the known list, the span against the
+  vocabulary, percentages, the lookup, what a research question asks.
+  Where the message asks for something a vocabulary lacks, the
+  clarification is the turn's answer and no model is called: C-1, C-3
+  to C-7 and 3.5's first turn stay exactly what they are, with no model
+  in the loop. Second, as each tool's input model: the tool validates
+  what the model passes it, against the same vocabularies, and raises
+  on a ticker neither held nor known, a span outside the vocabulary, a
+  weight outside (0, 1], two of a kind, a missing input the row needs,
+  and an instrument type outside share and fund. It repairs nothing
+  (invariant 5). The second layer exists because a strong model shown
+  "JMP" will silently correct it before calling the tool, and a reply
+  it repaired is a plausible wrong answer with no rule to fix it in; the
+  pre-pass sees the message the user wrote, and the tool refuses what
+  the model invented. And when a tool's validation raises, the client
+  ends the turn: the error text is the answer, shown unchanged, and the
+  model is not asked again in that turn, so a re-call with a guessed
+  default is impossible rather than discouraged. The tools' input
+  models carry no default for anything the user must state. Rejected:
+  extraction inside the tools only, for that reason; the model as the
+  extractor with a prompt rule per field, which is the debt
+  DIRECTION.md names in so many words.
+- **How a plan derives from a table and not a prompt.** Unchanged in
+  mechanism, changed in key: `TERMINAL` is keyed by tool name instead of
+  intent and discriminator, one row per tool, and `derive_plan` closes
+  the row's terminal through `REQUIRES` as it does today
+  (`schemas.py:289`). The model never sees a plan and never names an
+  agent; a tool's internal graph is its row. `test_derived_plans.py`
+  survives with the key renamed. The `validate_plan` check on
+  `RouterDecision` goes with the class: there is no model-written plan
+  to hold to the derived one.
+- **How the gate stays a gate no conversation can route around.** The
+  only tool whose output implies a position is `position`, and its run
+  is the `asks=position` row, PortfolioAnalysisAgent and ResearchAgent
+  closed over DataAgent and ScreeningAgent, with the gate on the edge
+  after them as `_gate_or_synthesizer` puts it today (`graph.py:105`).
+  `require_gate` (`nodes.py:1944`) moves from the formatter into the
+  tool's contract: `position` returns no block without a gate block for
+  the same ticker at the same weight, and raises otherwise. So the code
+  guarantees that no tool output implies a position unchecked
+  (invariant 2). What the code cannot guarantee is the model adding a
+  recommendation of its own beside a `philosophy_screen` output, which
+  is a sentence and not a figure; the system prompt forbids it, and the
+  corpus's R-2 and R-7 and the reading of 4.1 are what see it. I say so
+  here rather than pretend the gate covers prose. Rejected: the gate as
+  a tool the model calls, which is decision 62 undone; a classifier on
+  the answer, which is a second router.
+- **Which model drives the conversation, and what a turn costs.** My
+  recommendation is `claude-sonnet-5`, which is `ANTHROPIC_SONNET` in
+  `config.py:75` already and the model the reader, the proposer and
+  the view run on, so the system has one model and the router's Haiku
+  goes with the router. The reasons: its cache prefix minimum is 1,024
+  tokens, so the tool definitions and the system prompt cache from the
+  second turn, where Haiku 4.5's minimum is 4,096 and the block would
+  not; it takes strict tool schemas, which is what makes a tool input a
+  contract; and it is the judgement half's model, whose reading the
+  conversation has to sit beside. Rejected: Haiku 4.5, the router's
+  model, because the layer is the strong model the end state names and
+  a classifier-grade model in front of the tools is the router with a
+  different prompt; Opus 5 at two and a half times the price with no
+  measured need, to be revisited on the corpus if Sonnet's sequences
+  miss; Fable 5.1 at five times, the same. The cost, an estimate because
+  nothing in the tree records a call's tokens: today's routing call is
+  about 2,500 tokens of prompt by the four-characters rule, 10,146
+  characters with the examples and the portfolio line, and about a
+  hundred of output, which at Haiku's dollar per million input and five
+  per million output is about three tenths of a cent, consistent with
+  the thirty-sixth session's four cents for eighteen cases. After: at
+  least two Sonnet calls per turn, the tool call and the answer; a
+  system prompt and eleven tool definitions of perhaps three to five
+  thousand tokens, the roster's descriptions being 1,484 characters
+  today and growing to a schema each; the turn's transcript; the tool's
+  block back. At two dollars per million input and ten per million
+  output, a first turn is about one to two cents and a later turn with
+  the prefix cached at a tenth of the input price is about half a cent
+  to a cent, so between two and seven times the routing call depending
+  on the cache, plus the Level 4 Sonnet calls that do not change. The
+  corpus's sixty-seven turns come to about a dollar. The number that
+  replaces this estimate is `usage` on every call, recorded by the
+  client from its first commit; the count_tokens endpoint measures the
+  prompt without a completion and nothing in the tree calls it.
+- **How conversation memory is an extraction rule and not a transcript
+  in a context window.** Two things carry across turns, and they carry
+  differently. What a tool depends on carries as a record and is
+  resolved by a rule before any model is asked: a clarification a tool
+  asks back leaves `pending`, kind, token, candidate and message, and
+  the next turn's reply is resolved against it by `extraction.resolve`
+  (`extraction.py:196`) into the original question, routed as if typed.
+  Today only the unknown-ticker clarification leaves a record; the pass
+  gives every ask-back one, so "1Y" after C-3 stands for the question at
+  that span, which is S-3, and the reply to a two-weights question the
+  same. S-2 stays deterministic and pinned by `test_extraction.py`. What
+  a referent depends on, "And MSFT?" after JPM, "fix that" after the
+  breaches, "it" after GOOGL, is the model's, which is the dimension
+  Order 5 exists to add (benchmark.md Part 3c.5), and it is checkable
+  because it lands in a tool call: turn two of S-1 is right when the
+  model calls `position_pnl` with MSFT, and wrong otherwise, whatever it
+  remembered. What enters the model's context from a previous turn is
+  its own turns and the tools' summaries, never a raw array (invariant
+  3) and never the rendered answer refed as a document; the transcript
+  is the conversation's own messages and nothing else, bounded by the
+  cache and by the corpus's longest sequence, three turns. S-8 is the
+  contamination check.
+- **The roster and the intent vocabulary, surfaced and not taken.**
+  `INTENTS`, `IntentType`, `RouterDecision`, `safe_parse_router_response`,
+  `router_prompts.py` and `smart_router.py` go. `AGENTS`, `AgentName`
+  and `REQUIRES` stay: the agents are the tools' steps and
+  `graph.AGENT_NODES` still binds them. `TERMINAL` is rekeyed by tool.
+  `ExtractedParameters` splits into one input model per tool, each
+  carrying only what its node reads: `tickers` on `position_pnl`,
+  `compliance_check`, `philosophy_screen`, `thesis` and `position`;
+  `period` on `portfolio_volatility`; `weight` and `instrument_type` on
+  `hypothetical_weight`; `topic` on `policy_lookup`; `max_volatility`
+  and `portfolio_value`, which have no reader since decision 51, go
+  here and not before, as their entry says. `measure`, `group_by`,
+  `status` and `asks` go: the first and last are the tool's name, the
+  middle two are rendering, below. The router node in `graph.py` becomes
+  an entry that sets `agents_to_run` from the tool's plan;
+  `route_next_step` and the gate edge stay. The synthesizer's
+  `SYNTHESIZER_INTENTS` and the import-time check against the registry
+  go with the registry. The CLI's routing block (`cli.py:60` to `68`)
+  prints a decision that no longer exists and is the interlude's step
+  6, after Order 5.
+- **The hypothetical mode's instrument type, decision 12.** The
+  `hypothetical_weight` tool takes a weight and an instrument type,
+  share or fund, and when the message states no type it asks back
+  rather than assume: today `compliance.refuse` (`compliance.py:290`)
+  applies IPS-4.1 and IPS-4.2 both to an unnamed position, so an ETF
+  at 11% is refused under the issuer clause that exempts funds. A fund
+  is checked against IPS-4.1 alone, a share against both. Extraction
+  reads the type from the message when it is there, "a new ETF", "a
+  single stock", a closed list, and the tool's validation refuses any
+  other word. A named holding at a hypothetical weight, "What if AAPL
+  were 12%?", is not this decision's: it is a portfolio check with one
+  weight substituted, Part 17 computes it by hand, and it stays on the
+  expression list until it has a reference.
+- **The selection axis, decision 17.** The tool returns the whole block
+  and the conversation layer selects what to show. `allocation` returns
+  all three views, `compliance_check` every finding, `position_pnl`
+  every position, `philosophy_screen` the findings and the range
+  together; "how much is my portfolio worth" is the total the block
+  already carries, "my two biggest holdings" the first two lines of the
+  position view, "is my JNJ position over any limit" JNJ's two
+  findings, "what is GOOGL worth" the range beside the screen. So
+  `group_by`, `status` and the rendering use of `tickers` go, since
+  selection is the layer's and no tool output may depend on how the
+  question was asked (DIRECTION.md's third test). What the model shows
+  is a selection and not a computation, so invariant 1 holds as long as
+  every figure it quotes is in the block; the check for that is the
+  runner's, below. The four entries on 17, the synthesizer's stub, the
+  unread `measure`, the one-figure questions and 4.1 against 4.2, are
+  answered by this and close on Order 5's commit. Rejected: a `filter`
+  parameter per tool, the field with no reader this file has deleted
+  five times; a formatter per question, designed now and again at step
+  6.
+- **BaseAgent's loop and the config fields, decision 54.** Deleted with
+  the router, in the same order: `BaseAgent.process`, `get_system_prompt`,
+  `tool_map`, `SupervisorAgent`, `AgentRole` and `register_agent`
+  (`base_agent.py:26`, `:115`, `:195`, `:302`, `:392`). The loop's
+  entry, "BaseAgent's tool-calling loop has no live caller", names
+  `tests/test_phase5_4_integration.py:332` and the risk manager as its
+  callers; grepped today, `.process(` is called nowhere under `src/` or
+  `tests/`, that test file no longer mentions it, and
+  `risk_manager_agent.py` is gone. DataAgent and RebalanceAgent, which
+  override `process` and never have it called, keep their tool
+  functions and lose the base class. The three fields: the record
+  names `log_tool_calls`, `max_tool_calls_per_turn` and
+  `max_conversation_history`; in the tree the first two are already
+  comment lines at `base_agent.py:44` to `45`, and the third sits on
+  `AgentSettings` in `config.py:95` to `108` with `max_tool_iterations`
+  and `verbose_tool_results`, all three read by nothing but the
+  package's export list. That dataclass goes whole. The four entries on
+  54 close on the commit that deletes them.
+- **The out-of-scope text, decision 13's scope half.**
+  `OUT_OF_SCOPE_RESPONSE` (`nodes.py:2368`) becomes a statement clause in
+  the synthetic IPS, its own id in section 1 with topics such as scope,
+  forecast, tax, orders, selling, opinion and candidates, its text
+  benchmark.md Part 2's boundary as it stands since 20 September, so
+  that it no longer says the system does not say whether to buy. A
+  refusal cites it like any other clause: `policy_lookup` returns it on
+  a scope topic, and the conversation layer's refusal is the clause
+  quoted with its id and the subject refused named, which is what
+  R-1 to R-6 pin and the constant never did. The runner's check_3_2
+  asserts on the sentence "outside what this system does", which
+  becomes the clause's first sentence or the check moves. The
+  guarantee is the code's only in part: no tool computes a forecast, a
+  tax figure or an order, so a figure of that kind can trace to nothing
+  and fails the tracing check; a forecast in words is the corpus's to
+  catch. The text of the clause is mine to write, IPS.md being mine.
+  The target-weights half of 13 stays pending, after Order 5.
+- **What the absorbed decisions become.** 9: a `period` input stays a
+  span from the vocabulary, and an absolute window is still a
+  capability the pipelines lack, a cache key and a coverage check that
+  assume spans; the pass does not add it, and "The router cannot
+  express an absolute date range" stays open under its own trigger with
+  the router's name replaced by the tool's. The two-weights rule is the
+  tool's validation asking back. 11: the few-shots go with the prompt,
+  and the rule they broke survives them: a tool's description quotes no
+  benchmark or corpus prompt verbatim, so the tools are not chosen by
+  recognition. 36: `reasoning` goes with `RouterDecision`, and the rule
+  it wanted is stated for the model's narration instead: no figure in
+  the answer that is not in a tool output of the same turn, checked,
+  and the research node's judgement fields unchanged.
+- **The pytest count and the runner's probes.** 1864 passed, 6 xfailed,
+  plus the new layer's own tests, which are the eleven input models,
+  the rekeyed table and one test per tool that its contract returns a
+  block and no array. The runner's ten routing probes become two kinds
+  of read over a tool-call log the layer writes into the state: which
+  tool was called with which validated inputs, for check_1_2, 1_3, 3_3,
+  3_2, 3_5 and the four `blocked_on` probes, and that the tool's steps
+  ran in plan order, for check_2_1's handover probe, which reads the
+  trace inside the tool as it does today. One check is new and is what
+  makes invariant 1 mechanical rather than read: every digit sequence
+  in the model's narration is a substring of a tool output of that turn
+  or of the user's own message, the rendered text being the allowed
+  set, so a figure the model rounds fails. It runs in the client at
+  output time and refuses the answer with the figure named, a raise and
+  not a redaction, and the runner asserts the same check on every case.
+  The eighteen block and text checks do not move.
+
+**Rejected as a whole.** Keeping the router and adding a conversation
+around it, which is two deciders and the debt DIRECTION.md names.
+Seven tools mirroring `AGENTS` with a mode enum each, which is a router
+inside every tool. A pure asyncio version without LangGraph, which the
+handoff's "what I do not want" already refuses. A reasoning playbook in
+the model's context for the judgement half, the model screening the
+company, proposing the valuation's assumptions and logging the
+prediction itself: the screen is computed and cited, the assumptions
+are PHI-4.1's and the watchlist entry's, and no row is written by the
+system, so the playbook puts numbers in a model's hands three times. An
+interceptor over the model's prose that decides whether an answer
+implies a position and runs the check: a regex or a classifier that
+under-blocks a paraphrase and over-blocks a citation, with no reference
+to pin it; which tool ran is what implies a position.
+
+**What it owes before it is taken.** The eleven tool contracts on
+paper, each with its input model, its row, its block key, its rendered
+text and the corpus entries it answers. The scope clause's text,
+written by me. A line-by-line prediction of the corpus's sixty-seven
+turns before the run after Order 5: 32 expected on the same code, and
+which lines the refactor is predicted to move, the sequences S-1, S-4
+and S-5 by the model's memory, S-3 by the record, S-6 and S-7 by the
+model reading a referent, R-2 by there being no screen tool a bare
+opinion reaches; decision 16's seven reading gaps are predicted to stay
+where they are. The retirement of the golden set: `run_golden.py` and
+`expected.txt` deleted behind a tag on Order 5's opening commit, as the
+intents were parked. The client recording `usage` per call from its
+first commit, so that the cost above becomes a measurement. The runner
+rewritten before the layer lands, its ten probes and the tracing check,
+so the after has an instrument.
+
+**Which loop sees each part.** pytest sees the input models, the table
+and the tool contracts, and the 168 surviving extraction and derivation
+tests are the ones that hold the boundary. The runner sees eighteen
+cases through the layer once its probes are rewritten, and nothing
+before. The corpus run after Order 5 is the only instrument for the
+sequences, the refusals and the selections, and it is read by hand.
+The golden set sees nothing and dies. The CLI shows the answer.
+
 ### The interlude between Order 4 and Order 5, and how the corpus is built
 
 **Trigger:** the start of every session until Order 5 is opened; the commit that opens Order 5 closes this entry.
