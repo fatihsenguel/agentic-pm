@@ -210,7 +210,7 @@ def resolve(reply: str, pending: Optional[Dict[str, str]], held_tickers: Sequenc
     token, candidate, message = pending["token"], pending["candidate"], pending["message"]
     held = {t.upper() for t in held_tickers}
     words = re.sub(r"[^\w\s']", " ", reply).strip()
-    named = [t for t in (m.rstrip(".") for m in _TOKEN.findall(reply)) if t in held or t in _KNOWN]
+    named = [t for t in _TOKEN.findall(reply) if t in held or t in _KNOWN]
 
     if words.lower() in _CONFIRM:
         chosen = candidate
