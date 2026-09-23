@@ -96,8 +96,10 @@ _KNOWN = {t for t in KNOWN_ETFS | KNOWN_STOCKS if len(t) >= 2}
 
 # A whole all-caps token: letters, digits and dots, not glued to other
 # alphanumerics, so "P&L" yields P and L (single letters, never tickers) and
-# "ZZZZFAKE" yields nothing (no split can end at a boundary).
-_TOKEN = re.compile(r"(?<![A-Za-z0-9])([A-Z][A-Z0-9.]{0,5})(?![A-Za-z0-9])")
+# "ZZZZFAKE" yields nothing (no split can end at a boundary). The token ends
+# on a letter or digit, so a dot inside a ticker is kept, "BRK.B", and the
+# full stop after a ticker that ends a sentence is not, "Sell 50 SPY.".
+_TOKEN = re.compile(r"(?<![A-Za-z0-9])([A-Z](?:[A-Z0-9.]{0,4}[A-Z0-9])?)(?![A-Za-z0-9])")
 
 _NUMBER_WORDS = {
     "a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
