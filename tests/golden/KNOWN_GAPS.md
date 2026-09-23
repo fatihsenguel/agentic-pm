@@ -6860,7 +6860,7 @@ records this entry beside the line. Not fixed: wording, not arithmetic.
 
 ### The out-of-scope answer names capabilities the system now has
 
-**Trigger:** pending decision 13, which moves `OUT_OF_SCOPE_RESPONSE` into the IPS, and any commit that touches the constant.
+**Trigger:** the Order 5 commit that makes the refusal cite IPS-1.3 and deletes the constant; the clause exists since de7b66e. Any commit that touches the constant before then.
 
 Logged 21 September (thirty-second session), from the full test, read
 through the CLI. Case 3.2, "What will Nvidia's share price be at the end of
@@ -6887,6 +6887,15 @@ whether to sell a holding, what to buy, a tax figure, an order, market
 conditions, is named in none of the six; the list of what the system does
 stands in its place (benchmark.md Part 3c.6). Not fixed: answer text, not
 arithmetic.
+
+**24 September 2026 (thirty-ninth session, past midnight local): the IPS
+half done.** IPS-1.3 is in `docs/IPS.md` and `ips.toml` (de7b66e), a
+statement clause that says which questions the policy answers and which
+it refuses, benchmark.md Part 2's boundary as it stands since 20
+September, and `clauses_on` finds it for R-1 to R-6 and 3.2 by topic.
+The constant still prints its old text: making the refusal cite the
+clause is the conversation layer's, in Order 5, and this entry closes on
+that commit. Decision 13's target-weights half is untouched.
 
 ### Case 3.3's answer carries three exact halves and prints three different roundings
 
