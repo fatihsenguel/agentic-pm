@@ -1,9 +1,9 @@
 # AGENTIC_FINANCE — Session Handoff
 
-**Session date:** 23 September 2026 (thirty-ninth session), begun before noon UTC and ending about 22:25 UTC, past midnight on the local clock, which is why the record's last entry is dated 24 September. Regenerated at its end four times: at 13:00 UTC when the paper work was done, at 19:45 when the extraction work was done, at 21:10 when decision 45 was taken, and now, its first debt paid on paper. The thirty-eighth session ran on the evening of the 22nd.
-**Branch:** `contracts`, cut from `baseline-v1` at **006f410** before its first commit, in a worktree under `.claude/worktrees/`; **two commits with this one**, both records, no code, not merged, not pushed, **to be merged `--ff-only` by the owner**. The trunk at 006f410 is this session's third handoff commit, merged `--ff-only` from `order5` and pushed by the owner at about 22:00 UTC; `git ls-remote` showed the remote's `baseline-v1` at that commit after the push. `origin`'s push URL is `no_push` and the push goes by URL, so the local `origin/baseline-v1` ref lags; `git rev-list --count origin/baseline-v1..HEAD` says eighty-four for this branch with this commit, eighty-two of them the trunk's.
+**Session date:** 23 September 2026 (thirty-ninth session), begun before noon UTC and ending about 22:55 UTC, past midnight on the local clock, which is why the record's and the document's last dated lines say 24 September. Regenerated at its end five times: at 13:00 UTC when the paper work was done, at 19:45 when the extraction work was done, at 21:10 when decision 45 was taken, at 22:25 when the tool contracts were written, and now, the scope clause in the IPS. The thirty-eighth session ran on the evening of the 22nd.
+**Branch:** `scope`, cut from `baseline-v1` at **3194202** before its first commit, in a worktree under `.claude/worktrees/`; **three commits with this one**, the owner's document and its config with their tests, a record line, and this; not merged, not pushed, **to be merged `--ff-only` by the owner**. The trunk at 3194202 is this session's fourth handoff commit, merged `--ff-only` from `contracts` and pushed by the owner at about 22:35 UTC; `git ls-remote` showed the remote's `baseline-v1` at that commit after the push. `origin`'s push URL is `no_push` and the push goes by URL, so the local `origin/baseline-v1` ref lags; `git rev-list --count origin/baseline-v1..HEAD` says eighty-seven for this branch with this commit, eighty-four of them the trunk's.
 
-**State:** pytest **1941 passed, 6 xfailed** at c7418ba; nothing since touches code, so it was not run again. **Decision 45 is taken and Order 5 is open on paper; its first debt, the eleven tool contracts, is paid on paper (e2dd487).** The remaining debts, in order, are the owner's scope clause in the IPS, the runner rewritten, the corpus predicted line by line, and then the first code commit, which parks the golden set and records `usage`. The pending list stands at eight. **Order 5's first code commit is a later session's, after those debts.**
+**State:** pytest **1941 passed, 6 xfailed**, run at de7b66e after the clause; the count is unchanged because one test was renamed and none added. **Decision 45 is taken and Order 5 is open on paper; two of its debts are paid: the eleven tool contracts on paper (e2dd487) and the scope clause, IPS-1.3, in the owner's document and its config (de7b66e), written on the owner's word.** Two debts remain before any Order 5 code: the runner rewritten, and the corpus predicted line by line. The pending list stands at eight. **One correction to this session's earlier handoffs, in §2: the golden runs of 13:26 UTC refetched three filings clocks; every count held, the clocks did not.**
 
 Written for whoever picks this up cold, myself included.
 
@@ -11,18 +11,19 @@ Written for whoever picks this up cold, myself included.
 **Check every claim here against the code before acting on it, including
 this file.** Sections whose claims were checked again this session and
 still hold are kept word for word; the rest is rewritten. This session
-checked the trunk and the remote ref after each of the owner's three
+checked the trunk and the remote ref after each of the owner's four
 pushes, pytest's number and the one failure's cause, the store's counts
-three times, the golden set's size and its result, the runner's probes
-by name, the router-touching tests by file and by collection, every
-reader of the intent and the plan under `src/` and `tests/`, the line of
-every path the decision entry cites, which tree each of pytest and the
-golden script imports from a worktree, and every block key the
-contracts entry lists against the node that publishes it and the test
-that pins it; it did not re-check §3's library versions, the filings'
-pull timestamps, the local `origin` ref, or the store after 19:41 UTC.
+three times and its clocks once, at 22:20 UTC, the golden set's size and
+its result, the runner's probes by name, the router-touching tests by
+file and by collection, every reader of the intent and the plan under
+`src/` and `tests/`, the line of every path the decision entry cites,
+which tree each of pytest and the golden script imports from a worktree,
+every block key the contracts entry lists against the node that
+publishes it and the test that pins it, and which clauses the lookup
+finds for the corpus's refusals; it did not re-check §3's library
+versions or the local `origin` ref.
 
-**Four parts, each on the owner's word.** The paper part, merged at
+**Five parts, each on the owner's word.** The paper part, merged at
 13:10 UTC: the count of what Order 5 takes, corrected against the
 previous handoff; the calendar test logged; decision 45 written in the
 owner's words and reassessed against an outside reading's proposal and
@@ -33,7 +34,8 @@ dropped, the calendar test's clock pinned and the node's clock made
 injectable, the two record entries closed, decision 16 closed without a
 build, a handoff. The taking, merged at 22:00: decision 45 taken as its
 entry stands, 12 with it, the six entries on 45 repointed, a handoff.
-The contracts, this branch: the eleven tools on paper, and this.
+The contracts, merged at 22:35: the eleven tools on paper, a handoff.
+The clause, this branch: IPS-1.3, its record line, and this.
 
 ---
 
@@ -42,16 +44,17 @@ The contracts, this branch: the eleven tools on paper, and this.
 | File | What it is |
 |---|---|
 | `docs/DIRECTION.md` | **The end state and the invariants.** Dated, not regenerated. Wins over this file on direction; this file wins on state. Orders 1 to 4 are built; Order 5 is open on paper as of 069f9e3. The interlude between Orders 4 and 5 is its unnumbered paragraph under Order 4, last revised 22 September. Unchanged this session. |
-| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **Start with "The tool-boundary pass, which opens Order 5 - decision 45, TAKEN 23 September (thirty-ninth session)"**, about 365 lines beside decision 76's entry, whose "What it owes before it is taken" is the work list for Order 5; **then "The eleven tool contracts of Order 5, on paper - decision 45's first debt"**, about 180 lines after it, the entry the first code commit is written against; then "The interlude between Order 4 and Order 5, and how the corpus is built", which closes on that commit. Two entries closed this session, the regex entry on 2616a80 and the calendar entry on 59d5239; the six that triggered on 45 now trigger on the Order 5 commits that retire what each describes; the two on decision 16 on the first code commit and the corpus run after it; the one on decision 12 on the `hypothetical_weight` tool's first commit. **180 lines start `**Trigger:**`**, 8,246 lines. |
+| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **Start with "The tool-boundary pass, which opens Order 5 - decision 45, TAKEN 23 September (thirty-ninth session)"**, about 365 lines beside decision 76's entry, whose "What it owes before it is taken" is the work list for Order 5; **then "The eleven tool contracts of Order 5, on paper - decision 45's first debt"**, about 180 lines after it, the entry the first code commit is written against; then "The interlude between Order 4 and Order 5, and how the corpus is built", which closes on that commit. "The out-of-scope answer names capabilities the system now has" now waits on the Order 5 commit that cites IPS-1.3. Two entries closed this session, the regex entry on 2616a80 and the calendar entry on 59d5239. **180 lines start `**Trigger:**`**, 8,255 lines. |
+| `docs/IPS.md` and `ips.toml` | **The owner's policy, eighteen clauses since de7b66e.** IPS-1.3, added on 24 September on the owner's word and dated in the document's status, says which questions the policy answers and which it refuses, benchmark.md Part 2's boundary as it stands since 20 September; a statement clause, cited and never computed. `tests/test_ips.py` holds the config to the document, eighteen clauses, ten statements. |
 | `docs/benchmark.md` | **The definition of done, the corpus, and its runs.** Part 3c.6 holds three blocks: the run of 22 September at 17:11, 65 turns; 2.2 alone at 18:49; and R-8 and R-9 at 20:35 and 21:06. Unchanged this session. **Read Part 2, Part 3c and 3c.6 before Part 3's tables.** The corpus prediction, one of Order 5's debts, becomes its fourth block, written before the run. |
 | `tests/golden/expected_values.md` | Hand-computed reference, Parts 1 to 18. **Unchanged this session, by a character.** Never update it to match code output. |
 | `tests/golden/run_R-8_R-9_2026-09-22.txt`, `run_corpus_2026-09-22.txt`, `run_2.2_2026-09-22.txt` | The three transcripts, 285, 5,887 and 187 lines. Unchanged; records. |
-| `tests/test_analysis_node.py`, `test_compliance_node.py`, `test_screening_node.py`, `test_research_node.py`, `test_ledger_node.py` | The tests that pin each block's keys; the contracts entry is read from them, and one test per contract joins them at the first code commit. |
+| `tests/test_analysis_node.py`, `test_compliance_node.py`, `test_screening_node.py`, `test_research_node.py`, `test_ledger_node.py` | The tests that pin each block's keys; the contracts entry is read from them, and one test per contract joins them at the first code commit. Two counts in the compliance test moved to eighteen with the clause. |
 | `tests/test_extraction.py` and `tests/test_derived_plans.py` | The tests that survive Order 5 as the tools' input validation and dependency table: 28 functions, 174 collected. Three rows added to the first this session. |
 | `tests/golden/expected.txt` | Twenty-one lines, one pinned failure. **Run this session after the regex fix, unchanged.** Dies whole with the router; parked behind a tag on Order 5's opening commit. |
-| `tests/benchmark/run_cases.py` | **The scoreboard.** Eighteen cases, unchanged; **15/18 by the run at 21:49 UTC on the 22nd**. Ten of its twenty-eight probes and checks read `router_decision` and are rewritten before the layer lands, one of Order 5's debts; not run this session. |
+| `tests/benchmark/run_cases.py` | **The scoreboard.** Eighteen cases, unchanged; **15/18 by the run at 21:49 UTC on the 22nd**. Ten of its twenty-eight probes and checks read `router_decision` and are rewritten before the layer lands, the next of Order 5's debts; not run this session. |
 | `tests/golden/expected_values.xlsx` | The workbook, eleven sheets. Not opened this session. |
-| `docs/IPS.md`, `docs/PHILOSOPHY.md`, `docs/WATCHLIST.md`, `watchlist.toml` | The owner's. Unchanged, not edited. W-2 still states no growth pair and no weight. **The scope clause decision 45 puts in the IPS is the owner's to write, the next of Order 5's debts.** |
+| `docs/PHILOSOPHY.md`, `docs/WATCHLIST.md`, `watchlist.toml` | The owner's. Unchanged, not edited. W-2 still states no growth pair and no weight. |
 | `docs/PM-Assistant — Roadmap.md` | Stale; DIRECTION.md's Order supersedes it. |
 | `docs/workflow.md` | Stale, and a pasted conversational reply with emoji in its headers (KNOWN_GAPS). Not this session's. |
 
@@ -107,12 +110,13 @@ philosophy screen, the valuation's assumptions and the ledger, and would
 gate on a regex over prose; none of it is this system's shape, and its
 questions moved two things into the decision. One paid loop ran by
 accident: the golden script has no argument parsing, so a verbose
-import check with `--help` ran it whole against the checkout's tree.
-Then the owner took decision 45 and closed 16, each brought in plain
-words with its alternatives first, and the eleven tools were written
-on paper from the blocks the nodes publish today, 4.1 and 4.2 turning
-out to be two selections over one block, and the volatility tool's
-default window `config.DataConfig.default_period`, 3Y.
+import check with `--help` ran it whole against the checkout's tree,
+and, found only at the end of the day from the store's file size, that
+run refetched three filings clocks. Then the owner took decision 45 and
+closed 16, the eleven tools were written on paper from the blocks the
+nodes publish, 4.1 and 4.2 turning out to be two selections over one
+block, and the scope clause went into the IPS on the owner's word, the
+lookup finding it for every corpus refusal by topic.
 
 ### Design principles
 
@@ -120,20 +124,25 @@ Unchanged in the code. What this session held them to:
 
 - **References before code.** Every fix this session went in test first
   and red; the tool contracts are written before the tools, from the
-  tests that pin the blocks.
-- **A paid loop is predicted first and read against the store after.**
-  The golden set's prediction, no line moves, was in the commit message
-  before the run; the run was from the worktree with its own `src`; the
-  store was read after and had not moved.
+  tests that pin the blocks; the clause's count moved red in five tests
+  before the clause existed.
+- **Policy lives in config, not code.** The boundary the refusal states
+  is now a clause with an id, in the document and its config, found by
+  the lookup's topics; the constant in `nodes.py` that still prints it
+  is Order 5's to replace.
+- **A paid loop is predicted first and read against the store after,
+  counts and clocks both.** The golden set's prediction held and every
+  count held; the clocks did not, and the reading that found it came
+  from the file's size and date, nine hours late.
 - **Raise, do not repair.** The regex fix widens what a token excludes
   by one character and guesses at nothing; decision 16 builds no
   bridge; every contract raises on a missing input and carries no
-  default for what the user must state, the volatility window's default
-  being config's policy and not a repair.
+  default for what the user must state.
 - **Decisions are surfaced, not taken.** Decision 45 was written with a
   recommendation and the rejected alternatives, reassessed, and taken
   on the owner's yes as it stood; decision 16 was brought with both
-  options and closed on the owner's yes; nothing was taken on my own.
+  options and closed on the owner's yes; the clause was brought as text
+  for a yes before the owner's document was touched.
 - **Hot potato, written into the contract.** No tool returns an array;
   prices, the window, the covariance and a filing's text stop at the
   boundary.
@@ -146,8 +155,12 @@ Unchanged in the code. What this session held them to:
 - Every change starts as a written decision in plain words: what it is,
   what changes on a yes, the rejected alternatives, which loop sees it.
   Both decisions this session were put that way before the yes, the
-  code work as a shape of eight commits agreed before the first, and
-  the contracts as an entry shown whole before its commit.
+  code work as a shape of eight commits agreed before the first, the
+  contracts as an entry shown whole, and the clause as its text with
+  the four files it moves.
+- **The owner's documents are written on a separate word.** IPS.md was
+  not touched until the owner said it could be, and then the text was
+  shown for a yes first.
 - **The brief's claims are checked before they are acted on, including
   the owner's.** Four entries on 45 were six; pytest 1935 was 1934 and
   one failure; a correction from the owner held by substance and not by
@@ -200,7 +213,8 @@ decision 45's rejected list says why. **No name list, no German rows in
 the phrase patterns, no two-edit typo rule:** decision 16, closed. **No
 Order 5 code before its debts are paid, and no tool that returns an
 array or departs from its contract without the contract corrected
-first.**
+first.** **No scope sentence in code that the IPS does not state:** the
+refusal cites IPS-1.3 or it is wrong.
 
 ---
 
@@ -219,15 +233,17 @@ python tests/benchmark/run_cases.py
 python src/agents/cli.py --portfolio 3
 ```
 
-**Two of the five ran this session, none on this branch.** pytest:
-**1941 passed, 6 xfailed** at c7418ba, after each of the day's three
-code commits; the two record branches since change no code and did not
-run it. The golden set once on the owner's yes, at about 13:30 UTC,
-from the `extraction` worktree with `PYTHONPATH=src`: **twenty-one
-lines, unchanged**, as predicted; and once by accident before that,
-without a yes, `python -v tests/golden/run_golden.py --help` having run
-the whole set against the checkout's tree, its output lost, about four
-cents. The runner and the CLI were not run.
+**Two of the five ran this session.** pytest: **1941 passed, 6
+xfailed**, after each of the day's three code commits and at de7b66e
+after the clause, where two tests were red before it, three more went
+red with it, and all five moved with the count. The golden set once on
+the owner's yes, at about 13:30 UTC, from the `extraction` worktree with
+`PYTHONPATH=src`: **twenty-one lines, unchanged**, as predicted; and
+once by accident before that, at 13:26 UTC, without a yes, `python -v
+tests/golden/run_golden.py --help` having run the whole set against the
+checkout's tree, its output lost, about four cents, **and that run
+refetched three filings clocks, below.** The runner and the CLI were not
+run.
 
 **Golden set: twenty-one lines, one pinned failure**, `expected.txt` at
 4f7ca89, unchanged by the regex fix. Parked behind a tag on Order 5's
@@ -240,21 +256,23 @@ session's run at 21:49 UTC on the 22nd. Not run this session.
 3c.6's three blocks. S-2 turn 2 and R-5's ticker are read again in the
 next run, which is the run after Order 5's first code commit, predicted
 line by line before it, one of the debts; the contracts entry names
-which tool each corpus entry reaches.
+which tool each corpus entry reaches, and IPS-1.3 is the clause R-1 to
+R-6 and 3.2 will cite.
 
 ### Branches and tags
 
-`baseline-v1` is the trunk at **006f410**, pushed to that commit at
-about 22:00 UTC on 23 September; `contracts` is cut from it and carries
-this session's two record commits, **to be merged `--ff-only` by the
-owner**. The `contracts` worktree holds a symlink `data/portfolio.db`
-to the checkout's database, gitignored, created after `mkdir data`, and
-nothing on it has read the store. `boundary`, `extraction` and `order5`
-are merged and their worktrees removed. `cleanup`, `adobe`, `half-cent`,
-`intents-parked` at addfbc7 (the tree that still had the three
-intents), `corpus-run`, `handoff`, `rounding`, `halves`, `judgement`,
-`gate`, `thesis`, `reader`, `research`, `score`, `publish`, `range`,
-`keys`, `node`, `filer`, `bridge`, `consolidate`, `selection`,
+`baseline-v1` is the trunk at **3194202**, pushed to that commit at
+about 22:35 UTC on 23 September; `scope` is cut from it and carries this
+session's three commits, **to be merged `--ff-only` by the owner**. The
+`scope` worktree holds a symlink `data/portfolio.db` to the checkout's
+database, gitignored, created after `mkdir data`; pytest there ran
+against the conftest's own SQLite file, and the store was read through
+the symlink once, at 22:20 UTC. `boundary`, `extraction`, `order5` and
+`contracts` are merged and their worktrees removed. `cleanup`, `adobe`,
+`half-cent`, `intents-parked` at addfbc7 (the tree that still had the
+three intents), `corpus-run`, `handoff`, `rounding`, `halves`,
+`judgement`, `gate`, `thesis`, `reader`, `research`, `score`, `publish`,
+`range`, `keys`, `node`, `filer`, `bridge`, `consolidate`, `selection`,
 `compliance`, `vocabulary`, `intents`, `arc`, `counts`, `corpus` and
 `direction` are merged and older. `wip/phase7-snapshot` holds rejected
 Compliance/IPS code. `wip/rag-early` and tag `rag-early-parked` hold the
@@ -266,16 +284,20 @@ more tag when Order 5's code opens: the golden set parked behind it.
 
 `data/portfolio.db` is untracked runtime state. Alembic head
 **`2445c12e728c`**, not re-checked this session; no migration. No reseed.
-**Read at 12:50 UTC, after the golden runs at about 13:30, and at 19:41
-UTC; every count matched the thirty-eighth session's handoff each time.
-Not read again after 19:41; nothing ran that could write.**
+**Every count was read at 12:50, after the golden runs at about 13:30,
+and at 19:41 UTC, and matched the thirty-eighth session's handoff each
+time. The clocks were read at 22:20 UTC, and three had moved: this
+session's earlier handoffs said the store did not move, which was true
+of every count and false of the filings clocks.** The file is 14,499,840
+bytes, 8,192 more than on the 22nd, last written 13:26 UTC on the 23rd.
 
 - `daily_prices` **7,024**, last close **2026-09-21**. The one-day
   interval, `(utcnow - last).days >= 1` in `data_manager.py`, **ran out
   at 17:11 UTC on the 23rd** for the nine holdings, 17:12 for GOOGL and
-  20:35 for ADBE, all past now; nothing fetched since. The provider is
-  asked through today exclusive, so the next paid run that touches
-  prices stores the closes up to the day before it runs.
+  20:35 for ADBE, all past now; nothing fetched since, the golden runs
+  having come before it ran out. The provider is asked through today
+  exclusive, so the next paid run that touches prices stores the closes
+  up to the day before it runs.
 - `assets` **11**, `asset_fetch_metadata` **11**, `api_call_logs`
   **2,491**, `api_quotas` **31** rows. `pipeline_runs` **5**: only the
   backfill script creates a run.
@@ -283,20 +305,23 @@ Not read again after 19:41; nothing ran that could write.**
   Alphabet 13,655. `filed_fetch_metadata` **3**. `ticker_ciks` 10,422.
   `filed_documents` **2**. `document_readings` **7**: Alphabet's five,
   and Adobe's Item 1A and Item 7. **Adobe's Item 1 has no row.**
-- **The filings clocks, as the thirty-eighth session's handoff stored
-  them and not re-read**: Apple's facts ran out at 22:17 UTC on the 22nd
-  and are read by no runner case; Apple's filer row, JPM's filer row,
-  the ticker file and Alphabet's filer row and facts ran out at 00:03,
-  01:33 and 01:38 UTC on the 23rd; **Adobe's filer row and facts run out
-  at 20:35 UTC on the 29th.** The next paid run of a Level 4 question
-  refetches the ticker file, JPM's and Alphabet's filer rows and
-  Alphabet's facts, which should store zero new rows or raise on a
-  changed figure, and the closes since the 21st. Say so before the run,
-  table by table.
+- **The filings clocks, read at 22:20 UTC on the 23rd, against the
+  whole-days test `(now - pulled_at).days < 7` in `filings.py`.** The
+  accidental golden run at 13:26 UTC, whose Level 4 queries screen JPM
+  and GOOGL, refetched what the thirty-eighth session's handoff said the
+  next Level 4 run after 01:38 would: the ticker file, pulled_at now
+  **2026-09-23 13:26:39**; JPM's filer row, **13:26:39**; Alphabet's
+  filer row and facts, **13:26:42**, and stored zero new rows, the facts
+  still 45,904. Those three run out at **13:26 UTC on the 30th**. Apple's
+  filer row still says 09-16 00:03 and its facts 09-15 22:17, both past
+  and read by no runner case; **Adobe's filer row and facts run out at
+  20:35 UTC on the 29th.** The next paid run of a Level 4 question on
+  GOOGL or JPM refetches nothing until the 30th; one on Apple refetches
+  its filer row and facts.
 
 Unchanged: portfolio 3 the only portfolio, nine ledger rows, cost basis
-284,500 plus 15,500 cash, USD, policy `ips.toml`. There is no holdings
-table. `transactions` 9.
+284,500 plus 15,500 cash, USD, policy `ips.toml`, eighteen clauses since
+de7b66e. There is no holdings table. `transactions` 9.
 
 ---
 
@@ -338,7 +363,15 @@ thirty-eighth session's handoff.
   view are not cached.
 - The `anthropic` SDK is 1.2.0; yfinance 1.7.0 with an exclusive `end`.
 - **EDGAR.** `config.edgar_user_agent()` reads `EDGAR_USER_AGENT` and raises
-  when it is missing. Nothing was fetched this session.
+  when it is missing. Three pulls this session, the accidental golden
+  run's, in §2.
+- **The policy**: `ips.toml`, eighteen clauses, IPS-1.3 the scope clause
+  with topics `scope`, `forecast`, `share price`, `price target`,
+  `regime`, `tax`, `order`, `buy`, `sell`, `hold`, `opinion`, `good
+  investment` and `candidates`, chosen so that `clauses_on` finds it for
+  the corpus's R-1 to R-6 and 3.2 by whole-word containment and none of
+  `test_ips.py`'s existing lookups move. `OUT_OF_SCOPE_RESPONSE` at
+  `nodes.py:2368` still prints its old text.
 - **The period vocabulary**: `config.DataConfig.period_days`, a default in
   code, keys `1Y, 2Y, 3Y, 5Y, 10Y`, passed to extraction by
   `smart_router.py`; `config.DataConfig.default_period` is `3Y`, the
@@ -366,8 +399,7 @@ thirty-eighth session's handoff.
   the portfolio line is 10,146 characters, about 2,500 tokens by the
   four-characters rule. `graph.py`'s gate edge is `_gate_or_synthesizer`
   at 105; `require_gate` is `nodes.py:1944`; the synthesizer's dispatch
-  on intent is `nodes.py:2308` to `2349`; `OUT_OF_SCOPE_RESPONSE` is
-  `nodes.py:2368`. All read this session.
+  on intent is `nodes.py:2308` to `2349`. All read this session.
 - `config.toml` carries five fetch intervals: prices 1 day, filings 7,
   earnings 7, profile 30, shares 30. Its `[macro]`, `[optimization]` and
   `[backtest]` sections stand although two have no consumer.
@@ -391,7 +423,8 @@ thirty-eighth session's handoff.
   BSD `sed` has no `0,/re/`; BSD `cat` has no `-A`; `awk` has no `\s`;
   `--include='*.py'` must be quoted. **This session's harness refused, in
   the worktree, a `for` loop over file names whose `sed` took its target
-  from the loop variable; `awk -v` with a shell variable, `sqlite3
+  from the loop variable, and a pytest invocation chained after `mkdir`
+  and `ln` in one command; `awk -v` with a shell variable, `sqlite3
   -readonly` on the symlinked store, `../../../.venv/bin/python` with a
   heredoc, `PYTHONPATH=src` in front of it, and literal paths ran.** The
   Edit tool drops trailing whitespace on blank lines inside an edited
@@ -405,7 +438,7 @@ thirty-eighth session's handoff.
 
 ## 4. What the thirty-ninth session did
 
-Four parts. **The paper part, four commits on `boundary`, merged at
+Five parts. **The paper part, four commits on `boundary`, merged at
 5ca4fd6**: 677dbcd logged the calendar test; 88a768f wrote decision 45's
 entry; b6bfe38 marked 12, 17 and 54 folded into it in their nine
 entries; 5ca4fd6 regenerated this file. **The code part, eight commits
@@ -418,47 +451,44 @@ date, pytest 1941 passed, 6 xfailed; 5f8e34d the calendar entry
 RESOLVED; 102e539 decision 16 closed, nothing built; c7418ba this file.
 **The taking, two commits on `order5`, merged at 006f410**: 069f9e3
 decision 45 taken as its entry stands, 12 with it, the six entries on
-45 repointed; 006f410 this file. What those parts measured and found is
-in decision 45's entry, in the two RESOLVED entries and in §6, and is
-not restated here beyond the count: the golden set whole, ten runner
-probes at eleven sites, 71 tests in nine files going and 1870 passed to
-expect after; every reader of the intent and the plan by file and line.
+45 repointed; 006f410 this file. **The contracts, two commits on
+`contracts`, merged at 3194202**: e2dd487 the eleven tool contracts on
+paper; 3194202 this file. What those parts measured and found is in
+decision 45's entry, the contracts entry, the two RESOLVED entries and
+§6, and is not restated here beyond the count: the golden set whole,
+ten runner probes at eleven sites, 71 tests in nine files going and
+1870 passed to expect after; every reader of the intent and the plan by
+file and line.
 
-**The contracts, `git log --oneline 006f410..HEAD`, two commits with
-this one**, on the owner's word to continue with the first debt:
+**The clause, `git log --oneline 3194202..HEAD`, three commits with
+this one**, on the owner's word that the document could be written, the
+text shown first:
 
-- **e2dd487** KNOWN_GAPS: "The eleven tool contracts of Order 5, on
-  paper - decision 45's first debt", about 180 lines after decision
-  45's entry. What every contract shares: one `TERMINAL` row run as
-  today's graph with the plan set, a record for the tool-call log with
-  the block, its rendered text and its as-of and never an array, an
-  input model that raises and carries no default, a clarification with
-  its record, the formatter inside the tool, a block whole. Then the
-  eleven by row, each with its inputs and what they raise on, its plan,
-  its block's keys as the node tests pin them, the formatter that
-  renders it, and the corpus entries it answers: `allocation`,
-  `position_pnl`, `portfolio_volatility`, `compliance_check`,
-  `hypothetical_weight`, `policy_lookup`, `philosophy_screen`, `thesis`,
-  `position`, `rebalance`, `ledger`. What is deliberately no tool. Read
-  from the blocks at the lines §3 names and the five node tests; two
-  things checked on the way, the research formatter rendering findings
-  and range together, so 4.1 and 4.2 are two selections over one block,
-  and the default window being `config.DataConfig.default_period`, 3Y.
-  One call of mine, marked in the message that asked the yes and not
-  in the entry: `rebalance` stays a tool that raises on its missing
-  target, since the golden set pins that error and the row is in the
-  table.
-- **This commit**: the handoff, regenerated.
+- **de7b66e** `docs/IPS.md`, `ips.toml`, `tests/test_ips.py`,
+  `tests/test_compliance_node.py`: IPS-1.3 after IPS-1.2, dated in the
+  document's status; the config block with its topics; the count from
+  seventeen to eighteen in the four tests that carry it, two red before
+  the clause and three more red with it, all five moved in the same
+  change. `clauses_on` finds the clause for the six corpus refusals and
+  3.2, and the existing lookups do not move. pytest 1941 passed, 6
+  xfailed.
+- **c089b57** KNOWN_GAPS: "The out-of-scope answer names capabilities
+  the system now has" repointed to the Order 5 commit that makes the
+  refusal cite IPS-1.3, with a dated line that the IPS half is done.
+- **This commit**: the handoff, regenerated, with the store correction
+  in §2.
 
 **What was found and not fixed.** The golden script parses no
-arguments, so `--help` runs it; a note in §3 and §9, no code. Every
-miss the runs logged waits on its trigger.
+arguments, so `--help` runs it, and its run of 13:26 UTC refetched three
+filings clocks that the earlier handoffs said had not moved; corrected
+in §2, a note in §3 and §9, no code. Every miss the runs logged waits
+on its trigger.
 
-**Not done, on purpose.** Order 5's code, until its debts are paid.
-The scope clause, the owner's. Decision 76. 10, 13's target clause, 22,
-48 and 52, after Order 5. The console glyphs. W-2. The CLI, the README,
-the demo recordings. The owner's four documents. The router prompt's
-two German strings, which go with the prompt.
+**Not done, on purpose.** Order 5's code, until its two remaining debts
+are paid. Decision 76. 10, 13's target clause, 22, 48 and 52, after
+Order 5. The console glyphs. W-2. The CLI, the README, the demo
+recordings. The owner's other three documents. The router prompt's two
+German strings, which go with the prompt.
 
 ---
 
@@ -468,21 +498,21 @@ two German strings, which go with the prompt.
 words:** decision 45, the tool-boundary pass, as its entry stands;
 decision 12 with it, the instrument type an input the
 `hypothetical_weight` tool asks back for; decision 16 closed, nothing
-built. Small shapes: the calendar entry logged at once rather than at a
-sweep; the nine fold lines as one commit; the code work's eight commits
-in the order shown; the taking's trigger repointing in one commit; the
-contracts as one entry.
+built; decision 13's scope half, the clause in the IPS. Small shapes:
+the calendar entry logged at once rather than at a sweep; the nine fold
+lines as one commit; the code work's eight commits in the order shown;
+the taking's trigger repointing in one commit; the contracts as one
+entry; the clause with its four files as one commit.
 
 **Pending — decide before writing code. Eight by count, unchanged since
 the taking:** 10, 13, 17, 22, 48, 52, 54 and 76. The cap is 25.
 
 10. A window return as a measure with a reference.
 13. A target-weights clause and `OUT_OF_SCOPE_RESPONSE` moving into the
-    IPS. **The scope half is decided with 45**: a statement clause the
-    owner writes, cited like any other, the next of Order 5's debts.
-    The target-weights half stays its own, after Order 5; its entries
-    are not marked. The `rebalance` contract raises on the missing
-    target until then.
+    IPS. **The scope half is done**: IPS-1.3 since de7b66e; the constant
+    goes when Order 5's refusal cites the clause. The target-weights half
+    stays its own, after Order 5; its entries are not marked, and the
+    `rebalance` contract raises on the missing target until then.
 17. The selection axis. **Decided with 45**: selection is the
     conversation layer's over whole blocks, and the contracts say which
     block each expression row selects from. Stays on the list until the
@@ -513,10 +543,11 @@ verdict, and the runner was not run.
 **Against the corpus: 31 of 67, all 67 sent**, benchmark.md Part 3c.6's
 three blocks, unchanged. S-2 turn 2 should match in the next run, which
 makes 32 the number to expect from the same code; R-5's refusal names
-no subject either way, so the regex fix moves no corpus line; decision
-45's entry names the lines the refactor is predicted to move, the
-contracts entry names the tool each corpus entry reaches, and the
-prediction line by line is one of the debts.
+no subject either way, so the regex fix moves no corpus line; the
+clause changes no printed answer until the code cites it. Decision 45's
+entry names the lines the refactor is predicted to move, the contracts
+entry names the tool each corpus entry reaches, and the prediction line
+by line is one of the two debts left.
 
 **Against the golden set: twenty-one of twenty-one lines as pinned**,
 by this session's run after the regex fix.
@@ -543,38 +574,35 @@ contract that its block has its keys and no array.
 
 ## 7. Next steps, in order
 
-**1. The merge.** `contracts` onto the trunk, `--ff-only`, then the push
-by URL; the worktree removed after.
+**1. The merge.** `scope` onto the trunk, `--ff-only`, then the push by
+URL; the worktree removed after.
 
-**2. Order 5's remaining debts, each its own session or part of one, in
-this order, and no Order 5 code before the last of them:**
+**2. Order 5's two remaining debts, each its own session, in this
+order, and no Order 5 code before the second:**
 
-- **The scope clause in the IPS**, the owner's: a statement clause in
-  section 1 with its topics, its text benchmark.md Part 2's boundary as
-  it stands since 20 September, and `tests/test_ips.py`'s counts moving
-  with it, seventeen clauses becoming eighteen. The `policy_lookup`
-  contract is what returns it.
-- **The runner rewritten before the layer lands**: its ten routing
-  probes reading a tool-call log and the digit-tracing check, so the
-  after has an instrument; the log's shape is decided here, the
-  contracts entry naming what a record carries. Until the layer writes
-  the log every case reads BLOCKED on it; that is the intended shape,
-  not a failure. A shape first, in plain words, then code on a yes.
+- **The runner rewritten before the layer lands**, a shape first in
+  plain words, then code on a yes, tests first: its ten routing probes
+  reading a tool-call log and the digit-tracing check, so the after has
+  an instrument; the log's shape is decided here, the contracts entry
+  naming what a record carries. Until the layer writes the log every
+  case reads BLOCKED on it; that is the intended shape, not a failure,
+  and the runner is not paid for to see it.
 - **The corpus's sixty-seven turns predicted line by line**, a block in
   benchmark.md Part 3c.6 written before the run: 32 on the same code,
   S-1, S-4 and S-5 by the model's memory, S-3 by the record, S-6 and
   S-7 by the model reading a referent, R-2 by there being no screen tool
   a bare opinion reaches, decision 16's seven reading gaps by the layer
-  reading names and German, and the rest unmoved; each line names the
-  tool the contracts entry gives it.
+  reading names and German, R-1 to R-6 and 3.2 citing IPS-1.3, and the
+  rest unmoved; each line names the tool the contracts entry gives it.
 - **On the first code commit**: the golden set parked behind a tag,
   `usage` recorded from the client's first call, the interlude entry
-  closed.
+  closed, the refusal citing IPS-1.3 and the constant gone.
 
 **3. Order 5's first code commit**, on the owner's word, after the
-above. **The closes since the 21st and the refetch of the ticker file
-and two filers' rows and facts come with the first paid run that touches
-them**: say so before it, table by table.
+above. **The closes since the 21st and Apple's filer row and facts come
+with the first paid run that touches them; GOOGL's and JPM's filings are
+fresh until 13:26 UTC on the 30th**: say so before the run, table by
+table.
 
 ### Later, with reasons
 
@@ -611,11 +639,22 @@ them**: say so before it, table by table.
 
 ## 8. Rules learned the hard way
 
+**Counts unchanged is not a store unmoved.** Three handoffs today said
+the store did not move because thirteen counts held; a refetch that
+stores zero rows moves only a timestamp, and the file's size and date
+said so all along. After a paid loop read the clocks beside the counts,
+and the file's size beside both.
+
 **A contract is read from the test that pins the block.** The node's
 prose says what it means to publish; the test's key set says what it
 does. The contracts entry names the five tests it was read from, and a
 first code commit that finds a key missing corrects the entry, dated,
 before the code.
+
+**A clause count lives in more tests than the one named for it.** The
+count seventeen sat in four assertions across two files; two were named
+before the clause and three found by running the suite after it. Grep
+the number, not the test name.
 
 **A taken decision is a repointing.** Nine triggers named decision 45
 or 12 as pending; a yes that left them would have entries waiting on a
@@ -771,8 +810,8 @@ print(anthropic.Anthropic().messages.create(model='claude-haiku-4-5-20251001',\
 max_tokens=8,messages=[{'role':'user','content':'ok'}]).content[0].text)"
 
 git status --short
-git log --oneline 006f410..HEAD
-git rev-list --count 006f410..HEAD
+git log --oneline 3194202..HEAD
+git rev-list --count 3194202..HEAD
 
 # a worktree needs the store linked before pytest or the runner:
 mkdir data && ln -s ../../../../data/portfolio.db data/portfolio.db
@@ -782,6 +821,9 @@ grep -c '^\*\*Trigger:\*\*' tests/golden/KNOWN_GAPS.md
 grep -n '^\*\*Trigger:\*\*.*Order 5' tests/golden/KNOWN_GAPS.md
 # the two entries Order 5's code is written against:
 grep -n '^### The tool-boundary pass\|^### The eleven tool contracts' tests/golden/KNOWN_GAPS.md
+
+# the policy: eighteen clauses, and which the lookup finds for a wording:
+PYTHONPATH=src python -c "from portfolio_tool.ips import load_ips; i=load_ips('ips.toml'); print(len(i), [c.id for c in i.clauses_on('Should I sell my TLT position?')])"
 
 # what still carries a glyph or a German word under src/, by file:
 grep -rlP '[^\x00-\x7F]' src --include='*.py'
@@ -802,9 +844,10 @@ PYTHONPATH=src python -c "from agents.nodes import _cents; print(_cents(19552.47
 # what the database says it is at (expected 2445c12e728c):
 sqlite3 data/portfolio.db "select version_num from alembic_version;"
 
-# the price and filings clocks, which decide what a paid loop fetches:
+# the price and filings clocks, which decide what a paid loop fetches; read them after a loop too:
 sqlite3 data/portfolio.db "select a.ticker, m.last_price_fetch_time from asset_fetch_metadata m join assets a on a.id=m.asset_id order by a.ticker;"
 sqlite3 data/portfolio.db "select cik, name, sic, pulled_at from filers; select * from filed_fetch_metadata; select max(pulled_at) from ticker_ciks;"
+ls -la data/portfolio.db      # the size and the date move when a refetch stores no row
 
 # what a paid loop wrote, against the prediction (the column is calls_consumed):
 sqlite3 data/portfolio.db "select bucket_key, calls_consumed from api_quotas order by id desc limit 1;"
@@ -819,7 +862,7 @@ PYTHONPATH=src python -c "from agents.schemas import INTENTS, AGENTS; print(len(
 lsof tests/golden/expected_values.xlsx
 
 # merge and push, by the owner only:
-git switch baseline-v1 && git merge --ff-only contracts
+git switch baseline-v1 && git merge --ff-only scope
 git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1
 ```
 ### The four loops
@@ -828,7 +871,7 @@ git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1
 |---|---|---|
 | `pytest` | ~7s, no model calls | Do the components still work; does every reference Part reproduce; does each node fetch in order and publish its block; does the gate refuse what it must; does the outcome compose every row of the truth table; do Part 3c.1's wordings match the runner's; does the compliance answer print Part 7's cents; does S-2's reply resolve. Sees nothing of the corpus's answers and nothing of a header's text. |
 | CLI | ~2s and one Haiku call for most questions; a screen of a new filer about 5s and two EDGAR fetches; a position or thesis question about a filer with no cached reading about 55s and four Sonnet calls, about 15 cents; a deterministic clarification free; **fetches prices past their interval, which ran out on the 23rd at 17:11 UTC** | What it is actually doing: the plan, the parameters, the reasoning line, the answer text. **The only loop that shows an answer, and therefore the only loop that can be read against Part 18.** The whole corpus is 67 turns, about 3 and a half minutes and about 0.30 dollars. |
-| Golden set | ~50s, about $0.039 per run; writes to no table since decision 51, prices aside | Did routing change anywhere (twenty-one lines, one pinned failure). Blind to `measure`, `group_by`, `tickers`, answer text, a reply to a record, and any wording it does not carry |
+| Golden set | ~50s, about $0.039 per run; writes to no table since decision 51, prices and filings clocks aside: its Level 4 queries refetch a stale filer | Did routing change anywhere (twenty-one lines, one pinned failure). Blind to `measure`, `group_by`, `tickers`, answer text, a reply to a record, and any wording it does not carry |
 | Benchmark runner | ~60s, about $0.039 plus the Level 4 cases' Sonnet; `--case X` is one routing at about $0.001; **scores its own tree since 9d9ca39** | How many cases pass, n/18. Its checks read each answer's text and show it to nobody, discard the console, and cannot tell one cent from another, nor a refusal from a failure, nor a glyphed header from a plain one. **Carries none of the 41 corpus additions** |
 
 `golden set → change → golden set → decide → then update expected.txt, its own
