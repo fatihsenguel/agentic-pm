@@ -490,6 +490,84 @@ DIRECTION.md invariant 8 said "should I buy X" is refused until Level 4
 defines it. Level 4 defines it: 4.3's row above, and the checks Part 2 now
 names. The invariant's sentence is the owner's to revise.
 
+**Prediction for the runner's first run through the layer, written 24
+September 2026 (forty-second session) at ad7e350, before the run.** Not a
+status note: the eighteen cases read against every check in
+`tests/benchmark/run_cases.py` as it stands, so that the run is read
+against a prediction and not fitted to one. Written once and not edited
+after the run. Each line names the tool the layer should call with its
+inputs, or none where the pre-pass answers, then the verdict and why.
+
+**The hypothesis the lines share.** Until 5f0d2f7 the answer was the
+formatter's text, whole. Now the model reads that text and writes the
+answer, selecting what the question asks for, and nothing in the system
+prompt asks it to carry an as-of date, a source or a caveat. The checks
+were written against the whole text. Where a check requires what a plain
+answer to its question carries, I predict it holds. Where it requires the
+whole block, I predict it fails on the prose with the tool right and the
+block sound: every clause of the policy (2.2), every sector's share (1.4),
+the whole basis of a figure (1.3), every assumption by its key with every
+date and source of a range (4.2), every reading's accession and quote
+(4.4). Three things I predict hold on every case, and they are the largest
+uncertainties in this block: the model states the as-of date where it
+heads the tool's text; it copies figures as printed, so `figures_trace` and
+the client's own refusal both pass; and it keeps "price return" beside a
+P&L figure, on which 1.2, 3.3 and 3.5 stand or fall together.
+
+**11 of 18, 5 failing, 2 blocked**, against 15/18 before the layer. 2.1
+moves out of BLOCKED by the tool choice; 1.3, 1.4, 2.2, 4.2 and 4.4 move
+from PASS to FAIL on the prose; 4.1 and 4.3 stay blocked at PHI-2.1.
+
+| Case | Tool and inputs | Prediction |
+| --- | --- | --- |
+| 1.1 | allocation | PASS: the five classes with their shares of total as printed, the as-of from the text's first line |
+| 1.2 | position_pnl, tickers ["JPM"] | PASS: the purchase date, the P&L percent and the as-of carried; stands on "price return" being kept |
+| 1.3 | portfolio_volatility, period "1Y" | FAIL: the figure and the span carried; not all of the window's start and end, the closes, the covariance method and the annualisation, which the check requires whole |
+| 1.4 | allocation | FAIL: AAPL and MSFT named with the Technology line; the other sectors' shares of invested value, which `_prose_carries` requires, not printed. The answer the reading of 21 September asked for fails the check that pinned the five-sector table |
+| 2.1 | compliance_check, no input | PASS: the three concentration clause ids, each breach's distance, the four funds named as exempt, the as-of; the trace's three spans, two handovers and `check_ips` as before. Moved out of BLOCKED by the tool choice |
+| 2.2 | compliance_check, no input | FAIL: the answer names the breaches and not every clause; the check requires all eighteen ids, statements included |
+| 2.3 | compliance_check, no input | PASS: each breach's clause and distance from the lines on what would have to change, no trade verb, no percentage outside the findings |
+| 3.1 | turn 1 none, the pre-pass asks back for the type; turn 2 hypothetical_weight, weight 0.15, instrument_type "share", on the resolved question | PASS: IPS-4.1 and IPS-4.2 cited with their refusals; the risk is a hedge word, "however" the likeliest |
+| 3.2 | policy_lookup, the question's words, "share price" or "forecast" matching IPS-1.3 | PASS: IPS-1.3 cited, ComplianceAgent alone; the risk is the answer echoing the question's "will be at", which the forecast pattern reads as a forecast |
+| 3.3 | position_pnl, tickers [] | PASS: the nine positions published and their one as-of carried; on "price return", with 1.2 |
+| 3.4 | policy_lookup, topic "currency risk" | PASS: no clause, no id, no holding; the risk is the model rewording the fixed sentence the check reads, "contains nothing on" |
+| 3.5 | turn 1 none, the pre-pass asks back, APPL for AAPL; turn 2 position_pnl, tickers ["AAPL"], by the record | PASS: on "price return", with 1.2 |
+| 4.1 | philosophy_screen, ticker "GOOGL" | BLOCKED: the screen stops at PHI-2.1 (decision 48, D36) |
+| 4.2 | philosophy_screen, ticker "GOOGL" | FAIL: the two ends, the close and PHI-4.3 carried; the assumptions not named by their keys (`required_return` and the four others), and not every source and date of the range and the screen |
+| 4.3 | position, ticker "GOOGL" | BLOCKED: the screen stops at PHI-2.1; the gate runs and finds IPS-3.1 breached at the entry's 6% (Part 17 D) |
+| 4.4 | thesis, ticker "GOOGL" | FAIL: the readings' accessions and sources, the claims' quotes, the proposal's statement word for word and "proposed, not entered" not carried |
+| 4.5 | ledger | PASS: "4 predictions", the four ids with their due dates, all open, the as-of; the risk is "four" in words |
+| 4.6 | philosophy_screen, ticker "JPM" | PASS: PHI-3.2 alone, 6021 and National Commercial Banks, the check's date and the code's; nothing else about the company |
+
+**What it costs, said before the run.** Decision 45's rates: Sonnet 5 at
+$2 per million input tokens and $10 per million output, a cache read at a
+tenth of input; a cache write is 1.25 times input, the API's rate, which
+decision 45 does not state. About 36 model calls, two per case. The fixed
+prefix, the system prompt and the eleven tool definitions, is 6,715
+characters, about 2,000 tokens with the API's own tool preamble. It is
+cached, read on about 35 calls and written once or twice: about $0.02. The
+tools' texts and the calls' own blocks are uncached, about 30,000 tokens:
+$0.06. Output with adaptive thinking at `effort: "low"` is 8,000 to 30,000
+tokens: $0.08 to $0.30, the widest term and the one the run measures. The
+layer comes to about $0.17 to $0.40, printed per case. The Level 4 calls
+the layer does not record are three: the proposer on 4.4 and on 4.3, and
+the view on 4.3, about $0.03 to $0.10. The reader makes none, since
+Alphabet's three sections are stored under the current model and prompt
+versions (checked in `document_readings` before the run). **About $0.20
+to $0.50 in all**; $1.10 if the three sections were read again on both
+research cases. Decision 45 estimated $0.30 to $0.80.
+
+**What it fetches, table by table.** `daily_prices`: the nine holdings'
+closes after 2026-09-21, once, on 1.1, the first portfolio case; the
+22nd and 23rd, and the 24th only if the run starts after the US close.
+Then GOOGL's close, once, on 4.1, through the screen's last close. Nothing
+more under `price_fetch_interval_days = 1`: every stored close is
+2026-09-21 before the run. `assets`: no row, GOOGL's being stored. FX
+rates: none, portfolio 3 being single-currency. EDGAR submissions and
+facts: none, the clocks running to the 29th and 30th. `filed_documents`
+and `document_readings`: none. The provider is yfinance, and a fetch
+costs nothing but the rows.
+
 ---
 
 ## Part 3b — Output contract (previously undefined)
