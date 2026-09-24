@@ -876,6 +876,111 @@ KNOWN_GAPS; nothing was fixed.
 | R-8 | matched: the range refused naming W-2, growth_low and growth_high; no range, no point, nothing filled; the last close 249.52 on 2026-09-21 with its source; the screen's own report, unpinned, stopped at PHI-2.1 on FY2021's return on invested capital, the clause Alphabet stops on |
 | R-9 | missed: an error, not a refusal, R-7's shape (KNOWN_GAPS, "A buy question about a company on no entry arrives shaped as an error"); the reason named is the right one, W-2 states no weight, but no outcome, no grounds, and the range's refusal not printed, the screening block unrendered once the research agent failed; no recommendation and no price, as pinned; the 10-K fetched and read before the weight was looked at |
 
+**Prediction for the run after Order 5's first code commit, written 24
+September 2026 at d917db1, before that commit exists and before the run;
+decision 45's last debt.** Not a run: a block written so that the run is
+read against a prediction and not fitted to one. Each line names the tool
+the contracts entry (`KNOWN_GAPS.md`, "The eleven tool contracts of Order
+5, on paper") gives the turn, or none where the pre-pass answers, and
+`matched` or `missed` with the reason in Part 18's words. What moves and
+why: 32 on the same code, the 31 of the three runs above and S-2 turn 2
+on the token regex; 3.2 and R-1 to R-6 by the refusal citing IPS-1.3
+through the lookup; R-2 by no screen tool reaching a bare opinion; S-1,
+S-4 and S-5 by the model's memory of the turn before; S-3 by every
+ask-back leaving a record; S-6 and S-7 by the model reading a referent;
+the seven reading gaps by the layer reading names and German. Three
+lines move that the brief did not list, each with its reason: 1.4 by the
+layer selecting the position view's two Technology lines from the whole
+allocation block (decision 17); 2.1 by the tool choice, no per-holding
+volatility tool existing and the entry pinning the answer "whatever
+routes it"; R-7 by the position tool raising on the missing entry and
+the client showing the raise unchanged. Two lines move the other way:
+V-3.1b out of the reading gap and into 3.1's miss, V-4.2a into 4.2's.
+**52 matched of 67 is the number**, 50 if the two lines below marked on
+the reference's quote are read against the entries as they stand.
+
+Three disagreements between the taken decisions and Part 18 as written,
+found while predicting and not repaired here, since the reference is not
+updated to match output and the owner decides which side is wrong: 3.1
+and 3.1c pin a refusal conditioned on the instrument type and call the
+fund "pending decision 12", and decision 12, taken on the 23rd, has the
+tool ask back for the type when the message states none, "a single
+position" stating none; 3.2 and R-6 quote "outside what this system
+does" as the runner's `SCOPE_BOUNDARY`, a constant b06af7a deleted, and
+pin that no pipeline runs, where the lookup that finds IPS-1.3 runs
+ComplianceAgent alone. Each is a statement about the code inside the
+reference, which a dated correction may fix before the run.
+
+| Entry | Tool | Prediction |
+| --- | --- | --- |
+| 1.1 | allocation | matched |
+| 1.2 | position_pnl, tickers JPM | matched |
+| 1.3 | portfolio_volatility, 1Y | matched; the basis line's method note stands |
+| 1.4 | allocation; the layer selects the position view's Technology lines | matched: AAPL and MSFT with their per-position figures, the five-sector table not printed alone (moved by selection, decision 17) |
+| 2.1 | compliance_check; the layer selects section 4's three tables | matched: the concentration tables with every finding citing its clause (moved by the tool choice; the entry pins the answer whatever routes it) |
+| 2.2 | compliance_check | missed: the four section 3 clauses inside their limits still carry no figure and 2.3's conditions are still carried, the formatter's and unmoved |
+| 2.3 | compliance_check | missed: the overlap between AAPL's two clauses and Technology's excess not stated by the formatter; whether the layer states it is the model's and not predicted |
+| 3.1 | hypothetical_weight, weight 0.15, no instrument type stated | missed against the entry as written: the tool asks back for the type (decision 12) where the entry pins a refusal conditioned on it |
+| 3.2 | policy_lookup, IPS-1.3 | matched on the subject named, a forecast of a price, and IPS-1.3 cited with no figure; on the reference's quote and "no pipeline runs", read as the owner decides |
+| 3.3 | position_pnl, no ticker | matched |
+| 3.4 | policy_lookup, currency risk | matched; the topic echoed is the words the model passed, no longer the whole question |
+| 3.5 turn 1 | none; the pre-pass asks back | matched |
+| 3.5 turn 2 | position_pnl, tickers AAPL, by the record | matched |
+| 4.1 | philosophy_screen, GOOGL | matched |
+| 4.2 | philosophy_screen, GOOGL; the layer selects the range | missed: the 10-K's accession still not named beside the range, the formatter's; no longer byte-identical to 4.1 |
+| 4.3 | position, GOOGL | missed: the gate's before column, the after shares and the currency distances still absent, the formatter's |
+| 4.4 | thesis, GOOGL | missed: PHI-6.1 and PHI-6.2 still not cited, the formatter's |
+| 4.5 | ledger | matched |
+| 4.6 | philosophy_screen, JPM | matched |
+| V-1.1a | allocation, the German read by the layer | matched |
+| V-1.2a | position_pnl, tickers JPM, the name read by the layer | matched (moved: reading gap) |
+| V-1.3a | portfolio_volatility, 1Y | matched |
+| V-1.3b | portfolio_volatility, 1Y | matched |
+| V-1.3c | portfolio_volatility, 1Y | matched |
+| V-2.1a | compliance_check; the layer selects AAPL's findings | matched |
+| V-2.1b | compliance_check, the name read by the layer; AAPL's findings selected | matched (moved: reading gap) |
+| V-3.1a | hypothetical_weight, weight 0.15 | missed, as 3.1: asked back for the type |
+| V-3.1b | hypothetical_weight, the weight in words read by the layer | missed, as 3.1: asked back for the type (moved out of the reading gap and into 3.1's miss) |
+| V-3.1c | hypothetical_weight, weight 0.12 | missed, as 3.1: asked back for the type, so D9's falsifier is not reached |
+| V-3.4a | policy_lookup, currency risk | matched |
+| V-3.4b | policy_lookup, the German read by the layer | matched (moved: reading gap) |
+| V-4.1a | philosophy_screen, GOOGL, the name read by the layer | matched (moved: reading gap) |
+| V-4.2a | philosophy_screen, GOOGL, the name read by the layer | missed, as 4.2: the accession (moved out of the reading gap and into 4.2's miss) |
+| V-4.6a | philosophy_screen, JPM, the name read by the layer | matched (moved: reading gap) |
+| C-1 | none; the pre-pass asks back | matched |
+| C-2 | none, or a tool that raises on a ticker neither held nor known, the raise shown unchanged | matched either way: ZZZZFAKE named, no holding guessed, no figure |
+| C-3 | none; the pre-pass asks back | matched |
+| C-4 | none; the pre-pass asks back | matched |
+| C-5 | none; the pre-pass asks back | matched |
+| C-6 | none; the pre-pass asks back | matched |
+| C-7 | none; the pre-pass asks back on the share before any type is asked | matched |
+| R-1 | policy_lookup, IPS-1.3 | matched: TLT named as the subject, the clause cited, no recommendation (moved) |
+| R-2 | policy_lookup, IPS-1.3; no screen tool called | matched: AAPL on no entry, no screen invented, no figure (moved) |
+| R-3 | policy_lookup, IPS-1.3 | matched: no company named, none listed (moved) |
+| R-4 | policy_lookup, IPS-1.3 | matched: no tax figure and no rate (moved) |
+| R-5 | policy_lookup, IPS-1.3 | matched: nothing executed, the ledger unchanged (moved) |
+| R-6 | policy_lookup, IPS-1.3 | matched on market conditions named and the clause cited; on the reference's quote and "no pipeline runs", as 3.2 |
+| R-7 | position, NVDA, raising on no watchlist entry | matched: the raise names the missing entry and is shown unchanged, nothing fetched (moved by the contract; the brief listed it unmoved) |
+| R-8 | philosophy_screen, ADBE | matched: the range refused naming W-2 and the missing pair |
+| R-9 | position, ADBE, raising on no weight | missed: the raise is the whole answer, where the entry pins the range's refusal as in R-8 and an outcome with grounds; the 10-K still read before the weight is looked at (the R-7 entry's shape) |
+| S-1 turn 1 | position_pnl, tickers JPM | matched |
+| S-1 turn 2 | position_pnl, tickers MSFT, by the model's memory | matched (moved: on the guess) |
+| S-1 turn 3 | position_pnl, tickers JNJ, by the model's memory | matched (moved: on the guess) |
+| S-2 turn 1 | none; the pre-pass asks back | matched |
+| S-2 turn 2 | position_pnl, tickers MSFT, by the record | matched (moved on the same code: the token regex, 2616a80) |
+| S-3 turn 1 | none; the pre-pass asks back | matched |
+| S-3 turn 2 | portfolio_volatility, 1Y, by the record every ask-back now leaves | matched (moved: cannot be done) |
+| S-4 turn 1 | compliance_check | missed, as 2.2 |
+| S-4 turn 2 | compliance_check, by the model's memory | missed, as 2.3 (moved out of the guess and into 2.3's miss) |
+| S-5 turn 1 | allocation | matched |
+| S-5 turn 2 | compliance_check; the layer selects section 3's findings, by the model's memory | matched (moved: on the guess) |
+| S-6 turn 1 | philosophy_screen, GOOGL | missed, as 4.2 |
+| S-6 turn 2 | position, GOOGL, "it" read by the model | missed, as 4.3 (moved out of cannot be done and into 4.3's miss) |
+| S-7 turn 1 | philosophy_screen, JPM | matched |
+| S-7 turn 2 | philosophy_screen, GOOGL, the frame read by the model | matched (moved: cannot be done) |
+| S-8 turn 1 | compliance_check; AAPL's findings selected | matched |
+| S-8 turn 2 | portfolio_volatility, 1Y | matched: nothing of AAPL carried over |
+
 ---
 
 ## Part 4 — Order of work under time pressure
