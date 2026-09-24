@@ -43,6 +43,19 @@ class AgentState(TypedDict):
     tool: Optional[str]
     inputs: Dict[str, Any]
 
+    # The turn's tool-call log, one record per tool the conversation layer
+    # called, in call order: tool, inputs, key, block, text, as_of
+    # (KNOWN_GAPS, "The log's shape"). Empty when the turn called none.
+    tool_calls: List[Dict[str, Any]]
+    # What the pre-pass asked back this turn, as its record (kind, token,
+    # candidate, message), None when the turn answered; and what this turn's
+    # reply was resolved into ({"reply", "message"}), None when it was not a
+    # reply to a question asked.
+    clarification: Optional[Dict[str, Any]]
+    resolved: Optional[Dict[str, Any]]
+    # The usage of every model call the turn made (decision 45).
+    model_calls: List[Dict[str, Any]]
+
     # What the previous turn asked back, as a record extraction wrote (kind,
     # token, candidate, message), carried in so this turn's reply can be
     # resolved against it without re-reading prose. None when the previous
@@ -100,8 +113,9 @@ def create_initial_state(
         portfolio_id: the portfolio the request is about
         previous: the previous turn's final state, if this is a second
             turn. Its messages are carried forward with its answer, and if
-            it ended by asking back, the record of what it asked is carried
-            as `pending` for extraction to resolve the reply against.
+            it ended by asking back, the record of what it asked, its
+            `clarification`, is carried as `pending` for extraction to
+            resolve the reply against.
     
     Returns:
         Initialized AgentState
@@ -114,9 +128,7 @@ def create_initial_state(
         messages.extend(previous.get("messages") or [])
         if previous.get("final_response"):
             messages.append(AIMessage(content=previous["final_response"]))
-        decision = previous.get("router_decision") or {}
-        if decision.get("intent") == "clarification_needed":
-            pending = decision.get("pending")
+        pending = previous.get("clarification")
     messages.append(HumanMessage(content=user_message))
 
     return AgentState(
@@ -125,6 +137,10 @@ def create_initial_state(
         router_decision=None,
         tool=None,
         inputs={},
+        tool_calls=[],
+        clarification=None,
+        resolved=None,
+        model_calls=[],
         current_agent=None,
         execution_step=0,
         agents_to_run=[],

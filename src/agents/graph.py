@@ -4,11 +4,18 @@
 # Phase: 6.2 - LangGraph State Machine
 # Status: BANK-READY & FLEXIBLE
 
-from typing import Dict, Any
+from typing import Any, Dict, List, Tuple
 from langgraph.graph import StateGraph, END
 
+from langchain_core.messages import AIMessage, HumanMessage
+
+from config import config as app_config
+
+from .conversation import ConversationError, answer, conversation_model
+from .extraction import extract, resolve
 from .schemas import AGENTS
 from .state import AgentState, create_initial_state, is_execution_complete, get_next_agent
+from .tool_inputs import ToolContext
 from .nodes import (
     router_node,
     data_agent_node,
@@ -193,26 +200,86 @@ def get_graph():
 async def run_agent_graph(user_message: str, request_id: str = None, portfolio_id: int = None,
                           previous: Dict[str, Any] = None) -> Dict[str, Any]:
     """
-    Run the full agent graph for a user message. `previous` is the final
-    state of the turn before, when there is one: its messages and, if it
-    asked back, the record of what it asked are carried into this turn.
+    One turn of the conversation (Order 5, decision 45). `previous` is the
+    final state of the turn before, when there is one: its messages and, if
+    it asked back, the record of what it asked are carried into this turn.
+
+    The reply is resolved against that record first, then the pre-pass
+    reads the message: where extraction asks back, that is the turn's
+    answer and no model is called. Otherwise the conversation layer answers
+    with the tools, and the turn's state carries the tool-call log, the
+    usage of every call and the last tool run's `shared_data` and
+    `sub_results`.
     """
-    # Create initial state with portfolio context
     state = create_initial_state(user_message, request_id, portfolio_id=portfolio_id,
                                  previous=previous)
-    
-    # Get compiled graph
-    graph = get_graph()
-    
-    # One request span around the whole run, under the state's request id,
-    # so every node - Router included - traces into the same request and the
-    # stored trace shows the plan being executed, not only planned.
+
+    # One request span around the whole turn, under the state's request id,
+    # so every tool run traces into the same request.
     from observability import get_tracer
 
     with get_tracer().trace_request(request_id=state["request_id"], user_input=user_message[:100]):
-        final_state = await graph.ainvoke(state)
-    
-    return final_state
+        return await _turn(state, user_message)
+
+
+def _held_tickers(portfolio_id) -> List[str]:
+    if not portfolio_id:
+        return []
+    from portfolio_tool.portfolio_manager import PortfolioManager
+    return PortfolioManager().get_portfolio_tickers(portfolio_id)
+
+
+def _watchlist_tickers() -> Tuple[str, ...]:
+    from portfolio_tool.watchlist import load_watchlist
+    from .nodes import WATCHLIST_PATH
+    return tuple(c.ticker for c in load_watchlist(WATCHLIST_PATH).candidates.values())
+
+
+def _history(messages) -> List[Dict[str, str]]:
+    """The conversation's own earlier turns as the model is sent them: each
+    question and each answer shown, as text."""
+    roles = {HumanMessage: "user", AIMessage: "assistant"}
+    return [{"role": roles[type(m)], "content": m.content} for m in messages if type(m) in roles]
+
+
+async def _turn(state: Dict[str, Any], user_message: str) -> Dict[str, Any]:
+    held = _held_tickers(state["portfolio_id"])
+    periods = tuple(app_config.data.period_days.keys())
+    history = _history(state["messages"][:-1])
+
+    message = user_message
+    resolved = resolve(user_message, state.get("pending"), held, periods)
+    if resolved is not None:
+        state["resolved"] = {"reply": user_message, "message": resolved}
+        message = resolved
+
+    extraction = extract(message, held, periods)
+    if extraction.clarification:
+        # An ask-back with no resolution rule leaves a record with no kind:
+        # the turn asked back, and a reply to it resolves nothing.
+        state["clarification"] = extraction.pending or {
+            "kind": None, "token": None, "candidate": None, "message": message}
+        state["final_response"] = extraction.clarification
+        return state
+
+    context = ToolContext(held=tuple(held), periods=periods, watchlist=_watchlist_tickers())
+    try:
+        turn = await answer(message, history=history, context=context,
+                            portfolio_id=state["portfolio_id"], model=conversation_model(),
+                            request_id=state["request_id"])
+    except ConversationError as error:
+        state["final_response"] = str(error)
+        state["errors"] = [str(error)]
+        state["model_calls"] = list(error.model_calls)
+        return state
+
+    state["final_response"] = turn["text"]
+    state["tool_calls"] = turn["tool_calls"]
+    state["model_calls"] = turn["model_calls"]
+    ran = turn["state"] or {}
+    state["shared_data"] = ran.get("shared_data") or {}
+    state["sub_results"] = ran.get("sub_results") or {}
+    return state
 
 
 def run_agent_graph_sync(user_message: str, request_id: str = None, portfolio_id: int = None,

@@ -48,7 +48,12 @@ MAX_MODEL_CALLS = 6
 
 
 class ConversationError(Exception):
-    """Raised when a turn ends without an answer that may be shown."""
+    """Raised when a turn ends without an answer that may be shown. Carries
+    the usage of the calls made before it, which were paid for."""
+
+    def __init__(self, message: str, model_calls: Sequence[Dict[str, Any]] = ()):
+        super().__init__(message)
+        self.model_calls = list(model_calls)
 
 
 SYSTEM_PROMPT = (
@@ -196,7 +201,10 @@ async def answer(message: str, *, history: Sequence[Any], context: ToolContext,
     state: Optional[Dict[str, Any]] = None
 
     for _ in range(MAX_MODEL_CALLS):
-        response = model.respond(SYSTEM_PROMPT, tools, messages)
+        try:
+            response = model.respond(SYSTEM_PROMPT, tools, messages)
+        except ConversationError as error:
+            raise ConversationError(str(error), calls) from error
         calls.append(_usage(response))
 
         if response.stop_reason == "end_turn":
@@ -208,7 +216,7 @@ async def answer(message: str, *, history: Sequence[Any], context: ToolContext,
             return _turn(text, records, calls, state, messages)
         if response.stop_reason != "tool_use":
             raise ConversationError(f"The model stopped on {response.stop_reason!r} before "
-                                    "finishing its answer; nothing is shown.")
+                                    "finishing its answer; nothing is shown.", calls)
 
         results = []
         for block in response.content:
@@ -226,4 +234,4 @@ async def answer(message: str, *, history: Sequence[Any], context: ToolContext,
         messages.append({"role": "user", "content": results})
 
     raise ConversationError(f"The model made {MAX_MODEL_CALLS} calls without finishing the "
-                            "turn; nothing is shown.")
+                            "turn; nothing is shown.", calls)

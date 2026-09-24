@@ -22,7 +22,6 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from langgraph.graph import END, StateGraph
 
-from . import graph as _graph
 from . import nodes
 from .nodes import DataCalculationError
 from .schemas import AGENTS, derive_plan
@@ -54,7 +53,11 @@ BLOCK_KEY: Dict[str, Optional[str]] = {
 
 def _tool_graph():
     """The graph without the router and the synthesizer, bound to the
-    agents and the gate as they are bound when it is built."""
+    agents and the gate as they are bound when it is built. graph.py is
+    read here and not at import, since its turn imports the layer that
+    imports this module."""
+    from . import graph as _graph
+
     tool_graph = StateGraph(AgentState)
     for name in AGENTS:
         tool_graph.add_node(name, _graph.AGENT_NODES[name])
