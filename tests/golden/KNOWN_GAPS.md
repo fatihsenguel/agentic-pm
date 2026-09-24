@@ -8943,3 +8943,85 @@ decision that no longer exists and no tokens. So the corpus run after
 the layer, 55 turns reaching the model, has no measured cost. It was
 estimated before the run at about $0.55, from the runner's $0.008 a
 turn, plus about eight Level 4 calls that record nothing anywhere.
+
+### What a turn's result carries - decision 77, pending
+
+**Trigger:** pending decision 77. Read it with "Two tools in one turn leave the state only the last one's blocks", "A follow-up answered from the previous turn's figures is refused" and "The turn's `messages` from the layer are read by nothing", and before any commit that changes what a turn carries to the next.
+
+**Numbered 24 September 2026 (forty-third session) at my word, and not
+decided.** It joins A and C1 of the forty-second session's handoff into
+one shape.
+
+**The defect.** `graph._turn` sets the turn's `shared_data` and
+`sub_results` from the last tool run's final state, which
+`conversation.answer` returns as `"state"`. Each record in the tool-call
+log already carries its tool's block, text and as-of
+(`tool_runner.run_tool`), so a turn of two tools has the first one's
+block in the log and not in the state. Separately, the as-of and the
+fixed caveats reach the reader only when the model writes them.
+
+**The shape recommended.**
+
+- **The records replace the one `shared_data`.** The turn stops copying
+  `shared_data` and `sub_results` from the last run, and `answer` stops
+  returning `"state"`. Both fields stay in `AgentState`, since each tool
+  run's own graph uses them; a finished turn leaves them empty.
+- **Each record gains `blocks` and `agents`.** `blocks` is every summary
+  block the run published, keyed as today, named per tool in a table in
+  `tool_runner`: `position` publishes research, screening and gate, and
+  4.3 reads all three. Raw arrays are not on the table (invariant 3).
+  `agents` is each agent's name and success, replacing the `sub_results`
+  reads.
+- **Each record carries `provenance`: `as_of`, `source`, `caveats`.**
+  `as_of` as `_as_of` computes it today. `source` from the block where
+  the block states one (screening, valuation, ledger, readings), `None`
+  where none does (allocation, P&L, volatility, compliance), printed as
+  not recorded and never defaulted. `caveats` a fixed tuple per tool
+  beside its formatter: price return only, no look-through, not an
+  average of the holdings' volatilities. Facts of the method, which
+  nobody would set differently, so not config.
+- **The CLI, minimally now:** one line per record under the answer, with
+  the tool, its inputs, and its provenance, in place of the SHARED_DATA
+  dump and the AGENTS RUN block. The client proper after Order 5.
+- **The follow-up.** The tracing check's allowed set takes this turn's
+  records and those of the conversation's earlier turns, which the turn
+  carries forward from `previous`. The model's history stays answers
+  only: S-4's turn 2 quoted figures from turn 1's answer, each of which
+  had passed turn 1's check against turn 1's records. The unread
+  `messages` return goes.
+
+**Rejected.** Merging every run's `shared_data` into one:
+`compliance_check` and `hypothetical_weight` both publish `compliance`,
+so the merge overwrites and 2.1's defect returns. The last run's state
+kept with the log beside it: two sources for one block, which can
+disagree. The as-of and caveats appended as text: a formatter doing the
+client's work, and nothing to assert on as a field. The follow-up told to
+call the tool again: a prompt change, and a second payment for figures
+already shown. Earlier tools' texts sent to the model: more text in the
+context than the question needs.
+
+**The blast radius, measured at d893747.** The layer: `conversation.py`,
+`graph.py`, `tool_runner.py`, about 60 lines; `state.py`, comments and
+possibly one field for the earlier records. The CLI: `cli.py`, about 40
+lines. The runner: 16 direct `_shared` reads and six accessors built on
+it, about 44 uses, most moving with the accessors; 7 `sub_results` lines
+in five functions. The tests: `test_turn.py`, `test_runner_probes.py`,
+`test_check_4_3.py`, `test_conversation.py` and `test_figure_tracing.py`
+change their fixtures, and new tests pin each tool's record, the
+position's blocks, the provenance of the eleven tools and the
+follow-up's allowed set.
+
+**Found while measuring.** 1.3's check reads `shared_data["volatilities"]`,
+the nine single-name volatilities DataAgent publishes, which the
+`portfolio_volatility` block does not carry. Under this shape the check
+moves to pytest, which pins the figure over the committed closes, or the
+block carries the nine, a change to a pipeline's output. Recommended: to
+pytest. Part of the decision, not taken.
+
+**What each loop would show.** pytest: the fixtures move and the new
+tests land. The runner: 2.1 from BLOCKED to FAIL, `_one_call` still
+refusing two calls, which is C2's inside decision 17; the other seventeen
+verdicts predicted not to move. The corpus: the answers' text unchanged,
+each record's as-of and caveats printed under it; whether Part 3c's
+reading counts them is a question about the reading rules, not this
+decision. The CLI: the per-record lines.
