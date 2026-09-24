@@ -31,7 +31,8 @@ What each case asserts instead:
     answer at all
   - benchmark.md Part 3b: is an as-of date stated
   - on every turn, that every figure in the answer is one a tool printed
-    that turn or the user typed (`figures_trace`, DIRECTION.md invariant 1)
+    that turn or one of the question the turn recorded (`figures_trace`,
+    DIRECTION.md invariant 1)
 
 The as-of check asserts on `shared_data["allocation"]["as_of"]["worst_case"]`:
 that it exists, that it is a date, and that that exact date reaches the answer.
@@ -334,11 +335,17 @@ FIGURE = re.compile(r"\d+(?:,\d{3})*(?:\.\d+)?")
 
 def figures_trace(state, question):
     """Every figure in the answer is a figure a tool printed this turn or
-    one the user typed (DIRECTION.md invariant 1, decision 45): each number
-    token of the answer is a token of the allowed text, the rendered text
-    of every record in the tool-call log plus the question. Compared whole
-    and not as substrings: 4.4 is a substring of 4.41 and not the same
-    token, which is what makes a rounding fail.
+    one of the question the turn recorded (DIRECTION.md invariant 1,
+    decision 45): each number token of the answer is a token of the
+    allowed text, the rendered text of every record in the tool-call log
+    plus the question. Compared whole and not as substrings: 4.4 is a
+    substring of 4.41 and not the same token, which is what makes a
+    rounding fail.
+
+    The question is the one the client checks against: on a reply the
+    pre-pass resolved, the message it was resolved into, read from
+    `resolved` and never rebuilt from the reply; on any other turn, the
+    turn as typed. A resolution with no message raises.
 
     A membership check, not a provenance check: a clause id the model
     invented whose number a distance in the text happens to print passes
@@ -350,6 +357,9 @@ def figures_trace(state, question):
     """
     if state.get("clarification"):
         return []
+    resolved = state.get("resolved")
+    if resolved is not None:
+        question = resolved["message"]
     allowed = set(FIGURE.findall(question or ""))
     for record in _calls(state):
         allowed.update(FIGURE.findall(record.get("text") or ""))
