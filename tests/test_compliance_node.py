@@ -123,7 +123,6 @@ async def test_the_inputs_are_read_from_the_state_and_not_the_router():
     keyed as the tool's contract names them, and a node reads nothing from
     a router decision that no longer exists."""
     state = state_with()
-    del state["router_decision"]
     state["inputs"] = {"weight": 0.15, "instrument_type": "share"}
     out = await compliance_agent_node(state)
     assert out.get("errors") is None, out.get("errors")

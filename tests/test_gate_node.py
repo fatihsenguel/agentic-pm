@@ -198,8 +198,8 @@ def test_an_unfinished_plan_still_runs_its_agents_first(shared):
 
 
 def test_the_compiled_graph_holds_the_gate_and_its_edge():
-    compiled = graph.create_agent_graph()
-    assert graph.GATE in compiled.get_graph().nodes
+    from agents.tool_runner import _tool_graph
+    assert graph.GATE in _tool_graph().get_graph().nodes
 
 
 # --- the guard (decision 62) --------------------------------------------------------
@@ -235,31 +235,6 @@ def test_no_outcome_when_the_judgement_states_no_weight():
     shared = {"gate": {"ticker": "GOOGL", "weight": WEIGHT}}
     with pytest.raises(nodes.DataCalculationError, match="states no weight"):
         nodes.require_gate(shared, _judgement(weight=None))
-
-
-async def test_the_synthesizer_refuses_a_position_answer_with_no_gate_block(shared):
-    """End to end over the seam: a judgement record reaches the synthesizer
-    with the gate having failed, and no answer about the position is
-    printed."""
-    shared.pop("allocation")
-    state = _state(shared)
-    state["router_decision"] = {"intent": "research", "parameters": {}}
-    state["sub_results"] = {"ResearchAgent": {"success": True, "research": {}}}
-    out = await nodes.synthesizer_node(state)
-    assert "No gate block in shared_data" in str(out)
-
-
-async def test_the_synthesizer_prints_a_thesis_answer_without_one(shared):
-    """A thesis question implies no position, so the guard does not apply
-    and the answer prints as it did before the gate existed."""
-    shared["research"]["asks"] = "thesis"
-    state = _state(shared)
-    state["router_decision"] = {"intent": "research", "parameters": {}}
-    state["sub_results"] = {"ResearchAgent": {"success": False, "error": "nothing to read"}}
-    out = await nodes.synthesizer_node(state)
-    assert "gate block" not in str(out)
-
-
 
 
 # --- decision 68's outcome, composed here -------------------------------------------

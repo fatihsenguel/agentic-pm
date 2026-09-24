@@ -5,10 +5,7 @@ table is keyed by tool, one row per tool, and the model never sees a plan
 (decision 45).
 
 Every row of the table is pinned here to the plan it derives, so a change
-to REQUIRES or to the table moves a test before it moves an answer. Until
-the router is deleted, the plan it derives for an intent and its parameters
-is the plan of the tool that intent stands for, pinned below against the
-rows it derived when it was keyed by intent.
+to REQUIRES or to the table moves a test before it moves an answer.
 """
 
 import pytest
@@ -113,37 +110,3 @@ def test_a_closed_plan_respects_requires_and_an_unclosed_one_names_why():
 def test_an_unknown_tool_has_no_plan():
     with pytest.raises(KeyError):
         schemas.derive_plan("not_a_tool")
-
-
-# --- the router, until it is deleted -------------------------------------------
-
-# intent, parameters, the plan the intent-keyed table derived
-ROUTER_ROWS = [
-    ("rebalancing", {}, [D, R]),
-    ("data_fetch", {}, [D]),
-    ("data_fetch", {"measure": "allocation"}, [D, A]),
-    ("data_fetch", {"measure": "position_pnl"}, [D, A]),
-    ("risk_analysis", {}, [D]),
-    ("risk_analysis", {"measure": "portfolio_volatility"}, [D, A]),
-    ("compliance", {}, [D, A, C]),
-    ("compliance", {"hypothetical_weight": 0.15}, [C]),
-    ("compliance", {"policy_topic": "what does my policy say about cash"}, [C]),
-    ("research", {"tickers": ["JPM"]}, [S]),
-    ("research", {}, [S]),
-    ("research", {"tickers": ["GOOGL"], "asks": "thesis"}, [S, RA]),
-    ("research", {"asks": "position"}, [D, A, S, RA]),
-    ("ledger", {}, [L]),
-    ("clarification_needed", {}, []),
-    ("out_of_scope", {}, []),
-]
-
-
-@pytest.mark.parametrize("intent, params, plan", ROUTER_ROWS,
-                         ids=[f"{r[0]}:{'/'.join(r[1]) or '-'}" for r in ROUTER_ROWS])
-def test_the_router_derives_the_plan_it_derived_by_intent(intent, params, plan):
-    assert schemas.router_plan(intent, params) == plan
-
-
-def test_an_unknown_intent_has_no_router_plan():
-    with pytest.raises(KeyError):
-        schemas.router_plan("not_an_intent", {})

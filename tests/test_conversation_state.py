@@ -1,22 +1,14 @@
 """
 A second turn sees the first: the state carries the previous turn's
-messages and the record of what was asked, and the decision dict carries
-the question and the record so the CLI and the next turn can read them.
+messages and the record of what was asked back, so the next turn can
+resolve its reply against it.
 
-No LLM, no database. The router is stubbed where a node is run.
+No LLM, no database.
 """
 
 import inspect
-from types import SimpleNamespace
 
-from langchain_core.messages import AIMessage, HumanMessage
-
-from agents import smart_router
-from agents.extraction import Extraction
 from agents.graph import run_agent_graph, run_agent_graph_sync
-from agents.nodes import router_node
-from agents.schemas import ExtractedParameters, RouterDecision
-from agents.smart_router import _with_extraction
 from agents.state import create_initial_state, get_user_message
 
 
@@ -67,60 +59,3 @@ def test_no_previous_turn_means_no_record_and_one_message():
 def test_the_entry_points_take_the_previous_state():
     for entry in (run_agent_graph, run_agent_graph_sync):
         assert "previous" in inspect.signature(entry).parameters
-
-
-class _StubRouter:
-    def __init__(self, pending):
-        self._pending = pending
-        self.received = None
-
-    async def route(self, user_message, portfolio_id=None, pending=None):
-        self.received = pending
-        decision = SimpleNamespace(
-            intent="clarification_needed", confidence=1.0,
-            parameters=ExtractedParameters(), execution_order=[],
-            clarification_question="Did you mean AAPL?", pending=self._pending,
-            resolved=None, reasoning="Extraction could not resolve APPL",
-        )
-        return decision, SimpleNamespace(errors=[])
-
-
-async def test_the_router_node_hands_the_record_to_the_router(monkeypatch):
-    stub = _StubRouter(None)
-    monkeypatch.setattr(smart_router, "get_router", lambda: stub)
-    second = create_initial_state("yes", previous=_first_turn())
-    await router_node(second)
-    assert stub.received == PENDING
-
-
-async def test_the_decision_dict_carries_the_question_and_the_record(monkeypatch):
-    """_decision_to_dict dropped clarification_question (KNOWN_GAPS): the
-    CLI's "asked back" line never printed and the next turn had nothing
-    structured to resolve against."""
-    monkeypatch.setattr(smart_router, "get_router", lambda: _StubRouter(PENDING))
-    out = await router_node(create_initial_state("Hows my APPL doing?", portfolio_id=3))
-    decision = out["router_decision"]
-    assert decision["clarification_question"] == "Did you mean AAPL?"
-    assert decision["pending"] == PENDING
-    assert out["final_response"] == "Did you mean AAPL?"
-
-
-async def test_the_decision_dict_carries_the_reasoning(monkeypatch):
-    """The CLI prints `reasoning` from this dict and it was never there
-    (KNOWN_GAPS, pending decision 5): the diagnostic that read the model's
-    `status` printed reasoning: None."""
-    monkeypatch.setattr(smart_router, "get_router", lambda: _StubRouter(PENDING))
-    out = await router_node(create_initial_state("Hows my APPL doing?", portfolio_id=3))
-    assert out["router_decision"]["reasoning"] == "Extraction could not resolve APPL"
-
-
-def test_the_schema_holds_a_record_the_model_cannot_write():
-    decision = RouterDecision.model_validate({
-        "intent": "clarification_needed", "confidence": 1.0, "parameters": {},
-        "reasoning": "extraction asked about a typo", "clarification_question": "Did you mean AAPL?",
-        "pending": PENDING})
-    assert decision.pending == PENDING
-    extraction = Extraction(tickers=[], period=None, max_volatility=None,
-                            hypothetical_weight=None, clarification=None)
-    raw = {"intent": "out_of_scope", "parameters": {}, "pending": {"kind": "planted by the model"}}
-    assert _with_extraction(raw, extraction, "Should I buy Nvidia?")["pending"] is None

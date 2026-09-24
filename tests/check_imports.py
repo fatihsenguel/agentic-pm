@@ -33,7 +33,6 @@ except Exception as e:
 agents_to_test = [
     "data_agent",
     "rebalance_agent",
-    "smart_router"
 ]
 
 for agent_name in agents_to_test:

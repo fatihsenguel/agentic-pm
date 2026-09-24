@@ -21,17 +21,14 @@ from typing import Dict, Any, Optional, Literal, List, Tuple
 from langchain_core.messages import AIMessage, HumanMessage
 
 from .protocols import PortfolioContext
-from .schemas import INTENTS
 
 from .state import (
     AgentState,
-    set_router_decision,
     mark_agent_complete,
     add_shared_data,
     add_error,
     set_final_response,
     get_next_agent,
-    get_user_message,
     get_agent_result,
     get_shared_data,
     is_execution_complete,
@@ -315,133 +312,6 @@ def validate_portfolio_context(state: "AgentState") -> bool:
     # Portfolio specified but no holdings - invalid
     logger.error(f"Portfolio {portfolio_id} specified but holdings not loaded")
     return False
-
-
-# =============================================================================
-# ROUTER NODE
-# =============================================================================
-
-async def router_node(state: AgentState) -> Dict[str, Any]:
-    """
-    Router node - determines which agents to call and in what order.
-    
-    Uses the Smart Router (Phase 6.1) for LLM-based intent detection.
-    """
-    from .smart_router import get_router
-    
-    tracer = get_tracer()
-    agent_ctx = None
-    
-    try:
-        # The request span is owned by run_agent_graph, so it outlives this
-        # node and the agents after it trace into the same request. Opening
-        # it here closed it here, and every later node found no request:
-        # no agent spans, no tool calls, no handovers in any live trace.
-        if tracer and hasattr(tracer, "get_current_request"):
-            req = tracer.get_current_request()
-            if req:
-                agent_ctx = req.trace_agent("Router")
-                agent_ctx.__enter__()
-        
-        # Get user message
-        user_message = get_user_message(state)
-        
-        if not user_message:
-            return add_error(state, "No user message found")
-        
-        # Call Smart Router
-        router = get_router()
-        portfolio_id = state.get("portfolio_id")
-        decision, validation = await router.route(
-            user_message, portfolio_id=portfolio_id, pending=state.get("pending"))
-
-        # Every attempt the router rejected before this decision, carried in
-        # the state so a repaired route is visible to the CLI and the golden
-        # runner. This loop used to call add_warning and drop what it
-        # returned, so no retry ever reached state["warnings"].
-        warnings = list(state.get("warnings", []))
-        warnings.extend(f"Validation: {error}" for error in validation.errors)
-
-        # Check if clarification needed
-        if decision.intent == "clarification_needed":
-            return {
-                **set_final_response(state, decision.clarification_question or "Could you please clarify your request?"),
-                "router_decision": _decision_to_dict(decision),
-                "warnings": warnings,
-            }
-
-        # Set router decision and initialize execution
-        decided = _decision_to_dict(decision)
-        tool, inputs = _tool_and_inputs(decided)
-        return {
-            **set_router_decision(state, decided, tool, inputs),
-            "warnings": warnings,
-        }
-        
-    except Exception as e:
-        return add_error(state, f"Router error: {str(e)}")
-    
-    finally:
-        if agent_ctx:
-            agent_ctx.__exit__(None, None, None)
-
-
-def _tool_and_inputs(decision: Dict[str, Any]):
-    """The tool a router decision stands for, and its inputs under the names
-    the tool's contract gives them, so that the nodes read what the tool
-    runner will write. Where DataAgent runs, the tickers and the period go
-    in as the router extracted them, since DataAgent reads both. Deleted
-    with the router."""
-    intent = decision["intent"]
-    parameters = decision.get("parameters") or {}
-    tickers = parameters.get("tickers") or []
-    period = parameters.get("period")
-    if intent == "compliance":
-        if parameters.get("hypothetical_weight") is not None:
-            return "hypothetical_weight", {"weight": parameters["hypothetical_weight"]}
-        if parameters.get("policy_topic") is not None:
-            return "policy_lookup", {"topic": parameters["policy_topic"]}
-        return "compliance_check", {"tickers": tickers, "period": period}
-    if intent == "research":
-        if len(tickers) != 1:
-            raise ValueError(f"A research question is of one company and the message names "
-                             f"{tickers}. Name the one ticker.")
-        tool = parameters.get("asks") or "philosophy_screen"
-        inputs = {"ticker": tickers[0]}
-        if tool == POSITION:
-            inputs.update(tickers=tickers, period=period)
-        return tool, inputs
-    if intent in ("data_fetch", "risk_analysis"):
-        return parameters.get("measure"), {"tickers": tickers, "period": period}
-    if intent == "rebalancing":
-        return "rebalance", {"tickers": tickers, "period": period}
-    if intent == "ledger":
-        return "ledger", {}
-    return None, {}
-
-
-def _decision_to_dict(decision) -> Dict[str, Any]:
-    """Convert RouterDecision to dict for state storage."""
-    return {
-        "intent": decision.intent if isinstance(decision.intent, str) else decision.intent.value,
-        "confidence": decision.confidence,
-        # Every extracted field, from the schema. A hand-picked key list here
-        # was a second statement of ExtractedParameters and dropped any field
-        # it did not name - a router output that validated and then vanished
-        # before any node could read it.
-        "parameters": decision.parameters.model_dump(),
-        "execution_order": decision.execution_order,
-        # What was asked back, as text for the CLI and as the record the next
-        # turn resolves the reply against. Both used to be dropped here, so
-        # the CLI's "asked back" line never printed (KNOWN_GAPS).
-        "clarification_question": decision.clarification_question,
-        "pending": getattr(decision, "pending", None),
-        "resolved": getattr(decision, "resolved", None),
-        # The model's sentence, or extraction's "could not resolve", or the
-        # fallback's "Router failed". The CLI prints it; it was dropped here
-        # since the dict was first written (KNOWN_GAPS).
-        "reasoning": getattr(decision, "reasoning", None),
-    }
 
 
 # =============================================================================
@@ -2296,117 +2166,6 @@ async def rebalance_agent_node(state: AgentState) -> Dict[str, Any]:
         if agent_ctx:
             agent_ctx.__exit__(None, None, None)
 
-# =============================================================================
-# SYNTHESIZER NODE
-# =============================================================================
-
-# The intents the chain in synthesizer_node formats, stated once beside it. A
-# second statement of schemas.INTENTS, checked at import rather than derived,
-# as graph.AGENT_NODES is against AGENTS: three branches condition on what
-# ran, so a mapping would not be the chain. clarification_needed is the one
-# registry value with no
-# branch - router_node writes its final_response and the graph exits before
-# the synthesizer (KNOWN_GAPS, "Clarification exits the graph on a proxy").
-SYNTHESIZER_INTENTS = frozenset({
-    "rebalancing", "data_fetch",
-    "risk_analysis", "out_of_scope", "compliance", "research", "ledger",
-})
-_UNSYNTHESIZED_INTENTS = frozenset({"clarification_needed"})
-
-
-def _check_synthesizer_intents(handled) -> None:
-    expected = set(INTENTS) - _UNSYNTHESIZED_INTENTS
-    if set(handled) != expected:
-        raise RuntimeError(
-            "intent registry and synthesizer chain disagree: schemas.INTENTS "
-            f"formats {sorted(expected)}, nodes.SYNTHESIZER_INTENTS has "
-            f"{sorted(handled)}. An intent is added to both or to neither."
-        )
-
-
-_check_synthesizer_intents(SYNTHESIZER_INTENTS)
-
-
-async def synthesizer_node(state: AgentState) -> Dict[str, Any]:
-    """
-    Synthesizer node - combines results from all agents into final response.
-    
-    This is where we create the user-facing response.
-    """
-    try:
-        decision = state.get("router_decision") or {}
-        intent = decision.get("intent", "unknown")
-        sub_results = state.get("sub_results") or {}
-        errors = state.get("errors") or []
-        
-        # Build response based on intent
-        lines = []
-        
-        if errors:
-            lines.append("Some issues occurred during analysis:")
-            for err in errors[:3]:
-                lines.append(f"  - {err}")
-            lines.append("")
-        
-        # Intent-specific formatting
-        if intent == "rebalancing":
-            lines.extend(_format_rebalance_response(sub_results))
-        elif intent == "data_fetch" and "PortfolioAnalysisAgent" in sub_results:
-            lines.extend(_format_analysis_response(decision, sub_results))
-        elif intent == "risk_analysis" and "PortfolioAnalysisAgent" in sub_results:
-            lines.extend(_format_analysis_response(decision, sub_results))
-        elif intent == "risk_analysis":
-            lines.extend(_format_risk_response(sub_results))
-        elif intent == "out_of_scope":
-            lines.extend(_format_out_of_scope_response())
-        elif intent == "compliance":
-            lines.extend(_format_compliance_response(decision, sub_results))
-        elif intent == "research" and "ResearchAgent" in sub_results:
-            # Decision 62: nothing that implies a position is printed
-            # without the gate's block for the same ticker and weight. A
-            # thesis question implies none and passes straight through.
-            judgement = judgement_record(state)
-            if judgement is not None:
-                shared = state.get("shared_data") or {}
-                gate_block = require_gate(shared, judgement)
-                lines.extend(_format_position_response(judgement, gate_block,
-                                                       shared.get("screening")))
-            else:
-                lines.extend(_format_thesis_response(sub_results))
-        elif intent == "research":
-            lines.extend(_format_research_response(sub_results))
-        elif intent == "ledger":
-            lines.extend(_format_ledger_response(sub_results))
-        else:
-            lines.append("Analysis complete. See details below:")
-            for agent, result in sub_results.items():
-                lines.append(f"\n{agent}: {'ok' if result.get('success') else 'failed'}")
-        
-        response = "\n".join(lines)
-        return set_final_response(state, response)
-        
-    except Exception as e:
-        return set_final_response(state, f"Error synthesizing response: {str(e)}")
-
-
-# The scope boundary as benchmark.md Part 2 draws it today: security selection
-# is out, portfolio mechanics on what is already held are in. Fixed text, not
-# model output, so the refusal cannot grow a recommendation. Its eventual home
-# is a clause in the IPS, cited like any other; until the IPS lands it lives
-# here. tests/benchmark/run_cases.py asserts on the first sentence.
-OUT_OF_SCOPE_RESPONSE = [
-    "**OUT OF SCOPE**",
-    "",
-    "This asks for something outside what this system does.",
-    "",
-    "It answers questions about the portfolio you already hold - allocation, "
-    "P&L per position, volatility - and checks them against your investment "
-    "policy. It does not screen, pick, or say whether to buy or sell an "
-    "instrument, forecast prices or returns, assess tax, or place orders. "
-    "No recommendation is given here.",
-]
-
-
 def _format_compliance_response(decision: Dict, sub_results: Dict) -> List[str]:
     """Format the compliance block. Cites clause ids and the owner's clause
     text; prints the figures the checker published and computes none - the
@@ -2661,11 +2420,6 @@ def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict],
         lines.append(f"**Not shown:** {', '.join(left_out)}. Ask about the portfolio "
                      "for the full check.")
     return lines
-
-
-def _format_out_of_scope_response() -> List[str]:
-    """Out-of-scope request: nothing ran, so there is nothing to format."""
-    return list(OUT_OF_SCOPE_RESPONSE)
 
 
 # The metrics whose unit is a share, printed as percentages; the one ratio
@@ -3300,36 +3054,6 @@ def _format_rebalance_response(sub_results: Dict) -> List[str]:
     return lines
 
 
-def _format_analysis_response(decision: Dict, sub_results: Dict) -> List[str]:
-    """Select which of PortfolioAnalysisAgent's figures the question asked for.
-
-    The agent computes every figure; the router's `measure` says which one the
-    user wanted. Dispatching on anything else - `tickers` being non-empty, the
-    intent, the task description - was tried on paper and fails: the router
-    fills `tickers` from the portfolio on every allocation query (rule 2), the
-    intent is `data_fetch` for all of them, and the task description is free
-    text nothing can assert on.
-
-    A plan naming the agent with no measure is a router error and raises
-    rather than picking a formatter, because whichever one it picked would
-    answer a question the user did not ask with figures that look right.
-    """
-    parameters = decision.get("parameters") or {}
-    measure = parameters.get("measure")
-
-    tickers = parameters.get("tickers") or []
-    if measure == "allocation":
-        return _format_allocation_response(sub_results, parameters.get("group_by"), tickers)
-    if measure == "position_pnl":
-        return _format_pnl_response(sub_results, tickers)
-    if measure == "portfolio_volatility":
-        return _format_portfolio_volatility_response(sub_results, tickers)
-    raise ValueError(
-        f"PortfolioAnalysisAgent ran but the router set measure={measure!r}. "
-        "Nothing to select; see ExtractedParameters.measure."
-    )
-
-
 def _read_and_not_used(tickers: Optional[List[str]], because: str) -> List[str]:
     """Name what extraction read from the message and this formatter did not
     consume. Empty when it read nothing, so the line appears only when there
@@ -3563,59 +3287,6 @@ def _format_pnl_response(sub_results: Dict, tickers: List[str]) -> List[str]:
         lines.append("currency part; that split is not computed (expected_values.md Part 8 C).")
     return lines
 
-
-
-def _format_risk_response(sub_results: Dict) -> List[str]:
-    """Format the risk figures DataAgent produced.
-
-    Per holding only. Portfolio-level volatility needs the holding weights
-    against the covariance matrix and does not exist yet (expected_values.md
-    D7). Benchmark 1.3 asks for exactly that, so this names the gap rather than
-    letting nine per-holding numbers stand in for the one number asked for.
-
-    The window comes from `prices["period"]`, which is the range actually
-    returned, not the router's requested period. The router emits null when the
-    user names no timeframe and the window is then resolved from config two
-    files away, so the requested value is absent exactly when the reader most
-    needs to be told what was measured.
-
-    The router sends VaR and drawdown questions to this path, and none is
-    computed, so the answer says so on every run: the formatter cannot read
-    the question, and a volatility under a VaR question is a wrong answer
-    unless it says what it is not.
-    """
-    data = sub_results.get("DataAgent", {})
-    if not data.get("success"):
-        return ["Risk figures could not be loaded.",
-                f"  {data.get('error', 'No error recorded.')}"]
-
-    vols = (data.get("covariance") or {}).get("annualized_volatilities_raw") or {}
-    if not vols:
-        return ["No volatilities were computed for this request."]
-
-    prices = data.get("prices") or {}
-    window = prices.get("period")
-    observations = prices.get("num_observations")
-
-    lines = ["**RISK**", ""]
-    if window:
-        basis = f"**Annualised volatility per holding**, {window}"
-        if observations:
-            basis = f"{basis}, {observations} closes"
-        lines.append(f"{basis}:")
-    else:
-        lines.append("**Annualised volatility per holding**, window not reported:")
-    for ticker, vol in sorted(vols.items(), key=lambda kv: -kv[1]):
-        lines.append(f"  - {ticker:<6}{vol:>8.2%}")
-
-    lines.append("")
-    lines.append("**Not done.** These are per holding. The portfolio's own volatility")
-    lines.append("is a different number - weights against the covariance matrix -")
-    lines.append("and is answered when the question asks for it. No as-of date is")
-    lines.append("attached to the per-holding figures (benchmark 3.3).")
-    lines.append("Value at risk, expected shortfall and drawdown are not computed by")
-    lines.append("this system; none of the figures above is one of them.")
-    return lines
 
 
 def _format_portfolio_volatility_response(sub_results: Dict,
