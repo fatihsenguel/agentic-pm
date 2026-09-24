@@ -165,3 +165,48 @@ def test_3_5_reads_the_clarification_and_the_resolved_call():
     assert _mentions(run_cases.check_3_5(unresolved), "turn 2 records no resolution")
     wrong = _typo_turns(clarification=ASKED, resolved=RESOLVED, tickers=("MSFT",))
     assert _mentions(run_cases.check_3_5(wrong), "turn 2 tickers ['MSFT'] != ['AAPL']")
+
+
+# ---------------------------------------------------------------------------
+# The four blocked_on probes: the block still decides, the reason names
+# what the log shows
+# ---------------------------------------------------------------------------
+
+CALLED = "the layer called [('allocation', {})]"
+
+
+def test_blocked_on_compliance_names_what_the_log_shows():
+    assert run_cases.blocked_on_delegation_trace is run_cases.blocked_on_compliance
+    ran = _state([_record("compliance_check")], sub_results={"ComplianceAgent": {}})
+    assert run_cases.blocked_on_compliance(ran) is None
+    other = _state([_record("allocation")])
+    reason = run_cases.blocked_on_compliance(other)
+    assert "ComplianceAgent did not run" in reason and CALLED in reason
+    asked = _state([], clarification=ASKED, final_response="Did you mean AAPL?")
+    assert "asked back: 'Did you mean AAPL?'" in run_cases.blocked_on_compliance(asked)
+    nothing = _state([])
+    assert "called no tool" in run_cases.blocked_on_compliance(nothing)
+
+
+def test_blocked_on_screen_names_what_the_log_shows():
+    reached = _state([_record("philosophy_screen", {"ticker": "GOOGL"}, key="screening")],
+                     shared_data={"screening": {"subject": {"ticker": "GOOGL"}}})
+    assert run_cases.blocked_on_screen(reached) is None
+    reason = run_cases.blocked_on_screen(_state([_record("allocation")], errors=["x"]))
+    assert "no screening block" in reason and CALLED in reason and "errors: ['x']" in reason
+
+
+def test_blocked_on_ledger_names_what_the_log_shows():
+    reached = _state([_record("ledger")], shared_data={"ledger": {"records": []}})
+    assert run_cases.blocked_on_ledger(reached) is None
+    reason = run_cases.blocked_on_ledger(_state([_record("allocation")]))
+    assert "no ledger block" in reason and CALLED in reason
+
+
+def test_blocked_on_research_names_what_the_log_shows():
+    reached = _state([_record("thesis", {"ticker": "GOOGL"}, key="research")],
+                     shared_data={"research": {"asks": "thesis"}})
+    assert run_cases.blocked_on_research(reached) is None
+    reason = run_cases.blocked_on_research(_state([], clarification=ASKED,
+                                                  final_response="Did you mean AAPL?"))
+    assert "no research block" in reason and "asked back: 'Did you mean AAPL?'" in reason
