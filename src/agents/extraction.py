@@ -30,6 +30,13 @@ Percentages. A figure with a percent sign next to "vol" or "volatility" is
 the volatility cap; any other single percentage is the hypothetical weight
 in one position. Two of a kind, or a figure outside (0, 100], clarify.
 
+The instrument type of that position (decision 12), read only beside a
+weight, from a closed list: share, shares, stock, stocks for a share; fund,
+funds, ETF, ETFs for a fund. Which concentration limits apply depends on it,
+so a weight in one position that names no ticker, is not a position
+question, and states neither type or both is asked about rather than
+assumed.
+
 The compliance mode. A question about what the policy itself says - the
 word policy, IPS or investment policy statement followed by a saying verb,
 or "anything in my policy about" - is a lookup, and the router passes the
@@ -57,11 +64,11 @@ extraction asks back it leaves a record - kind, token, candidate, the
 message - and the next turn's reply is resolved against that record before
 anything else: a confirmation or the candidate substitutes the candidate
 for the token in the original message, a different held or known ticker
-substitutes that one, and anything else is a new message. The resolved
-message then goes through extraction and the model as if typed. Only the
-unknown-ticker clarification has a record and a rule so far, the one
-benchmark 3.5 defines; the span and percentage clarifications get theirs
-when a case asks.
+substitutes that one, and anything else is a new message. The instrument
+type's record is resolved by a reply that names one type and nothing else,
+the question then carrying "It would be a share." or "a fund." The resolved
+message then goes through extraction and the model as if typed. The span
+and percentage clarifications leave no record yet.
 """
 
 import re
@@ -90,6 +97,9 @@ class Extraction:
     # What a research question asks (decision 66): "position", "thesis",
     # or None.
     asks: Optional[str] = None
+    # The instrument type of a hypothetical weight, "share" or "fund", or
+    # None when the message states neither or both (decision 12).
+    instrument_type: Optional[str] = None
 
 
 _KNOWN = {t for t in KNOWN_ETFS | KNOWN_STOCKS if len(t) >= 2}
@@ -147,6 +157,15 @@ _POLICY_SAYS = re.compile(
 _VOL_WINDOW = 25  # characters either side of a percentage in which "vol" makes it a cap
 
 _THESIS = re.compile(r"\bthes(?:is|es)\b", re.IGNORECASE)
+_SHARE_WORDS = re.compile(r"\b(?:shares?|stocks?)\b", re.IGNORECASE)
+_FUND_WORDS = re.compile(r"\b(?:funds?|etfs?)\b", re.IGNORECASE)
+# A reply that names a type and nothing else: "A share.", "a single stock",
+# "an ETF", "it would be a fund".
+_TYPE_REPLY = re.compile(
+    r"^(?:(?:it(?:'s| is| would be)|a|an|the|single|new|index|directly|held)\s+)*"
+    r"(?:shares?|stocks?|funds?|etfs?)$",
+    re.IGNORECASE,
+)
 _POSITION = re.compile(r"\bshould\s+I\s+(?:buy|own)\b", re.IGNORECASE)
 
 
@@ -159,6 +178,14 @@ def _asks(message: str) -> Optional[str]:
     return "thesis" if _THESIS.search(message) else None
 
 
+def _instrument_type(text: str) -> Optional[str]:
+    """The one type the text names, or None when it names neither or both."""
+    share, fund = bool(_SHARE_WORDS.search(text)), bool(_FUND_WORDS.search(text))
+    if share == fund:
+        return None
+    return "share" if share else "fund"
+
+
 def extract(message: str, held_tickers: Sequence[str], periods: Iterable[str]) -> Extraction:
     """Extract what the message states, or the question to ask back.
 
@@ -169,7 +196,8 @@ def extract(message: str, held_tickers: Sequence[str], periods: Iterable[str]) -
 
     Returns:
         Extraction. `clarification` is set when a ticker, a span or a
-        percentage is outside what the vocabularies can express; the
+        percentage is outside what the vocabularies can express, or when a
+        weight in one unnamed position states no instrument type; the
         first such finding wins, in that order.
     """
     held = [t.upper() for t in held_tickers]
@@ -178,8 +206,23 @@ def extract(message: str, held_tickers: Sequence[str], periods: Iterable[str]) -
     tickers, ticker_question, pending = _tickers(message, held)
     period, period_question = _period(message, vocabulary)
     max_vol, weight, percent_question = _percentages(message)
+    asks = _asks(message)
+    kind = _instrument_type(message) if weight is not None else None
 
-    clarification = ticker_question or period_question or percent_question
+    type_question, type_record = None, None
+    if weight is not None and kind is None and not tickers and asks is None:
+        type_question = ("Would that position be a directly held share or a fund? "
+                         "Which limits apply depends on it.")
+        type_record = {"kind": "instrument_type", "token": None, "candidate": None,
+                       "message": message}
+
+    clarification = ticker_question or period_question or percent_question or type_question
+    if ticker_question:
+        record = pending
+    elif clarification is not None and clarification == type_question:
+        record = type_record
+    else:
+        record = None
     return Extraction(
         tickers=tickers,
         period=period,
@@ -187,8 +230,9 @@ def extract(message: str, held_tickers: Sequence[str], periods: Iterable[str]) -
         hypothetical_weight=weight,
         clarification=clarification,
         policy_lookup=_POLICY_SAYS.search(message) is not None,
-        pending=pending if ticker_question else None,
-        asks=_asks(message),
+        pending=record,
+        asks=asks,
+        instrument_type=kind,
     )
 
 
@@ -202,9 +246,16 @@ def resolve(reply: str, pending: Optional[Dict[str, str]], held_tickers: Sequenc
     Unknown ticker: a plain confirmation, or the candidate named, puts the
     candidate where the token was in the original message; a different held
     or known ticker named in the reply puts that one there. "no" alone
-    names nothing and resolves nothing. Never a guess: a reply outside this
-    vocabulary is routed as typed.
+    names nothing and resolves nothing.
+
+    Instrument type: a reply naming one type and nothing else appends it to
+    the original question. Never a guess: a reply outside this vocabulary
+    is routed as typed.
     """
+    if pending and pending.get("kind") == "instrument_type":
+        words = " ".join(re.sub(r"[^\w\s']", " ", reply).split())
+        kind = _instrument_type(words) if _TYPE_REPLY.fullmatch(words) else None
+        return f"{pending['message']} It would be a {kind}." if kind else None
     if not pending or pending.get("kind") != "unknown_ticker":
         return None
     token, candidate, message = pending["token"], pending["candidate"], pending["message"]

@@ -399,9 +399,11 @@ class SmartRouter:
     
     def _clarification_from_extraction(self, extraction: Extraction) -> RouterDecision:
         """The message asked for something outside the vocabularies - a typo
-        of a holding, a span the period vocabulary lacks, two weights. The
-        question is extraction's, deterministic, and no model is consulted:
-        a model shown the message would either guess or ask the same."""
+        of a holding, a span the period vocabulary lacks, two weights, a
+        weight with no instrument type. The question is extraction's,
+        deterministic, and no model is consulted: a model shown the message
+        would either guess or ask the same. The weight is left off, as it
+        belongs to intent compliance alone; the record carries the message."""
         return RouterDecision(
             intent=IntentType.CLARIFICATION_NEEDED,
             confidence=1.0,
@@ -410,7 +412,6 @@ class SmartRouter:
                 tickers=extraction.tickers,
                 period=extraction.period,
                 max_volatility=extraction.max_volatility,
-                hypothetical_weight=extraction.hypothetical_weight,
             ),
             reasoning=f"Extraction could not resolve the message: {extraction.clarification}"[:1000],
             clarification_question=extraction.clarification,

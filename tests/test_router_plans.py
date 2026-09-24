@@ -85,7 +85,7 @@ async def test_status_does_not_change_the_plan(router):
 async def test_a_hypothetical_weight_derives_the_agent_alone(router):
     router._llm = _FakeLLM(_json("compliance", COMPLIANCE))
     decision, _ = await router.route(
-        "I want to put 15% into a single position, is that allowed?", portfolio_id=3)
+        "I want to put 15% into a single stock, is that allowed?", portfolio_id=3)
     assert decision.execution_order == ["ComplianceAgent"]
     assert decision.parameters.hypothetical_weight == 0.15
 

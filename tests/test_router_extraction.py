@@ -163,7 +163,7 @@ async def test_a_portfolio_check_carries_no_mode(router):
 
 async def test_a_weight_in_the_message_reaches_the_decision(router):
     router._llm = _FakeLLM(_json("compliance", ("ComplianceAgent",)))
-    decision, _ = await router.route("I want to put 15% into a single position, is that allowed?",
+    decision, _ = await router.route("I want to put 15% into a single stock, is that allowed?",
                                      portfolio_id=3)
     assert decision.parameters.hypothetical_weight == 0.15
     assert decision.parameters.tickers == []
