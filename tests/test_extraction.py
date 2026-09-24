@@ -46,7 +46,6 @@ CLEAN = [
     ("What concentration risk do I have, and is it compatible with my investment policy?", P3, [], None, None, None),
     ("Does my current allocation violate any rule of my investment policy?", P3, [], None, None, None),
     ("What would have to change for me to be within the limits again?", P3, [], None, None, None),
-    ("I want to put 15% into a single position, is that allowed?", P3, [], None, None, 0.15),
     ("How is my position doing today?", P3, [], None, None, None),   # benchmark 3.3: "today" as "as of now"
     ("Is NEE up or down?", P3, ["NEE"], None, None, None),            # the prompt's example
     ("What does my investment policy say about currency risk?", P3, [], None, None, None),
@@ -96,6 +95,9 @@ CLARIFY = [
     ("Prices for the last week", SOME, ["last week"]),
     ("Put 15% into AAPL and 20% into MSFT", P3, ["15%", "20%"]),
     ("Put 150% into one stock", P3, ["150%"]),
+    # decision 12: a weight in one position with no instrument type is asked
+    # about, since which limits apply depends on it (Part 18, 3.1)
+    ("I want to put 15% into a single position, is that allowed?", P3, ["share", "fund"]),
     ("Over 1 year and 3 years", SOME, ["1 year", "3 years"]),
     # "today" with a change verb asks for a one-day move, a span the
     # vocabulary lacks; the pinned false refusal, then a since-purchase
@@ -303,4 +305,76 @@ def test_a_reply_is_resolved_against_the_record_or_not_at_all(reply, resolved):
 def test_no_record_or_an_unknown_kind_resolves_nothing():
     assert resolve("yes", None, P3) is None
     assert resolve("yes", {"kind": "span", "message": "over the last month"}, P3) is None
+
+
+# --- the instrument type of a hypothetical weight (decision 12) ---------------
+
+HYPOTHETICAL = "I want to put 15% into a single position, is that allowed?"
+
+# message, held, the instrument type read; read only beside a weight, so a
+# message with none reads no type whatever words it carries
+TYPES = [
+    ("Could I put 11% into a new stock?", P3, "share"),
+    ("Could I put 11% into a new ETF?", P3, "fund"),
+    ("Can I put 12% into a single stock?", P3, "share"),
+    ("Could 8% go into an index fund?", P3, "fund"),
+    ("What share of my portfolio is technology?", P3, None),
+    ("What will Nvidia's share price be at the end of next year?", P3, None),
+]
+
+
+@pytest.mark.parametrize("message, held, kind", TYPES, ids=[row[0][:40] for row in TYPES])
+def test_the_instrument_type_is_read_beside_a_weight(message, held, kind):
+    x = extract(message, held, PERIODS)
+    assert x.clarification is None, x.clarification
+    assert x.instrument_type == kind
+
+
+def test_a_weight_with_no_type_asks_back_and_leaves_a_record():
+    x = extract(HYPOTHETICAL, P3, PERIODS)
+    assert x.hypothetical_weight == 0.15 and x.instrument_type is None
+    assert "share" in x.clarification and "fund" in x.clarification
+    assert "IPS-" not in x.clarification
+    assert x.pending == {"kind": "instrument_type", "token": None, "candidate": None,
+                         "message": HYPOTHETICAL}
+
+
+@pytest.mark.parametrize("message", [
+    "What if AAPL were 12% of my portfolio?",   # a held position at a weight: not decision 12's
+    "Should I buy GOOGL at 6%?",                # a position question: the weight is the entry's
+    "Could I put 11% into a share and a fund?", # both named: which is not stated
+])
+def test_a_weight_asks_for_a_type_only_where_one_position_is_unnamed(message):
+    x = extract(message, P3, PERIODS)
+    if "share and a fund" in message:
+        assert x.instrument_type is None and x.pending["kind"] == "instrument_type"
+    else:
+        assert x.clarification is None and x.pending is None
+
+
+TYPE_PENDING = {"kind": "instrument_type", "token": None, "candidate": None,
+                "message": HYPOTHETICAL}
+AS_SHARE = HYPOTHETICAL + " It would be a share."
+AS_FUND = HYPOTHETICAL + " It would be a fund."
+
+TYPE_REPLIES = [
+    ("A share.", AS_SHARE),
+    ("share", AS_SHARE),
+    ("a single stock", AS_SHARE),
+    ("A fund.", AS_FUND),
+    ("an ETF", AS_FUND),
+    ("no", None),                          # names no type: a new message
+    ("a share or a fund", None),           # names both: nothing is chosen
+    ("What is my allocation?", None),      # a new question
+]
+
+
+@pytest.mark.parametrize("reply, resolved", TYPE_REPLIES, ids=[r[0] for r in TYPE_REPLIES])
+def test_a_type_reply_is_resolved_against_the_record_or_not_at_all(reply, resolved):
+    assert resolve(reply, TYPE_PENDING, P3) == resolved
+
+
+def test_the_resolved_question_extracts_whole():
+    x = extract(AS_SHARE, P3, PERIODS)
+    assert (x.hypothetical_weight, x.instrument_type, x.clarification) == (0.15, "share", None)
 
