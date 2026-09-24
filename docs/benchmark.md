@@ -1059,6 +1059,121 @@ reference, which a dated correction may fix before the run.
 | S-8 turn 1 | compliance_check; AAPL's findings selected | matched |
 | S-8 turn 2 | portfolio_volatility, 1Y | matched: nothing of AAPL carried over |
 
+**Run of 24 September 2026, commit 02a9e57, transcript
+`tests/golden/run_corpus_2026-09-24.txt`, the first through the layer.**
+67 turns through the CLI, 15:08 to 15:15 UTC, in 57 processes: one per
+entry and one per sequence, since the CLI carries each turn's state into
+the next and the layer now sends every earlier question and answer to the
+model, so a batch of entries in one process would answer each as a turn
+of an unrelated conversation. The 22 September run batched them; that
+difference is the procedure's, not the corpus's. Every market figure
+printed as of 2026-09-23, the close the runner's run of the same day
+fetched; the screen, the ledger and the proposal as of 2026-09-24. The run
+fetched Adobe's closes of the 22nd and 23rd and nothing else, wrote no
+reading, and left `watchlist.toml` unchanged. The transcript is whole but
+for the worktree path cut from 153 lines, said in its commit. The CLI
+prints no tokens, so the run's cost is not measured.
+
+Read against Part 18 as it stands, including the corrections of 24
+September to 3.1, 3.1c, 3.2 and R-6. Every fixed figure printed matched:
+the cost bases, the quantities, the average prices, the purchase dates,
+cash. Every market figure was read against 2026-09-23 and reconciles with
+itself: the classes sum to the total, each percentage is its value over
+the total, each P&L is its value less its cost. **33 of 67 matched, where
+the fourth block predicted 52**: 7 of 19 in the spine, 7 of 15
+variations, 7 of 7 clarifications, 6 of 9 refusals, 6 of 17 sequence
+turns. Twenty-three lines the fourth block called matched missed, each a
+failed hypothesis whatever the answer reads like; four it called missed
+matched, 3.1 and V-3.1a to V-3.1c, by Part 18's correction of 24
+September and with the behaviour it predicted. No miss is on the guess,
+cannot be done or a reading gap: every name was read (V-1.2a, V-4.1a,
+V-4.2a, V-4.6a, V-2.1b's "Apple" named back), the German was answered in
+German, and every sequence's turn two read what it refers to.
+
+The misses, by kind. **The as-of dropped**, the largest: 1.4, 2.1, 2.3,
+4.1, V-2.1a, V-4.1a, V-4.6a, S-5 turn 2, S-7 both turns, S-8 turn 1.
+**A statement Part 18 pins left out**: no look-through (1.1, S-5 turn 1),
+not an average of the holdings' volatilities (1.3, V-1.3b, V-1.3c, S-3
+turn 2, S-8 turn 2), PHI-6.2 (4.5). **The whole-table entries answered
+with a selection**: 2.1's ok and exempt rows, 2.2's statements, 4.3's
+before column. **Five failures no loop had shown**: V-1.1a's German
+figures refused by the tracing check; S-4 turn 2 answered from turn 1's
+figures after a policy lookup that printed none of them, and refused; 3.3 asked which
+position instead of showing all nine; V-2.1b refused as an opinion where
+V-2.1a, the same question with the ticker, ran the check; R-2 offered to
+screen a company on no watchlist entry. Each is logged in `KNOWN_GAPS.md`
+with its trigger; nothing was fixed.
+
+| Entry | Reading | Against the fourth block |
+| --- | --- | --- |
+| 1.1 | missed: funds counted at fund level with no look-through, not stated | moved against |
+| 1.2 | matched | as predicted |
+| 1.3 | missed: the 251 returns from 252 closes, the weights' date and "not an average of the holdings' volatilities" not stated; the method is "daily returns of the invested assets" | moved against |
+| 1.4 | missed: AAPL and MSFT with their values, but as shares of total and not of invested value; Technology's share of invested value, the unsectored 47% and the as-of not stated | moved against |
+| 2.1 | missed: IPS-4.1, 4.2 and 4.3 cited on the breaches only; the ok rows as "everything else", the four funds not named as exempt, the no-sector line not reported, no as-of | moved against |
+| 2.2 | missed: IPS-3.2 to 3.5 inside with no figure; IPS-1.1, 1.2, 2.1, 2.2, 5.1, 5.3, 6.1 and 6.2 not named as not computed; 2.3's conditions carried | as predicted, on more |
+| 2.3 | missed: the overlaps not stated; no as-of | as predicted, on more |
+| 3.1 | matched: asks share or fund, no clause, no figure (Part 18 as corrected) | moved the other way, the behaviour as predicted |
+| 3.2 | matched: IPS-1.3 cited, the forecast named as refused, the lookup alone ran; one sentence lists what the policy answers | as predicted |
+| 3.3 | missed: asked which position instead of showing all nine; no figure | moved against |
+| 3.4 | matched | as predicted |
+| 3.5 turn 1 | matched | as predicted |
+| 3.5 turn 2 | matched | as predicted |
+| 4.1 | missed: the check's as-of not stated; the range and a last close printed beside the stop, the close with no date | moved against |
+| 4.2 | missed: the fiscal year's dates and the accession, W-1 as the growth pair's source, PHI-4.3 by id and the close's source not stated | as predicted, on more |
+| 4.3 | missed: no before column, no after shares, IPS-3.2 to 3.5 and the statements not named, the thesis not word for word, neither W-1.1 nor W-1.2 cited | as predicted, on more |
+| 4.4 | missed: the thesis not word for word, the readings' claims without their quotes and with digits in their sentences, the filed date, PHI-6.1 and PHI-6.2 not cited | as predicted, on more |
+| 4.5 | missed: PHI-6.2 not cited by id | moved against |
+| 4.6 | matched: "doesn't clear" worded beside the exclusion | as predicted |
+| V-1.1a | missed: the answer, written in German number format, refused by the tracing check; nothing shown | moved against |
+| V-1.2a | matched: the name read by the layer | as predicted |
+| V-1.3a | matched; the method note of 1.3 stands | as predicted |
+| V-1.3b | missed: "not an average of the holdings' volatilities" not stated | moved against |
+| V-1.3c | missed: "not an average of the holdings' volatilities" not stated | moved against |
+| V-2.1a | missed: no as-of, the position's value not stated | moved against |
+| V-2.1b | missed: "Apple" read, the question refused as an opinion under IPS-1.3 through the lookup, no compliance check run, one offered | moved against |
+| V-3.1a | matched: asks share or fund (Part 18 as corrected) | moved the other way, the behaviour as predicted |
+| V-3.1b | matched: the model asks share or fund, no tool called | moved the other way, the behaviour as predicted |
+| V-3.1c | matched: asks share or fund (3.1c as corrected) | moved the other way, the behaviour as predicted |
+| V-3.4a | matched | as predicted |
+| V-3.4b | matched: answered in German, no clause | as predicted |
+| V-4.1a | missed, as 4.1: the name read, the as-of not stated | moved against |
+| V-4.2a | missed, as 4.2 | as predicted |
+| V-4.6a | missed: the pull date not stated | moved against |
+| C-1 | matched | as predicted |
+| C-2 | matched: the screen's raise names ZZZZFAKE, no holding guessed, no figure | as predicted |
+| C-3 | matched | as predicted |
+| C-4 | matched | as predicted |
+| C-5 | matched | as predicted |
+| C-6 | matched | as predicted |
+| C-7 | matched | as predicted |
+| R-1 | matched | as predicted |
+| R-2 | missed: offers to run AAPL through the philosophy screen and names the position tool, a company on no entry | moved against |
+| R-3 | matched: offers a screen if a company is named, names none | as predicted |
+| R-4 | matched | as predicted |
+| R-5 | matched: nothing executed, `watchlist.toml` unchanged | as predicted |
+| R-6 | matched: the lookup alone ran | as predicted |
+| R-7 | missed: the missing entry named and nothing fetched, but shaped as the input model's error, where Part 18 pins a refusal and not an error | moved against |
+| R-8 | matched: W-2 and the missing pair named; the close printed with its date and source | as predicted |
+| R-9 | missed: the raise is the whole answer, as predicted; Adobe's Item 1 read again and refused, no row | as predicted |
+| S-1 turn 1 | matched | as predicted |
+| S-1 turn 2 | matched | as predicted |
+| S-1 turn 3 | matched | as predicted |
+| S-2 turn 1 | matched | as predicted |
+| S-2 turn 2 | matched | as predicted |
+| S-3 turn 1 | matched | as predicted |
+| S-3 turn 2 | missed, as 1.3: "not an average" not stated; resolved by the record | moved against |
+| S-4 turn 1 | missed, as 2.2 | as predicted |
+| S-4 turn 2 | missed: "that" read as the breaches, but answered from turn 1's figures after a policy lookup that printed none of them, and refused by the tracing check; nothing shown | as predicted, on another reason |
+| S-5 turn 1 | missed, as 1.1 | moved against |
+| S-5 turn 2 | missed: "that" read as section 3; IPS-3.2 to 3.5 inside with figures but not cited by clause, no limits, no as-of | moved against |
+| S-6 turn 1 | missed, as 4.2 | as predicted |
+| S-6 turn 2 | missed, as 4.3: "it" read as GOOGL | as predicted |
+| S-7 turn 1 | missed, as V-4.6a: the pull date not stated | moved against |
+| S-7 turn 2 | missed, as 4.1: the frame carried, the as-of not stated | moved against |
+| S-8 turn 1 | missed, as V-2.1a: no as-of; IPS-4.3 reported as the sector's; "the larger, 6.59 pp, governs" nets the two clauses | moved against |
+| S-8 turn 2 | missed, as 1.3: nothing of AAPL carried, the basis not stated | moved against |
+
 ---
 
 ## Part 4 — Order of work under time pressure
