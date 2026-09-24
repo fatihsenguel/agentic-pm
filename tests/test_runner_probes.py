@@ -167,6 +167,39 @@ def test_3_5_reads_the_clarification_and_the_resolved_call():
     assert _mentions(run_cases.check_3_5(wrong), "turn 2 tickers ['MSFT'] != ['AAPL']")
 
 
+QUESTION = "I want to put 15% into a single position, is that allowed?"
+ASKED_TYPE = {"kind": "instrument_type", "token": None, "candidate": None,
+              "message": QUESTION}
+RESOLVED_TYPE = {"reply": "A share.", "message": QUESTION + " A share."}
+
+
+def _type_turns(first_log=(), clarification=ASKED_TYPE, resolved=RESOLVED_TYPE,
+                inputs=None):
+    first = _state(list(first_log), clarification=clarification,
+                   final_response="Would it be a directly held share or a fund?")
+    second = _state([_record("hypothetical_weight",
+                             inputs or {"weight": 0.15, "instrument_type": "share"},
+                             key="compliance")],
+                    resolved=resolved)
+    return [first, second]
+
+
+def test_3_1_reads_the_type_asked_back_and_the_share_call():
+    good = _type_turns()
+    assert _mentions(run_cases.check_3_1(good), "turn 1", "turn 2 records",
+                     "turn 2 inputs", "tool", "called") == []
+    guessed = _type_turns(first_log=[_record("hypothetical_weight", {"weight": 0.15})])
+    assert _mentions(run_cases.check_3_1(guessed), "turn 1 called")
+    unrecorded = _type_turns(clarification=None)
+    assert _mentions(run_cases.check_3_1(unrecorded), "turn 1 records no clarification")
+    unresolved = _type_turns(resolved=None)
+    assert _mentions(run_cases.check_3_1(unresolved), "turn 2 records no resolution")
+    assumed = _type_turns(inputs={"weight": 0.15, "instrument_type": "fund"})
+    assert _mentions(run_cases.check_3_1(assumed), "turn 2 inputs")
+    weight = _type_turns(inputs={"weight": 0.12, "instrument_type": "share"})
+    assert _mentions(run_cases.check_3_1(weight), "turn 2 inputs")
+
+
 # ---------------------------------------------------------------------------
 # The four blocked_on probes: the block still decides, the reason names
 # what the log shows
