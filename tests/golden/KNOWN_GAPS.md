@@ -7797,6 +7797,27 @@ point at the second's block; the log inside `shared_data`, which is the
 channel between agents and not what the model saw. The system prompt is
 still owed.
 
+**Corrected 24 September 2026 (forty-first session), where the code as
+built departs from the contracts above.** Five departures, each taken in
+the session on the owner's word. First, the model is shown each tool's
+rendered `text` as its tool result, not the `block`: the tracing check
+allows the figures the text prints, and a block would put unrounded floats
+in the model's hands; the log still carries the block for the runner.
+Second, `rebalance` publishes into no `shared_data` key, so its record has
+`key` None and its block is the agent's `decision` alone, the trades left
+behind. Third, `position_pnl`'s text is still selected by its `tickers`
+input, the formatter's selection of today, until decision 17's commit moves
+selection to the layer; every other tool renders its block whole. Fourth,
+`philosophy_screen` checks the ticker's shape only; whether a company has a
+CIK stays EDGAR's, in the node. Fifth, `hypothetical_weight`'s type is asked
+back by the pre-pass before any model call when the message states a weight
+in one unnamed position and no type, and not by the tool; the tool refuses
+a missing type as any input model refuses a missing input. The inputs reach
+the nodes under the state key `inputs`, keyed as above, beside `tool`,
+which the screening and research nodes branch on (0059682); `model_calls`
+carries every call's usage beside the log (5f0d2f7). A span clarification's
+record carries its phrases as a list under `token` (ab8307d).
+
 **Which loop sees it.** None until the code. pytest gains one test per
 contract that the block has these keys and no array; the corpus entries
 named above are read against Part 18 in the run after the first code
