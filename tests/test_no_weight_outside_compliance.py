@@ -36,16 +36,6 @@ import re
 from agents.nodes import _format_rebalance_response
 from agents.schemas import TERMINAL, derive_plan
 
-
-# One parameter per discriminator the terminal table uses, so that every row
-# of every intent is derived rather than a list of intents written by hand.
-DISCRIMINATORS = {
-    "measure": "allocation",
-    "hypothetical_weight": 0.05,
-    "policy_topic": "cash",
-    "asks": "thesis",
-}
-
 REBALANCE_SUCCESS = {
     "RebalanceAgent": {
         "success": True,
@@ -61,29 +51,18 @@ REBALANCE_SUCCESS = {
 TRADE = re.compile(r"\b(BUY|SELL|buy|sell)\b[^\n]{0,30}\b(SPY|TLT|GLD)\b")
 
 
-def test_the_checker_is_reachable_from_one_intent_only():
+def test_the_checker_is_reachable_from_the_compliance_tools_only():
     """The premise of this file, derived from the table rather than listed.
 
-    Every other intent runs no checker, so an answer under one of them either
-    states a position nothing checked or states none. This passes today - it
-    is not the falsifier for the defect, it is the reason the two below are
-    the right assertions - and it fails if a later intent gains or loses the
-    checker without this file being revisited.
+    Every other tool runs no checker, so an answer from one of them either
+    states a position nothing checked or states none; `position` is checked
+    by the gate on its edge, which is not a plan step. This passes today -
+    it is not the falsifier for the defect, it is the reason the two below
+    are the right assertions - and it fails if a later tool gains or loses
+    the checker without this file being revisited.
     """
-    planned_by = set()
-    for intent, rows in TERMINAL.items():
-        for key in rows:
-            # A key names a parameter, or a parameter and the one value it
-            # matches: `asks=position` is set from the key itself, and a
-            # bare `asks` from the table above.
-            if not key:
-                parameters = {}
-            else:
-                name, sep, value = key.partition("=")
-                parameters = {name: value if sep else DISCRIMINATORS[name]}
-            if "ComplianceAgent" in derive_plan(intent, parameters):
-                planned_by.add(intent)
-    assert planned_by == {"compliance"}
+    planned_by = {tool for tool in TERMINAL if "ComplianceAgent" in derive_plan(tool)}
+    assert planned_by == {"compliance_check", "hypothetical_weight", "policy_lookup"}
 
 
 def test_the_rebalance_answer_states_no_trades():

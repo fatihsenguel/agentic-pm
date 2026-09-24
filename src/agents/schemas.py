@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from enum import Enum
 import re
 
+from .tool_inputs import TOOLS
+
 
 # =============================================================================
 # ENUMS FOR VALIDATION
@@ -83,7 +85,7 @@ AgentName = Enum(
 # ComplianceAgent on a missing allocation when it checks the portfolio.
 # RebalanceAgent's missing target is not an entry: the target is the IPS's
 # (KNOWN_GAPS, "Rebalance has no target allocation source"). ComplianceAgent's
-# two portfolio-free modes skip its entry: TERMINAL marks those rows unclosed.
+# two portfolio-free tools skip its entry: TERMINAL marks those rows unclosed.
 # ResearchAgent on a missing screening block (decision 66).
 REQUIRES: Dict[str, Tuple[str, ...]] = {
     "PortfolioAnalysisAgent": ("DataAgent",),
@@ -154,7 +156,7 @@ class ExtractedParameters(BaseModel):
     # the company at the weight its entry states. Read by nothing outside
     # research. The two take different plans - a position is checked by the
     # gate against the published allocation and a thesis implies none - so
-    # TERMINAL discriminates on the value and not on the parameter alone.
+    # the two values are two tools, `thesis` and `position`.
     asks: Optional[Literal["thesis", "position"]] = Field(default=None)
 
     @field_validator('tickers')
@@ -170,92 +172,57 @@ class ExtractedParameters(BaseModel):
         return validated
 
 
-# The terminal-agent table: intent -> discriminator -> (terminal, closed).
-# The plan for a request is the terminal's requirement chain, closed upward
-# through REQUIRES in dependency order; the model's plan is never read for
-# these intents (docs/DIRECTION.md: plans derived from intent through a
-# dependency table, which becomes each tool's internal graph). The
-# discriminator is a parameter that decides the terminal: "" is the row with
-# none set; "measure" is the row for either analysis intent when the model
-# set a measure; the two compliance modes are the rows for a hypothetical
-# weight or a policy topic, which measure no portfolio and so are not closed
-# - ComplianceAgent runs alone. Every intent has a row: the model writes no
-# plan (combined, the last intent whose plan was the model's, is retired).
+# The terminal-agent table: tool -> (terminal, closed), one row per tool of
+# agents/tool_inputs.py (decision 45). The plan for a tool is the terminal's
+# requirement chain, closed upward through REQUIRES in dependency order
+# (docs/DIRECTION.md: each tool's internal graph); the model never sees a
+# plan. The two portfolio-free compliance tools measure no portfolio and so
+# are not closed: ComplianceAgent runs alone.
 #
-# A key may name a parameter, which matches when it is set, or a parameter
-# and a value, `asks=position`, which matches only that value. Rows are
-# tried in order and the first match decides, so the narrower key is
-# written above the wider one. A parameter with two values that need two
-# plans is why: a thesis question implies no position and reads no
-# allocation, and a position question is checked by the gate against the
-# allocation PortfolioAnalysisAgent published, so the two cannot share a
-# plan and ResearchAgent cannot require the portfolio agents for both.
-#
-# A row's terminal may be a tuple, closed over each name in order with
-# each name once. That is how a question needs two things finished rather
-# than one: `asks=position` needs the portfolio computed and the company
-# screened and read, and neither requires the other.
-TERMINAL: Dict[str, Dict[str, Tuple[Any, bool]]] = {
-    "rebalancing": {"": ("RebalanceAgent", True)},
-    "data_fetch": {"": ("DataAgent", True), "measure": ("PortfolioAnalysisAgent", True)},
-    "risk_analysis": {"": ("DataAgent", True), "measure": ("PortfolioAnalysisAgent", True)},
-    "compliance": {
-        "": ("ComplianceAgent", True),
-        "hypothetical_weight": ("ComplianceAgent", False),
-        "policy_topic": ("ComplianceAgent", False),
-    },
-    "research": {
-        "": ("ScreeningAgent", True),
-        "asks=position": (("PortfolioAnalysisAgent", "ResearchAgent"), True),
-        "asks": ("ResearchAgent", True),
-    },
-    "ledger": {"": ("LedgerAgent", True)},
-    "clarification_needed": {"": (None, True)},
-    "out_of_scope": {"": (None, True)},
+# A row's terminal may be a tuple, closed over each name in order with each
+# name once. That is how a tool needs two things finished rather than one:
+# `position` needs the portfolio computed and the company screened and read,
+# and neither requires the other.
+TERMINAL: Dict[str, Tuple[Any, bool]] = {
+    "allocation": ("PortfolioAnalysisAgent", True),
+    "position_pnl": ("PortfolioAnalysisAgent", True),
+    "portfolio_volatility": ("PortfolioAnalysisAgent", True),
+    "compliance_check": ("ComplianceAgent", True),
+    "hypothetical_weight": ("ComplianceAgent", False),
+    "policy_lookup": ("ComplianceAgent", False),
+    "philosophy_screen": ("ScreeningAgent", True),
+    "thesis": ("ResearchAgent", True),
+    "position": (("PortfolioAnalysisAgent", "ResearchAgent"), True),
+    "rebalance": ("RebalanceAgent", True),
+    "ledger": ("LedgerAgent", True),
 }
-
-if set(TERMINAL) != set(INTENTS):
-    raise RuntimeError(
-        "intent registry and terminal table disagree: schemas.INTENTS has "
-        f"{sorted(INTENTS)}, TERMINAL has {sorted(TERMINAL)}. An intent is added to both or to neither."
-    )
-def _key_parts(key: str) -> Tuple[str, Optional[str]]:
-    """A discriminator key as its parameter and, where it names one, the
-    value it matches. `asks` is the parameter set to anything; `asks=position`
-    is that parameter set to that value."""
-    name, sep, value = key.partition("=")
-    return name, (value if sep else None)
 
 
 def _terminals(terminal) -> Tuple[str, ...]:
     """A row's terminal as a tuple, one name or several."""
-    if terminal is None:
-        return ()
     return terminal if isinstance(terminal, tuple) else (terminal,)
 
 
-def validate_terminal(table: Mapping[str, Mapping[str, Tuple[Any, bool]]]) -> None:
-    """Every row of a terminal table: its key names a parameter and, where
-    it names a value, a value that is not empty; its terminal names agents
-    the roster has. Called on TERMINAL at import, so a table that cannot
-    route fails here rather than on the first live request, and taken as an
-    argument so that the checks can be shown working against a table that
-    breaks them."""
-    for intent, rows in table.items():
-        for key, (terminal, _closed) in rows.items():
-            name, value = _key_parts(key)
-            if name and name not in ExtractedParameters.model_fields:
-                raise RuntimeError(f"TERMINAL[{intent!r}] discriminates on {name!r}, "
-                                   "not a parameter")
-            if value is not None and not value:
-                raise RuntimeError(f"TERMINAL[{intent!r}] key {key!r} matches an empty value")
-            for agent in _terminals(terminal):
-                if agent not in AGENTS:
-                    raise RuntimeError(f"TERMINAL[{intent!r}] names {agent!r}, "
-                                       "not in the roster")
+def validate_terminal(table: Mapping[str, Tuple[Any, bool]]) -> None:
+    """Every row of a terminal table: its key is a tool and its terminal
+    names agents the roster has. Called on TERMINAL at import, so a table
+    that cannot route fails here rather than on the first live request, and
+    taken as an argument so that the checks can be shown working against a
+    table that breaks them."""
+    for tool, (terminal, _closed) in table.items():
+        if tool not in TOOLS:
+            raise RuntimeError(f"TERMINAL has a row for {tool!r}, not a tool")
+        for agent in _terminals(terminal):
+            if agent not in AGENTS:
+                raise RuntimeError(f"TERMINAL[{tool!r}] names {agent!r}, not in the roster")
 
 
 validate_terminal(TERMINAL)
+if set(TERMINAL) != set(TOOLS):
+    raise RuntimeError(
+        "tools and terminal table disagree: tool_inputs.TOOLS has "
+        f"{sorted(TOOLS)}, TERMINAL has {sorted(TERMINAL)}. A tool is added to both or to neither."
+    )
 
 
 def _closure(agent: str) -> List[str]:
@@ -270,33 +237,11 @@ def _closure(agent: str) -> List[str]:
     return out
 
 
-def _discriminator(intent: str, parameters: Mapping) -> str:
-    """The first row whose key matches, in the order the table writes them,
-    so a key naming a value is written above the one naming the parameter
-    alone and decides before it."""
-    for key in TERMINAL[intent]:
-        if not key:
-            continue
-        name, value = _key_parts(key)
-        found = parameters.get(name)
-        if found is None:
-            continue
-        if value is None or found == value:
-            return key
-    return ""
-
-
-def derive_plan(intent: str, parameters) -> List[str]:
-    """The plan for an intent and its parameters, from TERMINAL and REQUIRES.
-
-    An empty list for an intent that runs nothing. KeyError on an intent
-    not in the registry.
-    """
-    parameters = parameters if isinstance(parameters, Mapping) else parameters.model_dump()
-    terminal, closed = TERMINAL[intent][_discriminator(intent, parameters)]
+def derive_plan(tool: str) -> List[str]:
+    """The plan for a tool, from TERMINAL and REQUIRES. KeyError on a name
+    that is not a tool."""
+    terminal, closed = TERMINAL[tool]
     names = _terminals(terminal)
-    if not names:
-        return []
     if not closed:
         return list(names)
     plan: List[str] = []
@@ -307,14 +252,50 @@ def derive_plan(intent: str, parameters) -> List[str]:
     return plan
 
 
-def _plan_qualifier(intent: str, parameters: Mapping) -> str:
-    key = _discriminator(intent, parameters)
+# --- the router's intents, read through the tools; deleted with the router ---
+
+def router_tool(intent: str, parameters: Mapping) -> Optional[str]:
+    """The tool a router intent and its parameters stand for, or None where
+    the intent runs none: raw prices and the per-holding volatilities, which
+    decision 45 makes no tool, and the two intents that plan nothing.
+    KeyError on an intent not in the registry."""
+    if intent not in INTENTS:
+        raise KeyError(intent)
     if intent == "compliance":
-        return f" for {key}" if key else " over the portfolio"
-    if not key:
-        return ""
-    name, _ = _key_parts(key)
-    return f" with {name} {parameters.get(name)!r}"
+        if parameters.get("hypothetical_weight") is not None:
+            return "hypothetical_weight"
+        if parameters.get("policy_topic") is not None:
+            return "policy_lookup"
+        return "compliance_check"
+    if intent == "research":
+        asks = parameters.get("asks")
+        return asks if asks in ("thesis", "position") else "philosophy_screen"
+    if intent in ("data_fetch", "risk_analysis"):
+        return parameters.get("measure")
+    return {"rebalancing": "rebalance", "ledger": "ledger"}.get(intent)
+
+
+def router_plan(intent: str, parameters) -> List[str]:
+    """The plan for a router intent: its tool's, DataAgent alone for an
+    analysis intent with no measure, and nothing for the two that plan
+    nothing."""
+    parameters = parameters if isinstance(parameters, Mapping) else parameters.model_dump()
+    tool = router_tool(intent, parameters)
+    if tool is not None:
+        return derive_plan(tool)
+    return ["DataAgent"] if intent in ("data_fetch", "risk_analysis") else []
+
+
+def _plan_qualifier(intent: str, parameters: Mapping) -> str:
+    if intent == "compliance":
+        for key in ("hypothetical_weight", "policy_topic"):
+            if parameters.get(key) is not None:
+                return f" for {key}"
+        return " over the portfolio"
+    for name in ("measure", "asks"):
+        if parameters.get(name) is not None:
+            return f" with {name} {parameters[name]!r}"
+    return ""
 
 
 class RouterDecision(BaseModel):
@@ -324,8 +305,8 @@ class RouterDecision(BaseModel):
     intent: IntentType
     confidence: float = Field(..., ge=0.0, le=1.0)
     
-    # The plan: derived by the router from the intent and parameters through
-    # TERMINAL and REQUIRES, never asked of the model. Defaults empty so a
+    # The plan: derived by the router from the tool the intent and parameters
+    # stand for (router_plan), never asked of the model. Defaults empty so a
     # decision the model wrote without it validates on its own terms.
     execution_order: List[AgentName] = Field(default_factory=list)
     
@@ -407,8 +388,8 @@ class RouterDecision(BaseModel):
 
     @model_validator(mode='after')
     def validate_plan(self) -> 'RouterDecision':
-        """The plan is the one TERMINAL and REQUIRES derive for the intent
-        and parameters, exactly. The router writes that plan over the
+        """The plan is the one router_plan derives for the intent and
+        parameters, exactly. The router writes that plan over the
         model's before validation, so a mismatch here is a hand-built
         decision or a table change; the error names both plans. Never
         reordered (the "too big" flip and its diagnostics, KNOWN_GAPS,
@@ -416,7 +397,7 @@ class RouterDecision(BaseModel):
         intent = self.intent if isinstance(self.intent, str) else self.intent.value
         order = [a if isinstance(a, str) else a.value for a in self.execution_order]
         parameters = self.parameters.model_dump()
-        derived = derive_plan(intent, parameters)
+        derived = router_plan(intent, parameters)
         if order != derived:
             raise ValueError(
                 f"a {intent} plan{_plan_qualifier(intent, parameters)} is {derived}, not {order}"

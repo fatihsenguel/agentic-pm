@@ -16,8 +16,8 @@ from .schemas import (
     RouterDecision, 
     IntentType, 
     ExtractedParameters,
-    TERMINAL,
-    derive_plan,
+    INTENTS,
+    router_plan,
     safe_parse_router_response
 )
 from .validators import (
@@ -473,13 +473,13 @@ def _with_extraction(raw: Dict[str, Any], extraction: Extraction, user_message: 
     out["pending"] = extraction.pending
     out["resolved"] = None
 
-    # The plan is derived from the intent and those parameters through
-    # schemas.TERMINAL and REQUIRES; the model's execution_order is not
+    # The plan is derived from the tool the intent and those parameters
+    # stand for (schemas.router_plan); the model's execution_order is not
     # read, and a task list it sends is ignored with every other extra
     # field. An intent the registry lacks is left for the schema to reject.
     intent = raw.get("intent")
-    if intent in TERMINAL:
-        plan = derive_plan(intent, parameters)
+    if intent in INTENTS:
+        plan = router_plan(intent, parameters)
         out["execution_order"] = plan
     return out
 
