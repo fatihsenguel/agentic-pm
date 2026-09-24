@@ -210,3 +210,17 @@ def test_blocked_on_research_names_what_the_log_shows():
     reason = run_cases.blocked_on_research(_state([], clarification=ASKED,
                                                   final_response="Did you mean AAPL?"))
     assert "no research block" in reason and "asked back: 'Did you mean AAPL?'" in reason
+
+
+# ---------------------------------------------------------------------------
+# check_2_1's handover probe: one call, and the steps in plan order from
+# the trace, which the trace helper reads as it does today
+# ---------------------------------------------------------------------------
+
+def test_2_1_reads_the_compliance_call_and_leaves_the_plan_to_the_trace():
+    good = _state([_record("compliance_check")])
+    assert _mentions(run_cases.check_2_1(good), "tool", "called", "plan") == []
+    wrong = _state([_record("allocation")])
+    assert _mentions(run_cases.check_2_1(wrong), "not 'compliance_check'")
+    carried = _state([_record("compliance_check", {"tickers": ["AAPL"]})])
+    assert _mentions(run_cases.check_2_1(carried), "compliance_check takes no input")
