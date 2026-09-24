@@ -7539,6 +7539,23 @@ first commit, so that the cost above becomes a measurement. The runner
 rewritten before the layer lands, its ten probes and the tracing check,
 so the after has an instrument.
 
+**Paid, 24 September 2026 (fortieth session), the last two debts on
+paper.** The runner rewritten on `runner`, d43f32d to d917db1, tests
+first: its ten probes read a tool-call log under `tool_calls`, whose
+shape the contracts entry below records; the tracing check,
+`figures_trace`, runs on every turn of every case, comparing number
+tokens whole and not as substrings so that a rounding fails; every case
+reads BLOCKED on the log until the layer writes it, and before any paid
+call, `main` printing the eighteen verdicts without running the graph
+when `AgentState` declares no such key. The corpus predicted line by
+line at 134aeb3, benchmark.md Part 3c.6's fourth block, 52 of 67, each
+line naming its tool; on decision 16's seven reading gaps the block
+follows the brief of the 24th, which has the layer read names and
+German, and not the sentence above that predicted them to stay. What is
+still owed comes with the first code commit: the golden set parked
+behind a tag, `usage` recorded from the client's first call, and the
+system prompt.
+
 **Which loop sees each part.** pytest sees the input models, the table
 and the tool contracts, and the 168 surviving extraction and derivation
 tests are the ones that hold the boundary. The runner sees eighteen
@@ -7720,6 +7737,27 @@ which is R-1 to R-6.
 **What this entry owes.** The tool-call log's exact shape, decided with
 the runner's rewrite; and the system prompt that lists these eleven,
 which quotes no benchmark or corpus prompt verbatim.
+
+**The log's shape, decided 24 September 2026 (fortieth session) with
+the runner's rewrite, d43f32d to d917db1.** The state key `tool_calls`,
+a list in call order, emptied every turn as `shared_data` is: one
+record per tool call with `tool`, the name that is the block's key;
+`inputs`, the validated inputs as a dict keyed as the contracts above
+name them, empty for the four tools that take none; `key`, the
+`shared_data` key the block was published under; `block`, the block as
+returned to the model; `text`, the rendered text the formatter made of
+it; `as_of`, the block's as-of as a date string, None where the block
+has none. Beside it two keys the pre-pass writes: `clarification`, the
+record a turn asked back, kind, token, candidate and message, None when
+it answered; and `resolved`, the reply and the question it stood for,
+None otherwise. `pending` keeps its meaning, the previous turn's record
+carried in. The runner reads all three; `tests/test_runner_probes.py`'s
+docstring is the statement of record and `tests/test_figure_tracing.py`
+holds the check's rule. Rejected: a record without the block, since two
+lookups in one turn both publish `compliance` and the first record would
+point at the second's block; the log inside `shared_data`, which is the
+channel between agents and not what the model saw. The system prompt is
+still owed.
 
 **Which loop sees it.** None until the code. pytest gains one test per
 contract that the block has these keys and no array; the corpus entries
