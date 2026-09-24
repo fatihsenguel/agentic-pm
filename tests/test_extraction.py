@@ -271,12 +271,13 @@ def test_an_unknown_ticker_clarification_leaves_a_record():
 
 
 def test_other_extractions_leave_no_record():
-    """Only the unknown-ticker clarification has a resolution rule so far;
-    a span or a percentage clarification carries no record and a reply to
-    it is a new message. Their rules come with a case that asks."""
+    """Two weights and a weight outside (0, 100] leave no record: a reply
+    naming one weight stands for no single question, and choosing which
+    position was meant would be a repair. A reply to either is a new
+    message."""
     assert extract("Is my AAPL position too big?", P3, PERIODS).pending is None
-    assert extract("How has my portfolio done over the last month?", P3, PERIODS).pending is None
     assert extract("Put 15% into AAPL and 20% into MSFT", P3, PERIODS).pending is None
+    assert extract("Put 150% into one stock", P3, PERIODS).pending is None
 
 
 RESOLVED = "Hows my AAPL doing?"
@@ -378,3 +379,43 @@ def test_the_resolved_question_extracts_whole():
     x = extract(AS_SHARE, P3, PERIODS)
     assert (x.hypothetical_weight, x.instrument_type, x.clarification) == (0.15, "share", None)
 
+
+# --- the span clarification's record, and the reply resolved against it ------
+
+# message, the span phrases asked about, a reply from the vocabulary, the
+# question it stands for
+SPANS = [
+    ("What is my volatility over the last 6 months?", ["the last 6 months"],
+     "1Y", "What is my volatility over 1Y?"),                                   # C-3, S-3
+    ("What is my volatility over the last year and over two years?", ["two years", "the last year"],
+     "2Y", "What is my volatility over 2Y and over 2Y?"),                        # C-6
+    ("How has my portfolio done year to date?", ["year to date"],
+     "1Y", "How has my portfolio done 1Y?"),                                     # C-4
+]
+
+
+@pytest.mark.parametrize("message, phrases, reply, resolved", SPANS, ids=[r[0][:40] for r in SPANS])
+def test_a_span_clarification_leaves_a_record(message, phrases, reply, resolved):
+    assert extract(message, P3, PERIODS).pending == {
+        "kind": "span", "token": phrases, "candidate": None, "message": message}
+
+
+@pytest.mark.parametrize("message, phrases, reply, resolved", SPANS, ids=[r[0][:40] for r in SPANS])
+def test_a_span_from_the_vocabulary_stands_for_the_question_at_that_span(message, phrases, reply,
+                                                                          resolved):
+    pending = extract(message, P3, PERIODS).pending
+    assert resolve(reply, pending, P3, PERIODS) == resolved
+    x = extract(resolved, P3, PERIODS)
+    assert (x.period, x.clarification) == (reply, None)
+
+
+@pytest.mark.parametrize("reply", ["1y", "over 1Y", "1Y."])
+def test_a_span_reply_is_read_as_the_vocabulary_writes_it(reply):
+    pending = extract(SPANS[0][0], P3, PERIODS).pending
+    assert resolve(reply, pending, P3, PERIODS) == SPANS[0][3]
+
+
+@pytest.mark.parametrize("reply", ["6 months", "last month", "1Y and 2Y", "yes", "What is my allocation?"])
+def test_a_span_reply_outside_the_vocabulary_resolves_nothing(reply):
+    pending = extract(SPANS[0][0], P3, PERIODS).pending
+    assert resolve(reply, pending, P3, PERIODS) is None
