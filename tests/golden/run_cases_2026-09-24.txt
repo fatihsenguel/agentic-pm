@@ -1,0 +1,157 @@
+src/agents/data_agent.py:762: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:674: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:762: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:674: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:762: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:674: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:762: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:674: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:762: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:674: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:762: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:674: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:762: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:674: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:762: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:674: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:762: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:674: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:762: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:674: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:762: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+src/agents/data_agent.py:674: FutureWarning: The default fill_method='pad' in DataFrame.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  returns = prices.pct_change().dropna()
+1.1  PASS     What is my current allocation by asset class?
+          tokens: 949 in, 170 out, 2,428 cache written, 2,428 cache read, 2 calls
+
+1.2  FAIL     How has my JPM position performed since I bought it?
+          - purchase date 2024-07-15 never reaches the answer (1.2: purchase date named)
+          tokens: 391 in, 209 out, 0 cache written, 4,856 cache read, 2 calls
+
+1.3  FAIL     What is my volatility over the past twelve months?
+          - covariance_method sample is in shared_data but never reaches the answer
+          tokens: 458 in, 142 out, 0 cache written, 4,856 cache read, 2 calls
+
+1.4  FAIL     What positions do I hold in the Technology sector?
+          - answer does not carry the figure for: (no sector), Financials, Healthcare, Utilities
+          - as-of date 2026-09-23 is in allocation.as_of.worst_case but never reaches the answer
+          tokens: 955 in, 171 out, 0 cache written, 4,856 cache read, 2 calls
+
+2.1  BLOCKED  What concentration risk do I have, and is it compatible with my investment policy?
+          - ComplianceAgent did not run; the layer called [('compliance_check', {}), ('allocation', {})]. The agent exists; the choice of tool for this wording does not
+          tokens: 3,417 in, 653 out, 0 cache written, 4,856 cache read, 2 calls
+
+2.2  FAIL     Does my current allocation violate any rule of my investment policy?
+          - clauses never named in the answer: ['IPS-1.1', 'IPS-1.2', 'IPS-2.1', 'IPS-2.2', 'IPS-5.1', 'IPS-5.3', 'IPS-6.1', 'IPS-6.2']; all rules means visibly all of them
+          tokens: 2,564 in, 570 out, 0 cache written, 4,856 cache read, 2 calls
+
+2.3  FAIL     What would have to change for me to be within the limits again?
+          - as-of date 2026-09-23 is in compliance.as_of.worst_case but never reaches the answer
+          tokens: 2,594 in, 483 out, 0 cache written, 4,856 cache read, 2 calls
+
+3.1  FAIL     I want to put 15% into a single position, is that allowed? -> A share.
+          - answer carries figures no tool printed this turn: ['15']; every figure traces to a tool output (DIRECTION.md invariant 1)
+          tokens: 630 in, 167 out, 0 cache written, 4,856 cache read, 2 calls
+
+3.2  FAIL     What will Nvidia's share price be at the end of next year?
+          - no tool was called; the answer came from no tool output, and the case is one call to 'policy_lookup'
+          - answer does not cite IPS-1.3, the scope clause
+          tokens: 92 in, 54 out, 0 cache written, 2,428 cache read, 1 calls
+
+3.3  PASS     How is my position doing today?
+          tokens: 1,135 in, 514 out, 0 cache written, 4,856 cache read, 2 calls
+
+3.4  PASS     What does my investment policy say about currency risk?
+          tokens: 296 in, 95 out, 0 cache written, 4,856 cache read, 2 calls
+
+3.5  PASS     Hows my APPL doing? -> yes
+          tokens: 563 in, 196 out, 0 cache written, 4,856 cache read, 2 calls
+
+4.1  BLOCKED  Does GOOGL clear my philosophy?
+          - the check stopped on PHI-2.1: PHI-2.1: return_on_invested_capital for FY2021 is not in the figures. The check stops here and reports no finding on any clause (PHI-1.2, D25).; decision 48 (D36) keeps the lease-inclusive debt tag out of the list, so the stop at PHI-2.1 stands until Alphabet's FY2027 report, and PHI-3.1 stops on D&A after it (Part 13 B)
+          tokens: 1,201 in, 210 out, 0 cache written, 4,856 cache read, 2 calls
+
+4.2  FAIL     What is GOOGL worth?
+          - as-of date 2026-09-24 is in valuation.as_of but never reaches the answer
+          - as-of date 2025-12-31 is in valuation.ends but never reaches the answer
+          - as-of date 2026-02-05 is in valuation.filed but never reaches the answer
+          - valuation year FY2025 never reaches the answer
+          - valuation source 'EDGAR companyfacts' never reaches the answer
+          - assumption required_return is stated on PHI-4.1, which never reaches the answer; an assumption is marked as mine by its source
+          - assumption required_return is never named in the answer
+          - assumption terminal_growth is stated on PHI-4.1, which never reaches the answer; an assumption is marked as mine by its source
+          - assumption terminal_growth is never named in the answer
+          - assumption growth_low is stated on W-1, which never reaches the answer; an assumption is marked as mine by its source
+          - assumption growth_low is never named in the answer
+          - assumption growth_high is stated on W-1, which never reaches the answer; an assumption is marked as mine by its source
+          - assumption growth_high is never named in the answer
+          - assumption horizon_years is stated on PHI-4.1, which never reaches the answer; an assumption is marked as mine by its source
+          - assumption horizon_years is never named in the answer
+          - answer does not cite PHI-4.3, the clause that says a range is not a forecast
+          - as-of date 2026-09-24 is in screening.as_of but never reaches the answer
+          tokens: 1,191 in, 227 out, 0 cache written, 4,856 cache read, 2 calls
+
+4.3  BLOCKED  Should I buy GOOGL?
+          - the philosophy check stopped on PHI-2.1: PHI-2.1: return_on_invested_capital for FY2021 is not in the figures. The check stops here and reports no finding on any clause (PHI-1.2, D25). (decision 48)
+          tokens: 7,215 in, 649 out, 0 cache written, 4,856 cache read, 2 calls
+
+4.4  FAIL     What has to be true in a year for my GOOGL thesis to be right?
+          - as-of date 2026-09-24 is in research.as_of but never reaches the answer
+          - reading 'Item 1': section 'Item 1' never reaches the answer
+          - reading 'Item 1': source 'EDGAR filing archive' never reaches the answer
+          - as-of date 2026-02-05 is in reading 'Item 1'.filed but never reaches the answer
+          - reading 'Item 1A': section 'Item 1A' never reaches the answer
+          - reading 'Item 1A': source 'EDGAR filing archive' never reaches the answer
+          - as-of date 2026-02-05 is in reading 'Item 1A'.filed but never reaches the answer
+          - reading 'Item 7': section 'Item 7' never reaches the answer
+          - reading 'Item 7': source 'EDGAR filing archive' never reaches the answer
+          - as-of date 2026-02-05 is in reading 'Item 7'.filed but never reaches the answer
+          - prediction 'W-1.3': the answer does not say it is 'proposed, not entered'
+          - as-of date 2026-09-24 is in prediction 'W-1.3'.made_on but never reaches the answer
+          - as-of date 2027-09-24 is in prediction 'W-1.3'.due but never reaches the answer
+          - prediction 'W-1.3': the statement never reaches the answer
+          - prediction 'W-1.3': the value's source 'EDGAR companyfacts' never reaches the answer
+          - as-of date 2026-02-05 is in prediction 'W-1.3'.source.filed but never reaches the answer
+          - prediction 'W-1.3': claim 7.4, its reason, never reaches the answer
+          - prediction 'W-1.3': claim 7.4's quote never reaches the answer
+          - prediction 'W-1.3': claim 7.7, its reason, never reaches the answer
+          - prediction 'W-1.3': claim 7.7's quote never reaches the answer
+          - prediction 'W-1.3': claim 7.8, its reason, never reaches the answer
+          - prediction 'W-1.3': claim 7.8's quote never reaches the answer
+          - prediction 'W-1.3': claim 7.2, its reason, never reaches the answer
+          - prediction 'W-1.3': claim 7.2's quote never reaches the answer
+          - prediction 'W-1.3': claim 7.6, its reason, never reaches the answer
+          - prediction 'W-1.3': claim 7.6's quote never reaches the answer
+          tokens: 5,412 in, 476 out, 0 cache written, 4,856 cache read, 2 calls
+
+4.5  PASS     How have my predictions done?
+          tokens: 776 in, 383 out, 0 cache written, 4,856 cache read, 2 calls
+
+4.6  FAIL     Does JPM clear my philosophy?
+          - as-of date 2026-09-24 is in screening.as_of but never reaches the answer
+          - as-of date 2026-09-23 is in screening.sic_as_of but never reaches the answer
+          tokens: 645 in, 214 out, 0 cache written, 4,856 cache read, 2 calls
+
+5/18 passing, 10 failing, 3 blocked
+the run's tokens: 30,484 in, 5,583 out, 2,428 cache written, 82,552 cache read, 35 calls
