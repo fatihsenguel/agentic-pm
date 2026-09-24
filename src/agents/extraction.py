@@ -66,9 +66,12 @@ anything else: a confirmation or the candidate substitutes the candidate
 for the token in the original message, a different held or known ticker
 substitutes that one, and anything else is a new message. The instrument
 type's record is resolved by a reply that names one type and nothing else,
-the question then carrying "It would be a share." or "a fund." The resolved
-message then goes through extraction and the model as if typed. The span
-and percentage clarifications leave no record yet.
+the question then carrying "It would be a share." or "a fund." The span's
+record holds every span phrase the message carried, and a reply naming one
+span of the vocabulary puts it in place of each. The resolved message then
+goes through extraction and the model as if typed. Two weights and a weight
+outside (0, 100] leave no record: a reply naming one weight stands for no
+single question, and choosing which position was meant would be a repair.
 """
 
 import re
@@ -204,7 +207,7 @@ def extract(message: str, held_tickers: Sequence[str], periods: Iterable[str]) -
     vocabulary = list(periods)
 
     tickers, ticker_question, pending = _tickers(message, held)
-    period, period_question = _period(message, vocabulary)
+    period, period_question, phrases = _period(message, vocabulary)
     max_vol, weight, percent_question = _percentages(message)
     asks = _asks(message)
     kind = _instrument_type(message) if weight is not None else None
@@ -219,6 +222,8 @@ def extract(message: str, held_tickers: Sequence[str], periods: Iterable[str]) -
     clarification = ticker_question or period_question or percent_question or type_question
     if ticker_question:
         record = pending
+    elif period_question:
+        record = {"kind": "span", "token": phrases, "candidate": None, "message": message}
     elif clarification is not None and clarification == type_question:
         record = type_record
     else:
@@ -239,7 +244,8 @@ def extract(message: str, held_tickers: Sequence[str], periods: Iterable[str]) -
 _CONFIRM = {"yes", "y", "yep", "yeah", "correct", "right", "ja", "exactly", "that's right", "thats right"}
 
 
-def resolve(reply: str, pending: Optional[Dict[str, str]], held_tickers: Sequence[str]) -> Optional[str]:
+def resolve(reply: str, pending: Optional[Dict[str, str]], held_tickers: Sequence[str],
+            periods: Iterable[str] = ()) -> Optional[str]:
     """The message a reply stands for, resolved against the record of what
     was asked, or None when the reply resolves nothing and is a new message.
 
@@ -249,9 +255,23 @@ def resolve(reply: str, pending: Optional[Dict[str, str]], held_tickers: Sequenc
     names nothing and resolves nothing.
 
     Instrument type: a reply naming one type and nothing else appends it to
-    the original question. Never a guess: a reply outside this vocabulary
-    is routed as typed.
+    the original question.
+
+    Span: a reply that is one span of the caller's vocabulary, as the
+    question offered it, puts that span in place of every span phrase the
+    original message carried. Never a guess: a reply outside these
+    vocabularies is routed as typed.
     """
+    if pending and pending.get("kind") == "span":
+        words = re.sub(r"^(?:over\s+)?(?:the\s+)?", "",
+                       " ".join(re.sub(r"[^\w\s']", " ", reply).split()), flags=re.IGNORECASE)
+        chosen = next((key for key in periods if key.lower() == words.lower()), None)
+        if chosen is None:
+            return None
+        message = pending["message"]
+        for phrase in pending["token"]:
+            message = message.replace(phrase, chosen)
+        return message
     if pending and pending.get("kind") == "instrument_type":
         words = " ".join(re.sub(r"[^\w\s']", " ", reply).split())
         kind = _instrument_type(words) if _TYPE_REPLY.fullmatch(words) else None
@@ -355,16 +375,17 @@ def _period(message: str, vocabulary: List[str]):
         found.append((day.group(0).lower(), None))
 
     if not found:
-        return None, None
+        return None, None, []
+    phrases = [phrase for phrase, _ in found]
     for phrase, key in found:
         if key is None:
-            return None, unsupported(phrase)
+            return None, unsupported(phrase), phrases
     keys = {key for _, key in found}
     if len(keys) > 1:
-        phrases = " and ".join(f"'{p}'" for p, _ in found)
-        return None, (f"The message names two spans, {phrases}. Which one do you mean? "
-                      f"I can measure over {spans}.")
-    return keys.pop(), None
+        named = " and ".join(f"'{p}'" for p in phrases)
+        return None, (f"The message names two spans, {named}. Which one do you mean? "
+                      f"I can measure over {spans}."), phrases
+    return keys.pop(), None, []
 
 
 # --- percentages -------------------------------------------------------------

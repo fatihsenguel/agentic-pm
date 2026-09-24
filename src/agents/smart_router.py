@@ -199,7 +199,8 @@ class SmartRouter:
                     # Continue without portfolio - LLM will extract tickers from message
             
             resolved = None
-            resolved_message = resolve(user_message, pending, portfolio_tickers or [])
+            resolved_message = resolve(user_message, pending, portfolio_tickers or [],
+                                       app_config.data.period_days.keys())
             if resolved_message is not None:
                 resolved = {"reply": user_message, "message": resolved_message}
                 user_message = resolved_message
