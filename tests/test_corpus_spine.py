@@ -13,6 +13,11 @@ prompt is character for character the runner's, 3.5's two turns included.
 The table writes a two-turn case as "Turn 1: ... Turn 2: ..." on one line;
 the runner holds it as a tuple.
 
+One exception, named in `REPLY_TO_ASK_BACK`: the runner's 3.1 sends a
+second turn, the instrument type the first turn asks back for (decision
+12), which the corpus does not send. For it the table's prompt is the
+runner's first turn, and the second turn is the runner's alone.
+
 What this does not hold: anything about the other four kinds of corpus
 entry, whose wordings have no second copy, and nothing about the answers.
 """
@@ -30,6 +35,10 @@ BENCHMARK = ROOT / "docs" / "benchmark.md"
 
 ROW = re.compile(r"^\| (\d\.\d) \| (.+?) \| Part 18, ")
 TURNS = re.compile(r"^Turn 1: (.+?) Turn 2: (.+)$")
+
+# The runner's second turn for a case whose first turn asks back, the
+# corpus sending the first turn only.
+REPLY_TO_ASK_BACK = {"3.1": "A share."}
 
 
 def _spine_table():
@@ -49,7 +58,18 @@ def _spine_table():
 
 
 def _runner_cases():
-    return {case_id: prompt for case_id, prompt, *_ in run_cases.CASES}
+    """The runner's prompts as the corpus sends them: a case in
+    `REPLY_TO_ASK_BACK` must be exactly its first turn and that reply, and
+    is compared on its first turn."""
+    cases = {}
+    for case_id, prompt, *_ in run_cases.CASES:
+        reply = REPLY_TO_ASK_BACK.get(case_id)
+        if reply is not None:
+            assert isinstance(prompt, tuple) and len(prompt) == 2 and prompt[1] == reply, (
+                f"{case_id}: CASES {prompt!r} is not a first turn and the reply {reply!r}")
+            prompt = prompt[0]
+        cases[case_id] = prompt
+    return cases
 
 
 def test_the_spine_has_the_runner_s_eighteen_ids():

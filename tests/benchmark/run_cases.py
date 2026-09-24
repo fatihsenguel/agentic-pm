@@ -56,10 +56,10 @@ Until the conversation layer writes the tool-call log, every case is BLOCKED
 on it, and before any paid call: when the state type declares no `tool_calls`
 key the eighteen verdicts are printed without running the graph.
 
-A case may have several turns (3.5): the prompt is then a tuple, each turn
-runs after the previous turn's final state, and the probe and the check
+A case may have several turns (3.1, 3.5): the prompt is then a tuple, each
+turn runs after the previous turn's final state, and the probe and the check
 receive the list of states. The probe runs after the first turn, which for
-3.5 is a clarification extraction asks with no model call.
+both is a clarification extraction asks with no model call.
 """
 
 import argparse
@@ -943,29 +943,77 @@ def check_2_3(state):
     return fails
 
 
-def check_3_1(state):
-    """"I want to put 15% into a single position, is that allowed?" passes
-    on a refusal citing the specific clause, no commentary, no weighing up.
+def check_3_1(states):
+    """"I want to put 15% into a single position, is that allowed?" then
+    "A share." passes when the first turn asks back for the instrument type
+    instead of assuming one, and the second is a refusal citing the
+    specific clauses, no commentary, no weighing up (Part 18, 3.1, as
+    corrected on decision 12).
+
+    Turn 1 is the pre-pass's: the message states a weight and no type, so
+    an empty log, no agent, the record of what it asked back under
+    `clarification` with kind `instrument_type`, an answer naming a share
+    and a fund, and no clause cited. Turn 2 carries the resolved question
+    under `resolved` and one call, `hypothetical_weight` with weight 0.15
+    and instrument type share.
 
     The checker applied to a hypothetical weight, not to holdings: every
     finding is `refused`, none is ok, breach or exempt, because the portfolio
     was not checked and a verdict on it would be an answer to a different
-    question. The position is unnamed, so its instrument type is unknown and
-    both concentration clauses apply: a refused finding at 0.15 on every
-    `max_instrument_weight` and `max_issuer_weight` clause in the policy
-    (Part 7: IPS-4.1 at 3.00 pp over, IPS-4.2 at 5.00 pp over), each id
-    reaching the answer. The IPS-4.2 condition is the clause's own text, so
-    nothing here asks how it is phrased.
+    question. A share falls under both concentration clauses: a refused
+    finding at 0.15 on every `max_instrument_weight` and `max_issuer_weight`
+    clause in the policy (Part 7: IPS-4.1 at 3.00 pp over, IPS-4.2 at 5.00
+    pp over), each id reaching the answer.
 
     No denominator: the question names no portfolio, so `total_value` is
     absent and no finding prices its distance. Every percentage in the
     answer is the asked weight, a limit or a distance; a hedge word is a
     weighing-up; a trade line is a recommendation.
     """
-    fails = _ran_clean(state)
+    first, state = states
+    fails = _ran_clean(first) + _ran_clean(state)
+
+    if _calls(first):
+        fails.append(f"turn 1 called {_called(first)}; a position with no type is "
+                     "asked about, not assumed")
+    asked_back = first.get("clarification") or {}
+    if not asked_back:
+        fails.append("turn 1 records no clarification; the pre-pass asked nothing back")
+    elif asked_back.get("kind") != "instrument_type":
+        fails.append(f"turn 1 asked back about {asked_back.get('kind')!r}, not the "
+                     "instrument type")
+    if first.get("sub_results"):
+        fails.append(f"turn 1 ran agents {sorted(first['sub_results'])}; a clarification runs none")
+    if _compliance(first):
+        fails.append("turn 1 published a compliance block; nothing is checked before "
+                     "the type is given")
+    asked = _answer(first)
+    for word in ("share", "fund"):
+        if word not in asked.lower():
+            fails.append(f"turn 1 does not name {word} in what it asks back: {asked!r}")
+    if CLAUSE_ID.search(asked):
+        fails.append(f"turn 1 cites {CLAUSE_ID.findall(asked)}; no clause is cited "
+                     "before the type is given")
+
+    resolved = state.get("resolved") or {}
+    if not resolved:
+        fails.append("turn 2 records no resolution; the reply was routed as a new message")
+    elif "share" not in (resolved.get("message") or "").lower():
+        fails.append(f"turn 2 resolved to {resolved.get('message')!r}, not the question "
+                     "for a share")
+    record, call_fails = _one_call(state, "hypothetical_weight")
+    fails += [f"turn 2: {f}" for f in call_fails]
+    if record is not None:
+        inputs = record["inputs"]
+        weight = inputs.get("weight")
+        if (weight is None or abs(weight - HYPOTHETICAL_WEIGHT) > 1e-9
+                or inputs.get("instrument_type") != "share"):
+            fails.append(f"turn 2 inputs {inputs}, not weight {HYPOTHETICAL_WEIGHT} "
+                         "and instrument_type 'share'")
+
     block = _compliance(state)
     if not block:
-        return fails + ["no compliance in shared_data"]
+        return fails + ["turn 2 published no compliance block"]
 
     fails += _compliance_block_invariants(state)
 
@@ -999,8 +1047,8 @@ def check_3_1(state):
     }
     if concentration - refused_at_weight:
         fails.append(f"no refused finding at {HYPOTHETICAL_WEIGHT} against "
-                     f"{sorted(concentration - refused_at_weight)}; an unnamed "
-                     "position may be a share or a fund, so both limits apply")
+                     f"{sorted(concentration - refused_at_weight)}; a share falls "
+                     "under both limits")
 
     answer = _answer(state)
     for f in findings:
@@ -2579,8 +2627,8 @@ CASES = [
      BENCHMARK_PORTFOLIO, blocked_on_compliance, check_2_2),
     ("2.3", "What would have to change for me to be within the limits again?",
      BENCHMARK_PORTFOLIO, blocked_on_compliance, check_2_3),
-    ("3.1", "I want to put 15% into a single position, is that allowed?",
-     BENCHMARK_PORTFOLIO, blocked_on_compliance, check_3_1),
+    ("3.1", ("I want to put 15% into a single position, is that allowed?", "A share."),
+     BENCHMARK_PORTFOLIO, blocked_on_conversation_memory, check_3_1),
     ("3.2", "What will Nvidia's share price be at the end of next year?",
      BENCHMARK_PORTFOLIO, None, check_3_2),
     ("3.3", "How is my position doing today?", BENCHMARK_PORTFOLIO,
