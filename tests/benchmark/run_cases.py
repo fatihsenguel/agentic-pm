@@ -139,8 +139,8 @@ HYPOTHETICAL_WEIGHT = 0.15
 
 # The sentence the formatter emits when the policy has no clause on a topic
 # (Part 7, 3.4: "the policy contains nothing on currency risk"). Repeated
-# here rather than imported, as SCOPE_BOUNDARY is, so the check can fail
-# before the formatter exists.
+# here rather than imported so the check can fail before the formatter
+# exists.
 NO_CLAUSE = "contains nothing on"
 
 
@@ -183,6 +183,24 @@ def _called(state):
     """What the log shows, as (tool, inputs) pairs, for a reason or an
     assertion about which tool ran with what."""
     return [(r.get("tool"), r.get("inputs") or {}) for r in _calls(state)]
+
+
+def _one_call(state, tool):
+    """The one record a single-tool case expects: the tool named, called
+    once and alone. Returns the record and the failures; the record is
+    None when the log shows anything else, and the caller then reads no
+    input from it."""
+    calls = _called(state)
+    if not calls:
+        return None, [f"no tool was called; the answer came from no tool output, "
+                      f"and the case is one call to {tool!r}"]
+    if len(calls) != 1:
+        return None, [f"tools called: {[name for name, _ in calls]}; the case is one "
+                      f"call to {tool!r}"]
+    name, inputs = calls[0]
+    if name != tool:
+        return None, [f"the tool called is {name!r} with {inputs}, not {tool!r}"]
+    return _calls(state)[0], []
 
 
 # ---------------------------------------------------------------------------
@@ -343,11 +361,10 @@ def check_1_3(state):
     is checked as an invariant against the per-holding figures Part 4 names.
     """
     fails = _ran_clean(state)
-    params = (state.get("router_decision") or {}).get("parameters") or {}
-    if params.get("measure") != "portfolio_volatility":
-        fails.append(f"measure is {params.get('measure')!r}, not 'portfolio_volatility'")
-    if params.get("period") != "1Y":
-        fails.append(f"period is {params.get('period')!r}; 'twelve months' is 1Y")
+    record, call_fails = _one_call(state, "portfolio_volatility")
+    fails += call_fails
+    if record is not None and record["inputs"].get("period") != "1Y":
+        fails.append(f"period is {record['inputs'].get('period')!r}; 'twelve months' is 1Y")
 
     pv = _shared(state).get("portfolio_volatility") or {}
     if not pv:
@@ -441,17 +458,16 @@ def check_1_2(state):
     and the purchase date; the moving ones are checked as invariants and for
     reaching the prose.
 
-    `parameters.tickers` must be exactly ["JPM"]. Rule 2 lets the router fill
-    tickers from the portfolio when the user names none, and for P&L an empty
-    list means every position - so a padded list would silently turn a
-    question about one position into an answer about nine.
+    The log must show one call, `position_pnl` with tickers exactly ["JPM"].
+    For P&L an empty list means every position, so a list the layer padded
+    from the portfolio would silently turn a question about one position
+    into an answer about nine.
     """
     fails = _ran_clean(state)
-    params = (state.get("router_decision") or {}).get("parameters") or {}
-    if params.get("measure") != "position_pnl":
-        fails.append(f"measure is {params.get('measure')!r}, not 'position_pnl'")
-    if params.get("tickers") != ["JPM"]:
-        fails.append(f"tickers {params.get('tickers')} != ['JPM']; the position "
+    record, call_fails = _one_call(state, "position_pnl")
+    fails += call_fails
+    if record is not None and record["inputs"].get("tickers") != ["JPM"]:
+        fails.append(f"tickers {record['inputs'].get('tickers')} != ['JPM']; the position "
                      "named in the question, and nothing else")
 
     pnl = _shared(state).get("position_pnl") or {}
@@ -488,12 +504,16 @@ def check_1_2(state):
     return fails
 
 
-SCOPE_BOUNDARY = "outside what this system does"
+# The scope clause, IPS-1.3: what the policy answers and what it refuses.
+# A refusal cites it, and the citation reaches the answer through the
+# lookup and not from the model's memory: with no tool output carrying
+# "1.3", the tracing check fails the token.
+SCOPE_CLAUSE = "IPS-1.3"
 
 
 def check_3_2(state):
-    """A price forecast passes when the answer refers to the scope
-    boundary and gives no forecast.
+    """A price forecast passes when the answer refuses on the scope clause
+    and gives no forecast.
 
     **The prompt changed on 20 September**, at the commit that made 4.3
     answerable, as benchmark.md's "When 3.2 expires" says it would. It was
@@ -503,28 +523,29 @@ def check_3_2(state):
     rewritten and not deleted, to a prompt that stays out of scope for
     good: no price a stock will reach, ever (DIRECTION.md invariant 7).
 
-    Intent alone is not enough: a router that says out_of_scope while the
-    synthesizer still runs agents and formats a result would pass on the
-    label. So the plan must be empty, nothing may have run, and the fixed
-    boundary sentence must reach the answer. The sentence is the one the
-    synthesizer emits for this intent; it is repeated here rather than
-    imported so that this check can fail before the capability exists.
+    The log must show one call, `policy_lookup`, whose block matched
+    IPS-1.3; the lookup's own step, ComplianceAgent, is the only agent
+    that ran; the clause id reaches the answer; and no forecast phrase
+    does. The clause's text is not repeated here: what the answer must
+    carry is the id, and the text is the policy's to change.
     """
     fails = _ran_clean(state)
-    intent = _intent(state)
-    if intent != "out_of_scope":
-        fails.append(
-            f"intent is {intent!r}; 3.2 passes only by naming the scope boundary, "
-            "which needs an out_of_scope intent in router_prompts.py"
-        )
-    plan = (state.get("router_decision") or {}).get("execution_order") or []
-    if plan:
-        fails.append(f"execution_order {plan} is not empty; out_of_scope plans nothing")
-    ran = sorted((state.get("sub_results") or {}).keys())
+    record, call_fails = _one_call(state, "policy_lookup")
+    fails += call_fails
+    if record is not None:
+        clauses = ((record.get("block") or {}).get("topic") or {}).get("clauses") or []
+        if SCOPE_CLAUSE not in clauses:
+            fails.append(f"the lookup matched {clauses}; the scope clause {SCOPE_CLAUSE} "
+                         "is not among them")
+    ran = sorted(set(state.get("sub_results") or {}) - {"ComplianceAgent"})
     if ran:
-        fails.append(f"agents ran: {ran}; an out-of-scope request runs nothing")
-    if SCOPE_BOUNDARY not in _answer(state):
-        fails.append(f"answer does not carry the scope boundary ({SCOPE_BOUNDARY!r})")
+        fails.append(f"agents ran: {ran}; a lookup runs ComplianceAgent alone")
+    answer = _answer(state)
+    if SCOPE_CLAUSE not in answer:
+        fails.append(f"answer does not cite {SCOPE_CLAUSE}, the scope clause")
+    forecast = PRICE_FORECAST.search(answer)
+    if forecast:
+        fails.append(f"answer forecasts a price: {forecast.group(0)!r}")
     return fails
 
 
@@ -534,10 +555,11 @@ def check_3_3(state):
 
     `position_pnl` in shared_data does NOT mean the answer is about the
     position: PortfolioAnalysisAgent publishes it on every run, allocation
-    queries included. What says the answer is about positions is the router's
-    `measure`, and that is what this asserts on, plus that all nine positions
-    were published and dated. An allocation table with a date would fail here
-    on `measure`, which is the false pass this case exists to refuse.
+    queries included. What says the answer is about positions is the tool
+    the log shows was called, and that is what this asserts on, plus that
+    all nine positions were published and dated. An allocation table with a
+    date would fail here on the tool, which is the false pass this case
+    exists to refuse.
 
     `tickers` must be empty. The formatter prints all nine positions whether
     the list is empty or padded with all nine, so without this check the case
@@ -545,13 +567,11 @@ def check_3_3(state):
     7 September, in the same run that failed 1.2 for exactly that padding.
     """
     fails = _ran_clean(state)
-    params = (state.get("router_decision") or {}).get("parameters") or {}
-    if params.get("measure") != "position_pnl":
-        fails.append(f"measure is {params.get('measure')!r}, not 'position_pnl'; "
-                     "the answer is not about the position")
-    if params.get("tickers"):
-        fails.append(f"tickers {params.get('tickers')} is not empty; the question "
-                     "names no position, and a filled list means the router "
+    record, call_fails = _one_call(state, "position_pnl")
+    fails += call_fails
+    if record is not None and record["inputs"].get("tickers"):
+        fails.append(f"tickers {record['inputs'].get('tickers')} is not empty; the question "
+                     "names no position, and a filled list means the layer "
                      "copied the portfolio in")
 
     pnl = _shared(state).get("position_pnl") or {}
@@ -1171,16 +1191,27 @@ def check_3_5(states):
     """"Hows my APPL doing?" then "yes" - a typo of a held ticker. Passes
     when the first turn asks back naming the holding instead of guessing,
     and the second turn is the resolved question routed as if typed:
-    position P&L for AAPL and nothing else, with the resolution recorded on
-    the decision so the pass is memory's and not the model's reading of
+    position P&L for AAPL and nothing else, with the resolution recorded in
+    the state so the pass is memory's and not the model's reading of
     APPL as AAPL.
+
+    Turn 1 is the pre-pass's: an empty log, no agent, and the record of
+    what it asked back under `clarification`, the token APPL for the
+    candidate AAPL. Turn 2 carries the resolved question under `resolved`
+    and one call, `position_pnl` with tickers ["AAPL"].
     """
     first, second = states
     fails = _ran_clean(first) + _ran_clean(second)
 
-    if _intent(first) != "clarification_needed":
-        fails.append(f"turn 1 intent is {_intent(first)!r}; a typo of a holding is asked "
+    if _calls(first):
+        fails.append(f"turn 1 called {_called(first)}; a typo of a holding is asked "
                      "about, not guessed")
+    asked_back = first.get("clarification") or {}
+    if not asked_back:
+        fails.append("turn 1 records no clarification; the pre-pass asked nothing back")
+    elif (asked_back.get("token"), asked_back.get("candidate")) != ("APPL", "AAPL"):
+        fails.append(f"turn 1 asked back about {asked_back.get('token')!r} for "
+                     f"{asked_back.get('candidate')!r}, not APPL for AAPL")
     if first.get("sub_results"):
         fails.append(f"turn 1 ran agents {sorted(first['sub_results'])}; a clarification runs none")
     asked = _answer(first)
@@ -1188,19 +1219,15 @@ def check_3_5(states):
         if name not in asked:
             fails.append(f"turn 1 does not name {name} in what it asks back: {asked!r}")
 
-    decision = second.get("router_decision") or {}
-    params = decision.get("parameters") or {}
-    resolved = decision.get("resolved") or {}
+    resolved = second.get("resolved") or {}
     if not resolved:
         fails.append("turn 2 records no resolution; the reply was routed as a new message")
     elif "AAPL" not in (resolved.get("message") or "") or "APPL" in (resolved.get("message") or ""):
         fails.append(f"turn 2 resolved to {resolved.get('message')!r}, not the question with AAPL")
-    if _intent(second) != "data_fetch":
-        fails.append(f"turn 2 intent is {_intent(second)!r}, not data_fetch")
-    if params.get("measure") != "position_pnl":
-        fails.append(f"turn 2 measure is {params.get('measure')!r}, not 'position_pnl'")
-    if params.get("tickers") != ["AAPL"]:
-        fails.append(f"turn 2 tickers {params.get('tickers')} != ['AAPL']")
+    record, call_fails = _one_call(second, "position_pnl")
+    fails += [f"turn 2: {f}" for f in call_fails]
+    if record is not None and record["inputs"].get("tickers") != ["AAPL"]:
+        fails.append(f"turn 2 tickers {record['inputs'].get('tickers')} != ['AAPL']")
 
     pnl = _shared(second).get("position_pnl") or {}
     aapl = pnl.get("AAPL")
