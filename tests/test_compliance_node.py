@@ -132,6 +132,20 @@ async def test_the_inputs_are_read_from_the_state_and_not_the_router():
     assert {f["status"] for f in block["findings"]} == {"refused"}
 
 
+async def test_a_weight_with_no_instrument_type_is_an_error_and_not_a_verdict():
+    out = await compliance_agent_node(state_with({"weight": 0.15}))
+    assert "compliance" not in (out.get("shared_data") or {})
+    [error] = out["errors"]
+    assert "instrument type" in error
+
+
+async def test_a_fund_is_checked_against_the_instrument_limit_alone():
+    out = await compliance_agent_node(state_with({"weight": 0.15, "instrument_type": "fund"}))
+    assert out.get("errors") is None, out.get("errors")
+    findings = out["shared_data"]["compliance"]["findings"]
+    assert [(f["clause"], f["status"]) for f in findings] == [("IPS-4.1", "refused")]
+
+
 async def test_topic_the_policy_is_silent_on_sets_no_clause():
     out = await compliance_agent_node(state_with({"topic": "currency risk"}))
     assert out.get("errors") is None

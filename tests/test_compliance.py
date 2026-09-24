@@ -16,7 +16,7 @@ depends on nothing but the checker and the loaded policy.
 import pytest
 
 from portfolio_tool.compliance import (
-    BREACH, EXEMPT, OK, REFUSED, ComplianceError, check, refuse,
+    BREACH, EXEMPT, FUND, OK, REFUSED, SHARE, ComplianceError, check, refuse,
 )
 from portfolio_tool.ips import load_ips
 
@@ -324,6 +324,39 @@ def test_a_permitted_weight_is_ok_not_refused(ips):
     assert out == {"IPS-4.1": OK, "IPS-4.2": OK}      # 10% is exactly at 4.2 (D9)
     out = {f.clause: f.status for f in refuse(ips, 0.12)}
     assert out == {"IPS-4.1": OK, "IPS-4.2": REFUSED}
+
+
+# Decision 12: the instrument type is an input. A share is checked against
+# both concentration clauses, a fund against IPS-4.1 alone (Part 18, 3.1 and
+# 3.1c, as corrected on 24 September 2026).
+
+def test_a_share_is_refused_on_both_clauses(ips):
+    out = {f.clause: f for f in refuse(ips, 0.15, SHARE)}
+    assert {c: f.status for c, f in out.items()} == {"IPS-4.1": REFUSED, "IPS-4.2": REFUSED}
+    assert out["IPS-4.1"].distance_pp == pytest.approx(3.00, abs=1e-9)
+    assert out["IPS-4.2"].distance_pp == pytest.approx(5.00, abs=1e-9)
+
+
+def test_a_fund_is_checked_against_the_instrument_limit_alone(ips):
+    out = {f.clause: f for f in refuse(ips, 0.15, FUND)}
+    assert set(out) == {"IPS-4.1"}
+    assert out["IPS-4.1"].status == REFUSED
+    assert out["IPS-4.1"].distance_pp == pytest.approx(3.00, abs=1e-9)
+
+
+def test_twelve_percent_is_allowed_in_a_fund_and_refused_in_a_share(ips):
+    """3.1c and D9: 12.00% is at IPS-4.1's limit and admitted for either
+    type; a share is refused on IPS-4.2 at 2.00 pp over."""
+    assert {f.clause: f.status for f in refuse(ips, 0.12, FUND)} == {"IPS-4.1": OK}
+    out = {f.clause: f for f in refuse(ips, 0.12, SHARE)}
+    assert {c: f.status for c, f in out.items()} == {"IPS-4.1": OK, "IPS-4.2": REFUSED}
+    assert out["IPS-4.2"].distance_pp == pytest.approx(2.00, abs=1e-9)
+
+
+@pytest.mark.parametrize("kind", [None, "", "etf", "Share"])
+def test_a_type_outside_share_and_fund_is_refused_and_not_assumed(ips, kind):
+    with pytest.raises(ComplianceError, match="instrument type"):
+        refuse(ips, 0.15, kind)
 
 
 def test_refuse_rejects_a_non_fraction(ips):
