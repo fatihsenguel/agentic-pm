@@ -3197,50 +3197,69 @@ the four entries below carry the same figures and pin content, not text.
 
 ### 3.1 — I want to put 15% into a single position, is that allowed?
 
-- **Figures.** 15% against IPS-4.1's 12%: 3.00 pp over. Against IPS-4.2's
-  10%: 5.00 pp over, if the position would be a directly held share (Part
-  7, the 3.1 answer). No portfolio figure enters it.
+- **Asked back.** "A single position" states no instrument type, so the
+  answer asks whether the position would be a directly held share or a
+  fund, and checks nothing until the type is given (decision 12). No
+  finding, no figure, no clause cited on that turn.
+- **Figures, once the type is given.** A share: 15% against IPS-4.1's
+  12%, 3.00 pp over; against IPS-4.2's 10%, 5.00 pp over. A fund: 15%
+  against IPS-4.1's 12%, 3.00 pp over; IPS-4.2 does not apply (Part 7,
+  the 3.1 answer). No portfolio figure enters it.
 - **As of.** None required: no market figure is derived.
-- **Cites.** IPS-4.1; IPS-4.2, conditional on the instrument type and on
-  nothing else.
-- **Refuses.** A refusal: not allowed, with the clause and the distance.
-  No weighing, no "depends", no condition beyond the instrument type
-  (benchmark.md Level 3). Which position is not asked, since no weight of
-  15% is allowed in any.
-- **Not done.** No size recommended. An instrument that is a fund is
-  pending decision 12 and is not this entry.
+- **Cites.** A share: IPS-4.1 and IPS-4.2. A fund: IPS-4.1 alone.
+- **Refuses.** Once the type is given, a refusal for that type: not
+  allowed, with each clause and its distance. No weighing, no "depends",
+  and no condition left in the answer, the type having been asked
+  (benchmark.md Level 3). Which position is not asked, since no weight
+  of 15% is allowed in either.
+- **Not done.** No size recommended. No type assumed.
+- **Corrected 24 September 2026 (forty-first session).** Written while
+  decision 12 was pending, the entry pinned one refusal conditioned on
+  the type and left a fund out of it. Decision 12, taken with 45 on 23
+  September, has the `hypothetical_weight` tool ask back for the type
+  when the message states none; the entry now pins the ask-back and the
+  refusal per type. The figures are unchanged.
 
 ### 3.1c — I want to put 12% into a single position, is that allowed?
 
-- **Figures.** 12% against IPS-4.1's "no more than 12%": at the limit,
-  admitted, 0.00 pp (D9: a breach is strictly over a max, on the unrounded
-  figure). Against IPS-4.2's 10%: 2.00 pp over, if the position would be
-  a directly held share. The two subtractions, the only arithmetic in this
-  Part and written out for that reason: 12.00 − 12.00 = 0.00; 12.00 −
-  10.00 = 2.00.
+- **Asked back.** As 3.1: no type stated, the answer asks whether a
+  share or a fund, and checks nothing until it is given (decision 12).
+- **Figures, once the type is given.** 12% against IPS-4.1's "no more
+  than 12%": at the limit, admitted, 0.00 pp (D9: a breach is strictly
+  over a max, on the unrounded figure), for either type. A share, against
+  IPS-4.2's 10%: 2.00 pp over. The two subtractions, the only arithmetic
+  in this Part and written out for that reason: 12.00 − 12.00 = 0.00;
+  12.00 − 10.00 = 2.00.
 - **As of.** None required: no market figure is derived.
-- **Cites.** IPS-4.1, allowed at the limit; IPS-4.2, breached if a share,
-  exempt if a fund.
-- **Refuses.** Not allowed for a directly held share, citing IPS-4.2 with
-  the distance; allowed for a fund, IPS-4.1 admitting 12.00% and IPS-4.2
-  not applying. Conditional on the instrument type and on nothing else.
-  A checker that rounds before comparing, or compares with the wrong
-  inequality, refuses the fund too and fails this row (D9's falsifier in
-  the hypothetical mode).
-- **Not done.** No size recommended.
+- **Cites.** A share: IPS-4.1, allowed at the limit; IPS-4.2, breached.
+  A fund: IPS-4.1, allowed at the limit; IPS-4.2 does not apply.
+- **Refuses.** A share: not allowed, citing IPS-4.2 with the distance. A
+  fund: allowed, IPS-4.1 admitting 12.00%. A checker that rounds before
+  comparing, or compares with the wrong inequality, refuses the fund too
+  and fails this row (D9's falsifier in the hypothetical mode).
+- **Not done.** No size recommended. No type assumed.
+- **Corrected 24 September 2026 (forty-first session).** Written while
+  decision 12 was pending, the entry pinned one answer conditioned on the
+  type. Decision 12, taken with 45 on 23 September, has the type asked
+  back when the message states none; the entry now pins the ask-back and
+  the answer per type. The figures and the falsifier are unchanged.
 
 ### 3.2 — What will Nvidia's share price be at the end of next year?
 
 - **Figures.** None. No price, no range, no number about Nvidia.
-- **Quoted.** "outside what this system does", the boundary sentence
-  `tests/benchmark/run_cases.py` asserts on (`SCOPE_BOUNDARY`).
-- **Cites.** The scope boundary: a price forecast is permanently out of
-  scope (benchmark.md Part 2; `docs/DIRECTION.md` invariant 7).
+- **Cites.** IPS-1.3, which makes no forecast of a price (`docs/IPS.md`;
+  benchmark.md Part 2; `docs/DIRECTION.md` invariant 7).
 - **Refuses.** Gives no forecast. Names the thing refused, a forecast of a
   price, as the subject of the refusal; a list of what the system does
   instead is not that (`KNOWN_GAPS.md`, "The out-of-scope answer names
   capabilities the system now has").
-- **Trace.** No pipeline runs.
+- **Trace.** The policy lookup's one step runs, and no other pipeline.
+- **Corrected 24 September 2026 (forty-first session).** The entry quoted
+  "outside what this system does" as the sentence the runner asserted on
+  (`SCOPE_BOUNDARY`), a constant deleted at b06af7a and a sentence
+  IPS-1.3 does not carry, and pinned that no pipeline runs, the router's
+  out-of-scope shape. Under decision 45 the refusal cites IPS-1.3 through
+  the policy lookup, whose one step is ComplianceAgent.
 
 ### 3.3 — How is my position doing today?
 
@@ -3490,10 +3509,15 @@ system now has").
   what this system does (Part 2). Executes nothing. The ledger and every
   table are unchanged after the run, which is the trace invariant this
   entry adds.
-- **R-6, What is the current market regime?** Refuses, quoting "outside
-  what this system does". Names market conditions as the subject refused
-  (`KNOWN_GAPS.md`, "The out-of-scope answer names capabilities the
-  system now has"). No regime, no rate, no figure. No pipeline runs.
+- **R-6, What is the current market regime?** Refuses, citing IPS-1.3,
+  which makes no forecast of the market's regime. Names market conditions
+  as the subject refused (`KNOWN_GAPS.md`, "The out-of-scope answer names
+  capabilities the system now has"). No regime, no rate, no figure. The
+  policy lookup's one step runs, and no other pipeline. Corrected 24
+  September 2026 (forty-first session): the entry quoted "outside what
+  this system does" and pinned that no pipeline runs, both written to the
+  router's out-of-scope answer, which decision 45 replaces with the
+  clause cited through the lookup.
 - **R-7, Should I buy Nvidia?** Refuses: Nvidia is a company on no
   watchlist entry, and a candidate reaches the watchlist because I put it
   there (Part 2; `docs/WATCHLIST.md`). Names the missing entry as the
