@@ -5885,6 +5885,16 @@ it, which is the record working. The shape stands: Item 1 has no row and
 is asked for again, a few cents, on every thesis or position question
 about ADBE until a request returns a faithful reading.
 
+**24 September 2026 (forty-second session), the runner's first run
+through the layer.** No reading was requested: `document_readings` held
+seven rows before the run and after it, Alphabet's three sections stored
+under the current prompt versions. The run proposed on 4.4 (W-1.3) and,
+by the code path, on 4.3, and asked the view once on 4.3; none of it is
+recorded (the tokens entry, "What a turn of the layer costs is an estimate
+with no thinking tokens in it - RESOLVED 24 September (forty-second
+session)"). No case names ADBE, so Adobe's Item 1 was
+not asked for.
+
 ### The first live proposals cite claims that do not support them
 
 **Trigger:** the next prompt version of the proposer; the commit that makes 4.3 answerable.
@@ -8542,9 +8552,9 @@ day keeps it, the reply resolves to the message unchanged, and extraction
 asks the same question again: a loop the user sees, not a wrong answer. No
 corpus prompt starts with the day.
 
-### What a turn of the layer costs is an estimate with no thinking tokens in it
+### What a turn of the layer costs is an estimate with no thinking tokens in it - RESOLVED 24 September (forty-second session)
 
-**Trigger:** the first paid runner run after 5f0d2f7, read with the tokens it prints.
+**Trigger:** none: measured by the first paid runner run after 5f0d2f7, below.
 
 Recorded 24 September 2026 (forty-first session). Decision 45's estimate,
 one to two cents a first turn, counts a system prompt, eleven tool
@@ -8555,9 +8565,29 @@ thinking when `thinking` is not set, billed as output, and the layer sends
 measurement, and the estimate of $0.30 to $0.80 for the eighteen cases is
 said before it and not after.
 
+**Measured 24 September 2026 (forty-second session), the runner's first
+run through the layer, `tests/golden/run_cases_2026-09-24.txt`.** 35
+calls: 30,484 input tokens, 5,583 output with thinking, 2,428 cache
+written, 82,552 cache read. The fixed prefix is 2,428 tokens, written on
+the first call and read on the other 34, so the cache held across a run
+of under three minutes. At decision 45's rates, with a cache write at
+1.25 times input, the API's rate, which decision 45 does not state: $0.061
+input, $0.056 output, $0.006 written, $0.017 read, **$0.14 for the layer**,
+about $0.008 a case. The first turn of the run, 1.1, cost about one cent
+(949 in, 170 out, 2,428 written, 2,428 read), inside decision 45's one to
+two; a later single-tool turn, 1.2, about $0.004. Decision 45's $0.30 to
+$0.80 and the prediction's $0.17 to $0.40 (benchmark.md, at 78c61cd) were
+both high on output: about 160 tokens a call with thinking at `effort:
+"low"`, where the prediction allowed 8,000 to 30,000 for the run. What the
+layer does not record: the Level 4 calls on the same model, three in this
+run, the view and the proposer on 4.3 and the proposer on 4.4. At the
+proposal measured on 19 September, 2,424 in and 214 out, they come to
+about $0.02, an estimate: their tokens are printed nowhere. The run in
+all, about $0.16.
+
 ### Nine tools render through a formatter no test runs on their block
 
-**Trigger:** the first paid runner run after 5f0d2f7.
+**Trigger:** the first paid run that calls `rebalance`.
 
 Recorded 24 September 2026 (forty-first session), on the owner's word for
 the shape of the tests. `tests/test_tool_runner.py` runs every tool on
@@ -8568,6 +8598,19 @@ A tool rendered by the wrong formatter, or a formatter that cannot read the
 block a tool publishes, shows first in the runner's paid run. A real
 DataAgent in a test would reach the price provider on a stale store, which
 is why the stand-ins.
+
+**24 September 2026 (forty-second session), the runner's first run
+through the layer.** Eight of the nine ran on a live block and rendered
+without a raise: `allocation` (1.1, 1.4, and 2.1's second call),
+`position_pnl` (1.2, 3.3, 3.5), `portfolio_volatility` (1.3),
+`compliance_check` (2.1, 2.2, 2.3), `philosophy_screen` (4.1, 4.2, 4.6),
+`thesis` (4.4), `position` (4.3) and `ledger` (4.5). The checks found in
+the answers figures, ids and dates that only the right formatter's text
+carries: 1.3's window and closes, the ten clause ids 2.2's answer did
+name, 4.5's prediction ids and due dates. So each tool reached its own
+formatter. Whether each text is right line by line the run does not show,
+the runner printing no answer. `rebalance` is called by no case and stays
+unseen; the trigger is repointed to it.
 
 ### The turn's `messages` from the layer are read by nothing
 
