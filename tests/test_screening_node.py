@@ -375,7 +375,8 @@ async def test_the_price_is_the_last_stored_close_on_a_row_the_node_creates(prov
         session.close()
 
 
-async def test_a_second_run_asks_the_price_provider_for_nothing_the_same_day(provider):
+async def test_a_second_run_asks_the_price_provider_for_nothing_the_same_day(provider, monkeypatch):
+    monkeypatch.setattr(nodes, "utc_today", lambda: dt.date(2026, 9, 22))
     await nodes.screening_agent_node(state_with(["GOOGL"]))
     provider.prices.calls.clear()
     block = _block(await nodes.screening_agent_node(state_with(["GOOGL"])))
@@ -389,6 +390,7 @@ async def test_a_candidate_stating_no_pair_stops_the_range_and_not_the_screen(
     range"): the stop names the pair, no range is defaulted, and the price
     and the screen are published as they are."""
     _watchlist(monkeypatch, tmp_path, W1_WITHOUT_A_PAIR)
+    monkeypatch.setattr(nodes, "utc_today", lambda: dt.date(2026, 9, 22))
     out = await nodes.screening_agent_node(state_with(["GOOGL"]))
     assert out.get("errors") is None, out.get("errors")
     block = _block(out)
