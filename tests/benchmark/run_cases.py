@@ -168,10 +168,6 @@ def _answer(state):
     return state.get("final_response") or ""
 
 
-def _intent(state):
-    return (state.get("router_decision") or {}).get("intent")
-
-
 def _calls(state):
     """The turn's tool-call log: one record per tool the layer called, in
     call order, each with `tool`, `inputs`, `key`, `block`, `text` and
@@ -183,6 +179,18 @@ def _called(state):
     """What the log shows, as (tool, inputs) pairs, for a reason or an
     assertion about which tool ran with what."""
     return [(r.get("tool"), r.get("inputs") or {}) for r in _calls(state)]
+
+
+def _what_ran(state):
+    """What the log shows, for a blocked reason: the tools called with
+    their inputs, what the pre-pass asked back, or that the model called
+    no tool."""
+    called = _called(state)
+    if called:
+        return f"the layer called {called}"
+    if state.get("clarification"):
+        return f"the pre-pass asked back: {_answer(state)!r}"
+    return "the model called no tool"
 
 
 def _one_call(state, tool):
@@ -1160,18 +1168,13 @@ def blocked_on_portfolio_vol(state):
 
 def blocked_on_compliance(state):
     """ComplianceAgent exists (8 September); a case is blocked now only when
-    the router did not plan it, which is a routing gap, not a missing agent."""
+    the layer called no tool whose plan runs it, which is a choice of tool
+    for this wording, not a missing agent. The reason names what the log
+    shows instead, which is the diagnostic."""
     if "ComplianceAgent" in (state.get("sub_results") or {}):
         return None
-    plan = (state.get("router_decision") or {}).get("execution_order") or []
-    reason = (f"the router did not plan ComplianceAgent (intent {_intent(state)!r}, "
-              f"plan {plan}); the agent exists, the routing for this wording does not")
-    if _intent(state) == "clarification_needed":
-        # What the router asked back is the diagnostic: it names what the
-        # router could not resolve in the wording. router_node writes the
-        # question to final_response; the decision dict does not carry it.
-        reason += f"; it asked back: {_answer(state)!r}"
-    return reason
+    return (f"ComplianceAgent did not run; {_what_ran(state)}. The agent exists; "
+            "the choice of tool for this wording does not")
 
 
 blocked_on_delegation_trace = blocked_on_compliance
@@ -1277,15 +1280,14 @@ def _screening(state):
 
 
 def blocked_on_screen(state):
-    """The philosophy check node publishes the block when the routing
+    """The philosophy check node publishes the block when a tool's plan
     reaches it. A state without the block is a question that did not
     reach the check, and the case is blocked on that; the reason names what
-    the router did with the question so the record says whether the gap is
-    the node or the routing."""
+    the log shows so the record says whether the gap is the node or the
+    choice of tool."""
     if _screening(state):
         return None
-    plan = (state.get("router_decision") or {}).get("execution_order") or []
-    reason = (f"no screening block in shared_data (intent {_intent(state)!r}, plan {plan}); "
+    reason = (f"no screening block in shared_data ({_what_ran(state)}); "
               "the question did not reach the philosophy check")
     errors = state.get("errors") or []
     if errors:
@@ -1836,12 +1838,11 @@ def _ledger_file():
 def blocked_on_ledger(state):
     """4.5 needs the ledger read into shared_data. Until a node publishes it
     the case is blocked on that, not failed; the reason names what the
-    router did with the question, so the first sighting records the
-    routing the way 4.2's did."""
+    log shows, so the first sighting records the choice of tool the way
+    4.2's did the routing."""
     if _ledger(state):
         return None
-    plan = (state.get("router_decision") or {}).get("execution_order") or []
-    reason = (f"no ledger block in shared_data (intent {_intent(state)!r}, plan {plan}); "
+    reason = (f"no ledger block in shared_data ({_what_ran(state)}); "
               "the question did not reach the ledger")
     errors = state.get("errors") or []
     if errors:
@@ -2017,12 +2018,11 @@ def _watchlist_entry(ticker):
 
 def blocked_on_research(state):
     """4.4 needs the research block. Until a node publishes it the case is
-    blocked on that, not failed; the reason names what the router did with
-    the question, so the first sighting records the routing."""
+    blocked on that, not failed; the reason names what the log shows, so
+    the first sighting records the choice of tool."""
     if _research(state):
         return None
-    plan = (state.get("router_decision") or {}).get("execution_order") or []
-    reason = (f"no research block in shared_data (intent {_intent(state)!r}, plan {plan}); "
+    reason = (f"no research block in shared_data ({_what_ran(state)}); "
               "the question did not reach the research agent")
     errors = state.get("errors") or []
     if errors:
