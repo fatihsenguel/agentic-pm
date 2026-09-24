@@ -22,6 +22,10 @@ fails on its number.
 import sys
 from pathlib import Path
 
+import pytest
+
+from agents.conversation import untraced_figures
+
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT / "tests" / "benchmark"))
 
@@ -31,6 +35,11 @@ import run_cases  # noqa: E402
 TEXT = ("**ALLOCATION** as of 2026-09-21\n"
         "Equity: 69.41% of total, 284,500.00 USD invested\n"
         "**IPS-4.2** caps any issuer at 10% of total; AAPL is 4.41 pp over.")
+
+RESOLVED = {"reply": "A share.",
+            "message": "I want to put 15% into a single position, is that allowed? "
+                       "It would be a share."}
+POSITION = "**NOT PERMITTED BY THE POLICY**\n**IPS-4.1** caps a position at 12% of total."
 
 
 def _state(answer, *texts):
@@ -88,6 +97,27 @@ def test_every_record_s_text_is_allowed_and_an_empty_log_allows_nothing():
     assert run_cases.figures_trace(_state(answer, first, second), "q") == []
     assert _untraced(run_cases.figures_trace(_state(answer), "q"))
     assert run_cases.figures_trace(_state("No figures at all."), "q") == []
+
+
+def test_a_resolved_reply_is_read_against_the_question_it_resolved_into():
+    """Case 3.1 of 24 September: the client let "15" through against the
+    resolved question and the runner refused it against "A share."."""
+    answer = "15% in one position is not permitted under IPS-4.1, which caps it at 12%."
+    state = {**_state(answer, POSITION), "resolved": RESOLVED}
+    assert untraced_figures(answer, [POSITION], RESOLVED["message"]) == []
+    assert run_cases.figures_trace(state, "A share.") == []
+
+
+def test_a_figure_only_the_typed_reply_carries_is_refused_on_a_resolved_turn():
+    """The recorded question is read and never rebuilt from the reply."""
+    state = {**_state("A 20% share is not permitted.", POSITION), "resolved": RESOLVED}
+    assert _untraced(run_cases.figures_trace(state, "A 20% share."))
+
+
+def test_a_resolution_with_no_question_raises():
+    state = {**_state("No figures.", POSITION), "resolved": {"reply": "A share."}}
+    with pytest.raises(KeyError):
+        run_cases.figures_trace(state, "A share.")
 
 
 def test_a_turn_the_pre_pass_answered_is_not_read():
