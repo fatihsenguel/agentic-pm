@@ -8320,3 +8320,36 @@ above's, applied to the two tests: pin the date each runs at. Until
 then the number a session says is 2 failed beside the passes, and this
 entry is why; a suite that goes red by the calendar is not a suite that
 found a defect.
+
+### Part 18's 3.1, 3.1c, 3.2 and R-6 state the code as it stood before decisions 12 and 45
+
+**Trigger:** my dated correction of the four entries, or the run after
+Order 5's first code commit, whichever comes first; the prediction
+block in benchmark.md Part 3c.6 reads those four lines either way and
+says which reading it took.
+
+Recorded 24 September 2026 (fortieth session), found while predicting
+the corpus line by line, not repaired: the reference is never updated
+to match output, and a statement about the code inside it is corrected
+on my word, dated. Three statements, in `tests/golden/expected_values.md`
+Part 18. First, 3.1 and 3.1c pin a refusal conditioned on the
+instrument type, "if the position would be a directly held share", and
+3.1 says a fund "is pending decision 12 and is not this entry". Decision
+12 was taken with 45 on the 23rd: the `hypothetical_weight` tool asks
+back for the type when the message states none, and "a single position"
+states none, so after Order 5 both prompts are asked back and neither
+refusal is printed until the type is given. The entries and the runner's
+`check_3_1`, which asserts a refused finding on both clauses, stand on
+the rule the decision replaced. Second, 3.2's "Quoted" line and R-6's
+"Refuses" line quote "outside what this system does" as the boundary
+sentence "`tests/benchmark/run_cases.py` asserts on (`SCOPE_BOUNDARY`)";
+that constant went at b06af7a, the check now asserting IPS-1.3 cited,
+and IPS-1.3 as written on the 24th does not carry the sentence. Third,
+3.2 and R-6 pin "No pipeline runs", written to the router's
+`out_of_scope` shape; after Order 5 the refusal cites the clause
+through `policy_lookup`, whose one step is ComplianceAgent, so one
+pipeline runs and the trace invariant as written fails. Which side is
+wrong is mine to decide: the decisions, taken, or the four entries. The
+prediction block counts 3.1 and 3.1c missed on the first, and 3.2 and
+R-6 matched on the subject and the clause, reading the quote and the
+trace line as this entry's to settle.
