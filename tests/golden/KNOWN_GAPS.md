@@ -7594,6 +7594,31 @@ still owed comes with the first code commit: the golden set parked
 behind a tag, `usage` recorded from the client's first call, and the
 system prompt.
 
+**Code, 24 September 2026 (forty-first session), on branch `layer`, each
+commit on the owner's yes, tests first.** Nodes read `tool` and `inputs`
+from the state (0059682); decision 12 in the pipeline, a share against
+IPS-4.1 and IPS-4.2, a fund against IPS-4.1 alone (848539b); the pre-pass
+reads the instrument type and asks back for it (cb20156) and leaves a
+record for a span question a reply resolves (ab8307d); the eleven input
+models (de97f34); `TERMINAL` keyed by tool (715e122); the tool runner
+(0908c6e); the client, the system prompt and the eleven descriptions, with
+`usage` recorded on every call (cd9c375); the runner printing tokens per
+case (c388587); the golden set parked behind `golden-parked` (195a296);
+**the first code commit, 5f0d2f7**, where a turn runs the pre-pass and the
+layer and the runner unblocks; the router, its prompt and the synthesizer
+deleted behind `router-parked` (4d971b1). Two departures from the order
+this entry and the shape gave: `OUT_OF_SCOPE_RESPONSE` went at 4d971b1 and
+not in the first code commit, since deleting it meant deleting the
+synthesizer's dispatch; and the two-weights half of "every ask-back leaves
+a record" was not built, a reply naming one weight standing for no single
+question (logged below). The count above, 71 tests, was re-measured when
+they went: 99, the 71 plus two `ExtractedParameters` tests on fields this
+decision deletes, five more of that class's tests its input models replace,
+seventeen router rows written in 715e122 to die with the router, and two
+tests of the per-holding volatility formatter no tool reaches. pytest 2008
+passed, 6 xfailed at 4d971b1. No paid loop ran; the first runner run and
+the corpus run after it are the owner's to call.
+
 **Which loop sees each part.** pytest sees the input models, the table
 and the tool contracts, and the 168 surviving extraction and derivation
 tests are the ones that hold the boundary. The runner sees eighteen
