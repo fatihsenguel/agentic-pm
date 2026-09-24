@@ -5571,9 +5571,15 @@ Items 1A and 7 were refused differently from request to request (cap,
 page break, digit), which the cache cannot hide since a refused reading
 leaves no row ("A refused section is asked for again on every run").
 
-### The router's stronger-model switch sends a temperature the model refuses
+### The router's stronger-model switch sends a temperature the model refuses - RESOLVED 24 September (forty-first session)
 
-**Trigger:** the router's `use_stronger_model` switch turned on, or `ACTIVE_LLM_CONFIG` set to `ANTHROPIC_SONNET`.
+**Trigger:** none: the switch went with `smart_router.py` at 4d971b1.
+
+**Resolved 24 September 2026 (forty-first session).** The router and its
+switch are deleted. The conversation layer sends `claude-sonnet-5` no
+temperature (cd9c375, pinned in `tests/test_conversation.py`). `get_llm`
+in `config.py` still passes one and now has no caller; it goes with
+decision 54's config fields.
 
 Logged 19 September (twenty-sixth session). `smart_router.py:109` builds
 the stronger model with `temperature=0.0`, and `get_llm` passes
@@ -6581,6 +6587,14 @@ behind.
 ### No model call's tokens are recorded anywhere
 
 **Trigger:** the next paid loop's cost prediction.
+
+**Read 24 September 2026 (forty-first session): now true of three callers
+and false of one.** The conversation layer records the four token counts
+of every call under `model_calls` (cd9c375), and the runner prints them per
+case and per run (c388587). The reader, the proposer and the view, the
+Level 4 calls on the same model, still record nothing, so a runner run's
+printed tokens undercount by their calls. `token_counter.py` lost its one
+caller with the router (4d971b1).
 
 Logged 21 September (thirtieth session), having under-predicted a paid
 loop's cost by about half. Every cost figure this project states comes
