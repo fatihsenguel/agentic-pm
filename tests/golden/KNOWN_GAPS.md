@@ -8634,3 +8634,96 @@ any model call (cb20156), and the runner's `check_3_1` pins that (0d74185).
 V-3.1b, the weight in words, reaches the model, which may call the tool
 with no type and meet the input model's refusal instead. The block is read
 as written and not rewritten; the run says which happened.
+
+### The runner's first run through the layer: 5 of 18 against a prediction of 11
+
+**Trigger:** the corpus run after 5f0d2f7, which reads the prose of the same questions; and the next change to a check in `tests/benchmark/run_cases.py`.
+
+Recorded 24 September 2026 (forty-second session). One run at 78c61cd,
+14:16 to 14:19 UTC, `tests/golden/run_cases_2026-09-24.txt`,
+read against the prediction written before it (benchmark.md, the block
+at 78c61cd). **5/18, 10 failing, 3 blocked**, where the prediction said
+11/18 and the last run before the layer 15/18. Twelve verdicts matched
+the prediction, one of them, 1.3, on a narrower reason: the window, the
+closes and the dates reached the answer and only the covariance method did
+not. Six moved against it, each a failed hypothesis whatever the answer
+reads like: 1.2, the purchase date dropped; 2.1, blocked (below, "Two
+tools in one turn leave the state only the last one's blocks"); 2.3, the
+as-of dropped; 3.1, the tracing check (below, "The runner's tracing check
+and the client's read different questions on a resolved reply"); 3.2, no
+tool called (below, "A price forecast was answered with no tool called");
+4.6, both dates dropped.
+
+**The shared hypothesis failed on the date.** The prediction held that the
+model states the as-of where it heads the tool's text. It did on 1.1, 1.2,
+3.3, 3.5 and 4.5, and dropped it on 1.4, 2.3, 4.2, 4.4 and 4.6. The system
+prompt asks for no date, and nothing tells a figure's date from its figure
+in the tracing check. The other two conditions held: no answer carried a
+figure outside the tools' texts and the user's own words, and "price
+return" reached all three P&L answers.
+
+**What the count means.** Four cases, 1.3, 1.4, 2.2 and 4.2, fail on
+checks that require the whole block in the prose, written when the answer
+was the formatter's text. The layer selects (decision 17), so whether a
+check asks for more than the question does, or the answer carries less
+than it must, is a decision this entry does not take. What is lost by
+either reading is Part 3b's as-of on every figure. The runner prints no
+answer, so no line here reads the prose; the corpus run is the
+instrument that does.
+
+### Two tools in one turn leave the state only the last one's blocks
+
+**Trigger:** the commit that next changes what a turn carries to the next; the corpus run after 5f0d2f7, whose sequences may call two tools in a turn.
+
+Recorded 24 September 2026 (forty-second session), from case 2.1 of the
+run above. The model called `compliance_check` and then `allocation` in
+one turn. `graph._turn` sets the turn's `shared_data` and `sub_results`
+from `turn["state"]`, the last tool run's final state, so the compliance
+block and ComplianceAgent's result are not in the state the turn returns,
+and the runner's probe reads BLOCKED. The model was shown both tools'
+texts; the tool-call log carries both records with their blocks.
+`conversation.py` allows six model calls a turn, and its comment says the
+longest turn the corpus asks for calls two tools. What the state carries
+from a turn of several tools is a decision about the state, surfaced and
+not taken. Separately, `_one_call` in the runner fails any case that calls
+two tools, whatever the second is.
+
+### A price forecast was answered with no tool called
+
+**Trigger:** the corpus run after 5f0d2f7, which reads 3.2 and R-1 to R-6 through the same instruction; any change to `SYSTEM_PROMPT`, which is a hypothesis with a prediction first.
+
+Recorded 24 September 2026 (forty-second session), from case 3.2 of the
+run above. One model call, 92 tokens in, 54 out, no tool: the answer cites
+no clause. The system prompt says that for a forecast the model calls
+`policy_lookup` and cites the clause it returns. The client lets the
+answer through because it carries no figure, so the tracing check has
+nothing to refuse; no check in the client requires a tool call. One draw,
+one failed prediction on this case. The answer's text is not recorded,
+the runner printing none.
+
+### The runner's tracing check and the client's read different questions on a resolved reply
+
+**Trigger:** the next change to `figures_trace` in `tests/benchmark/run_cases.py` or to `untraced_figures` in `agents/conversation.py`.
+
+Recorded 24 September 2026 (forty-second session), from case 3.1 of the
+run above. On turn 2 the client checks the answer against the resolved
+question, "I want to put 15% into a single position, is that allowed? It
+would be a share.", and let "15" through. The runner checks it against the
+turn as typed, "A share.", and refuses "15", the tool's text printing
+"15.00%". Invariant 1 allows a figure the user typed; which of the two
+readings of "the question" is right is the owner's to decide. Until then
+every resolved reply whose answer repeats a figure from the first turn
+fails the runner and passes the client.
+
+### The fetch of 24 September stored no close of 22 September for JNJ, NEE and VNQ
+
+**Trigger:** the next paid run that fetches prices, read against `daily_prices` for 2026-09-22.
+
+Recorded 24 September 2026 (forty-second session). The runner's run
+fetched 17 closes where 20 were expected: the 22nd and 23rd for the nine
+holdings and GOOGL. For 2026-09-22 there are rows for AAPL, MSFT, SPY,
+TLT, GLD, JPM and GOOGL, none for JNJ, NEE and VNQ; the 23rd is complete.
+The cause is not looked at. A missing close inside the one-year window
+changes the returns 1.3's covariance is computed from, and under
+`price_fetch_interval_days = 1` the next fetch may not ask for the day
+again.
