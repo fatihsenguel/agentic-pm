@@ -8291,3 +8291,32 @@ is through `utc_today`, and the test pinning the date it runs at, so
 that the assertion is about the window and not about today. Until then
 the number a session says is 1934 passed, 1 failed, 6 xfailed, and this
 entry is why.
+
+### Two more screening-node tests read the clock and fail from 24 September
+
+**Trigger:** the commit that pins their clock, on my word; the fix is
+the one the entry above took for the third test, and it is not a code
+change under `src/`.
+
+Recorded 24 September 2026 (fortieth session), from the session's
+pytest runs: 1941 passed, 6 xfailed in the checkout before midnight UTC
+on the 23rd, and 2 failed from the first run after it, at 00:25 UTC,
+with no change in the code between them. The entry above foresaw the
+day: "from the 24th both stand-in closes fall outside the window, the
+node stops on a missing close". Its fix, 59d5239, pinned the clock in
+the one test it named, `tests/test_screening_node.py:348`, by
+monkeypatching `nodes.utc_today` to 22 September at line 356. Two tests
+in the same file over the same stand-in provider do not pin it:
+`test_a_second_run_asks_the_price_provider_for_nothing_the_same_day` at
+378 and `test_a_candidate_stating_no_pair_stops_the_range_and_not_the_screen`
+at 386. Both read `utc_today()` live, the seven-day window
+(`LAST_CLOSE_WINDOW_DAYS`, `nodes.py:1177`) to 24 September starts on
+the 17th, the stand-in's closes of 15 and 16 September fall outside it,
+and the node asks the provider again and stops on a missing close. The
+first fails on the provider having been asked, the second on the stop.
+Verified in the checkout at 6f145f0 and in the `runner` worktree, the
+same two, so nothing on the branch caused it. The fix is the entry
+above's, applied to the two tests: pin the date each runs at. Until
+then the number a session says is 2 failed beside the passes, and this
+entry is why; a suite that goes red by the calendar is not a suite that
+found a defect.
