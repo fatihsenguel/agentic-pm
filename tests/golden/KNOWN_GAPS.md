@@ -2952,9 +2952,9 @@ holds the published block to Part 7; it is the instrument that then caught
 each later change to the block.
 
 
-### The extraction bridge reads symbols, not company names
+### The extraction bridge reads symbols, not company names - RESOLVED 24 September (forty-second session)
 
-**Trigger:** the corpus run after 5f0d2f7, which reads V-1.2a, V-2.1b, V-4.1a, V-4.2a and V-4.6a. Decision 16 was closed 23 September (thirty-ninth session): nothing is built in extraction.
+**Trigger:** none: the corpus run after 5f0d2f7 read the five names, below.
 
 **Read 24 September 2026 (forty-first session), on Order 5's first code
 commit.** The pre-pass still reads symbols only; a name reaches the model,
@@ -3007,10 +3007,20 @@ tool with the ticker, which the tool validates, so this gap is the
 layer's to close and the five corpus lines above are its check in the
 run after Order 5. The entry stays open until that run reads them.
 
+**24 September 2026 (forty-second session), the corpus run after the
+layer (benchmark.md Part 3c.6, the fifth block): resolved.** The layer
+read every name. JPMorgan went to `position_pnl` as JPM (V-1.2a,
+matched); Alphabet to the screen as GOOGL (V-4.1a, V-4.2a); JPMorgan to
+the screen as JPM (V-4.6a). Those three miss on the answers' content, the
+as-of and the range's sources, not on the name. V-2.1b named Apple back
+and refused the question as an opinion instead of running the check: a
+tool choice, not a reading, logged as "A company's name moves the tool
+choice where its ticker does not".
 
-### The four phrase rules in extraction read English
 
-**Trigger:** the corpus run after 5f0d2f7, which reads V-3.1b and V-3.4b. Decision 16 was closed 23 September (thirty-ninth session): nothing is built in extraction.
+### The four phrase rules in extraction read English - RESOLVED 24 September (forty-second session)
+
+**Trigger:** none: the corpus run after 5f0d2f7 read V-3.1b and V-3.4b, below.
 
 **Read 24 September 2026 (forty-first session), on Order 5's first code
 commit.** The rules are unchanged; a German message the pre-pass does not
@@ -3054,6 +3064,16 @@ model reads the German sentence and calls the tool with its inputs, so
 the gap is the layer's and V-3.1b and V-3.4b are its check in the run
 after Order 5; the prompt's two German strings go with the prompt. The
 entry stays open until that run reads them.
+
+**24 September 2026 (forty-second session), the corpus run after the
+layer (benchmark.md Part 3c.6, the fifth block): resolved.** V-3.1b, the
+weight in words, reached the model, which asked back for the instrument
+type and called no tool (matched, 3.1 as corrected). V-3.4b, the German
+policy question, went to the lookup and was answered in German, with no
+clause cited (matched). A German span question, "im letzten Monat", is in
+no corpus line and was not run. V-1.1a, the German allocation question,
+failed on a different thing, the answer's number format, logged as "The
+tracing check refuses an answer written in German number format".
 
 
 ### The lookup sentence quotes the whole question
@@ -6403,7 +6423,7 @@ answer - the model's view, the weight, the entry condition and the outcome
 
 ### A buy question about a company on no entry arrives shaped as an error
 
-**Trigger:** the next change to how the synthesizer renders a failed run; the commit that gives 4.3 the rest of its answer.
+**Trigger:** the CLI as the client after Order 5, where a raise shown to the reader is given its shape; the next change to the `position` tool's plan. Repointed 24 September (forty-second session): the synthesizer it named went at 4d971b1.
 
 Logged 20 September (twenty-ninth session), from the golden runs. "Should
 I buy Nvidia?" used to be refused with the scope-boundary sentence. It is
@@ -6450,6 +6470,18 @@ for an answer that says no weight is stated, a fact the watchlist loader
 had before the first call. Not fixed: rendering and the order of the
 position step, neither arithmetic (benchmark.md Part 3c.6, the third
 block).
+
+**24 September 2026 (forty-second session), the corpus run after the
+layer (the fifth block).** The synthesizer this entry's trigger names
+went at 4d971b1; a raise is now shown unchanged as the turn's answer.
+R-7 is refused by the `position` input model before anything runs: no
+agent, nothing fetched, the missing entry named. The shape is still an
+error's: "position cannot answer on these inputs: ticker: NVDA is on no
+watchlist entry ... (given 'NVDA')". R-9 runs the screen and the research
+agent before `position_weight` raises, and the raise is the whole answer:
+"position: ResearchAgent: W-2 (ADBE) states no weight ...". Adobe's Item
+1 was read again and refused, no row stored, in 21 seconds. The order of
+the position step and the shape of a raise both stand.
 
 ### IPS-2.1 would pass an instrument the policy forbids
 
@@ -8238,9 +8270,9 @@ to `risk_analysis` with the DataAgent alone and answered with per-holding
 volatilities over 756 closes; no concentration table, no clause
 (benchmark.md Part 3c.6). Still the pinned row; not fixed.
 
-### A follow-up that depends on the previous turn is asked back by the model
+### A follow-up that depends on the previous turn is asked back by the model - RESOLVED 24 September (forty-second session)
 
-**Trigger:** the corpus run after 5f0d2f7, which reads S-1, S-4 to S-7 against the fourth block.
+**Trigger:** none: the corpus run after 5f0d2f7 read S-1 and S-4 to S-7, below.
 
 **Read 24 September 2026 (forty-first session), on Order 5's first code
 commit.** A turn now carries the conversation's earlier questions and
@@ -8269,6 +8301,19 @@ clarification every time, and the honest failure rather than a plausible
 wrong answer. What it is: the baseline for the dimension Order 5 exists
 to add. The run after Order 5 reads these same ten turns, and the pinned
 answers are the spine entries Part 3c.5 points at.
+
+**24 September 2026 (forty-second session), the corpus run after the
+layer (benchmark.md Part 3c.6, the fifth block): resolved.** No second
+turn was asked back. The model read every referent. "And MSFT?" and
+"And JNJ?" went to `position_pnl` for the one ticker (S-1, both matched).
+"That" was read as the breaches (S-4) and as the allocation's classes
+(S-5). "It" was read as GOOGL and sent to `position` (S-6). "And GOOGL?"
+kept the philosophy check's frame (S-7). S-8's second turn carried
+nothing of AAPL. The second turns of S-4 to S-8 still miss, each on its
+answer and none on the referent. S-5's leaves the clauses uncited and
+drops the as-of; S-6's misses as 4.3; S-7's drops the as-of; S-8's
+leaves out 1.3's basis. S-4's is refused by the tracing check, logged as
+"A follow-up answered from the previous turn's figures is refused".
 
 ### The unknown-ticker correction fails on the comma after "no" - RESOLVED 23 September (thirty-eighth session)
 
@@ -8361,9 +8406,9 @@ Formatter selection in all three, no arithmetic; not fixed under step 4's
 rule. The rebuild after Order 5 is designed once, against Part 18, and
 these three are what it is read against first.
 
-### A bare opinion on a company is routed to the philosophy screen
+### A bare opinion on a company is routed to the philosophy screen - RESOLVED 24 September (forty-second session)
 
-**Trigger:** the corpus run after 5f0d2f7, which reads R-2; decision 13 stays pending for its target-weights half only.
+**Trigger:** none: the corpus run after 5f0d2f7 read R-2, below; decision 13 stays pending for its target-weights half only.
 
 **Read 24 September 2026 (forty-first session), on Order 5's first code
 commit.** The system prompt directs a bare opinion to `policy_lookup` and
@@ -8383,6 +8428,15 @@ gives no opinion, which is right, and prints a figure about the company
 and a stop the question never asked for, which is not. A routing miss
 that Order 5 ends, logged and not fixed; the same run routed R-1, R-3 to
 R-6 and 3.2 to the out-of-scope answer as pinned.
+
+**24 September 2026 (forty-second session), the corpus run after the
+layer (the fifth block): resolved.** R-2 went to `policy_lookup` alone
+and refused on IPS-1.3's "gives no opinion on whether something is a
+good investment". No screen ran, nothing was fetched, and no figure was
+printed. The answer then offered to run AAPL through the philosophy
+screen and named the `position` tool, for a company on no entry. That is
+R-2's miss now, logged as "An answer offers a tool for a company the
+owner has not written down".
 
 ### A screening-node test is pinned to the calendar - RESOLVED 23 September (thirty-ninth session)
 
@@ -8623,9 +8677,9 @@ state's `messages` instead (5f0d2f7), so the tools' texts of an earlier
 turn reach the model only through the answer that quoted them. A value
 nothing consumes; one of the two goes when the history is decided again.
 
-### The prediction's 3.1 line names the tool where the pre-pass asks back
+### The prediction's 3.1 line names the tool where the pre-pass asks back - RESOLVED 24 September (forty-second session)
 
-**Trigger:** the corpus run after 5f0d2f7, which reads 3.1, V-3.1a and V-3.1c against the fourth block.
+**Trigger:** none: the corpus run after 5f0d2f7 read 3.1 and V-3.1a to V-3.1c, below.
 
 Recorded 24 September 2026 (forty-first session). The fourth block's 3.1
 line gives the tool as "hypothetical_weight, weight 0.15, no instrument
@@ -8635,9 +8689,18 @@ V-3.1b, the weight in words, reaches the model, which may call the tool
 with no type and meet the input model's refusal instead. The block is read
 as written and not rewritten; the run says which happened.
 
+**24 September 2026 (forty-second session), the corpus run after the
+layer (the fifth block): resolved.** The pre-pass asked back for the type
+on 3.1, V-3.1a and V-3.1c before any model call. V-3.1b reached the model,
+which asked back itself and called no tool, so the input model's refusal
+was not met. All four match Part 18 as corrected on the 24th. The fourth
+block called them missed against the entry as written then, and the fifth
+records them as moved the other way, with the behaviour the fourth
+predicted.
+
 ### The runner's first run through the layer: 5 of 18 against a prediction of 11
 
-**Trigger:** the corpus run after 5f0d2f7, which reads the prose of the same questions; and the next change to a check in `tests/benchmark/run_cases.py`.
+**Trigger:** the next change to a check in `tests/benchmark/run_cases.py`.
 
 Recorded 24 September 2026 (forty-second session). One run at 78c61cd,
 14:16 to 14:19 UTC, `tests/golden/run_cases_2026-09-24.txt`,
@@ -8671,9 +8734,21 @@ either reading is Part 3b's as-of on every figure. The runner prints no
 answer, so no line here reads the prose; the corpus run is the
 instrument that does.
 
+**24 September 2026 (forty-second session), the corpus run after the
+layer read the prose (benchmark.md Part 3c.6, the fifth block).** The
+same shape, seen in the answers. The as-of was dropped on eleven turns,
+1.4, 2.1 and 2.3 among them, the prompts this run also scored. The
+whole-table entries were answered with a selection: 1.4 as shares of
+total, 2.2 without its statements. Two prompts behaved differently from
+the runner's draw an hour earlier. 3.3 asked which position instead of
+showing all nine, logged as "The same question called a tool on one draw
+and asked back on another". 3.2 called the lookup and cited IPS-1.3. The
+decision this entry leaves open is unchanged, and the prose now shows
+what either answer to it would change.
+
 ### Two tools in one turn leave the state only the last one's blocks
 
-**Trigger:** the commit that next changes what a turn carries to the next; the corpus run after 5f0d2f7, whose sequences may call two tools in a turn.
+**Trigger:** the commit that next changes what a turn carries to the next.
 
 Recorded 24 September 2026 (forty-second session), from case 2.1 of the
 run above. The model called `compliance_check` and then `allocation` in
@@ -8688,9 +8763,18 @@ from a turn of several tools is a decision about the state, surfaced and
 not taken. Separately, `_one_call` in the runner fails any case that calls
 two tools, whatever the second is.
 
+**24 September 2026 (forty-second session), the corpus run after the
+layer.** The CLI prints the agents of the last tool run of a turn and no
+tool-call log, so a second call shows only through a figure. 2.1's answer
+prints Technology at 56.75% of sectored value, a figure only the
+allocation's text prints, and the client's tracing check let it through.
+So 2.1 called `allocation` here too, and `compliance_check` after it,
+whose agents are the last run the CLI shows. The same question called
+two tools on both of today's draws. The shape stands.
+
 ### A price forecast was answered with no tool called
 
-**Trigger:** the corpus run after 5f0d2f7, which reads 3.2 and R-1 to R-6 through the same instruction; any change to `SYSTEM_PROMPT`, which is a hypothesis with a prediction first.
+**Trigger:** any change to `SYSTEM_PROMPT`, which is a hypothesis with a prediction first.
 
 Recorded 24 September 2026 (forty-second session), from case 3.2 of the
 run above. One model call, 92 tokens in, 54 out, no tool: the answer cites
@@ -8700,6 +8784,12 @@ answer through because it carries no figure, so the tracing check has
 nothing to refuse; no check in the client requires a tool call. One draw,
 one failed prediction on this case. The answer's text is not recorded,
 the runner printing none.
+
+**24 September 2026 (forty-second session), the corpus run after the
+layer.** The same instruction, seven times: 3.2 and R-1 to R-6 each ran
+`policy_lookup` alone, ComplianceAgent the only agent, and each cited
+IPS-1.3. The runner's draw is one in eight on this instruction. Nothing
+is proposed on it.
 
 ### The runner's tracing check and the client's read different questions on a resolved reply
 
@@ -8717,7 +8807,7 @@ fails the runner and passes the client.
 
 ### The fetch of 24 September stored no close of 22 September for JNJ, NEE and VNQ
 
-**Trigger:** the next paid run that fetches prices, read against `daily_prices` for 2026-09-22.
+**Trigger:** the next fetch of the holdings' closes, read against `daily_prices` for 2026-09-22.
 
 Recorded 24 September 2026 (forty-second session). The runner's run
 fetched 17 closes where 20 were expected: the 22nd and 23rd for the nine
@@ -8727,3 +8817,9 @@ The cause is not looked at. A missing close inside the one-year window
 changes the returns 1.3's covariance is computed from, and under
 `price_fetch_interval_days = 1` the next fetch may not ask for the day
 again.
+
+**24 September 2026 (forty-second session), the corpus run.** It fetched
+Adobe's closes of the 22nd and 23rd and no holding's: each was inside its
+interval since the runner's fetch. JNJ, NEE and VNQ still have no close
+of 2026-09-22. The volatility answers of the run, 10.59%, were computed
+over that gap. The trigger is repointed from the paid run to the fetch.
