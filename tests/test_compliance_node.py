@@ -118,6 +118,20 @@ async def test_hypothetical_weight_refuses_without_a_portfolio():
     assert all(f["distance_value"] is None for f in block["findings"])
 
 
+async def test_the_inputs_are_read_from_the_state_and_not_the_router():
+    """Order 5: a tool's validated inputs reach its nodes under `inputs`,
+    keyed as the tool's contract names them, and a node reads nothing from
+    a router decision that no longer exists."""
+    state = state_with()
+    del state["router_decision"]
+    state["inputs"] = {"weight": 0.15}
+    out = await compliance_agent_node(state)
+    assert out.get("errors") is None, out.get("errors")
+    block = out["shared_data"]["compliance"]
+    assert block["total_value"] is None
+    assert {f["status"] for f in block["findings"]} == {"refused"}
+
+
 async def test_topic_the_policy_is_silent_on_sets_no_clause():
     out = await compliance_agent_node(state_with({"policy_topic": "currency risk"}))
     assert out.get("errors") is None
