@@ -1083,21 +1083,22 @@ def check_2_1(state):
     investment policy?" passes when Data, Risk and Compliance agents all run
     and the trace shows contract handovers.
 
-    Risk is PortfolioAnalysisAgent (decision, 8 September). So: the three
-    agents planned in order and each successful; the trace carrying their
-    spans, the two handovers and the checker's tool call; the block sound;
-    and the answer carrying the concentration clauses - each 4.x breach's
-    distance and clause id, each exempt fund named (Part 7: funds are
-    counted at fund level and not attributed to issuers), the as-of date -
-    with no figure the policy does not state and no trade line.
+    Risk is PortfolioAnalysisAgent (decision, 8 September). So: one call,
+    `compliance_check`, which takes no input; its three steps each
+    successful and the trace carrying their spans in plan order, the two
+    handovers and the checker's tool call; the block sound; and the answer
+    carrying the concentration clauses - each 4.x breach's distance and
+    clause id, each exempt fund named (Part 7: funds are counted at fund
+    level and not attributed to issuers), the as-of date - with no figure
+    the policy does not state and no trade line.
 
     Which subjects breach is not asserted.
     """
     fails = _ran_clean(state)
-    plan = (state.get("router_decision") or {}).get("execution_order") or []
-    if plan != COMPLIANCE_PLAN:
-        fails.append(f"plan {plan} != {COMPLIANCE_PLAN}; Data, Risk (PortfolioAnalysisAgent) "
-                     "and Compliance in that order")
+    record, call_fails = _one_call(state, "compliance_check")
+    fails += call_fails
+    if record is not None and record["inputs"]:
+        fails.append(f"compliance_check takes no input; the call carried {record['inputs']}")
     sub = state.get("sub_results") or {}
     not_ok = [a for a in COMPLIANCE_PLAN if not (sub.get(a) or {}).get("success")]
     if not_ok:
