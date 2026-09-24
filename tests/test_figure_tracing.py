@@ -88,3 +88,12 @@ def test_every_record_s_text_is_allowed_and_an_empty_log_allows_nothing():
     assert run_cases.figures_trace(_state(answer, first, second), "q") == []
     assert _untraced(run_cases.figures_trace(_state(answer), "q"))
     assert run_cases.figures_trace(_state("No figures at all."), "q") == []
+
+
+def test_a_turn_the_pre_pass_answered_is_not_read():
+    """A clarification is deterministic text and no narration: it may name
+    the vocabulary's spans, and no tool printed them."""
+    asked = _state("I can measure over 1Y, 2Y, 3Y, 5Y or 10Y, not over 'last quarter'.")
+    assert _untraced(run_cases.figures_trace(asked, "What is my volatility over last quarter?"))
+    asked["clarification"] = {"kind": "unknown_span", "message": "..."}
+    assert run_cases.figures_trace(asked, "What is my volatility over last quarter?") == []

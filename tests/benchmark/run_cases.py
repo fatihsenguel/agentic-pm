@@ -296,6 +296,39 @@ def _date_reaches_answer(state, stated, where):
     return fails
 
 
+# A figure as the formatters print it: digits, thousands commas, an
+# optional decimal part. A date is three of these and a clause id one.
+FIGURE = re.compile(r"\d+(?:,\d{3})*(?:\.\d+)?")
+
+
+def figures_trace(state, question):
+    """Every figure in the answer is a figure a tool printed this turn or
+    one the user typed (DIRECTION.md invariant 1, decision 45): each number
+    token of the answer is a token of the allowed text, the rendered text
+    of every record in the tool-call log plus the question. Compared whole
+    and not as substrings: 4.4 is a substring of 4.41 and not the same
+    token, which is what makes a rounding fail.
+
+    A membership check, not a provenance check: a clause id the model
+    invented whose number a distance in the text happens to print passes
+    on the token. A turn the pre-pass answered with a clarification has no
+    narration to read, its text being deterministic and able to carry the
+    vocabulary's spans, so it is not checked. The conversation layer runs
+    the same check at output time and refuses the answer; the runner
+    asserts it on every other turn of every case.
+    """
+    if state.get("clarification"):
+        return []
+    allowed = set(FIGURE.findall(question or ""))
+    for record in _calls(state):
+        allowed.update(FIGURE.findall(record.get("text") or ""))
+    untraced = sorted(set(FIGURE.findall(_answer(state))) - allowed)
+    if untraced:
+        return [f"answer carries figures no tool printed this turn: {untraced}; "
+                "every figure traces to a tool output (DIRECTION.md invariant 1)"]
+    return []
+
+
 def _prose_carries(state, lines, key):
     """Weak Part 3b check: did the figures in shared_data reach the answer."""
     answer = _answer(state)
@@ -2593,6 +2626,8 @@ def run_case(case_id, prompt, portfolio_id, blocked_probe, check):
         return "FAIL", ["no check written for this case"]
 
     fails = check(states if multi else states[0])
+    for turn, state in zip(turns, states):
+        fails += figures_trace(state, turn)
     return ("PASS", []) if not fails else ("FAIL", fails)
 
 
