@@ -257,3 +257,32 @@ def test_2_1_reads_the_compliance_call_and_leaves_the_plan_to_the_trace():
     assert _mentions(run_cases.check_2_1(wrong), "not 'compliance_check'")
     carried = _state([_record("compliance_check", {"tickers": ["AAPL"]})])
     assert _mentions(run_cases.check_2_1(carried), "compliance_check takes no input")
+
+
+# ---------------------------------------------------------------------------
+# What a case cost: the usage the layer records for every model call
+# (decision 45), summed over every turn, in tokens and never in money
+# ---------------------------------------------------------------------------
+
+def _calls(*usages):
+    return [{"model": "claude-sonnet-5", "input_tokens": i, "output_tokens": o,
+             "cache_creation_input_tokens": w, "cache_read_input_tokens": r}
+            for i, o, w, r in usages]
+
+
+def test_the_usage_line_sums_every_call_of_every_turn():
+    states = [{"model_calls": _calls((4200, 60, 4000, 0), (300, 40, 0, 4000))},
+              {"model_calls": _calls((1250, 35, 0, 4000))}]
+    assert run_cases.usage_line(states) == (
+        "tokens: 5,750 in, 135 out, 4,000 cache written, 8,000 cache read, 3 calls")
+
+
+def test_a_turn_the_pre_pass_answered_calls_nothing():
+    assert run_cases.usage_line([{"model_calls": []}]) == (
+        "tokens: 0 in, 0 out, 0 cache written, 0 cache read, 0 calls")
+
+
+def test_a_turn_that_recorded_no_usage_says_so():
+    """A state without the key is a layer that did not record, which is a
+    finding and not a zero."""
+    assert run_cases.usage_line([{"model_calls": []}, {}]) == "tokens: not recorded on turn 2"
