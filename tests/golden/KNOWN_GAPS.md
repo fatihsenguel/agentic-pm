@@ -8746,6 +8746,14 @@ and asked back on another". 3.2 called the lookup and cited IPS-1.3. The
 decision this entry leaves open is unchanged, and the prose now shows
 what either answer to it would change.
 
+**24 September 2026 (forty-third session), the trigger fired at
+d893747.** `figures_trace` now reads a resolved reply against the
+question it was resolved into ("The runner's tracing check and the
+client's read different questions on a resolved reply", resolved). Of
+this run's verdicts it moves 3.1's alone, whose only failure was that
+check's "15"; nothing was run again, so the count stands at 5/18 until
+the next paid run. The decision this entry leaves open is untouched.
+
 ### Two tools in one turn leave the state only the last one's blocks
 
 **Trigger:** the commit that next changes what a turn carries to the next.
@@ -8791,9 +8799,9 @@ layer.** The same instruction, seven times: 3.2 and R-1 to R-6 each ran
 IPS-1.3. The runner's draw is one in eight on this instruction. Nothing
 is proposed on it.
 
-### The runner's tracing check and the client's read different questions on a resolved reply
+### The runner's tracing check and the client's read different questions on a resolved reply - RESOLVED 24 September (forty-third session)
 
-**Trigger:** the next change to `figures_trace` in `tests/benchmark/run_cases.py` or to `untraced_figures` in `agents/conversation.py`.
+**Trigger:** none: resolved 24 September (forty-third session) in 5cc3a9a, the tests, and d893747, the change.
 
 Recorded 24 September 2026 (forty-second session), from case 3.1 of the
 run above. On turn 2 the client checks the answer against the resolved
@@ -8804,6 +8812,20 @@ turn as typed, "A share.", and refuses "15", the tool's text printing
 readings of "the question" is right is the owner's to decide. Until then
 every resolved reply whose answer repeats a figure from the first turn
 fails the runner and passes the client.
+
+**Resolved 24 September 2026 (forty-third session), on my yes to the
+recommendation, with no decision number.** The runner reads the question
+the turn recorded: `state["resolved"]["message"]` on a resolved reply,
+the turn as typed on any other, never rebuilt from the reply, and a
+resolution with no message raises. It is the question the client already
+checks against under decision 45, so nothing about the state or the
+tools moved. Three tests in `tests/test_figure_tracing.py` went red at
+5cc3a9a and passed at d893747: pytest 2008 before, 2011 after, 6 xfailed
+throughout. Only the runner sees the change, and only on 3.1; 3.5's
+reply and its resolution carry no figure. The prediction for 3.1's next
+draw is PASS, the line it failed on being the one removed, if the model
+calls `hypothetical_weight` at 0.15 and cites IPS-4.1 again. No paid run
+was made.
 
 ### The fetch of 24 September stored no close of 22 September for JNJ, NEE and VNQ
 
