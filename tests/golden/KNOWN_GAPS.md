@@ -8823,3 +8823,123 @@ Adobe's closes of the 22nd and 23rd and no holding's: each was inside its
 interval since the runner's fetch. JNJ, NEE and VNQ still have no close
 of 2026-09-22. The volatility answers of the run, 10.59%, were computed
 over that gap. The trigger is repointed from the paid run to the fetch.
+
+### The tracing check refuses an answer written in German number format
+
+**Trigger:** any change to `untraced_figures` in `agents/conversation.py` or to `SYSTEM_PROMPT`; either is a decision on what language an answer's figures are written in.
+
+Recorded 24 September 2026 (forty-second session), from V-1.1a of the
+corpus run after the layer (benchmark.md Part 3c.6, the fifth block).
+"Wie ist meine Allokation nach Anlageklasse?" went to `allocation`, and
+the model wrote its answer in German with German notation, a point for
+thousands and a comma for decimals. The client refused it whole: "The
+answer carried figures no tool printed this turn: 00, 15.500, 27.435,
+283.776, 3, 39.288, 40.230, 406.229, 50, 6, 67, 69, 75, 82, 86, 90." The
+check did what it was built to do: 406.229,50 is not a token of a text
+that prints 406,229.50, and a check that read both would be comparing
+figures it has reformatted. The system prompt already says every figure
+is copied exactly as printed. A German question with figures in its
+answer gets no answer; V-3.4b, German with no figure, passed. I use
+German now and then. Which side moves, the answer's notation or the
+check's reading of it, is mine to decide, and a prompt line is a
+hypothesis with a prediction first.
+
+### A follow-up answered from the previous turn's figures is refused
+
+**Trigger:** the commit that next changes what a turn carries to the next.
+
+Recorded 24 September 2026 (forty-second session), from S-4 of the
+corpus run after the layer. Turn 1, "Does my current allocation violate
+any rule of my investment policy?", called `compliance_check` and
+answered with the seven breaches at the 23rd's closes and their
+distances. Turn 2, "What would have to change to fix that?", read "that"
+as the breaches, called
+`policy_lookup`, and wrote the distances from turn 1's answer. The
+lookup's text printed none of them, so the client refused the answer,
+naming eighteen figures. Decision 45 allows a figure only from a tool
+output of the same turn or the question, and the history carries turn
+1's answer as text, not its tool's output. So the model had the figures
+in its context and no way to cite them. Either it calls the tool again
+in the turn that quotes it, or the allowed set takes the earlier turns'
+tool texts. The second is a change to what a turn carries and belongs
+with "The turn's `messages` from the layer are read by nothing".
+Surfaced, not taken.
+
+### The same question called a tool on one draw and asked back on another
+
+**Trigger:** the next paid run that sends "How is my position doing today?", runner or corpus.
+
+Recorded 24 September 2026 (forty-second session). The runner's 3.3, in
+its run of 14:16 to 14:19 UTC, called `position_pnl` with no ticker and
+passed. The corpus's 3.3 at 15:08:57 UTC, the same prompt on the same
+code in a fresh process, called no tool and asked "Could you tell me
+which position you mean?". The tool's description says to pass an empty
+list for every position,
+and Part 18 pins all nine positions for this question. A question whose
+right answer is fixed got two behaviours in an hour. One draw each, not
+a rate. What the next draws of this prompt say is the measurement, and
+no prompt change is proposed on two.
+
+### A company's name moves the tool choice where its ticker does not
+
+**Trigger:** any change to `SYSTEM_PROMPT` or to `compliance_check`'s description; the next corpus run, which reads V-2.1a and V-2.1b again.
+
+Recorded 24 September 2026 (forty-second session), from the corpus run
+after the layer. V-2.1a, "Is my AAPL position too big?", called
+`compliance_check` and answered with AAPL's two breaches. V-2.1b, "Is
+my Apple position too big?", called `policy_lookup`, refused on IPS-1.3
+as an opinion, and offered the check. The model read Apple as AAPL; what
+moved is the tool. DIRECTION.md's third "stop and ask" test is a change
+that makes a tool's output depend on how it was asked. This is the
+layer doing that on its own, one draw each, with no code change behind
+it.
+
+### An answer offers a tool for a company the owner has not written down
+
+**Trigger:** any change to `SYSTEM_PROMPT`; any change to `philosophy_screen`'s input model.
+
+Recorded 24 September 2026 (forty-second session), from R-2 of the
+corpus run after the layer. The refusal was right. The answer then
+offered "Run AAPL through the philosophy screen" and "Check whether
+entering a position in AAPL (if it's on the watchlist) is supported ...
+via the `position` tool", naming a tool to the reader. Part 18's R-2 pins
+that the philosophy check is not run on a company I have not written
+down. Accepting the offer would run it: `philosophy_screen`'s input model
+takes any ticker in the exchange's form. C-2 ran the screen on ZZZZFAKE
+and was stopped only at EDGAR, and 4.6 screens JPM, which is held and on
+no entry. So the pin and the tool disagree on what the screen may be
+asked, and 4.6 is the case against restricting it to the watchlist.
+R-3's and V-2.1b's answers offer too, naming no company. Surfaced, not
+taken.
+
+### The narration adds comparisons and summaries no tool printed
+
+**Trigger:** any change to `SYSTEM_PROMPT`, which is a hypothesis with a prediction first.
+
+Recorded 24 September 2026 (forty-second session), from the corpus run
+after the layer. The tracing check reads figures, and three answers add
+what no tool printed in words.
+- S-8 turn 1, AAPL's two breaches: "the larger of these, 6.59 pp,
+  governs". That is a comparison drawn between two clauses, where Part
+  18 has overlaps stated and not netted.
+- 4.4: "In short: the thesis is right if advertising keeps its margin,
+  cloud's margin keeps improving, and the surge in 2026 capex shows up in
+  cloud revenue growth ...". That is a thesis in the model's words beside
+  W-1's, which the answer never quotes.
+- 4.3: "This is not a judgement of my own", beside a thesis view the
+  view model formed. Part 3b marks judgement as judgement.
+
+The system prompt forbids a judgement of the model's own beside a tool's
+output. Nothing checks it.
+
+### The CLI prints no tokens, so a corpus run's cost is not measured
+
+**Trigger:** the CLI as the client after Order 5.
+
+Recorded 24 September 2026 (forty-second session). The layer records
+every call's usage under `model_calls` and the runner prints it. The
+CLI, which the corpus is sent through, prints the routing block of a
+decision that no longer exists and no tokens. So the corpus run after
+the layer, 55 turns reaching the model, has no measured cost. It was
+estimated before the run at about $0.55, from the runner's $0.008 a
+turn, plus about eight Level 4 calls that record nothing anywhere.
