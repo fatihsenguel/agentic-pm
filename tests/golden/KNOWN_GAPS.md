@@ -7764,9 +7764,18 @@ contract that the block has these keys and no array; the corpus entries
 named above are read against Part 18 in the run after the first code
 commit.
 
-### The interlude between Order 4 and Order 5, and how the corpus is built
+### The interlude between Order 4 and Order 5, and how the corpus is built - CLOSED 24 September (forty-first session)
 
-**Trigger:** the start of every session until Order 5 is opened; the commit that opens Order 5 closes this entry.
+**Trigger:** none: closed on 5f0d2f7, the commit that opens Order 5. Decision 76 stays pending under its own entry, and the corpus run after that commit is read against benchmark.md Part 3c.6's fourth block.
+
+**Closed 24 September 2026 (forty-first session).** Order 5's first code
+commit is 5f0d2f7: a turn runs the pre-pass and the conversation layer,
+and the router is off its path; the router itself went at 4d971b1, behind
+the tag `router-parked`, and the golden set at 195a296, behind
+`golden-parked`. The interlude's steps are done or, for the CLI, the
+README and the demo recordings, moved after Order 5 by the revision of
+22 September. What remains of it is the corpus run, which is Order 5's
+and not the interlude's, read line by line against the fourth block.
 
 **Written 21 September 2026 (thirty-third session), in my words, because all
 of it was decided in conversation and a prompt is not a record.** Order 4's
