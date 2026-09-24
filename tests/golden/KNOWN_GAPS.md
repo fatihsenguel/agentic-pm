@@ -2107,9 +2107,14 @@ Trigger unchanged.
 
 ## Hygiene
 
-### Two router few-shot examples are benchmark prompts verbatim
+### Two router few-shot examples are benchmark prompts verbatim - RESOLVED 24 September (forty-first session)
 
-**Trigger:** the Order 5 commit that deletes `router_prompts.py`; decision 45 was taken 23 September (thirty-ninth session), and its rule survives the prompt: a tool's description quotes no benchmark or corpus prompt verbatim. Decision 11 merged into it 15 September (eighteenth session).
+**Trigger:** none: `router_prompts.py` deleted at 4d971b1, behind `router-parked`.
+
+**Resolved 24 September 2026 (forty-first session).** The prompt and its
+few-shots went with the router. The rule survives them as a test:
+`tests/test_conversation.py` fails if the system prompt or any tool
+description contains a prompt of benchmark.md Part 3c.
 
 "What is my current allocation by asset class?" and "What is my volatility
 over the past twelve months?" appear in `router_prompts.py` word for word as
@@ -2363,9 +2368,14 @@ refused under IPS-4.2 at +2.00 pp for a fund as for a share, where Part 18
 says a fund is allowed. Still pending, not taken.
 
 
-### `ExtractedParameters` fields with no reader - grep, 8 September
+### `ExtractedParameters` fields with no reader - grep, 8 September - RESOLVED 24 September (forty-first session)
 
-**Trigger:** the next grep over `ExtractedParameters`, and the Order 5 commit that splits it into the tools' input models, where `max_volatility` and `portfolio_value` go; decision 45 was taken 23 September (thirty-ninth session).
+**Trigger:** none: `ExtractedParameters` deleted at 4d971b1.
+
+**Resolved 24 September 2026 (forty-first session).** The class went with
+the router; the eleven input models in `agents/tool_inputs.py` (de97f34)
+carry only what each node reads, and `max_volatility` and
+`portfolio_value` are in none of them.
 
 **Corrected 22 September (thirty-third session): this entry's last line
 is now false.** It ends "`portfolio_value` keeps its reader in the
@@ -2578,9 +2588,14 @@ the field had neither a writer nor a reader.
 printed it went on 7 September (third sitting); the field stays because removing it is a
 RebalanceAgent change. No reader.
 
-### The first `out_of_scope` definition moved "Should I rebalance?" to clarification
+### The first `out_of_scope` definition moved "Should I rebalance?" to clarification - RESOLVED 24 September (forty-first session)
 
-**Trigger:** the Order 5 commit that deletes `router_prompts.py`; decision 45 was taken 23 September (thirty-ninth session). Decision 11 merged into it 15 September (eighteenth session). The verbatim golden query in the prompt goes with the two few-shots.
+**Trigger:** none: the prompt deleted at 4d971b1.
+
+**Resolved 24 September 2026 (forty-first session).** The definition, the
+intent and the golden query in the prompt went with the router. A
+rebalance question now reaches the `rebalance` tool, which raises on the
+missing target as the node did.
 
 Recorded 7 September (third sitting). The first wording listed in-scope
 mechanics as "drift, rebalancing trades to a target" and closed with "if a
@@ -2939,7 +2954,13 @@ each later change to the block.
 
 ### The extraction bridge reads symbols, not company names
 
-**Trigger:** the commit that opens Order 5, and the corpus run after it, which reads V-1.2a, V-2.1b, V-4.1a, V-4.2a and V-4.6a. Decision 16 was closed 23 September (thirty-ninth session): nothing is built in extraction.
+**Trigger:** the corpus run after 5f0d2f7, which reads V-1.2a, V-2.1b, V-4.1a, V-4.2a and V-4.6a. Decision 16 was closed 23 September (thirty-ninth session): nothing is built in extraction.
+
+**Read 24 September 2026 (forty-first session), on Order 5's first code
+commit.** The pre-pass still reads symbols only; a name reaches the model,
+which may pass the ticker to a tool, and the tool's input model refuses a
+ticker that is neither held nor on the watchlist. Whether the model reads
+the names is the corpus run's.
 
 Recorded 9 September (between sittings), from conversation with the owner.
 `agents/extraction.py` recognises a holding by its symbol only: an all-caps
@@ -2989,7 +3010,11 @@ run after Order 5. The entry stays open until that run reads them.
 
 ### The four phrase rules in extraction read English
 
-**Trigger:** the commit that opens Order 5, and the corpus run after it, which reads V-3.1b and V-3.4b. Decision 16 was closed 23 September (thirty-ninth session): nothing is built in extraction.
+**Trigger:** the corpus run after 5f0d2f7, which reads V-3.1b and V-3.4b. Decision 16 was closed 23 September (thirty-ninth session): nothing is built in extraction.
+
+**Read 24 September 2026 (forty-first session), on Order 5's first code
+commit.** The rules are unchanged; a German message the pre-pass does not
+read reaches the model. The corpus run shows what it passes the tools.
 
 Recorded 9 September (between sittings). Intent in German works: the
 prompt's few-shots are German and the model reads it. Tickers, percentages
@@ -6206,9 +6231,14 @@ in the rank entry above: this schema becomes the tools' input validation when
 that layer lands, so a restriction extraction cannot express is a question
 that layer will not be able to ask either.
 
-### What is `reasoning` for: a debugging artifact, or something checked?
+### What is `reasoning` for: a debugging artifact, or something checked? - RESOLVED 24 September (forty-first session)
 
-**Trigger:** the Order 5 commit that deletes `RouterDecision`, where the field goes and the rule it wanted is stated for the model's narration instead; decision 45 was taken 23 September (thirty-ninth session). Decision 36, the router's field, merged into it 15 September (eighteenth session).
+**Trigger:** none: `RouterDecision` and its `reasoning` deleted at 4d971b1.
+
+**Resolved 24 September 2026 (forty-first session).** The field went with
+the class. The rule it wanted is stated for the model's narration and
+checked: `agents/conversation.py` refuses an answer carrying a figure no
+tool printed that turn, naming the figure (cd9c375).
 
 **Recorded 11 September (fourteenth session), from an outside reading, with
 one claim corrected against the code.** The router emits `reasoning`, free
@@ -6858,9 +6888,17 @@ matched on figure and window, 10.55% over 2025-09-19 to 2026-09-21, 252
 closes, with the basis line still naming the covariance matrix; Part 3c.6
 records this entry beside the line. Not fixed: wording, not arithmetic.
 
-### The out-of-scope answer names capabilities the system now has
+### The out-of-scope answer names capabilities the system now has - RESOLVED 24 September (forty-first session)
 
-**Trigger:** the Order 5 commit that makes the refusal cite IPS-1.3 and deletes the constant; the clause exists since de7b66e. Any commit that touches the constant before then.
+**Trigger:** none: `OUT_OF_SCOPE_RESPONSE` deleted at 4d971b1; the corpus run reads 3.2 and R-1 to R-6 against Part 18 as corrected.
+
+**Resolved 24 September 2026 (forty-first session), in the code.** The
+constant went with the synthesizer at 4d971b1, one commit after the first
+code commit rather than in it, since deleting it meant deleting the
+synthesizer's dispatch. The refusal is `policy_lookup` citing IPS-1.3, as
+the system prompt directs; `tests/test_tool_runner.py` runs that lookup
+end to end on "share price" and finds IPS-1.3 alone. Whether the model
+calls it for each refusal is the corpus run's to show.
 
 Logged 21 September (thirty-second session), from the full test, read
 through the CLI. Case 3.2, "What will Nvidia's share price be at the end of
@@ -8132,7 +8170,13 @@ volatilities over 756 closes; no concentration table, no clause
 
 ### A follow-up that depends on the previous turn is asked back by the model
 
-**Trigger:** the commit that opens Order 5, which is where this class ends; read before it, since the sequences are what Order 5 is judged against.
+**Trigger:** the corpus run after 5f0d2f7, which reads S-1, S-4 to S-7 against the fourth block.
+
+**Read 24 September 2026 (forty-first session), on Order 5's first code
+commit.** A turn now carries the conversation's earlier questions and
+answers to the model as text (5f0d2f7); a record left by the pre-pass is
+resolved before it. Whether the model reads the referent is the corpus
+run's.
 
 Recorded 22 September 2026 (thirty-fifth session), from the corpus's
 first run (benchmark.md Part 3c.6). Conversation memory today is one
@@ -8249,7 +8293,12 @@ these three are what it is read against first.
 
 ### A bare opinion on a company is routed to the philosophy screen
 
-**Trigger:** the commit that opens Order 5, where the tool layer decides what "Is X a good investment" reaches; and pending decision 13, since the refusal it wants is the out-of-scope answer's.
+**Trigger:** the corpus run after 5f0d2f7, which reads R-2; decision 13 stays pending for its target-weights half only.
+
+**Read 24 September 2026 (forty-first session), on Order 5's first code
+commit.** The system prompt directs a bare opinion to `policy_lookup` and
+IPS-1.3, whose topics carry "good investment"; no screen tool is chosen by
+rule. Decision 13's scope half is done: the constant went at 4d971b1.
 
 Recorded 22 September 2026 (thirty-fifth session), from the corpus's
 first run. R-2, "Is AAPL a good investment?", is pinned as a refusal: a
