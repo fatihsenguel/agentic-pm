@@ -8328,12 +8328,22 @@ then the number a session says is 2 failed beside the passes, and this
 entry is why; a suite that goes red by the calendar is not a suite that
 found a defect.
 
-### Part 18's 3.1, 3.1c, 3.2 and R-6 state the code as it stood before decisions 12 and 45
+### Part 18's 3.1, 3.1c, 3.2 and R-6 state the code as it stood before decisions 12 and 45 - RESOLVED 24 September (forty-first session)
 
-**Trigger:** my dated correction of the four entries, or the run after
-Order 5's first code commit, whichever comes first; the prediction
-block in benchmark.md Part 3c.6 reads those four lines either way and
-says which reading it took.
+**Trigger:** none: corrected on 22e9b76, on my word; `check_3_1` moves
+in a commit of its own.
+
+**Resolved 24 September 2026 (forty-first session), on my word.**
+Decision 12 stands and the four entries are corrected, dated, as
+statements about the code. 3.1 and 3.1c pin the ask-back for the
+instrument type when the message states none, and the answer per type
+once it is given, their figures and D9's falsifier unchanged. 3.2 and
+R-6 drop the quoted sentence and "No pipeline runs", and pin IPS-1.3
+cited, the subject named, no figure, and the policy lookup's one step
+run. The prediction block's 3.1, V-3.1a, V-3.1b and V-3.1c lines are
+read against the corrected entries and not rewritten. The runner's
+`check_3_1` still asserts a refused finding on both clauses from one
+turn; its second turn, giving the type, is the next commit's.
 
 Recorded 24 September 2026 (fortieth session), found while predicting
 the corpus line by line, not repaired: the reference is never updated
