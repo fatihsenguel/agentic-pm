@@ -24,10 +24,11 @@ PENDING = {"kind": "unknown_ticker", "token": "APPL", "candidate": "AAPL",
            "message": "Hows my APPL doing?"}
 
 
-def _first_turn(intent="clarification_needed", pending=PENDING):
+def _first_turn(pending=PENDING):
+    """A first turn as the layer leaves it: the record of what the pre-pass
+    asked back under `clarification`, None when the turn answered."""
     state = create_initial_state("Hows my APPL doing?", "t1", portfolio_id=3)
-    state["router_decision"] = {"intent": intent, "parameters": {}, "execution_order": [],
-                                "clarification_question": "Did you mean AAPL?", "pending": pending}
+    state["clarification"] = pending
     state["final_response"] = "APPL is not a ticker I know. Did you mean AAPL, which you hold?"
     return state
 
@@ -51,7 +52,7 @@ def test_the_current_message_is_the_last_human_one():
 
 
 def test_a_previous_turn_that_was_answered_leaves_no_record():
-    answered = _first_turn(intent="data_fetch", pending=None)
+    answered = _first_turn(pending=None)
     second = create_initial_state("and MSFT?", previous=answered)
     assert second["pending"] is None
     assert len(second["messages"]) == 3
