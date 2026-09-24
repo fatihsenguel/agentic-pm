@@ -8488,3 +8488,106 @@ wrong is mine to decide: the decisions, taken, or the four entries. The
 prediction block counts 3.1 and 3.1c missed on the first, and 3.2 and
 R-6 matched on the subject and the clause, reading the quote and the
 trace line as this entry's to settle.
+
+### The token counter prices a model it does not know at a default
+
+**Trigger:** decision 54's commit, which deletes the config fields beside it; or any code that calls `calculate_cost` or `TokenCounter.add_usage`.
+
+Recorded 24 September 2026 (forty-first session). `observability/token_counter.py`
+carries a price table from 2024 with no current model in it, and
+`calculate_cost` falls back to a "default" of $10 and $30 per million for
+any model it does not name: a plausible figure for a model nobody priced,
+the repair-instead-of-raise shape. It had one caller, the router, and has
+none since 4d971b1. The conversation layer records tokens and computes no
+price; the record converts tokens at the rates it states. Not reused, not
+fixed: code no question reaches is deleted behind a tag, with decision 54's
+fields.
+
+### Statements about the router and the synthesizer outlive them
+
+**Trigger:** decision 17's commit, which touches the formatters these comments sit beside; or the console-glyph session, which reads the same files line by line.
+
+Recorded 24 September 2026 (forty-first session), grepped at 4d971b1. 28
+comments and docstrings under `src/` name the synthesizer, most of them
+"the synthesizer formats; this node does not", now true of the tool's
+formatter and false of a node that no longer exists. `route_next_step`
+still returns "synthesizer" for a plan's end, its docstring saying why.
+Two test files carry the old names: `tests/test_smart_router.py` holds the
+validator and REQUIRES tests and no router, and
+`tests/test_synthesizer_formatters.py` tests the rebalance formatter. The
+CLI's routing block reads `router_decision`, which the state no longer
+carries, and prints empty fields; that block is the CLI's, after Order 5.
+
+### Two weights, or a weight outside a share of the portfolio, leave no record
+
+**Trigger:** a case or corpus entry that answers either ask-back with a reply.
+
+Recorded 24 September 2026 (forty-first session), on the owner's word.
+Decision 45 has every ask-back leave a record, "the reply to a two-weights
+question the same". A reply naming one of two weights stands for no single
+question, "Put 15% into AAPL and 20% into MSFT" then "15%", and choosing
+which position was meant would be a repair; a reply to "150%" is a new
+question, which extraction already reads whole. So the span and the
+instrument type leave records (ab8307d, cb20156), and these two leave one
+with no kind, which resolves nothing (5f0d2f7).
+
+### A capitalised day in a span question is not replaced by the reply
+
+**Trigger:** a turn whose span phrase starts with a capital, "Today" or "Yesterday".
+
+Recorded 24 September 2026 (forty-first session). `_period` records the
+day of a one-day move lower-cased, and the span resolution replaces each
+recorded phrase in the message as written. A message that capitalises the
+day keeps it, the reply resolves to the message unchanged, and extraction
+asks the same question again: a loop the user sees, not a wrong answer. No
+corpus prompt starts with the day.
+
+### What a turn of the layer costs is an estimate with no thinking tokens in it
+
+**Trigger:** the first paid runner run after 5f0d2f7, read with the tokens it prints.
+
+Recorded 24 September 2026 (forty-first session). Decision 45's estimate,
+one to two cents a first turn, counts a system prompt, eleven tool
+definitions, the transcript and the tool's text. Sonnet 5 runs adaptive
+thinking when `thinking` is not set, billed as output, and the layer sends
+`effort: "low"` unmeasured. The runner prints each case's four token counts
+(c388587), less the Level 4 calls that record nothing; the run is the
+measurement, and the estimate of $0.30 to $0.80 for the eighteen cases is
+said before it and not after.
+
+### Nine tools render through a formatter no test runs on their block
+
+**Trigger:** the first paid runner run after 5f0d2f7.
+
+Recorded 24 September 2026 (forty-first session), on the owner's word for
+the shape of the tests. `tests/test_tool_runner.py` runs every tool on
+stand-in agents with `render` replaced, so it pins the plan, the inputs,
+the record and the raises, and not which formatter a tool's block goes
+through; `hypothetical_weight` and `policy_lookup` alone run end to end.
+A tool rendered by the wrong formatter, or a formatter that cannot read the
+block a tool publishes, shows first in the runner's paid run. A real
+DataAgent in a test would reach the price provider on a stale store, which
+is why the stand-ins.
+
+### The turn's `messages` from the layer are read by nothing
+
+**Trigger:** the commit that next changes what a turn carries to the next.
+
+Recorded 24 September 2026 (forty-first session). `conversation.answer`
+returns the turn's messages for the next turn to carry (cd9c375); the turn
+in `graph.py` carries the conversation's questions and answers from the
+state's `messages` instead (5f0d2f7), so the tools' texts of an earlier
+turn reach the model only through the answer that quoted them. A value
+nothing consumes; one of the two goes when the history is decided again.
+
+### The prediction's 3.1 line names the tool where the pre-pass asks back
+
+**Trigger:** the corpus run after 5f0d2f7, which reads 3.1, V-3.1a and V-3.1c against the fourth block.
+
+Recorded 24 September 2026 (forty-first session). The fourth block's 3.1
+line gives the tool as "hypothetical_weight, weight 0.15, no instrument
+type stated", the tool asking back. As built, the pre-pass asks back before
+any model call (cb20156), and the runner's `check_3_1` pins that (0d74185).
+V-3.1b, the weight in words, reaches the model, which may call the tool
+with no type and meet the input model's refusal instead. The block is read
+as written and not rewritten; the run says which happened.
