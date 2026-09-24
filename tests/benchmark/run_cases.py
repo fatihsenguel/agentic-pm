@@ -66,6 +66,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
 from agents.graph import run_agent_graph_sync
+from agents.state import AgentState
 from observability import get_tracer
 from observability.tracer import TraceEventType
 
@@ -169,6 +170,40 @@ def _answer(state):
 
 def _intent(state):
     return (state.get("router_decision") or {}).get("intent")
+
+
+def _calls(state):
+    """The turn's tool-call log: one record per tool the layer called, in
+    call order, each with `tool`, `inputs`, `key`, `block`, `text` and
+    `as_of`. Empty when the turn called none."""
+    return state.get("tool_calls") or []
+
+
+def _called(state):
+    """What the log shows, as (tool, inputs) pairs, for a reason or an
+    assertion about which tool ran with what."""
+    return [(r.get("tool"), r.get("inputs") or {}) for r in _calls(state)]
+
+
+# ---------------------------------------------------------------------------
+# The log probe. Every case reads BLOCKED until the layer writes the log:
+# before any paid call when the state type declares no such key, and after
+# a run when the state carries none. An empty list is a log: a turn the
+# pre-pass answered with a clarification called no tool and says so.
+# ---------------------------------------------------------------------------
+
+LOG_KEY = "tool_calls"
+
+
+def state_declares_log(state_type=AgentState):
+    return LOG_KEY in getattr(state_type, "__annotations__", {})
+
+
+def blocked_on_tool_log(state):
+    if LOG_KEY in state:
+        return None
+    return ("the state carries no tool-call log; the conversation layer that "
+            "writes it (Order 5, decision 45) has not landed")
 
 
 # ---------------------------------------------------------------------------
@@ -2508,6 +2543,9 @@ def run_case(case_id, prompt, portfolio_id, blocked_probe, check):
         states.append(run_agent_graph_sync(turns[0], portfolio_id=portfolio_id))
 
     subject = states if multi else states[0]
+    reason = blocked_on_tool_log(states[0])
+    if reason is not None:
+        return "BLOCKED", [reason]
     if blocked_probe is not None:
         reason = blocked_probe(subject)
         if reason is not None:
@@ -2542,8 +2580,16 @@ def main():
             parser.error(f"no case {args.case}; known: {', '.join(c[0] for c in CASES)}")
 
     counts = {"PASS": 0, "FAIL": 0, "BLOCKED": 0}
+    declared = state_declares_log()
     for case_id, prompt, portfolio_id, probe, check in cases:
-        status, reasons = run_case(case_id, prompt, portfolio_id, probe, check)
+        if not declared:
+            # Nothing is run and nothing is paid for: the verdict is known
+            # before the call.
+            status, reasons = "BLOCKED", [
+                f"the state declares no {LOG_KEY!r}; the conversation layer that "
+                "writes the tool-call log (Order 5, decision 45) has not landed"]
+        else:
+            status, reasons = run_case(case_id, prompt, portfolio_id, probe, check)
         counts[status] += 1
         shown = " -> ".join(prompt) if isinstance(prompt, tuple) else prompt
         print(f"{case_id}  {status:<8} {shown}")
