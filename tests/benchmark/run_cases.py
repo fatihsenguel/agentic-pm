@@ -21,12 +21,17 @@ regression, which is the worst signal a counter can give.
 What each case asserts instead:
 
   - the case ran end to end with no errors
+  - which tool the conversation layer called, with which validated inputs,
+    read from the tool-call log the layer writes into the state under
+    `tool_calls` (decision 45); 2.1 reads the tool's steps from the trace
   - the structure and invariants of what reached `shared_data`
   - the STATIC figures exactly against expected_values.md - cost bases, cash,
     the ticker set - none of which move with prices
   - weakly on the prose: do the figures `shared_data` carries appear in the
     answer at all
   - benchmark.md Part 3b: is an as-of date stated
+  - on every turn, that every figure in the answer is one a tool printed
+    that turn or the user typed (`figures_trace`, DIRECTION.md invariant 1)
 
 The as-of check asserts on `shared_data["allocation"]["as_of"]["worst_case"]`:
 that it exists, that it is a date, and that that exact date reaches the answer.
@@ -46,6 +51,10 @@ Blocked cases probe for the capability rather than declaring themselves blocked,
 so they unblock automatically when it arrives. A case that unblocks while its
 check is still unwritten reports FAIL saying so - "done" for a roadmap item
 means its case asserts, not that its arithmetic is right.
+
+Until the conversation layer writes the tool-call log, every case is BLOCKED
+on it, and before any paid call: when the state type declares no `tool_calls`
+key the eighteen verdicts are printed without running the graph.
 
 A case may have several turns (3.5): the prompt is then a tuple, each turn
 runs after the previous turn's final state, and the probe and the check
