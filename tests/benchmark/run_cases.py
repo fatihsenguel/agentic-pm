@@ -241,6 +241,28 @@ def blocked_on_tool_log(state):
             "writes it (Order 5, decision 45) has not landed")
 
 
+# What a case cost: the usage the layer records for every model call
+# (decision 45), summed over every turn, in tokens. A price is not computed
+# here; the record converts tokens at the rates it states.
+USAGE_FIELDS = (("input_tokens", "in"), ("output_tokens", "out"),
+                ("cache_creation_input_tokens", "cache written"),
+                ("cache_read_input_tokens", "cache read"))
+
+
+def usage_line(states):
+    totals = dict.fromkeys((field for field, _ in USAGE_FIELDS), 0)
+    calls = 0
+    for turn, state in enumerate(states, start=1):
+        if "model_calls" not in state:
+            return f"tokens: not recorded on turn {turn}"
+        for call in state["model_calls"]:
+            calls += 1
+            for field, _ in USAGE_FIELDS:
+                totals[field] += call[field]
+    counted = ", ".join(f"{totals[field]:,} {label}" for field, label in USAGE_FIELDS)
+    return f"tokens: {counted}, {calls} calls"
+
+
 # ---------------------------------------------------------------------------
 # Shared checks
 # ---------------------------------------------------------------------------
@@ -2663,16 +2685,16 @@ def run_case(case_id, prompt, portfolio_id, blocked_probe, check):
     subject = states if multi else states[0]
     reason = blocked_on_tool_log(states[0])
     if reason is not None:
-        return "BLOCKED", [reason]
+        return "BLOCKED", [reason], states
     if blocked_probe is not None:
         reason = blocked_probe(subject)
         if reason is not None:
-            return "BLOCKED", [reason]
+            return "BLOCKED", [reason], states
         if check is None:
             return "FAIL", [
                 "capability has arrived but this case has no check written; "
                 "a roadmap item is not done until its case asserts"
-            ]
+            ], states
 
     with contextlib.redirect_stdout(buf):
         for turn in turns[1:]:
@@ -2680,12 +2702,12 @@ def run_case(case_id, prompt, portfolio_id, blocked_probe, check):
                                                previous=states[-1]))
 
     if check is None:
-        return "FAIL", ["no check written for this case"]
+        return "FAIL", ["no check written for this case"], states
 
     fails = check(states if multi else states[0])
     for turn, state in zip(turns, states):
         fails += figures_trace(state, turn)
-    return ("PASS", []) if not fails else ("FAIL", fails)
+    return ("PASS" if not fails else "FAIL"), fails, states
 
 
 def main():
@@ -2700,26 +2722,32 @@ def main():
             parser.error(f"no case {args.case}; known: {', '.join(c[0] for c in CASES)}")
 
     counts = {"PASS": 0, "FAIL": 0, "BLOCKED": 0}
+    ran = []
     declared = state_declares_log()
     for case_id, prompt, portfolio_id, probe, check in cases:
         if not declared:
             # Nothing is run and nothing is paid for: the verdict is known
             # before the call.
-            status, reasons = "BLOCKED", [
+            status, reasons, states = "BLOCKED", [
                 f"the state declares no {LOG_KEY!r}; the conversation layer that "
-                "writes the tool-call log (Order 5, decision 45) has not landed"]
+                "writes the tool-call log (Order 5, decision 45) has not landed"], []
         else:
-            status, reasons = run_case(case_id, prompt, portfolio_id, probe, check)
+            status, reasons, states = run_case(case_id, prompt, portfolio_id, probe, check)
         counts[status] += 1
+        ran += states
         shown = " -> ".join(prompt) if isinstance(prompt, tuple) else prompt
         print(f"{case_id}  {status:<8} {shown}")
         for reason in reasons:
             print(f"          - {reason}")
+        if states:
+            print(f"          {usage_line(states)}")
         print()
 
     total = len(CASES)
     print(f"{counts['PASS']}/{total} passing, "
           f"{counts['FAIL']} failing, {counts['BLOCKED']} blocked")
+    if ran:
+        print(f"the run's {usage_line(ran)}")
     if args.case:
         print(f"(ran {len(cases)} of {total}; the count above is out of the full set)")
 
