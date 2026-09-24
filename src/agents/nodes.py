@@ -1097,8 +1097,9 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
             # A proposed weight in one position: no portfolio, no total, no date.
             with (agent_ctx.trace_tool("refuse_ips") if agent_ctx else nullcontext()) as tool_ctx:
                 if tool_ctx:
-                    tool_ctx.set_input({"policy": ips.path, "weight": weight})
-                findings = refuse(ips, weight)
+                    tool_ctx.set_input({"policy": ips.path, "weight": weight,
+                                       "instrument_type": inputs.get("instrument_type")})
+                findings = refuse(ips, weight, inputs.get("instrument_type"))
                 for f in findings:
                     by_status[f.status] = by_status.get(f.status, 0) + 1
                 if tool_ctx:

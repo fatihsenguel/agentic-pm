@@ -309,7 +309,7 @@ def test_missing_total_raises(ips):
 # --- refuse: the hypothetical weight of 3.1 ----------------------------------
 
 def test_fifteen_percent_is_refused_on_both_concentration_clauses(ips):
-    out = {f.clause: f for f in refuse(ips, 0.15)}
+    out = {f.clause: f for f in refuse(ips, 0.15, SHARE)}
     assert set(out) == {"IPS-4.1", "IPS-4.2"}
     assert out["IPS-4.1"].status == REFUSED
     assert out["IPS-4.1"].distance_pp == pytest.approx(3.00, abs=1e-9)
@@ -320,9 +320,9 @@ def test_fifteen_percent_is_refused_on_both_concentration_clauses(ips):
 
 
 def test_a_permitted_weight_is_ok_not_refused(ips):
-    out = {f.clause: f.status for f in refuse(ips, 0.10)}
+    out = {f.clause: f.status for f in refuse(ips, 0.10, SHARE)}
     assert out == {"IPS-4.1": OK, "IPS-4.2": OK}      # 10% is exactly at 4.2 (D9)
-    out = {f.clause: f.status for f in refuse(ips, 0.12)}
+    out = {f.clause: f.status for f in refuse(ips, 0.12, SHARE)}
     assert out == {"IPS-4.1": OK, "IPS-4.2": REFUSED}
 
 
@@ -361,4 +361,4 @@ def test_a_type_outside_share_and_fund_is_refused_and_not_assumed(ips, kind):
 
 def test_refuse_rejects_a_non_fraction(ips):
     with pytest.raises(ComplianceError, match="not a fraction"):
-        refuse(ips, 15)
+        refuse(ips, 15, SHARE)

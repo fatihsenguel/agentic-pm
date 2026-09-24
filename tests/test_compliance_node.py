@@ -106,7 +106,7 @@ async def test_an_unknown_instrument_type_is_an_error_not_a_verdict():
 # --- the two modes that measure no portfolio ---------------------------------
 
 async def test_hypothetical_weight_refuses_without_a_portfolio():
-    out = await compliance_agent_node(state_with({"weight": 0.15}))
+    out = await compliance_agent_node(state_with({"weight": 0.15, "instrument_type": "share"}))
     assert out.get("errors") is None
     block = out["shared_data"]["compliance"]
     assert set(block) == BLOCK_KEYS
@@ -124,7 +124,7 @@ async def test_the_inputs_are_read_from_the_state_and_not_the_router():
     a router decision that no longer exists."""
     state = state_with()
     del state["router_decision"]
-    state["inputs"] = {"weight": 0.15}
+    state["inputs"] = {"weight": 0.15, "instrument_type": "share"}
     out = await compliance_agent_node(state)
     assert out.get("errors") is None, out.get("errors")
     block = out["shared_data"]["compliance"]
@@ -169,7 +169,7 @@ async def test_topic_the_policy_has_names_its_clauses():
 async def test_a_lookup_or_hypothetical_needs_no_analysis_output():
     out = await compliance_agent_node(state_with({"topic": "cash"}))
     assert out.get("errors") is None
-    out = await compliance_agent_node(state_with({"weight": 0.05}))
+    out = await compliance_agent_node(state_with({"weight": 0.05, "instrument_type": "share"}))
     assert out.get("errors") is None
     assert {f["status"] for f in out["shared_data"]["compliance"]["findings"]} == {"ok"}
 
@@ -209,7 +209,7 @@ def portfolio_naming(tmp_path):
         pm.delete_portfolio(portfolio_id)
 
 
-@pytest.mark.parametrize("params", [{"topic": "concentration"}, {"weight": 0.15}])
+@pytest.mark.parametrize("params", [{"topic": "concentration"}, {"weight": 0.15, "instrument_type": "share"}])
 async def test_the_policy_loaded_is_the_portfolios(tmp_path, portfolio_naming, params):
     """A personal file, one clause, named on the row: every mode loads it and
     not the committed policy."""

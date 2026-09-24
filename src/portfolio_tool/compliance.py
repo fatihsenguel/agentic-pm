@@ -287,18 +287,26 @@ def _per_sector(
     return out
 
 
-def refuse(ips: IPS, weight: float) -> List[Finding]:
-    """A hypothetical weight in one position, against every concentration
-    clause. The position is unnamed, so it may be a share or a fund and both
-    the instrument and the issuer limit apply. No portfolio, so no total and
-    no currency distance. Over a limit is `refused`; at or under is `ok` -
-    the policy permits it and the checker says so.
+def refuse(ips: IPS, weight: float, instrument_type: str) -> List[Finding]:
+    """A hypothetical weight in one position of the stated type, against the
+    concentration clauses that apply to it (decision 12): a share against
+    the instrument and the issuer limit, a fund against the instrument limit
+    alone, the issuer limit counting directly held shares only. A type
+    outside share and fund is refused, never assumed. No portfolio, so no
+    total and no currency distance. Over a limit is `refused`; at or under
+    is `ok` - the policy permits it and the checker says so.
     """
     if not 0 < weight <= 1:
         raise ComplianceError(f"Weight {weight!r} is not a fraction in (0, 1].")
+    if instrument_type not in INSTRUMENT_TYPES:
+        raise ComplianceError(
+            f"The instrument type {instrument_type!r} is neither {SHARE!r} nor {FUND!r}; "
+            "which limits apply depends on it, so it is asked for and not assumed.")
+    types = ("max_instrument_weight", "max_issuer_weight") if instrument_type == SHARE \
+        else ("max_instrument_weight",)
     return [
         _finding(clause, HYPOTHETICAL, weight, clause.params["max"], "max", None, None,
                  over=REFUSED)
         for clause in ips.checkable
-        if clause.type in ("max_instrument_weight", "max_issuer_weight")
+        if clause.type in types
     ]

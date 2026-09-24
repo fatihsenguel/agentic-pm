@@ -14,7 +14,7 @@ import re
 from dataclasses import asdict
 
 from agents.nodes import _cents, _format_compliance_response
-from portfolio_tool.compliance import check, refuse
+from portfolio_tool.compliance import SHARE, check, refuse
 from portfolio_tool.ips import load_ips
 
 from test_compliance import INSTRUMENT_TYPES, TOTAL, allocation
@@ -88,7 +88,7 @@ def test_portfolio_check_answer():
 
 def test_hypothetical_answer():
     ips = load_ips("ips.toml")
-    findings = refuse(ips, 0.15)
+    findings = refuse(ips, 0.15, SHARE)
     answer = _answer(_block(ips, findings, None, None))
     assert "NOT PERMITTED" in answer
     assert "IPS-4.1" in answer and "IPS-4.2" in answer
@@ -97,7 +97,7 @@ def test_hypothetical_answer():
     assert not HEDGE.search(answer)
     assert not TRADE.search(answer)
 
-    permitted = refuse(ips, 0.10)
+    permitted = refuse(ips, 0.10, SHARE)
     answer = _answer(_block(ips, permitted, None, None))
     assert "PERMITTED" in answer and "NOT PERMITTED" not in answer
     assert _unexplained(answer, permitted) == []
@@ -325,6 +325,6 @@ def test_modes_with_no_amount_need_no_currency():
     """The hypothetical and the lookup print no amount, so a None currency
     is right there, not an error."""
     ips = load_ips("ips.toml")
-    assert "USD" not in _answer(_block(ips, refuse(ips, 0.15), None, None))
+    assert "USD" not in _answer(_block(ips, refuse(ips, 0.15, SHARE), None, None))
     assert "USD" not in _answer(_block(ips, [], None, None,
                                        topic={"asked": "cash", "clauses": []}, no_clause=True))
