@@ -36,7 +36,7 @@ def state_with(_params=None, portfolio_id=BENCHMARK_PORTFOLIO, **shared):
                                  portfolio_id=portfolio_id)
     state["shared_data"] = shared
     state["agents_to_run"] = ["ComplianceAgent"]
-    state["router_decision"] = {"intent": "compliance", "parameters": _params or {}}
+    state["inputs"] = _params or {}
     return state
 
 
@@ -106,7 +106,7 @@ async def test_an_unknown_instrument_type_is_an_error_not_a_verdict():
 # --- the two modes that measure no portfolio ---------------------------------
 
 async def test_hypothetical_weight_refuses_without_a_portfolio():
-    out = await compliance_agent_node(state_with({"hypothetical_weight": 0.15}))
+    out = await compliance_agent_node(state_with({"weight": 0.15}))
     assert out.get("errors") is None
     block = out["shared_data"]["compliance"]
     assert set(block) == BLOCK_KEYS
@@ -133,7 +133,7 @@ async def test_the_inputs_are_read_from_the_state_and_not_the_router():
 
 
 async def test_topic_the_policy_is_silent_on_sets_no_clause():
-    out = await compliance_agent_node(state_with({"policy_topic": "currency risk"}))
+    out = await compliance_agent_node(state_with({"topic": "currency risk"}))
     assert out.get("errors") is None
     block = out["shared_data"]["compliance"]
     assert block["findings"] == []
@@ -145,7 +145,7 @@ async def test_topic_the_policy_is_silent_on_sets_no_clause():
 
 
 async def test_topic_the_policy_has_names_its_clauses():
-    out = await compliance_agent_node(state_with({"policy_topic": " Concentration "}))
+    out = await compliance_agent_node(state_with({"topic": " Concentration "}))
     block = out["shared_data"]["compliance"]
     assert block["no_clause"] is False
     assert block["topic"] == {"asked": "concentration", "clauses": ["IPS-4.1", "IPS-4.2", "IPS-4.3"]}
@@ -153,16 +153,16 @@ async def test_topic_the_policy_has_names_its_clauses():
 
 
 async def test_a_lookup_or_hypothetical_needs_no_analysis_output():
-    out = await compliance_agent_node(state_with({"policy_topic": "cash"}))
+    out = await compliance_agent_node(state_with({"topic": "cash"}))
     assert out.get("errors") is None
-    out = await compliance_agent_node(state_with({"hypothetical_weight": 0.05}))
+    out = await compliance_agent_node(state_with({"weight": 0.05}))
     assert out.get("errors") is None
     assert {f["status"] for f in out["shared_data"]["compliance"]["findings"]} == {"ok"}
 
 
 async def test_both_modes_is_an_error():
     out = await compliance_agent_node(
-        state_with({"hypothetical_weight": 0.15, "policy_topic": "cash"}))
+        state_with({"weight": 0.15, "topic": "cash"}))
     [error] = out["errors"]
     assert "Both" in error
 
@@ -195,7 +195,7 @@ def portfolio_naming(tmp_path):
         pm.delete_portfolio(portfolio_id)
 
 
-@pytest.mark.parametrize("params", [{"policy_topic": "concentration"}, {"hypothetical_weight": 0.15}])
+@pytest.mark.parametrize("params", [{"topic": "concentration"}, {"weight": 0.15}])
 async def test_the_policy_loaded_is_the_portfolios(tmp_path, portfolio_naming, params):
     """A personal file, one clause, named on the row: every mode loads it and
     not the committed policy."""
@@ -210,7 +210,7 @@ async def test_the_policy_loaded_is_the_portfolios(tmp_path, portfolio_naming, p
 async def test_no_portfolio_is_no_policy():
     """A policy question with no portfolio set has no policy to answer from:
     a refusal, not the committed file with a plausible face."""
-    out = await compliance_agent_node(state_with({"policy_topic": "cash"}, portfolio_id=None))
+    out = await compliance_agent_node(state_with({"topic": "cash"}, portfolio_id=None))
     assert "compliance" not in (out.get("shared_data") or {})
     [error] = out["errors"]
     assert "no portfolio" in error.lower() and "policy" in error.lower()
@@ -218,7 +218,7 @@ async def test_no_portfolio_is_no_policy():
 
 async def test_a_portfolio_naming_an_absent_file_is_refused_by_name(tmp_path, portfolio_naming):
     absent = str(tmp_path / "absent.toml")
-    out = await compliance_agent_node(state_with({"policy_topic": "cash"}, portfolio_id=portfolio_naming(absent)))
+    out = await compliance_agent_node(state_with({"topic": "cash"}, portfolio_id=portfolio_naming(absent)))
     assert "compliance" not in (out.get("shared_data") or {})
     [error] = out["errors"]
     assert absent in error

@@ -36,6 +36,13 @@ class AgentState(TypedDict):
     # Router decision (from Smart Router - Phase 6.1)
     router_decision: Optional[Dict[str, Any]]
 
+    # The tool this run answers and its validated inputs, keyed as the
+    # tool's contract names them (KNOWN_GAPS, "The eleven tool contracts of
+    # Order 5"). Every node reads its inputs here and nowhere else; `tool`
+    # is what a node that serves two tools branches on.
+    tool: Optional[str]
+    inputs: Dict[str, Any]
+
     # What the previous turn asked back, as a record extraction wrote (kind,
     # token, candidate, message), carried in so this turn's reply can be
     # resolved against it without re-reading prose. None when the previous
@@ -116,6 +123,8 @@ def create_initial_state(
         messages=messages,
         pending=pending,
         router_decision=None,
+        tool=None,
+        inputs={},
         current_agent=None,
         execution_step=0,
         agents_to_run=[],
@@ -137,11 +146,15 @@ def create_initial_state(
 # STATE UPDATE HELPERS
 # =============================================================================
 
-def set_router_decision(state: AgentState, decision: Dict[str, Any]) -> Dict[str, Any]:
-    """Set the router decision and initialize execution order."""
+def set_router_decision(state: AgentState, decision: Dict[str, Any], tool: Optional[str],
+                        inputs: Dict[str, Any]) -> Dict[str, Any]:
+    """Set the router decision, the tool and inputs it stands for, and the
+    execution order."""
     agents_to_run = decision.get("execution_order", [])
     return {
         "router_decision": decision,
+        "tool": tool,
+        "inputs": inputs,
         "agents_to_run": agents_to_run,
     }
 

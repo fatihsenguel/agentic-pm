@@ -73,10 +73,7 @@ def load_portfolio_context(state: "AgentState") -> PortfolioContext:
     portfolio_id = state.get("portfolio_id")
     
     if not portfolio_id:
-        # Get tickers from router decision
-        router_decision = state.get("router_decision") or {} 
-        parameters = router_decision.get("parameters", {})
-        tickers = parameters.get("tickers", [])
+        tickers = (state.get("inputs") or {}).get("tickers") or []
         
         if not tickers:
             raise PortfolioContextError(
@@ -374,8 +371,10 @@ async def router_node(state: AgentState) -> Dict[str, Any]:
             }
 
         # Set router decision and initialize execution
+        decided = _decision_to_dict(decision)
+        tool, inputs = _tool_and_inputs(decided)
         return {
-            **set_router_decision(state, _decision_to_dict(decision)),
+            **set_router_decision(state, decided, tool, inputs),
             "warnings": warnings,
         }
         
@@ -385,6 +384,40 @@ async def router_node(state: AgentState) -> Dict[str, Any]:
     finally:
         if agent_ctx:
             agent_ctx.__exit__(None, None, None)
+
+
+def _tool_and_inputs(decision: Dict[str, Any]):
+    """The tool a router decision stands for, and its inputs under the names
+    the tool's contract gives them, so that the nodes read what the tool
+    runner will write. Where DataAgent runs, the tickers and the period go
+    in as the router extracted them, since DataAgent reads both. Deleted
+    with the router."""
+    intent = decision["intent"]
+    parameters = decision.get("parameters") or {}
+    tickers = parameters.get("tickers") or []
+    period = parameters.get("period")
+    if intent == "compliance":
+        if parameters.get("hypothetical_weight") is not None:
+            return "hypothetical_weight", {"weight": parameters["hypothetical_weight"]}
+        if parameters.get("policy_topic") is not None:
+            return "policy_lookup", {"topic": parameters["policy_topic"]}
+        return "compliance_check", {"tickers": tickers, "period": period}
+    if intent == "research":
+        if len(tickers) != 1:
+            raise ValueError(f"A research question is of one company and the message names "
+                             f"{tickers}. Name the one ticker.")
+        tool = parameters.get("asks") or "philosophy_screen"
+        inputs = {"ticker": tickers[0]}
+        if tool == POSITION:
+            inputs.update(tickers=tickers, period=period)
+        return tool, inputs
+    if intent in ("data_fetch", "risk_analysis"):
+        return parameters.get("measure"), {"tickers": tickers, "period": period}
+    if intent == "rebalancing":
+        return "rebalance", {"tickers": tickers, "period": period}
+    if intent == "ledger":
+        return "ledger", {}
+    return None, {}
 
 
 def _decision_to_dict(decision) -> Dict[str, Any]:
@@ -454,12 +487,10 @@ async def data_agent_node(state: AgentState) -> Dict[str, Any]:
         # Cache holdings if loaded (spread into the return below)
         holdings_update = cache_portfolio_holdings(state, holdings)
         
-        # The period is extraction's: a vocabulary key or None, always
-        # present on the decision. None falls through to config's default in
-        # the data agent; no second default lives here.
-        router_decision = state.get("router_decision") or {}
-        parameters = router_decision.get("parameters", {})
-        period = parameters.get("period")
+        # The period is extraction's: a vocabulary key or None. None falls
+        # through to config's default in the data agent; no second default
+        # lives here.
+        period = (state.get("inputs") or {}).get("period")
         
         print(f"  Tickers: {tickers}")
         print(f"  Period: {period}")
@@ -1000,10 +1031,10 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
     (clause, subject, bound), and the `no_clause` marker. The synthesizer
     formats and cites; this node does not.
 
-    Three modes, decided by the router's parameters and nothing else:
-    neither set is a check of the portfolio; `hypothetical_weight` is a
-    proposed weight in one position, refused or permitted with no portfolio
-    measured (3.1); `policy_topic` is the user's own words for a topic, and
+    Three modes, decided by the inputs and nothing else: neither set is a
+    check of the portfolio; `weight` is a proposed weight in one position,
+    refused or permitted with no portfolio measured (3.1); `topic` is the
+    user's own words for a topic, and
     the lookup is which clauses' topics occur inside those words (3.4) - the
     owner's vocabulary contained in the question, no similarity, no nearest
     clause, and the router is never shown the vocabulary. The last two
@@ -1029,13 +1060,13 @@ async def compliance_agent_node(state: AgentState) -> Dict[str, Any]:
 
     try:
         shared = state.get("shared_data", {})
-        params = (state.get("router_decision") or {}).get("parameters") or {}
-        weight = params.get("hypothetical_weight")
-        topic = params.get("policy_topic")
+        inputs = state.get("inputs") or {}
+        weight = inputs.get("weight")
+        topic = inputs.get("topic")
         if weight is not None and topic is not None:
             raise DataCalculationError(
-                "Both hypothetical_weight and policy_topic are set; the router's "
-                "validator rejects this, so it did not run."
+                "Both a weight and a topic are set; they are two different tools, "
+                "hypothetical_weight and policy_lookup."
             )
 
         from contextlib import nullcontext
@@ -1249,9 +1280,9 @@ async def screening_agent_node(state: AgentState) -> Dict[str, Any]:
     Screening Agent node - the philosophy applied to one company's filed
     figures (decision 29; benchmark cases 4.1 and 4.6).
 
-    One ticker, extraction's, from the router's parameters; none or two is
-    an error, since a screen is of one company. The calls, in this order and
-    for this reason: the SEC ticker file resolves the ticker to a CIK; the
+    One ticker, from the inputs; none is an error, since a screen is of one
+    company. The calls, in this order and for this reason: the SEC ticker
+    file resolves the ticker to a CIK; the
     submissions document gives the filer's name and SIC code; the exclusion
     is decided on the code alone (D34, screening.exclude); only a company the
     philosophy does screen has its company facts fetched, read into fiscal
@@ -1317,14 +1348,12 @@ async def screening_agent_node(state: AgentState) -> Dict[str, Any]:
         from portfolio_tool.screening import ScreeningError, exclude, range_assumptions, screen
         from portfolio_tool.watchlist import WatchlistError, growth_pair, load_watchlist
 
-        params = (state.get("router_decision") or {}).get("parameters") or {}
-        tickers = params.get("tickers") or []
-        if len(tickers) != 1:
+        ticker = (state.get("inputs") or {}).get("ticker")
+        if not ticker:
             raise DataCalculationError(
-                f"A philosophy check is of one company and the message names {tickers}. "
+                "A philosophy check is of one company and no ticker was given. "
                 "Name the one ticker to check."
             )
-        ticker = tickers[0]
 
         # A position question is about a candidate I wrote down: the gate
         # checks it at the weight that entry states, and the research
@@ -1334,7 +1363,7 @@ async def screening_agent_node(state: AgentState) -> Dict[str, Any]:
         # submissions and facts to discover what the watchlist says in a
         # lookup. A philosophy check is not narrowed this way: case 4.6
         # screens JPM, which is held and is on no entry.
-        if params.get("asks") == "position":
+        if state.get("tool") == POSITION:
             try:
                 load_watchlist(WATCHLIST_PATH).by_ticker(ticker)
             except WatchlistError as e:
@@ -1822,11 +1851,10 @@ async def research_agent_node(state: AgentState) -> Dict[str, Any]:
         # Refusals about one section: the next section is still read.
         section_refused = (SectionError, ReadingModelError, ReadingError)
 
-        params = (state.get("router_decision") or {}).get("parameters") or {}
-        asks = params.get("asks")
+        asks = state.get("tool")
         if asks not in ASKS:
             raise DataCalculationError(
-                f"The research agent is asked {asks!r}; it answers {' and '.join(ASKS)} "
+                f"The research agent is asked for {asks!r}; it answers {' and '.join(ASKS)} "
                 "(decision 66).")
 
         screening = (state.get("shared_data") or {}).get("screening")

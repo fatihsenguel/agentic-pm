@@ -185,7 +185,8 @@ clause = "PHI-4.1"
 def state_with(tickers, portfolio_id=BENCHMARK_PORTFOLIO):
     state = create_initial_state("Does it clear my philosophy?", portfolio_id=portfolio_id)
     state["agents_to_run"] = ["ScreeningAgent"]
-    state["router_decision"] = {"intent": "research", "parameters": {"tickers": list(tickers)}}
+    assert len(tickers) <= 1, "a screen is of one company; two is the input model's refusal"
+    state["inputs"] = {"ticker": tickers[0]} if tickers else {}
     return state
 
 
@@ -287,9 +288,8 @@ async def test_a_second_run_asks_the_provider_for_nothing(provider):
 
 # --- refusals ----------------------------------------------------------------------
 
-@pytest.mark.parametrize("tickers", [[], ["JPM", "GOOGL"]])
-async def test_none_or_two_tickers_is_an_error_and_nothing_is_fetched(provider, tickers):
-    out = await nodes.screening_agent_node(state_with(tickers))
+async def test_no_ticker_is_an_error_and_nothing_is_fetched(provider):
+    out = await nodes.screening_agent_node(state_with([]))
     assert "screening" not in (out.get("shared_data") or {})
     [error] = out["errors"]
     assert "one company" in error

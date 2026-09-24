@@ -53,8 +53,7 @@ def test_context_carries_the_portfolios_currency():
 
 def test_context_without_a_portfolio_has_no_base_currency():
     state = create_initial_state("Analyze SPY and TLT")
-    state["router_decision"] = {"intent": "data_fetch",
-                                "parameters": {"tickers": ["SPY", "TLT"]}}
+    state["inputs"] = {"tickers": ["SPY", "TLT"]}
     assert load_portfolio_context(state).base_currency is None
 
 

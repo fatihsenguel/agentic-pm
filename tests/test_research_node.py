@@ -188,8 +188,8 @@ def state(asks="thesis", screening=None):
     s = create_initial_state("What has to be true in a year for my GOOGL thesis to be right?",
                              portfolio_id=3)
     s["agents_to_run"] = ["ResearchAgent"]
-    s["router_decision"] = {"intent": "research",
-                            "parameters": {"tickers": ["GOOGL"], "asks": asks}}
+    s["tool"] = asks
+    s["inputs"] = {"ticker": "GOOGL"}
     s["shared_data"] = {"screening": screened() if screening is None else screening}
     return s
 

@@ -96,17 +96,11 @@ def test_load_portfolio_context_with_valid_portfolio():
         pm.delete_portfolio(portfolio_id)
 
 
-def test_load_portfolio_context_with_router_tickers():
-    """Should SUCCEED when no portfolio but tickers in router decision"""
+def test_load_portfolio_context_with_tickers_in_the_inputs():
+    """Should SUCCEED when no portfolio but tickers in the inputs"""
     state = create_initial_state("Analyze AAPL")
-    
-    # Simulate router extracting tickers
-    state["router_decision"] = {
-        "parameters": {
-            "tickers": ["AAPL", "MSFT"]
-        }
-    }
-    
+    state["inputs"] = {"tickers": ["AAPL", "MSFT"]}
+
     ctx = load_portfolio_context(state)
     tickers, holdings = ctx.tickers, ctx.holdings
     
