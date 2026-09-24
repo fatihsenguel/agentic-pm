@@ -8292,11 +8292,18 @@ that the assertion is about the window and not about today. Until then
 the number a session says is 1934 passed, 1 failed, 6 xfailed, and this
 entry is why.
 
-### Two more screening-node tests read the clock and fail from 24 September
+### Two more screening-node tests read the clock and fail from 24 September - RESOLVED 24 September (forty-first session)
 
-**Trigger:** the commit that pins their clock, on my word; the fix is
-the one the entry above took for the third test, and it is not a code
-change under `src/`.
+**Trigger:** none: fixed on 8f49f46, the fix this entry named.
+
+**Resolved 24 September 2026 (forty-first session).** Both tests pin
+22 September by monkeypatching `nodes.utc_today`, as line 356 does for
+the third; nothing under `src/` changed. pytest 1962 passed, 6 xfailed,
+the number a session says again. The file's other calls to the node
+read the clock unpinned and assert nothing about the price window: the
+JPM tests, the ticker neither held nor listed, and the GOOGL tests on
+the screen and the range, which pass with both stand-in closes outside
+the window and stay outside it on every later day.
 
 Recorded 24 September 2026 (fortieth session), from the session's
 pytest runs: 1941 passed, 6 xfailed in the checkout before midnight UTC
