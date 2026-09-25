@@ -2223,6 +2223,15 @@ def _format_policy_lookup(block: Dict, policy: Dict) -> List[str]:
     return lines
 
 
+# What each answer states its method leaves out, as the formatter below
+# prints it: a fact of the method, fixed, which the tool's record carries
+# as its provenance's caveats (decision 77). tests/test_caveats.py holds
+# each tuple to the formatter's text.
+HYPOTHETICAL_WEIGHT_CAVEATS = (
+    "Not done: no recommendation. The policy states the limit and the answer stops there.",
+)
+
+
 def _format_hypothetical(findings: List[Dict], policy: Dict) -> List[str]:
     """A proposed weight in one position against the concentration limits.
     Refused or permitted per clause, the clause text, the distance. No
@@ -2258,6 +2267,11 @@ def _cents(amount: float) -> str:
     binary neighbour's .17 (decision 75). The one rounding site for a
     distance the checker computed; the block carries it unrounded."""
     return f"{Decimal(repr(amount)).quantize(CENT, rounding=ROUND_HALF_UP):,}"
+
+
+COMPLIANCE_CHECK_CAVEATS = (
+    "Not done: no recommendation, no target weight, no instrument to trade.",
+)
 
 
 def _format_policy_check(block: Dict, policy: Dict, findings: List[Dict],
@@ -3013,6 +3027,11 @@ def _format_thesis_response(sub_results: Dict) -> List[str]:
     return lines
 
 
+REBALANCE_CAVEATS = (
+    "Not shown: the trades, their sizes and their cost.",
+)
+
+
 def _format_rebalance_response(sub_results: Dict) -> List[str]:
     """Format rebalancing results, without the trades.
 
@@ -3078,6 +3097,11 @@ def _read_and_not_used(tickers: Optional[List[str]], because: str) -> List[str]:
     it = "it" if len(tickers) == 1 else "them"
     return ["", f"**Read and not used:** {named}. Extraction read {it} from the "
                 f"question; {because}."]
+
+
+ALLOCATION_CAVEATS = (
+    "Not done. Fund holdings are counted at fund level; there is no look-through.",
+)
 
 
 def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = None,
@@ -3217,6 +3241,12 @@ def _format_allocation_response(sub_results: Dict, group_by: Optional[str] = Non
     return lines
 
 
+PNL_CAVEATS = (
+    "Not done. Price return only: dividends are not attributed to the portfolio, so income "
+    "is not included (expected_values.md D4).",
+)
+
+
 def _format_pnl_response(sub_results: Dict, tickers: List[str]) -> List[str]:
     """Format the position P&L PortfolioAnalysisAgent computed.
 
@@ -3287,6 +3317,13 @@ def _format_pnl_response(sub_results: Dict, tickers: List[str]) -> List[str]:
         lines.append("currency part; that split is not computed (expected_values.md Part 8 C).")
     return lines
 
+
+
+PORTFOLIO_VOLATILITY_CAVEATS = (
+    "Not done. Cash is excluded from the weights, so this is the volatility of the invested "
+    "assets rather than of the total portfolio.",
+    "It is one window under one regime; it is not an average of the per-holding volatilities.",
+)
 
 
 def _format_portfolio_volatility_response(sub_results: Dict,

@@ -3,7 +3,7 @@ One tool run: its plan set from the terminal table rather than routed, its
 validated inputs in the state, and the record the conversation layer logs
 (KNOWN_GAPS, "The eleven tool contracts of Order 5", "The log's shape",
 "What a turn's result carries - decision 77"): `tool`, `inputs`, `key`,
-`block`, `text`, `as_of`, `blocks`, `agents`.
+`block`, `text`, `blocks`, `agents`, `provenance`.
 
 The graph is the one graph.py builds, less the router and the synthesizer:
 the agents as graph.AGENT_NODES binds them, the gate on the edge after the
@@ -15,7 +15,10 @@ The record carries the tool's block, and under `blocks` every summary
 block the run published as BLOCKS names them, and nothing else from
 `shared_data`: the prices, the covariance matrix and the window stop at
 the tool's boundary (DIRECTION.md invariant 3). `agents` is each agent
-that ran, in plan order, with the success it reported. A run with errors,
+that ran, in plan order, with the success it reported. `provenance` is
+the block's as-of, the data source the block states or None where it
+states none, and the tool's fixed caveats, the sentences its formatter
+prints about what the method leaves out (CAVEATS). A run with errors,
 a run that publishes no block of its table, and a position without the
 gate's check of the same ticker at the same weight (decision 62,
 `require_gate`) raise instead of returning a record.
@@ -30,7 +33,7 @@ from .nodes import DataCalculationError
 from .schemas import AGENTS, derive_plan
 from .state import AgentState, create_initial_state
 
-__all__ = ["BLOCKS", "BLOCK_KEY", "ToolRunError", "render", "run_tool"]
+__all__ = ["BLOCKS", "BLOCK_KEY", "CAVEATS", "ToolRunError", "render", "run_tool"]
 
 
 class ToolRunError(Exception):
@@ -80,6 +83,28 @@ if set(BLOCKS) != set(BLOCK_KEY):
 for _tool, _key in BLOCK_KEY.items():
     if _key is not None and _key not in BLOCKS[_tool]:
         raise RuntimeError(f"BLOCKS[{_tool!r}] leaves out the tool's own block {_key!r}")
+
+# What each tool's method leaves out, the sentences its formatter prints
+# and the record carries as its provenance's caveats. Each tuple lives
+# beside its formatter; a tool whose answer states no caveat has none,
+# and none is written for the record's sake.
+CAVEATS: Dict[str, Tuple[str, ...]] = {
+    "allocation": nodes.ALLOCATION_CAVEATS,
+    "position_pnl": nodes.PNL_CAVEATS,
+    "portfolio_volatility": nodes.PORTFOLIO_VOLATILITY_CAVEATS,
+    "compliance_check": nodes.COMPLIANCE_CHECK_CAVEATS,
+    "hypothetical_weight": nodes.HYPOTHETICAL_WEIGHT_CAVEATS,
+    "policy_lookup": (),
+    "philosophy_screen": (),
+    "thesis": (),
+    "position": (),
+    "rebalance": nodes.REBALANCE_CAVEATS,
+    "ledger": (),
+}
+
+if set(CAVEATS) != set(BLOCK_KEY):
+    raise RuntimeError(f"CAVEATS names {sorted(CAVEATS)} and BLOCK_KEY {sorted(BLOCK_KEY)}; "
+                       "a tool is on both tables or on neither")
 
 
 def _tool_graph():
@@ -151,6 +176,29 @@ def _as_of(tool: str, block: Mapping[str, Any]) -> Optional[str]:
     return as_of
 
 
+def _source(tool: str, block: Mapping[str, Any]) -> Optional[str]:
+    """The data source the block states: at its top level (the screen), or
+    the one its readings (a thesis, a position) or its candidates' figures
+    (the ledger) share, every one named where they differ. None where the
+    block states none, which the reader prints as not recorded; nothing is
+    defaulted."""
+    if block.get("source"):
+        return str(block["source"])
+    if tool in ("thesis", "position"):
+        stated = [r.get("source") for r in block.get("readings") or []]
+    elif tool == "ledger":
+        stated = [f.get("source") for f in (block.get("figures") or {}).values()]
+    else:
+        return None
+    sources = sorted({str(s) for s in stated if s})
+    return ", ".join(sources) if sources else None
+
+
+def _provenance(tool: str, block: Mapping[str, Any]) -> Dict[str, Any]:
+    return {"as_of": _as_of(tool, block), "source": _source(tool, block),
+            "caveats": CAVEATS[tool]}
+
+
 async def run_tool(tool: str, inputs: Mapping[str, Any], portfolio_id: Optional[int],
                    request_id: Optional[str] = None) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """Run one tool on inputs already validated against its model, and
@@ -188,5 +236,6 @@ async def run_tool(tool: str, inputs: Mapping[str, Any], portfolio_id: Optional[
 
     agents = {name: bool((result or {}).get("success")) for name, result in sub_results.items()}
     record = {"tool": tool, "inputs": dict(inputs), "key": key, "block": block,
-              "text": text, "as_of": _as_of(tool, block), "blocks": blocks, "agents": agents}
+              "text": text, "blocks": blocks, "agents": agents,
+              "provenance": _provenance(tool, block)}
     return record, final
