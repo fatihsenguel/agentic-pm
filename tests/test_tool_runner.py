@@ -2,14 +2,17 @@
 The tool runner: one tool, its validated inputs, the graph run with the
 tool's plan set rather than routed, and the record the conversation layer
 logs (KNOWN_GAPS, "The eleven tool contracts of Order 5", "The log's
-shape"): `tool`, `inputs`, `key`, `block`, `text`, `as_of`.
+shape", "What a turn's result carries - decision 77"): `tool`, `inputs`,
+`key`, `block`, `text`, `as_of`, `blocks`, `agents`.
 
 What is tested here is what the runner adds, over stand-in agents that
 publish a known block: the plan run is the tool's, the tool and its inputs
 reach every step, the record is read from the block the tool publishes and
-from nothing else in `shared_data`, a run with errors raises instead of
-returning a record, and a position raises without the gate's check of the
-same ticker at the same weight. Which keys each block carries is pinned by
+from nothing else in `shared_data`, `blocks` carries every summary block
+the run published and nothing raw, `agents` each agent that ran with its
+success, a run with errors raises instead of returning a record, a run
+missing a block of its table raises, and a position raises without the
+gate's check of the same ticker at the same weight. Which keys each block carries is pinned by
 the node tests and not again here. The two tools that need no data,
 `hypothetical_weight` and `policy_lookup`, also run end to end on the
 suite's copy of the database, rendered by their formatter.
@@ -62,6 +65,24 @@ TOOLS = [
     ("ledger", {}, "ledger", "2026-09-24"),
 ]
 
+# The summary blocks each tool's run publishes, which its record carries
+# as `blocks`: the analysis agent's three together, the position's three
+# beside them, the rebalance none. The tool's own block is among them.
+PORTFOLIO = {"allocation", "position_pnl", "portfolio_volatility"}
+BLOCKS = {
+    "allocation": PORTFOLIO,
+    "position_pnl": PORTFOLIO,
+    "portfolio_volatility": PORTFOLIO,
+    "compliance_check": PORTFOLIO | {"compliance"},
+    "hypothetical_weight": {"compliance"},
+    "policy_lookup": {"compliance"},
+    "philosophy_screen": {"screening"},
+    "thesis": {"screening", "research"},
+    "position": PORTFOLIO | {"screening", "research", "gate"},
+    "rebalance": set(),
+    "ledger": {"ledger"},
+}
+
 
 @pytest.fixture
 def seen(monkeypatch):
@@ -104,7 +125,11 @@ async def test_a_tool_runs_its_plan_and_records_its_block(runner, seen, rendered
     assert all((t, i) == (tool, inputs) for _, t, i in seen)
     assert record == {"tool": tool, "inputs": inputs, "key": key,
                       "block": state["shared_data"][key], "text": f"the {tool} answer",
-                      "as_of": as_of}
+                      "as_of": as_of,
+                      "blocks": {k: state["shared_data"][k] for k in BLOCKS[tool]},
+                      "agents": {name: True for name in derive_plan(tool)}}
+    assert record["blocks"][key] is record["block"]
+    assert list(record["agents"]) == derive_plan(tool)
 
 
 async def test_only_a_position_passes_the_gate(runner, seen, rendered):
@@ -129,6 +154,32 @@ async def test_rebalance_records_the_agents_decision_under_no_key(runner, seen, 
     monkeypatch.setitem(graph.AGENT_NODES, "RebalanceAgent", rebalance)
     record, _ = await runner.run_tool("rebalance", {}, portfolio_id=3)
     assert (record["key"], record["block"], record["as_of"]) == (None, {"decision": decision}, None)
+    assert record["blocks"] == {}
+    assert record["agents"] == {"DataAgent": True, "RebalanceAgent": True}
+
+
+async def test_an_agent_that_did_not_succeed_is_recorded_so(runner, seen, rendered, monkeypatch):
+    """`agents` is each agent's success as it reported it, not the run's
+    having raised: an agent that returned success False and no error
+    leaves a record that says so."""
+    async def unsure(state):
+        return mark_agent_complete(state, "DataAgent", {"success": False})
+
+    monkeypatch.setitem(graph.AGENT_NODES, "DataAgent", unsure)
+    record, _ = await runner.run_tool("allocation", {}, portfolio_id=3)
+    assert record["agents"] == {"DataAgent": False, "PortfolioAnalysisAgent": True}
+
+
+async def test_a_run_missing_a_block_of_its_table_raises(runner, seen, rendered, monkeypatch):
+    """A thesis run publishes screening and research; one that publishes
+    its own block and not the other raises rather than recording a record
+    with a hole in it."""
+    async def screening_nothing(state):
+        return mark_agent_complete(state, "ScreeningAgent", {"success": True})
+
+    monkeypatch.setitem(graph.AGENT_NODES, "ScreeningAgent", screening_nothing)
+    with pytest.raises(runner.ToolRunError, match="screening"):
+        await runner.run_tool("thesis", {"ticker": "GOOGL"}, portfolio_id=3)
 
 
 async def test_the_raw_arrays_stay_behind(runner, seen, rendered):
@@ -136,7 +187,8 @@ async def test_the_raw_arrays_stay_behind(runner, seen, rendered):
     through `shared_data` inside the run and stop at the tool's boundary."""
     record, state = await runner.run_tool("allocation", {}, portfolio_id=3)
     assert set(RAW) <= set(state["shared_data"])
-    assert set(record) == {"tool", "inputs", "key", "block", "text", "as_of"}
+    assert set(record) == {"tool", "inputs", "key", "block", "text", "as_of", "blocks", "agents"}
+    assert set(record["blocks"]).isdisjoint(RAW)
     for name in RAW:
         assert name not in repr(record), name
 
