@@ -10,9 +10,14 @@ probe under test; every other assertion of the check fails on them, so
 each test asserts on the presence or absence of one failure and never on
 the list being empty.
 
-The log's shape, as decided with the shape of this rewrite: the state key
-`tool_calls`, a list in call order, emptied every turn, one record per
-tool call with `tool`, `inputs`, `key`, `block`, `text` and `as_of`. A
+The log's shape, as decided with the shape of this rewrite and extended
+by decision 77: the state key `tool_calls`, a list in call order, emptied
+every turn, one record per tool call with `tool`, `inputs`, `key`,
+`block`, `text`, `blocks` (every summary block the run published),
+`agents` (each agent that ran, with its success) and `provenance` (the
+block's as-of, its source, the tool's caveats). The runner reads every
+block and every agent from the records and nothing from the state's
+`shared_data` or `sub_results`, which a finished turn leaves empty. A
 turn the pre-pass answers with a clarification carries an empty list and
 the record it asked back under `clarification`; a turn whose reply was
 resolved into a question carries that under `resolved`.
@@ -38,11 +43,11 @@ import run_cases  # noqa: E402
 
 class _Declares(TypedDict):
     tool_calls: List[dict]
-    shared_data: dict
+    final_response: str
 
 
 class _DoesNot(TypedDict):
-    shared_data: dict
+    final_response: str
 
 
 def test_a_state_type_that_declares_no_log_blocks_before_any_run():
@@ -51,35 +56,89 @@ def test_a_state_type_that_declares_no_log_blocks_before_any_run():
 
 
 def test_a_state_without_the_log_is_blocked_on_it():
-    reason = run_cases.blocked_on_tool_log({"shared_data": {}, "final_response": ""})
+    reason = run_cases.blocked_on_tool_log({"final_response": ""})
     assert reason is not None
     assert "tool-call log" in reason
 
 
 def test_a_state_with_an_empty_log_is_not_blocked():
-    assert run_cases.blocked_on_tool_log({"tool_calls": [], "shared_data": {}}) is None
+    assert run_cases.blocked_on_tool_log({"tool_calls": []}) is None
 
 
 # ---------------------------------------------------------------------------
 # The five input probes: which tool was called with which inputs
 # ---------------------------------------------------------------------------
 
-def _record(tool, inputs=None, key=None, block=None, text=""):
-    return {"tool": tool, "inputs": inputs or {}, "key": key or tool,
-            "block": block or {}, "text": text, "as_of": None}
+NO_PROVENANCE = {"as_of": None, "source": None, "caveats": ()}
+
+
+def _record(tool, inputs=None, key=None, block=None, text="", blocks=None, agents=None):
+    """A record as the tool runner writes it. `blocks` carries the tool's
+    own block under its key when one is given and nothing otherwise, so a
+    bare record publishes no block and every block check fails on it."""
+    key = key or tool
+    if blocks is None:
+        blocks = {key: block} if block is not None else {}
+    return {"tool": tool, "inputs": inputs or {}, "key": key, "block": block or {},
+            "text": text, "blocks": blocks, "agents": agents or {},
+            "provenance": dict(NO_PROVENANCE)}
 
 
 def _state(log, **extra):
-    """The least state that reaches the probe: a log, an empty shared_data
-    so every block check fails, and the keys _ran_clean reads."""
-    state = {"tool_calls": log, "shared_data": {}, "final_response": "",
-             "sub_results": {}, "errors": [], "warnings": []}
+    """The least state that reaches the probe: a log and the keys
+    _ran_clean reads. No `shared_data` and no `sub_results`: a finished
+    turn leaves both empty, and the runner reads neither."""
+    state = {"tool_calls": log, "final_response": "", "errors": [], "warnings": []}
     state.update(extra)
     return state
 
 
 def _mentions(fails, *words):
     return [f for f in fails if any(w in f for w in words)]
+
+
+# ---------------------------------------------------------------------------
+# The accessors: every block and every agent is read from the records
+# ---------------------------------------------------------------------------
+
+def test_a_block_is_read_from_the_record_that_carries_it_and_not_from_the_state():
+    left_behind = _state([_record("allocation")],
+                         shared_data={"allocation": {"by_sector": {"lines": []}}})
+    assert run_cases._block(left_behind, "allocation") == {}
+    assert run_cases._published(left_behind, "allocation") is False
+    carried = _state([_record("allocation", block={"by_sector": {"lines": []}})])
+    assert run_cases._block(carried, "allocation") == {"by_sector": {"lines": []}}
+    assert run_cases._published(carried, "allocation") is True
+
+
+def test_two_records_with_the_same_key_read_as_the_later_one():
+    """Two tools in one turn each publishing `compliance`: the later call's
+    block is what the turn ended on, as the last run's state was before."""
+    first = _record("hypothetical_weight", key="compliance", block={"findings": [1]})
+    second = _record("compliance_check", key="compliance", block={"findings": [1, 2]})
+    assert run_cases._block(_state([first, second]), "compliance") == {"findings": [1, 2]}
+    assert run_cases._block(_state([second, first]), "compliance") == {"findings": [1]}
+
+
+def test_a_block_beside_the_tools_own_is_read_from_the_same_record():
+    """The compliance check's record carries the allocation its run
+    published, which the block invariants read for the denominator."""
+    record = _record("compliance_check", key="compliance", block={"findings": []},
+                     blocks={"compliance": {"findings": []},
+                             "allocation": {"by_asset_class": {"total_value": 1.0}}})
+    assert run_cases._allocation(_state([record]), "by_asset_class") == {"total_value": 1.0}
+
+
+def test_the_agents_are_read_from_every_record():
+    state = _state([_record("allocation", agents={"DataAgent": True,
+                                                  "PortfolioAnalysisAgent": True}),
+                    _record("compliance_check", agents={"DataAgent": True,
+                                                        "PortfolioAnalysisAgent": False,
+                                                        "ComplianceAgent": True})],
+                   sub_results={"RebalanceAgent": {"success": True}})
+    assert run_cases._agents(state) == {"DataAgent": True, "PortfolioAnalysisAgent": False,
+                                        "ComplianceAgent": True}
+    assert run_cases._agents(_state([])) == {}
 
 
 def test_1_2_reads_the_pnl_call_for_jpm_alone():
@@ -104,6 +163,21 @@ def test_1_3_reads_the_volatility_call_at_one_year():
     assert _mentions(run_cases.check_1_3(wrong), "not 'portfolio_volatility'")
 
 
+def test_1_3_reads_the_block_from_the_record_and_no_single_name_volatilities():
+    """The nine single-name volatilities were read beside the block for a
+    weighted-average check that tests/test_analysis_node.py now holds
+    over the committed closes (decision 77). A figure above that average
+    is not this check's to refuse, and nothing beside the record is read."""
+    block = {"annualised": 0.5, "weights": {t: 1 / 9 for t in sorted(run_cases.TICKERS)},
+             "weights_as_of": "2026-09-21", "annualisation": 252, "covariance_method": "sample",
+             "window": {"start": "2025-09-22", "end": "2026-09-21", "closes": 252}}
+    state = _state([_record("portfolio_volatility", {"period": "1Y"}, block=block)],
+                   shared_data={"volatilities": {t: 0.1 for t in run_cases.TICKERS}})
+    fails = run_cases.check_1_3(state)
+    assert _mentions(fails, "no portfolio_volatility", "weighted average") == []
+    assert _mentions(fails, "never reaches the answer")
+
+
 def test_3_3_reads_the_pnl_call_with_no_ticker():
     good = _state([_record("position_pnl", {"tickers": []})])
     assert _mentions(run_cases.check_3_3(good), "tickers", "tool", "called") == []
@@ -113,22 +187,22 @@ def test_3_3_reads_the_pnl_call_with_no_ticker():
     assert _mentions(run_cases.check_3_3(wrong), "not 'position_pnl'")
 
 
-def _lookup(clauses, text=""):
+def _lookup(clauses, text="", agents=None):
     return _record("policy_lookup", {"topic": "share price"}, key="compliance",
                    block={"topic": {"asked": "share price", "clauses": clauses},
-                          "no_clause": not clauses}, text=text)
+                          "no_clause": not clauses}, text=text,
+                   agents=agents or {"ComplianceAgent": True})
 
 
 def test_3_2_reads_the_lookup_that_found_the_scope_clause():
-    good = _state([_lookup(["IPS-1.3"])], final_response="IPS-1.3 says so.",
-                  sub_results={"ComplianceAgent": {"success": True}})
+    good = _state([_lookup(["IPS-1.3"])], final_response="IPS-1.3 says so.")
     assert _mentions(run_cases.check_3_2(good), "IPS-1.3", "tool", "called", "agents ran") == []
     missed = _state([_lookup([])], final_response="Nothing on it.")
     assert _mentions(run_cases.check_3_2(missed), "the lookup matched []")
     uncited = _state([_lookup(["IPS-1.3"])], final_response="The policy forbids it.")
     assert _mentions(run_cases.check_3_2(uncited), "answer does not cite IPS-1.3")
-    ran = _state([_lookup(["IPS-1.3"])], final_response="IPS-1.3",
-                 sub_results={"ComplianceAgent": {}, "DataAgent": {}})
+    ran = _state([_lookup(["IPS-1.3"], agents={"ComplianceAgent": True, "DataAgent": True})],
+                 final_response="IPS-1.3")
     assert _mentions(run_cases.check_3_2(ran), "agents ran: ['DataAgent']")
     none = _state([], final_response="IPS-1.3 forbids a forecast.")
     assert _mentions(run_cases.check_3_2(none), "no tool was called")
@@ -210,8 +284,11 @@ CALLED = "the layer called [('allocation', {})]"
 
 def test_blocked_on_compliance_names_what_the_log_shows():
     assert run_cases.blocked_on_delegation_trace is run_cases.blocked_on_compliance
-    ran = _state([_record("compliance_check")], sub_results={"ComplianceAgent": {}})
+    ran = _state([_record("compliance_check", agents={"ComplianceAgent": True})])
     assert run_cases.blocked_on_compliance(ran) is None
+    left_behind = _state([_record("compliance_check")],
+                         sub_results={"ComplianceAgent": {"success": True}})
+    assert "ComplianceAgent did not run" in run_cases.blocked_on_compliance(left_behind)
     other = _state([_record("allocation")])
     reason = run_cases.blocked_on_compliance(other)
     assert "ComplianceAgent did not run" in reason and CALLED in reason
@@ -222,23 +299,23 @@ def test_blocked_on_compliance_names_what_the_log_shows():
 
 
 def test_blocked_on_screen_names_what_the_log_shows():
-    reached = _state([_record("philosophy_screen", {"ticker": "GOOGL"}, key="screening")],
-                     shared_data={"screening": {"subject": {"ticker": "GOOGL"}}})
+    reached = _state([_record("philosophy_screen", {"ticker": "GOOGL"}, key="screening",
+                              block={"subject": {"ticker": "GOOGL"}})])
     assert run_cases.blocked_on_screen(reached) is None
     reason = run_cases.blocked_on_screen(_state([_record("allocation")], errors=["x"]))
     assert "no screening block" in reason and CALLED in reason and "errors: ['x']" in reason
 
 
 def test_blocked_on_ledger_names_what_the_log_shows():
-    reached = _state([_record("ledger")], shared_data={"ledger": {"records": []}})
+    reached = _state([_record("ledger", block={"records": []})])
     assert run_cases.blocked_on_ledger(reached) is None
     reason = run_cases.blocked_on_ledger(_state([_record("allocation")]))
     assert "no ledger block" in reason and CALLED in reason
 
 
 def test_blocked_on_research_names_what_the_log_shows():
-    reached = _state([_record("thesis", {"ticker": "GOOGL"}, key="research")],
-                     shared_data={"research": {"asks": "thesis"}})
+    reached = _state([_record("thesis", {"ticker": "GOOGL"}, key="research",
+                              block={"asks": "thesis"})])
     assert run_cases.blocked_on_research(reached) is None
     reason = run_cases.blocked_on_research(_state([], clarification=ASKED,
                                                   final_response="Did you mean AAPL?"))
@@ -251,8 +328,12 @@ def test_blocked_on_research_names_what_the_log_shows():
 # ---------------------------------------------------------------------------
 
 def test_2_1_reads_the_compliance_call_and_leaves_the_plan_to_the_trace():
-    good = _state([_record("compliance_check")])
-    assert _mentions(run_cases.check_2_1(good), "tool", "called", "plan") == []
+    ran = {a: True for a in run_cases.COMPLIANCE_PLAN}
+    good = _state([_record("compliance_check", agents=ran)])
+    assert _mentions(run_cases.check_2_1(good), "tool", "called", "plan",
+                     "did not run successfully") == []
+    unsure = _state([_record("compliance_check", agents={**ran, "DataAgent": False})])
+    assert _mentions(run_cases.check_2_1(unsure), "did not run successfully: ['DataAgent']")
     wrong = _state([_record("allocation")])
     assert _mentions(run_cases.check_2_1(wrong), "not 'compliance_check'")
     carried = _state([_record("compliance_check", {"tickers": ["AAPL"]})])

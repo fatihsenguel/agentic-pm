@@ -44,9 +44,9 @@ POSITION = "**NOT PERMITTED BY THE POLICY**\n**IPS-4.1** caps a position at 12% 
 
 def _state(answer, *texts):
     log = [{"tool": "allocation", "inputs": {}, "key": "allocation", "block": {},
-            "text": t, "as_of": None} for t in texts]
-    return {"tool_calls": log, "shared_data": {}, "final_response": answer,
-            "sub_results": {}, "errors": [], "warnings": []}
+            "text": t, "blocks": {}, "agents": {},
+            "provenance": {"as_of": None, "source": None, "caveats": ()}} for t in texts]
+    return {"tool_calls": log, "final_response": answer, "errors": [], "warnings": []}
 
 
 def _untraced(fails):

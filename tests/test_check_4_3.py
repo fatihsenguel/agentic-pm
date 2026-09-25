@@ -42,13 +42,18 @@ def _entered_ids():
 
 
 def _state(answer):
-    """The least state that reaches the prediction branch: a research
-    block so the check does not stop at the top, and an answer to look in.
-    Everything else fails, which is what the tests below rely on."""
+    """The least state that reaches the prediction branch: a position
+    record carrying a research block so the check does not stop at the
+    top, and an answer to look in. Everything else fails, which is what
+    the tests below rely on. The block is on the record and nowhere else:
+    the runner reads the records (decision 77)."""
+    research = {"asks": "position", "subject": {}}
     return {
-        "shared_data": {"research": {"asks": "position", "subject": {}}},
+        "tool_calls": [{"tool": "position", "inputs": {"ticker": run_cases.WATCHLIST_TICKER},
+                        "key": "research", "block": research, "text": "",
+                        "blocks": {"research": research}, "agents": {},
+                        "provenance": {"as_of": None, "source": None, "caveats": ()}}],
         "final_response": answer,
-        "sub_results": {},
         "errors": [],
     }
 
