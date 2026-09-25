@@ -1,8 +1,9 @@
 """
 One tool run: its plan set from the terminal table rather than routed, its
 validated inputs in the state, and the record the conversation layer logs
-(KNOWN_GAPS, "The eleven tool contracts of Order 5", "The log's shape"):
-`tool`, `inputs`, `key`, `block`, `text`, `as_of`.
+(KNOWN_GAPS, "The eleven tool contracts of Order 5", "The log's shape",
+"What a turn's result carries - decision 77"): `tool`, `inputs`, `key`,
+`block`, `text`, `as_of`, `blocks`, `agents`.
 
 The graph is the one graph.py builds, less the router and the synthesizer:
 the agents as graph.AGENT_NODES binds them, the gate on the edge after the
@@ -10,12 +11,14 @@ plan exactly as `_gate_or_synthesizer` puts it there, and the end where the
 synthesizer was. Each tool renders its own block with the formatter that
 renders it today.
 
-The record carries the block and nothing else from `shared_data`: the
-prices, the covariance matrix and the window stop at the tool's boundary
-(DIRECTION.md invariant 3). A run with errors, a run that publishes no
-block, and a position without the gate's check of the same ticker at the
-same weight (decision 62, `require_gate`) raise instead of returning a
-record.
+The record carries the tool's block, and under `blocks` every summary
+block the run published as BLOCKS names them, and nothing else from
+`shared_data`: the prices, the covariance matrix and the window stop at
+the tool's boundary (DIRECTION.md invariant 3). `agents` is each agent
+that ran, in plan order, with the success it reported. A run with errors,
+a run that publishes no block of its table, and a position without the
+gate's check of the same ticker at the same weight (decision 62,
+`require_gate`) raise instead of returning a record.
 """
 
 from typing import Any, Dict, Mapping, Optional, Tuple
@@ -27,7 +30,7 @@ from .nodes import DataCalculationError
 from .schemas import AGENTS, derive_plan
 from .state import AgentState, create_initial_state
 
-__all__ = ["BLOCK_KEY", "ToolRunError", "render", "run_tool"]
+__all__ = ["BLOCKS", "BLOCK_KEY", "ToolRunError", "render", "run_tool"]
 
 
 class ToolRunError(Exception):
@@ -49,6 +52,34 @@ BLOCK_KEY: Dict[str, Optional[str]] = {
     "rebalance": None,
     "ledger": "ledger",
 }
+
+# The summary blocks each tool's run publishes, the `shared_data` keys the
+# record carries as `blocks`. The analysis agent publishes its three
+# together or raises, so every run through it carries all three; the
+# position's run adds the screen, the reading and the gate's check. The
+# raw arrays beside them are not on the table (DIRECTION.md invariant 3).
+# The rebalance run publishes none: its block is the agent's decision.
+_PORTFOLIO = ("allocation", "position_pnl", "portfolio_volatility")
+BLOCKS: Dict[str, Tuple[str, ...]] = {
+    "allocation": _PORTFOLIO,
+    "position_pnl": _PORTFOLIO,
+    "portfolio_volatility": _PORTFOLIO,
+    "compliance_check": _PORTFOLIO + ("compliance",),
+    "hypothetical_weight": ("compliance",),
+    "policy_lookup": ("compliance",),
+    "philosophy_screen": ("screening",),
+    "thesis": ("screening", "research"),
+    "position": _PORTFOLIO + ("screening", "research", "gate"),
+    "rebalance": (),
+    "ledger": ("ledger",),
+}
+
+if set(BLOCKS) != set(BLOCK_KEY):
+    raise RuntimeError(f"BLOCKS names {sorted(BLOCKS)} and BLOCK_KEY {sorted(BLOCK_KEY)}; "
+                       "a tool is on both tables or on neither")
+for _tool, _key in BLOCK_KEY.items():
+    if _key is not None and _key not in BLOCKS[_tool]:
+        raise RuntimeError(f"BLOCKS[{_tool!r}] leaves out the tool's own block {_key!r}")
 
 
 def _tool_graph():
@@ -134,15 +165,19 @@ async def run_tool(tool: str, inputs: Mapping[str, Any], portfolio_id: Optional[
 
     key = BLOCK_KEY[tool]
     shared = final.get("shared_data") or {}
+    sub_results = final.get("sub_results") or {}
+    missing = [k for k in BLOCKS[tool] if k not in shared]
+    if missing:
+        raise ToolRunError(f"{tool}: the run published no "
+                           f"{', '.join(repr(k) for k in missing)} block.")
+    blocks = {k: shared[k] for k in BLOCKS[tool]}
     if key is None:
-        result = (final.get("sub_results") or {}).get("RebalanceAgent") or {}
+        result = sub_results.get("RebalanceAgent") or {}
         if "decision" not in result:
             raise ToolRunError(f"{tool}: the agent returned no decision.")
         block = {"decision": result["decision"]}
-    elif key not in shared:
-        raise ToolRunError(f"{tool}: the run published no {key!r} block.")
     else:
-        block = shared[key]
+        block = blocks[key]
 
     try:
         if tool == "position":
@@ -151,6 +186,7 @@ async def run_tool(tool: str, inputs: Mapping[str, Any], portfolio_id: Optional[
     except DataCalculationError as error:
         raise ToolRunError(f"{tool}: {error}") from error
 
+    agents = {name: bool((result or {}).get("success")) for name, result in sub_results.items()}
     record = {"tool": tool, "inputs": dict(inputs), "key": key, "block": block,
-              "text": text, "as_of": _as_of(tool, block)}
+              "text": text, "as_of": _as_of(tool, block), "blocks": blocks, "agents": agents}
     return record, final

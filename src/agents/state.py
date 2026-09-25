@@ -40,8 +40,10 @@ class AgentState(TypedDict):
     inputs: Dict[str, Any]
 
     # The turn's tool-call log, one record per tool the conversation layer
-    # called, in call order: tool, inputs, key, block, text, as_of
-    # (KNOWN_GAPS, "The log's shape"). Empty when the turn called none.
+    # called, in call order: tool, inputs, key, block, text, as_of, and
+    # under blocks every summary block the run published with agents the
+    # agents that ran (KNOWN_GAPS, "The log's shape", "What a turn's
+    # result carries - decision 77"). Empty when the turn called none.
     tool_calls: List[Dict[str, Any]]
     # What the pre-pass asked back this turn, as its record (kind, token,
     # candidate, message), None when the turn answered; and what this turn's
