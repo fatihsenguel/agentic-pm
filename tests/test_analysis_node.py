@@ -11,7 +11,13 @@ the suite green.
 
 The covariance matrix is a diagonal stand-in: the node needs one to run,
 and portfolio volatility has its own reference in
-tests/test_portfolio_volatility.py.
+tests/test_portfolio_volatility.py. One test at the end runs the node
+over that reference's matrix, the sample covariance of the 252 committed
+closes, and holds the figure the node publishes to Part 4's 10.2936%:
+the reference pins the function, and this pins the node's wiring of the
+weights and the matrix into it. The runner's 1.3 read the nine
+single-name volatilities beside the block for a weaker version of the
+same check; decision 77 moved it here.
 
 A second state is expected_values.md Part 8 C: one AAPL position in a euro
 portfolio, the 09-02 close and a stated 0.8500 spot on the same date, so
@@ -242,3 +248,31 @@ async def test_missing_currency_input_raises(key):
     [error] = out["errors"]
     assert key in error
     assert "allocation" not in (out.get("shared_data") or {})
+
+
+async def test_the_published_volatility_over_the_committed_closes_is_part_4s():
+    """The node over the reference's own inputs: the 252 committed closes'
+    sample covariance, annualised, and the last close as the price of every
+    holding, so the weights are the reference's. The figure published must
+    be Part 4's, and well below the weighted average of the single names,
+    which is what a node that wired the wrong matrix or the wrong weights
+    would publish instead."""
+    import numpy as np
+    import pandas as pd
+
+    from test_portfolio_volatility import CLOSES, EXPECTED, TRADING_DAYS
+
+    closes = pd.read_csv(CLOSES, index_col="date", parse_dates=True)
+    returns = closes.pct_change().dropna()
+    cov = returns.cov(ddof=1) * TRADING_DAYS
+    s = state()
+    s["shared_data"]["latest_prices"] = {t: float(closes.iloc[-1][t]) for t in PRICES}
+    s["shared_data"]["covariance_matrix"] = {t: cov.loc[t].to_dict() for t in cov.index}
+    out = await portfolio_analysis_agent_node(s)
+    assert out.get("errors") is None, out.get("errors")
+    block = out["shared_data"]["portfolio_volatility"]
+    assert block["annualised"] == pytest.approx(EXPECTED, abs=5e-7)
+    single = returns.std(ddof=1) * np.sqrt(TRADING_DAYS)
+    weighted_average = sum(block["weights"][t] * single[t] for t in block["weights"])
+    assert block["annualised"] < 0.8 * weighted_average
+    assert block["window"]["closes"] == 252 and block["annualisation"] == TRADING_DAYS
