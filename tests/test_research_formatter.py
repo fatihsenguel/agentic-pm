@@ -137,9 +137,11 @@ def render(block):
 
 
 def state_for(block, answer):
-    return {"shared_data": {"screening": block}, "final_response": answer, "errors": [],
-            "router_decision": {"intent": "research", "execution_order": ["ScreeningAgent"],
-                                "parameters": {"tickers": [block["subject"]["ticker"]]}}}
+    from test_runner_probes import record_of
+
+    record = record_of("philosophy_screen", {"ticker": block["subject"]["ticker"]},
+                       {"screening": block}, {"ScreeningAgent": True})
+    return {"tool_calls": [record], "final_response": answer, "errors": []}
 
 
 # --- excluded: PHI-3.2 and nothing else ------------------------------------------------

@@ -84,6 +84,22 @@ def _record(tool, inputs=None, key=None, block=None, text="", blocks=None, agent
             "provenance": dict(NO_PROVENANCE)}
 
 
+def record_of(tool, inputs, shared, agents=None, text=""):
+    """A record as the tool runner writes it from a run's final state, for
+    a test that ran the nodes itself and hands the runner's checks the
+    result: every block of the tool's table that `shared` carries, the
+    tool's own under `block`. A block the test did not publish is left
+    out rather than raised on, since the check under test reads only the
+    ones it names."""
+    from agents.tool_runner import BLOCKS, BLOCK_KEY
+
+    key = BLOCK_KEY[tool]
+    blocks = {k: shared[k] for k in BLOCKS[tool] if k in shared}
+    return {"tool": tool, "inputs": dict(inputs), "key": key, "block": blocks.get(key) or {},
+            "text": text, "blocks": blocks, "agents": dict(agents or {}),
+            "provenance": dict(NO_PROVENANCE)}
+
+
 def _state(log, **extra):
     """The least state that reaches the probe: a log and the keys
     _ran_clean reads. No `shared_data` and no `sub_results`: a finished

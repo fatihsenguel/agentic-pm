@@ -24,17 +24,19 @@ What each case asserts instead:
   - which tool the conversation layer called, with which validated inputs,
     read from the tool-call log the layer writes into the state under
     `tool_calls` (decision 45); 2.1 reads the tool's steps from the trace
-  - the structure and invariants of what reached `shared_data`
+  - the structure and invariants of the blocks the records carry, every
+    summary block each tool's run published (decision 77); the state's
+    `shared_data` and `sub_results` are read by nothing here
   - the STATIC figures exactly against expected_values.md - cost bases, cash,
     the ticker set - none of which move with prices
-  - weakly on the prose: do the figures `shared_data` carries appear in the
+  - weakly on the prose: do the figures the blocks carry appear in the
     answer at all
   - benchmark.md Part 3b: is an as-of date stated
   - on every turn, that every figure in the answer is one a tool printed
     that turn or one of the question the turn recorded (`figures_trace`,
     DIRECTION.md invariant 1)
 
-The as-of check asserts on `shared_data["allocation"]["as_of"]["worst_case"]`:
+The as-of check asserts on the allocation block's `as_of.worst_case`:
 that it exists, that it is a date, and that that exact date reaches the answer.
 It was a date-shaped regex over the prose until roadmap item 5 built the field,
 and it was replaced in the same commit so that 1.1 and 1.4 could not flip to
@@ -158,12 +160,44 @@ NO_CLAUSE = "contains nothing on"
 # Accessors
 # ---------------------------------------------------------------------------
 
-def _shared(state):
-    return state.get("shared_data") or {}
+def _calls(state):
+    """The turn's tool-call log: one record per tool the layer called, in
+    call order, each with `tool`, `inputs`, `key`, `block`, `text`,
+    `blocks`, `agents` and `provenance` (decision 77). Empty when the turn
+    called none."""
+    return state.get("tool_calls") or []
+
+
+def _block(state, key):
+    """The summary block under `key` as the turn's records carry it: the
+    last record that carries it, since a turn of two tools ends on the
+    later one's, as the last run's state did. Empty when none does. The
+    state's `shared_data` is not read: a finished turn leaves it empty
+    (decision 77)."""
+    for record in reversed(_calls(state)):
+        blocks = record.get("blocks") or {}
+        if key in blocks:
+            return blocks[key] or {}
+    return {}
+
+
+def _published(state, key):
+    """Whether any record of the turn carries a block under `key`."""
+    return any(key in (record.get("blocks") or {}) for record in _calls(state))
+
+
+def _agents(state):
+    """Every agent the turn's records say ran, with its success, later
+    records overwriting earlier ones. The state's `sub_results` is not
+    read."""
+    ran = {}
+    for record in _calls(state):
+        ran.update(record.get("agents") or {})
+    return ran
 
 
 def _allocation(state, view):
-    return (_shared(state).get("allocation") or {}).get(view) or {}
+    return _block(state, "allocation").get(view) or {}
 
 
 def _by_label(block):
@@ -171,18 +205,11 @@ def _by_label(block):
 
 
 def _compliance(state):
-    return _shared(state).get("compliance") or {}
+    return _block(state, "compliance")
 
 
 def _answer(state):
     return state.get("final_response") or ""
-
-
-def _calls(state):
-    """The turn's tool-call log: one record per tool the layer called, in
-    call order, each with `tool`, `inputs`, `key`, `block`, `text` and
-    `as_of`. Empty when the turn called none."""
-    return state.get("tool_calls") or []
 
 
 def _called(state):
@@ -281,37 +308,37 @@ def _states_as_of(state):
     would have reported 1.1 and 1.4 as passing on the proxy rather than on the
     field.
 
-    Allocation-specific, deliberately. It reads
-    `shared_data["allocation"]["as_of"]`, and every case calling it (1.1, 1.4)
-    produces an allocation. P&L carries its as-of per position under
-    `shared_data["position_pnl"]` and has `_states_pnl_as_of` below; portfolio
-    volatility carries a window and a weights date and `check_1_3` reads both.
-    Searching for a date wherever one might live is what the regex version did.
+    Allocation-specific, deliberately. It reads the allocation block's
+    `as_of`, and every case calling it (1.1, 1.4) produces an allocation.
+    P&L carries its as-of per position in the position_pnl block and has
+    `_states_pnl_as_of` below; portfolio volatility carries a window and a
+    weights date and `check_1_3` reads both. Searching for a date wherever
+    one might live is what the regex version did.
     """
-    allocation = _shared(state).get("allocation") or {}
+    allocation = _block(state, "allocation")
     as_of = allocation.get("as_of") or {}
     stated = as_of.get("worst_case")
 
     if not stated:
-        return ["no as_of.worst_case in shared_data['allocation'] "
+        return ["no as_of.worst_case in the allocation block "
                 "(benchmark.md Part 3b)"]
 
     return _date_reaches_answer(state, stated, "allocation.as_of.worst_case")
 
 
 def _states_pnl_as_of(state, tickers):
-    """Per-position as-of: `shared_data["position_pnl"][ticker]["as_of"]`.
+    """Per-position as-of: the position_pnl block's `[ticker]["as_of"]`.
 
     One holding, one close, so there is nothing to reduce and every position
     asked about carries its own date. Each must be a date and each must reach
     the answer.
     """
-    pnl = _shared(state).get("position_pnl") or {}
+    pnl = _block(state, "position_pnl")
     fails = []
     for t in tickers:
         stated = (pnl.get(t) or {}).get("as_of")
         if not stated:
-            fails.append(f"no as_of for {t} in shared_data['position_pnl'] "
+            fails.append(f"no as_of for {t} in the position_pnl block "
                          "(benchmark.md Part 3b)")
             continue
         fails += _date_reaches_answer(state, stated, f"position_pnl[{t}].as_of")
@@ -371,7 +398,7 @@ def figures_trace(state, question):
 
 
 def _prose_carries(state, lines, key):
-    """Weak Part 3b check: did the figures in shared_data reach the answer."""
+    """Weak Part 3b check: did the figures in the block reach the answer."""
     answer = _answer(state)
     missing = sorted(
         label
@@ -404,7 +431,7 @@ def check_1_1(state):
     fails = _ran_clean(state)
     block = _allocation(state, "by_asset_class")
     if not block:
-        return fails + ["no allocation.by_asset_class in shared_data"]
+        return fails + ["no allocation.by_asset_class block on the records"]
 
     lines = _by_label(block)
     if set(lines) != set(COST_BY_CLASS):
@@ -448,9 +475,9 @@ def check_1_3(state):
     if record is not None and record["inputs"].get("period") != "1Y":
         fails.append(f"period is {record['inputs'].get('period')!r}; 'twelve months' is 1Y")
 
-    pv = _shared(state).get("portfolio_volatility") or {}
+    pv = _block(state, "portfolio_volatility")
     if not pv:
-        return fails + ["no portfolio_volatility in shared_data"]
+        return fails + ["no portfolio_volatility block on the records"]
 
     vol = pv.get("annualised")
     if not isinstance(vol, (int, float)) or not 0 < vol < 1:
@@ -469,30 +496,26 @@ def check_1_3(state):
     elif abs(sum(weights.values()) - 1.0) > 1e-4:
         fails.append(f"weights sum to {sum(weights.values())}, not 1 (rounded to 6dp)")
 
-    # Part 4's sanity check as an invariant: diversification puts the
-    # portfolio figure well below the weighted average of the single names.
-    vols = _shared(state).get("volatilities") or {}
-    if weights and vols and set(weights) <= set(vols):
-        weighted_average = sum(weights[t] * vols[t] for t in weights)
-        if isinstance(vol, (int, float)) and vol > 0.8 * weighted_average:
-            fails.append(f"portfolio volatility {vol:.4f} is not below the "
-                         f"weighted average of single-name vols {weighted_average:.4f}; "
-                         "an average is not a portfolio figure (Part 4)")
+    # Part 4's sanity check, that diversification puts the portfolio figure
+    # well below the weighted average of the single names, read the nine
+    # volatilities DataAgent published beside the block; the record carries
+    # the block alone, and tests/test_analysis_node.py holds the node to
+    # Part 4's figure over the committed closes (decision 77).
 
     answer = _answer(state)
     if isinstance(vol, (int, float)) and f"{vol:.2%}" not in answer:
-        fails.append(f"volatility {vol:.2%} is in shared_data but never reaches the answer")
+        fails.append(f"volatility {vol:.2%} is in the block but never reaches the answer")
     for label, value in (("window.start", window.get("start")),
                          ("window.end", window.get("end")),
                          ("window.closes", window.get("closes")),
                          ("annualisation", pv.get("annualisation")),
                          ("covariance_method", pv.get("covariance_method"))):
         if value is not None and str(value) not in answer:
-            fails.append(f"{label} {value} is in shared_data but never reaches the answer")
+            fails.append(f"{label} {value} is in the block but never reaches the answer")
 
     stated = pv.get("weights_as_of")
     if not stated:
-        fails.append("no weights_as_of in shared_data['portfolio_volatility'] "
+        fails.append("no weights_as_of in the portfolio_volatility block "
                      "(benchmark.md Part 3b)")
     else:
         fails += _date_reaches_answer(state, stated, "portfolio_volatility.weights_as_of")
@@ -503,7 +526,7 @@ def check_1_4(state):
     fails = _ran_clean(state)
     block = _allocation(state, "by_sector")
     if not block:
-        return fails + ["no allocation.by_sector in shared_data"]
+        return fails + ["no allocation.by_sector block on the records"]
 
     lines = _by_label(block)
     fails += _cost_bases_match(lines, COST_BY_SECTOR, "by_sector")
@@ -552,10 +575,10 @@ def check_1_2(state):
         fails.append(f"tickers {record['inputs'].get('tickers')} != ['JPM']; the position "
                      "named in the question, and nothing else")
 
-    pnl = _shared(state).get("position_pnl") or {}
+    pnl = _block(state, "position_pnl")
     jpm = pnl.get("JPM")
     if not jpm:
-        return fails + ["no position_pnl.JPM in shared_data"]
+        return fails + ["no position_pnl.JPM block on the records"]
 
     if abs(jpm.get("cost_basis", 0.0) - 20_000.00) > CENT:
         fails.append(f"JPM cost basis {jpm.get('cost_basis')} != 20000.00")
@@ -577,7 +600,7 @@ def check_1_2(state):
         fails.append("purchase date 2024-07-15 never reaches the answer (1.2: "
                      "purchase date named)")
     if jpm.get("pnl_pct") is not None and f"{jpm['pnl_pct']:.2%}" not in answer:
-        fails.append(f"P&L {jpm['pnl_pct']:.2%} is in shared_data but never "
+        fails.append(f"P&L {jpm['pnl_pct']:.2%} is in the block but never "
                      "reaches the answer")
     if "price return" not in answer.lower():
         fails.append("answer does not say it is price return only (D4)")
@@ -619,7 +642,7 @@ def check_3_2(state):
         if SCOPE_CLAUSE not in clauses:
             fails.append(f"the lookup matched {clauses}; the scope clause {SCOPE_CLAUSE} "
                          "is not among them")
-    ran = sorted(set(state.get("sub_results") or {}) - {"ComplianceAgent"})
+    ran = sorted(set(_agents(state)) - {"ComplianceAgent"})
     if ran:
         fails.append(f"agents ran: {ran}; a lookup runs ComplianceAgent alone")
     answer = _answer(state)
@@ -635,7 +658,7 @@ def check_3_3(state):
     """"How is my position doing today?" - no position named, so every
     position is the answer, each with its own as-of date reaching the prose.
 
-    `position_pnl` in shared_data does NOT mean the answer is about the
+    A position_pnl block on the record does NOT mean the answer is about the
     position: PortfolioAnalysisAgent publishes it on every run, allocation
     queries included. What says the answer is about positions is the tool
     the log shows was called, and that is what this asserts on, plus that
@@ -656,7 +679,7 @@ def check_3_3(state):
                      "names no position, and a filled list means the layer "
                      "copied the portfolio in")
 
-    pnl = _shared(state).get("position_pnl") or {}
+    pnl = _block(state, "position_pnl")
     if set(pnl) != TICKERS:
         fails.append(f"position_pnl covers {sorted(pnl)}, not the nine positions")
     if "price return" not in _answer(state).lower():
@@ -701,7 +724,7 @@ def _compliance_block_invariants(state):
     statements = block.get("statements") or []
 
     if not policy:
-        return ["no policy in shared_data['compliance']; the answer cannot cite"]
+        return ["no policy in the compliance block; the answer cannot cite"]
 
     statement_ids = {c for c, entry in policy.items() if entry.get("type") == "statement"}
     listed = {s.get("clause") for s in statements}
@@ -756,7 +779,7 @@ def _compliance_block_invariants(state):
         for k in ("observed", "limit"):
             if not 0 <= f[k] <= 1:
                 fails.append(f"finding {where} {k} {f[k]} is not a fraction; "
-                             "percentages in shared_data are fractions")
+                             "percentages in the block are fractions")
 
         signed = (observed - limit) if bound == "max" else (limit - observed)
         if abs(signed * 100 - f["distance_pp"]) > 1e-6:
@@ -809,7 +832,7 @@ def check_2_2(state):
     fails = _ran_clean(state)
     block = _compliance(state)
     if not block:
-        return fails + ["no compliance in shared_data"]
+        return fails + ["no compliance block on the records"]
 
     fails += _compliance_block_invariants(state)
 
@@ -870,7 +893,7 @@ def check_2_2(state):
 
     as_of = (block.get("as_of") or {}).get("worst_case")
     if not as_of:
-        fails.append("no as_of.worst_case in shared_data['compliance'] "
+        fails.append("no as_of.worst_case in the compliance block "
                      "(benchmark.md Part 3b)")
     else:
         fails += _date_reaches_answer(state, as_of, "compliance.as_of.worst_case")
@@ -926,7 +949,7 @@ def check_2_3(state):
     fails = _ran_clean(state)
     block = _compliance(state)
     if not block:
-        return fails + ["no compliance in shared_data"]
+        return fails + ["no compliance block on the records"]
 
     fails += _compliance_block_invariants(state)
 
@@ -957,7 +980,7 @@ def check_2_3(state):
             fails.append(f"breach {where}: clause id never reaches the answer")
         if f"{f['distance_pp']:.2f}" not in answer:
             fails.append(f"breach {where}: distance {f['distance_pp']:.2f} pp is "
-                         "in shared_data but never reaches the answer")
+                         "in the block but never reaches the answer")
 
     invented = sorted(set(CLAUSE_ID.findall(answer)) - set(policy))
     if invented:
@@ -968,7 +991,7 @@ def check_2_3(state):
 
     as_of = (block.get("as_of") or {}).get("worst_case")
     if not as_of:
-        fails.append("no as_of.worst_case in shared_data['compliance'] "
+        fails.append("no as_of.worst_case in the compliance block "
                      "(benchmark.md Part 3b)")
     else:
         fails += _date_reaches_answer(state, as_of, "compliance.as_of.worst_case")
@@ -1014,8 +1037,6 @@ def check_3_1(states):
     elif asked_back.get("kind") != "instrument_type":
         fails.append(f"turn 1 asked back about {asked_back.get('kind')!r}, not the "
                      "instrument type")
-    if first.get("sub_results"):
-        fails.append(f"turn 1 ran agents {sorted(first['sub_results'])}; a clarification runs none")
     if _compliance(first):
         fails.append("turn 1 published a compliance block; nothing is checked before "
                      "the type is given")
@@ -1122,7 +1143,7 @@ def check_3_4(state):
     fails = _ran_clean(state)
     block = _compliance(state)
     if not block:
-        return fails + ["no compliance in shared_data"]
+        return fails + ["no compliance block on the records"]
 
     fails += _compliance_block_invariants(state)
 
@@ -1221,8 +1242,8 @@ def check_2_1(state):
     fails += call_fails
     if record is not None and record["inputs"]:
         fails.append(f"compliance_check takes no input; the call carried {record['inputs']}")
-    sub = state.get("sub_results") or {}
-    not_ok = [a for a in COMPLIANCE_PLAN if not (sub.get(a) or {}).get("success")]
+    ran = _agents(state)
+    not_ok = [a for a in COMPLIANCE_PLAN if not ran.get(a)]
     if not_ok:
         fails.append(f"agents that did not run successfully: {not_ok}")
 
@@ -1230,7 +1251,7 @@ def check_2_1(state):
 
     block = _compliance(state)
     if not block:
-        return fails + ["no compliance in shared_data"]
+        return fails + ["no compliance block on the records"]
     fails += _compliance_block_invariants(state)
     if block.get("no_clause"):
         fails.append("no_clause is set on a portfolio check")
@@ -1265,7 +1286,7 @@ def check_2_1(state):
 
     as_of = (block.get("as_of") or {}).get("worst_case")
     if not as_of:
-        fails.append("no as_of.worst_case in shared_data['compliance'] "
+        fails.append("no as_of.worst_case in the compliance block "
                      "(benchmark.md Part 3b)")
     else:
         fails += _date_reaches_answer(state, as_of, "compliance.as_of.worst_case")
@@ -1278,13 +1299,13 @@ def check_2_1(state):
 # ---------------------------------------------------------------------------
 
 def blocked_on_pnl(state):
-    if "position_pnl" in _shared(state):
+    if _published(state, "position_pnl"):
         return None
     return "position P&L is not computed (roadmap item 3, expected_values.md D4)"
 
 
 def blocked_on_portfolio_vol(state):
-    if "portfolio_volatility" in _shared(state):
+    if _published(state, "portfolio_volatility"):
         return None
     return "portfolio volatility is not computed (roadmap item 4, expected_values.md D7)"
 
@@ -1294,7 +1315,7 @@ def blocked_on_compliance(state):
     the layer called no tool whose plan runs it, which is a choice of tool
     for this wording, not a missing agent. The reason names what the log
     shows instead, which is the diagnostic."""
-    if "ComplianceAgent" in (state.get("sub_results") or {}):
+    if "ComplianceAgent" in _agents(state):
         return None
     return (f"ComplianceAgent did not run; {_what_ran(state)}. The agent exists; "
             "the choice of tool for this wording does not")
@@ -1338,8 +1359,6 @@ def check_3_5(states):
     elif (asked_back.get("token"), asked_back.get("candidate")) != ("APPL", "AAPL"):
         fails.append(f"turn 1 asked back about {asked_back.get('token')!r} for "
                      f"{asked_back.get('candidate')!r}, not APPL for AAPL")
-    if first.get("sub_results"):
-        fails.append(f"turn 1 ran agents {sorted(first['sub_results'])}; a clarification runs none")
     asked = _answer(first)
     for name in ("APPL", "AAPL"):
         if name not in asked:
@@ -1355,13 +1374,13 @@ def check_3_5(states):
     if record is not None and record["inputs"].get("tickers") != ["AAPL"]:
         fails.append(f"turn 2 tickers {record['inputs'].get('tickers')} != ['AAPL']")
 
-    pnl = _shared(second).get("position_pnl") or {}
+    pnl = _block(second, "position_pnl")
     aapl = pnl.get("AAPL")
     if not aapl:
         return fails + ["turn 2 published no position_pnl.AAPL"]
     answer = _answer(second)
     if aapl.get("pnl_pct") is not None and f"{aapl['pnl_pct']:.2%}" not in answer:
-        fails.append(f"AAPL P&L {aapl['pnl_pct']:.2%} is in shared_data but never reaches the answer")
+        fails.append(f"AAPL P&L {aapl['pnl_pct']:.2%} is in the block but never reaches the answer")
     if "price return" not in answer.lower():
         fails.append("answer does not say it is price return only (D4)")
     fails += _states_pnl_as_of(second, ["AAPL"])
@@ -1399,7 +1418,7 @@ BANK_SIC_DESCRIPTION = "National Commercial Banks"
 
 
 def _screening(state):
-    return _shared(state).get("screening") or {}
+    return _block(state, "screening")
 
 
 def blocked_on_screen(state):
@@ -1410,7 +1429,7 @@ def blocked_on_screen(state):
     choice of tool."""
     if _screening(state):
         return None
-    reason = (f"no screening block in shared_data ({_what_ran(state)}); "
+    reason = (f"no screening block on the records ({_what_ran(state)}); "
               "the question did not reach the philosophy check")
     errors = state.get("errors") or []
     if errors:
@@ -1470,7 +1489,7 @@ def _screen_block_invariants(state, subject):
     years = block.get("years") or {}
 
     if not philosophy:
-        return ["no philosophy in shared_data['screening']; the answer cannot cite"]
+        return ["no philosophy in the screening block; the answer cannot cite"]
 
     statement_ids = {c for c, entry in philosophy.items() if entry.get("type") == "statement"}
     listed = {s.get("clause") for s in statements}
@@ -1608,7 +1627,7 @@ def _screen_dates_reach_answer(state):
     for key in ("as_of", "sic_as_of"):
         stated = block.get(key)
         if not stated:
-            fails.append(f"no {key} in shared_data['screening'] (benchmark.md Part 3b)")
+            fails.append(f"no {key} in the screening block (benchmark.md Part 3b)")
             continue
         fails += _date_reaches_answer(state, str(stated)[:10], f"screening.{key}")
     return fails
@@ -1620,7 +1639,7 @@ def _not_from_the_ips(state):
     philosophy runs the IPS check")."""
     fails = []
     if _compliance(state):
-        fails.append("shared_data carries a compliance block; the philosophy question "
+        fails.append("the records carry a compliance block; the philosophy question "
                      "ran the IPS check")
     cited = sorted(set(CLAUSE_ID.findall(_answer(state))))
     if cited:
@@ -1655,7 +1674,7 @@ def check_4_1(state):
     fails = _ran_clean(state)
     block = _screening(state)
     if not block:
-        return fails + ["no screening in shared_data"]
+        return fails + ["no screening block on the records"]
     fails += _screen_block_invariants(state, WATCHLIST_TICKER)
     if block.get("stopped"):
         return fails + [f"the check stopped: {block['stopped']}"]
@@ -1688,7 +1707,7 @@ def check_4_1(state):
                              "date never reaches the answer; every figure carries its source")
     source = block.get("source")
     if not source:
-        fails.append("no source in shared_data['screening']; a figure without a source "
+        fails.append("no source in the screening block; a figure without a source "
                      "is a number in the answer")
     elif str(source) not in answer:
         fails.append(f"source {source!r} never reaches the answer")
@@ -1727,7 +1746,7 @@ def check_4_6(state):
     fails = _ran_clean(state)
     block = _screening(state)
     if not block:
-        return fails + ["no screening in shared_data"]
+        return fails + ["no screening block on the records"]
     fails += _screen_block_invariants(state, BANK_TICKER)
 
     if block.get("stopped"):
@@ -1786,7 +1805,7 @@ def blocked_on_range(state):
         return reason
     block = _screening(state)
     if not block.get("valuation") and not block.get("valuation_stopped"):
-        return ("no valuation record in shared_data['screening']; nothing publishes a "
+        return ("no valuation record in the screening block; nothing publishes a "
                 "range (Part 11, decision 57)")
     return None
 
@@ -1832,13 +1851,13 @@ def check_4_2(state):
     fails = _ran_clean(state)
     block = _screening(state)
     if not block:
-        return fails + ["no screening in shared_data"]
+        return fails + ["no screening block on the records"]
     fails += _screen_block_invariants(state, WATCHLIST_TICKER)
     if block.get("valuation_stopped"):
         return fails + [f"the range stopped: {block['valuation_stopped']}"]
     record = _valuation(state)
     if not record:
-        return fails + ["no valuation record in shared_data['screening']"]
+        return fails + ["no valuation record in the screening block"]
     answer = _answer(state)
 
     low, high = record.get("low"), record.get("high")
@@ -1897,7 +1916,7 @@ def check_4_2(state):
 
     price = block.get("price") or {}
     if not price:
-        fails.append("no price in shared_data['screening']; the price and its as-of date "
+        fails.append("no price in the screening block; the price and its as-of date "
                      "are stated (decision 57)")
     else:
         value = price.get("value")
@@ -1941,7 +1960,7 @@ SCORE_KEYS = ("outcome", "source", "scored_on", "result")
 
 
 def _ledger(state):
-    return _shared(state).get("ledger") or {}
+    return _block(state, "ledger")
 
 
 def _ledger_file():
@@ -1965,7 +1984,7 @@ def blocked_on_ledger(state):
     4.2's did the routing."""
     if _ledger(state):
         return None
-    reason = (f"no ledger block in shared_data ({_what_ran(state)}); "
+    reason = (f"no ledger block on the records ({_what_ran(state)}); "
               "the question did not reach the ledger")
     errors = state.get("errors") or []
     if errors:
@@ -1993,7 +2012,7 @@ def check_4_5(state):
     fails = _ran_clean(state)
     block = _ledger(state)
     if not block:
-        return fails + ["no ledger in shared_data"]
+        return fails + ["no ledger block on the records"]
     answer = _answer(state)
     as_of = block.get("as_of")
     fails += _date_reaches_answer(state, as_of, "ledger.as_of")
@@ -2121,7 +2140,7 @@ PRICE_PHRASES = ("share price", "stock price", "price target", "will be at", "wi
 
 
 def _research(state):
-    return _shared(state).get("research") or {}
+    return _block(state, "research")
 
 
 def _watchlist_entry(ticker):
@@ -2145,7 +2164,7 @@ def blocked_on_research(state):
     the first sighting records the choice of tool."""
     if _research(state):
         return None
-    reason = (f"no research block in shared_data ({_what_ran(state)}); "
+    reason = (f"no research block on the records ({_what_ran(state)}); "
               "the question did not reach the research agent")
     errors = state.get("errors") or []
     if errors:
@@ -2378,7 +2397,7 @@ def check_4_4(state):
     """
     fails = _ran_clean(state)
     if not _research(state):
-        return fails + ["no research in shared_data"]
+        return fails + ["no research block on the records"]
     entry = _watchlist_entry(WATCHLIST_TICKER)
     if entry is None:
         return fails + [f"watchlist.toml has no candidate under {WATCHLIST_TICKER}"]
@@ -2449,7 +2468,7 @@ GATE_CLEAR = {"ok", "exempt"}
 
 
 def _gate(state):
-    return _shared(state).get("gate") or {}
+    return _block(state, "gate")
 
 
 def blocked_on_recommendation(state):
@@ -2473,7 +2492,7 @@ def blocked_on_recommendation(state):
         return ("the research block carries no judgement; the question was not read as one "
                 f"about a position (asks {_research(state).get('asks')!r})")
     if not _gate(state):
-        return ("no gate block in shared_data; an answer that implies a position passes "
+        return ("no gate block on the records; an answer that implies a position passes "
                 "the IPS check before it is shown (DIRECTION.md invariant 2), and a gate "
                 "that could not run publishes nothing")
     screen_stop = _screening(state).get("stopped")
@@ -2516,7 +2535,7 @@ def check_4_3(state):
     fails = _ran_clean(state)
     block = _research(state)
     if not block:
-        return fails + ["no research in shared_data"]
+        return fails + ["no research block on the records"]
     entry = _watchlist_entry(WATCHLIST_TICKER)
     if entry is None:
         return fails + [f"watchlist.toml has no candidate under {WATCHLIST_TICKER}"]

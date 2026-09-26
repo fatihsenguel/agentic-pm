@@ -57,10 +57,17 @@ statement = """By 18 September 2027 Alphabet will have reported a gross margin f
 
 
 async def _answered():
+    from test_runner_probes import record_of
+
     out = await nodes.research_agent_node(state())
-    lines = nodes._format_thesis_response(out["sub_results"])
-    return {"final_response": "\n".join(lines), "shared_data": out["shared_data"],
-            "errors": out.get("errors") or [], "sub_results": out["sub_results"]}
+    text = "\n".join(nodes._format_thesis_response(out["sub_results"]))
+    # The record the turn would carry, which the runner's checks read;
+    # `shared_data` stays for the assertions here that read the block.
+    record = record_of("thesis", {"ticker": "GOOGL"}, out["shared_data"],
+                       {name: bool(r.get("success")) for name, r in out["sub_results"].items()},
+                       text)
+    return {"final_response": text, "shared_data": out["shared_data"],
+            "errors": out.get("errors") or [], "tool_calls": [record]}
 
 
 async def test_the_nodes_block_rendered_passes_the_runners_4_4(edgar, models):

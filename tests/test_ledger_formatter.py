@@ -146,9 +146,10 @@ def render(block):
 
 
 def state_for(block, answer):
-    return {"shared_data": {"ledger": block}, "final_response": answer, "errors": [],
-            "router_decision": {"intent": "ledger", "execution_order": ["LedgerAgent"],
-                                "parameters": {}}}
+    from test_runner_probes import record_of
+
+    return {"tool_calls": [record_of("ledger", {}, {"ledger": block}, {"LedgerAgent": True})],
+            "final_response": answer, "errors": []}
 
 
 def _by_id(block):

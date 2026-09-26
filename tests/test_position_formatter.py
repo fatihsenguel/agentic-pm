@@ -116,8 +116,14 @@ async def _answered(models, clear_screen=False):
     # the gate wrote the outcome onto the published one.
     lines = nodes._format_position_response(nodes.judgement_record(s), gate_block, screening)
     s["final_response"] = "\n".join(lines)
-    s["router_decision"] = {"intent": "research",
-                            "parameters": {"tickers": ["GOOGL"], "asks": "position"}}
+    # The record the turn would carry, which the runner's checks read;
+    # `shared_data` stays on the state for the assertions here that read
+    # the blocks directly.
+    from test_runner_probes import record_of
+
+    s["tool_calls"] = [record_of("position", {"ticker": "GOOGL"}, s["shared_data"],
+                                 {name: bool(r.get("success")) for name, r in s["sub_results"].items()},
+                                 s["final_response"])]
     return s
 
 
