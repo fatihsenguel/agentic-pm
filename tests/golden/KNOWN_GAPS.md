@@ -9126,3 +9126,50 @@ nothing else predicted to move. The corpus: no answer's text changes;
 S-4's turn 2 is no longer refused if it again quotes turn 1's distances;
 each record's provenance prints under the answer. Neither paid loop has
 run since.
+
+### The runner after decision 77: 8 of 18 against a prediction of 6
+
+**Trigger:** decision 17's commit, where C2 is taken case by case; and the next paid run that sends 1.2 or 1.3.
+
+Recorded 26 September 2026 (forty-fourth session). One run at ddf01f2,
+the code merged as 2b67e20, 14:31:01 to 14:33:12 UTC, on my word. Read
+against the prediction written before it (benchmark.md Part 3, the block
+at ddf01f2). The output was not kept as a file; its verdicts and reasons
+are in this entry. **8/18, 8 failing, 2 blocked**, where the prediction
+said 6/18, 10 failing, 2 blocked. Sixteen verdicts matched their lines.
+
+**The two lines the session's work was about held.** 3.1 PASS: the
+tracing check reads the resolved question, which carries the "15"
+(d893747). 2.1 out of BLOCKED to FAIL, for the reason predicted first:
+the model called `allocation` and then `compliance_check`, as on both
+draws of the 24th, and `_one_call` fails the case. The record now
+carries the compliance block and the probe reads it (decision 77).
+
+**Two moved against the prediction, both to PASS.** 1.2 carried the
+purchase date and 1.3 the covariance method, the one thing each dropped
+on the 24th. Nothing in the code changed what either answer carries, so
+each is the model writing on this draw a detail it dropped on the last.
+The prediction assumed the 24th's drops would repeat, and on these two
+they did not: whether a detail reaches the prose varies between draws
+of the same question, as 3.3 showed on the 24th. One draw each, not a
+rate; no prompt change is proposed on two.
+
+**2.1's other reasons are C2's first measurement.** Beside the one-call
+rule, the case fails on the trace check, which reads the agents of both
+runs in one trace, DataAgent and PortfolioAnalysisAgent twice, against
+the compliance plan run once; on the three exempt funds, TLT, GLD and
+VNQ, not named; and on the as-of, 2026-09-25, not reaching the answer.
+The first two are the runner's rules meeting a turn of two tools, which
+is decision 17's; the last two are the prose, with 2.3, 1.4 and the
+Level 4 cases.
+
+**The rest as on the 24th.** 1.4, 2.2, 2.3, 3.2, 4.2, 4.4 and 4.6 fail
+on the reasons of the 24th: the as-of dropped on 1.4, 2.1, 2.3, 4.2,
+4.4 and 4.6; 2.2's thirteen clauses unnamed; 3.2 answered with no tool
+called, a second draw of "A price forecast was answered with no tool
+called"; 4.2's assumptions, sources and dates and 4.4's readings and
+proposal not carried. 4.1 and 4.3 blocked at PHI-2.1 (decision 48).
+
+**What it cost.** 30,471 tokens in, 5,968 out, 2,428 written to the
+cache and 82,552 read from it, over 35 calls: about $0.14 at decision
+45's rates, as said before the run.
