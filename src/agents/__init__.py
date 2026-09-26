@@ -22,7 +22,6 @@ Usage:
 
 from .config import (
     ACTIVE_LLM_CONFIG,
-    AGENT_SETTINGS,
     get_llm,
     # Presets for easy switching
     OPENAI_MINI,
@@ -61,7 +60,6 @@ __version__ = "0.6.0"  # Phase 6: Production-Ready Multi-Agent System
 __all__ = [
     # === Configuration ===
     "ACTIVE_LLM_CONFIG",
-    "AGENT_SETTINGS", 
     "get_llm",
     "OPENAI_MINI",
     "OPENAI_FULL",

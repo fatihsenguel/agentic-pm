@@ -88,27 +88,6 @@ ANTHROPIC_SONNET = LLMConfig(
 ACTIVE_LLM_CONFIG = ANTHROPIC_HAIKU
 
 # =============================================================================
-# AGENT BEHAVIOR SETTINGS
-# =============================================================================
-
-@dataclass
-class AgentSettings:
-    """Runtime settings for agent behavior - tune for cost/quality tradeoff."""
-    
-    # Context window management
-    max_conversation_history: int = 10
-    
-    # Tool behavior
-    max_tool_iterations: int = 5
-    
-    # Response behavior
-    verbose_tool_results: bool = False
-
-
-AGENT_SETTINGS = AgentSettings()
-
-
-# =============================================================================
 # FACTORY FUNCTION
 # =============================================================================
 

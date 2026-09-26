@@ -73,6 +73,17 @@ def test_the_package_exports_no_task_loop_vocabulary():
     assert [name for name in loop if hasattr(agents, name)] == []
 
 
+def test_no_settings_describe_the_loop():
+    """`AgentSettings` held the loop's limits, its history length and a
+    verbosity flag, and nothing read any of them."""
+    import agents
+    from agents import config
+
+    assert not hasattr(config, "AgentSettings")
+    assert not hasattr(config, "AGENT_SETTINGS")
+    assert "AGENT_SETTINGS" not in agents.__all__
+
+
 def test_the_data_agents_log_prints_only_when_verbose(capsys):
     create_data_agent(verbose=False).log("quiet")
     assert capsys.readouterr().out == ""
