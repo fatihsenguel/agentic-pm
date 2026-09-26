@@ -8923,6 +8923,12 @@ layer.** The same instruction, seven times: 3.2 and R-1 to R-6 each ran
 IPS-1.3. The runner's draw is one in eight on this instruction. Nothing
 is proposed on it.
 
+
+**26 September 2026 (forty-fifth session), the trigger fired at
+55a63e9.** The runner's 3.2 of 17:02 UTC called `policy_lookup`, two
+model calls, and failed on the forecast pattern: the answer carried
+"price target", naming what it refused in the words the check reads as a
+forecast. The notation sentence is not about either; recorded as a draw.
 ### The runner's tracing check and the client's read different questions on a resolved reply - RESOLVED 24 September (forty-third session)
 
 **Trigger:** none: resolved 24 September (forty-third session) in 5cc3a9a, the tests, and d893747, the change.
@@ -8972,7 +8978,7 @@ over that gap. The trigger is repointed from the paid run to the fetch.
 
 ### The tracing check refuses an answer written in German number format
 
-**Trigger:** any change to `untraced_figures` in `agents/conversation.py` or to `SYSTEM_PROMPT`; either is a decision on what language an answer's figures are written in.
+**Trigger:** the next paid run that sends a German question whose answer carries figures, V-1.1a or any other; a second refusal of V-1.1a under the sentence of 55a63e9 stops the wording.
 
 Recorded 24 September 2026 (forty-second session), from V-1.1a of the
 corpus run after the layer (benchmark.md Part 3c.6, the fifth block).
@@ -8989,6 +8995,30 @@ answer gets no answer; V-3.4b, German with no figure, passed. I use
 German now and then. Which side moves, the answer's notation or the
 check's reading of it, is mine to decide, and a prompt line is a
 hypothesis with a prediction first.
+
+**26 September 2026 (forty-fifth session), decided: the notation moves,
+the check does not.** A check reading both notations would pass a
+misquote, 1.234 being a thousand in one and one-point-two in the other,
+and one choosing a notation from the question's language would depend
+on how it was asked. One sentence at the end of `SYSTEM_PROMPT`, "Write
+every figure with the digits, separators and decimal point exactly as
+the tool printed it, whatever language you answer in." (55a63e9); a
+test holds the client's check and the runner's to refusing German
+notation. The prediction, written first (benchmark.md Part 3c.6, the
+block at 55a63e9): V-1.1a answered in German with every figure in the
+tool's notation and shown.
+
+**The same day, 17:04 UTC, the prediction failed.** V-1.1a, the first
+turn of a fresh CLI process, called `allocation` and was refused: "The
+answer carried figures no tool printed this turn: 00, 15.500, 22,
+27.297, 287.171, 3, 39.341, 39.660, 408.969, 6, 62, 67, 70, 79." The
+model wrote German notation again with the sentence in the prompt.
+V-3.4b matched, answered in German with no clause; its one figure, 18
+clauses, passed the check. One failed prediction on V-1.1a. The rule
+allows one more draw of the same wording; a second refusal stops it and
+brings a diagnostic that separates the causes: whether the model reads
+the sentence and localizes anyway, or reads the question's language as
+outranking it. No third wording.
 
 ### A follow-up answered from the previous turn's figures is refused - RESOLVED 26 September (forty-fourth session)
 
@@ -9043,6 +9073,11 @@ runner prints no answer, so what the second draw said is not recorded.
 One failed prediction on this case; no prompt change is proposed, the
 system prompt being out of this session's scope.
 
+
+**26 September 2026 (forty-fifth session), the trigger fired again.**
+The runner's 3.3 of 17:02 UTC at 55a63e9 called `position_pnl` and
+passed, as predicted. Five draws of the prompt: three called the tool,
+two did not.
 ### A company's name moves the tool choice where its ticker does not
 
 **Trigger:** any change to `SYSTEM_PROMPT` or to `compliance_check`'s description; the next corpus run, which reads V-2.1a and V-2.1b again.
@@ -9095,6 +9130,13 @@ what no tool printed in words.
 The system prompt forbids a judgement of the model's own beside a tool's
 output. Nothing checks it.
 
+
+**26 September 2026 (forty-fifth session), the trigger fired at
+55a63e9.** The runner's 2.1 of 17:02 UTC carried 44.85%, a figure a
+tool printed that turn (the tracing check passed it) and no compliance
+finding carries, so the IPS-5.2 check refused it as a target. A figure
+selected from another tool's text beside the findings, not one the
+model wrote. Recorded as a draw.
 ### The CLI prints no tokens, so a corpus run's cost is not measured
 
 **Trigger:** the CLI as the client after Order 5.
@@ -9426,7 +9468,7 @@ September.
 
 ### The runner after decision 17: 8 of 18 against a prediction of 9
 
-**Trigger:** the next paid run of the runner, read against a prediction written before it; and the next change to `SYSTEM_PROMPT`, where 2.1's refusal and 3.3's missing call are read first.
+**Trigger:** none: its successor is "The runner after the notation sentence: 10 of 18 against a prediction of 9".
 
 Recorded 26 September 2026 (forty-fifth session). One run at 22063f6,
 15:43:10 to 15:45:02 UTC, on my word, the worktree's `src` imported as
@@ -9559,3 +9601,39 @@ whether a trace carries tokens at all, read from the layer's record, or
 drops the fields, is what a trace should record, a question of its own.
 Not deleted with the calculator, the approved shape naming the price
 alone.
+
+### The runner after the notation sentence: 10 of 18 against a prediction of 9
+
+**Trigger:** the next paid run of the runner, read against a prediction written before it; and the next change to `SYSTEM_PROMPT`.
+
+Recorded 26 September 2026 (forty-fifth session). One run at b67e865,
+the prompt as 55a63e9 left it, 17:02:34 to 17:04:35 UTC, on my word, the
+worktree's `src` imported as printed before it. Read against the
+prediction written before it (benchmark.md Part 3, the block at
+55a63e9). The output was not kept as a file; its verdicts and reasons
+are here. **10/18, 6 failing, 2 blocked**, where the prediction said
+9/18, 7 failing, 2 blocked. Seventeen verdicts matched their lines, two
+of them, 2.1 and 3.2, on reasons the lines did not name.
+
+**The hypothesis held on what it was about.** No case failed on a
+figure's notation; every English answer kept the tools'.
+
+**4.6 moved against the prediction, FAIL to PASS.** The code's pull date
+reached the answer, the one thing it dropped on the three earlier draws.
+Nothing in the change is about it; a draw, and a failed line.
+
+**The rest.** 1.1, 1.2, 1.3, 2.3, 3.1, 3.3, 3.4, 3.5 and 4.5 passed as
+predicted, 3.3 calling `position_pnl`. 1.4 failed on the unsectored
+line's share and, this draw, Technology's. 2.1 named the exempt funds
+and failed on 44.85%, a figure a tool printed and no finding carries,
+read by the IPS-5.2 check as a target. 2.2 failed on nine clauses not
+named. 3.2 called `policy_lookup` and failed on "price target" in the
+answer. 4.2 carried the assumptions and PHI-4.3 and failed on the
+fiscal year and its two dates alone. 4.4 failed on the sections, the
+proposal and the claims. 4.1 and 4.3 blocked at PHI-2.1 (decision 48).
+
+**What it cost.** 30,919 tokens in, 5,921 out, 2,465 written to the
+cache and 86,275 read, over 36 calls: about $0.14 at decision 45's
+rates, as said before the run. The two German prompts through the CLI
+were not measured, the CLI printing no tokens ("The CLI prints no
+tokens, so a corpus run's cost is not measured").
