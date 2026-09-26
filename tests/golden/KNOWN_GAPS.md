@@ -8980,6 +8980,16 @@ right answer is fixed got two behaviours in an hour. One draw each, not
 a rate. What the next draws of this prompt say is the measurement, and
 no prompt change is proposed on two.
 
+**26 September 2026 (forty-fifth session), the trigger fired twice.**
+The runner's 3.3 of 14:31 UTC at ddf01f2 called `position_pnl` and
+passed; its 3.3 of 15:43 to 15:45 UTC at 22063f6 called no tool, one
+model call, and read BLOCKED on no P&L block, against a prediction of
+PASS ("The runner after decision 17: 8 of 18 against a prediction of
+9"). Four draws of the prompt: two called the tool, two did not. The
+runner prints no answer, so what the second draw said is not recorded.
+One failed prediction on this case; no prompt change is proposed, the
+system prompt being out of this session's scope.
+
 ### A company's name moves the tool choice where its ticker does not
 
 **Trigger:** any change to `SYSTEM_PROMPT` or to `compliance_check`'s description; the next corpus run, which reads V-2.1a and V-2.1b again.
@@ -9176,7 +9186,7 @@ run since.
 
 ### The runner after decision 77: 8 of 18 against a prediction of 6
 
-**Trigger:** the next paid run of the runner, read against benchmark.md Part 3's prediction written on 26 September (forty-fifth session) after decision 17.
+**Trigger:** none: its successor is "The runner after decision 17: 8 of 18 against a prediction of 9".
 
 Recorded 26 September 2026 (forty-fourth session). One run at ddf01f2,
 the code merged as 2b67e20, 14:31:01 to 14:33:12 UTC, on my word. Read
@@ -9234,7 +9244,7 @@ no run has shown: the next run is read against its own prediction.
 
 ### The runner's checks against a selecting layer - decision 17, TAKEN 26 September (forty-fifth session)
 
-**Trigger:** the next paid run of the runner, which is read against benchmark.md Part 3's prediction written after this decision; and the next change to a check in `tests/benchmark/run_cases.py`, read against the four rules below.
+**Trigger:** the next change to a check in `tests/benchmark/run_cases.py`, read against the four rules below. The paid run after it is recorded in "The runner after decision 17: 8 of 18 against a prediction of 9".
 
 **What was open.** Decision 17's shape, the tool returning its whole
 block and the conversation layer selecting what the question asks, was
@@ -9360,3 +9370,56 @@ which Part 18 does not name. It is the rule decision 17 applied to 1.4,
 4.2 and 4.4, not applied here because 1.3 passed on 26 September and was
 not among the seven cases brought; 1.3 failed on it alone on 24
 September.
+
+### The runner after decision 17: 8 of 18 against a prediction of 9
+
+**Trigger:** the next paid run of the runner, read against a prediction written before it; and the next change to `SYSTEM_PROMPT`, where 2.1's refusal and 3.3's missing call are read first.
+
+Recorded 26 September 2026 (forty-fifth session). One run at 22063f6,
+15:43:10 to 15:45:02 UTC, on my word, the worktree's `src` imported as
+printed before it. Read against the prediction written before it
+(benchmark.md Part 3, the block at c153d73). The output was not kept as
+a file; its verdicts and reasons are here. **8/18, 7 failing, 3
+blocked**, where the prediction said 9/18, 7 failing, 2 blocked.
+Seventeen verdicts matched their lines, one of them, 2.1, on a different
+reason.
+
+**The line the decision was about held.** 2.3 PASS: its one failure on
+both earlier draws was the as-of in the prose, now read from the
+compliance record. 1.4 failed on the unsectored line's share alone and
+4.6 on the code's pull date alone, as predicted; neither failed on a
+rule decision 17 moved. No case failed on a tool called beside its own,
+on the trace, or on a provenance date.
+
+**3.3 moved against the prediction, PASS to BLOCKED.** The model made
+one call and called no tool, so no P&L block was published and the
+probe blocked. The prediction held the tool call of both runner draws;
+the corpus draw of the 24th had asked back, and so did this one. A
+failed hypothesis, recorded in "The same question called a tool on one
+draw and asked back on another".
+
+**2.1 failed as predicted, on a reason the prediction did not name.**
+The answer carried the figure 48, which no tool printed, and the
+client's check refused it: the text shown was the refusal, which names
+the 48, so the tracing check fails the refusal on the same token and
+every clause, distance and exempt fund is missing from it. What the
+model wrote around the 48 is not recorded, the runner printing no
+answer. This is the client's check doing what invariant 1 asks, a draw
+of "The narration adds comparisons and summaries no tool printed". The
+exempt funds, the predicted reason, were not reached.
+
+**The other failures, as predicted, with two reasons not named.** 1.4
+on the unsectored share; 2.2 on thirteen clauses; 3.2 on no tool
+called; 4.2 on the fiscal year and its two dates, the five assumptions'
+names and sources and PHI-4.3, and also on the close's source,
+`yfinance`, which the check keeps in the prose and the line did not
+name; 4.4 on the three sections, the prediction's made-on and due
+dates, the claims and their quotes, and also on three claims printed
+without their uncertainty on the line; 4.6 on the pull date. 4.1 and
+4.3 blocked at PHI-2.1 (decision 48). 1.2, 1.3, 3.1, 3.4, 3.5 and 4.5
+passed; 1.2 and 1.3 carried the details they dropped on the 24th, a
+second draw each.
+
+**What it cost.** 29,395 tokens in, 5,591 out, 2,428 written to the
+cache and 80,124 read from it, over 34 calls: about $0.14 at decision
+45's rates, as said before the run.
