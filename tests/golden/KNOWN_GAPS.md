@@ -990,9 +990,9 @@ needing.
 
 ## Unbuilt features
 
-### The synthesizer returns the same answer regardless of the question
+### The synthesizer returns the same answer regardless of the question - RESOLVED 26 September (forty-fifth session)
 
-**Trigger:** the next question that reaches the stub, and pending decision 17, the selection axis. Decision 51 fired on 22 September and narrowed what reaches it without closing it.
+**Trigger:** none: resolved under decision 17, the synthesizer and its stub deleted with the router in Order 5.
 
 **Updated 22 September (thirty-third session). The stub is still there
 and two of its three doors are shut.** `SYNTHESIZER_INTENTS` is checked
@@ -1078,6 +1078,13 @@ trigger folded into decision 45, the tool-boundary pass, on paper: the
 stub is the synthesizer's dispatch on intent, which goes with the
 router, each tool rendering its own block, and 45's entry says so.
 Closes on Order 5's commit. Trigger unchanged.
+
+**26 September 2026 (forty-fifth session), resolved under decision 17.**
+Read against the code at 41a6d19: no synthesizer node exists. The tool
+graph (`tool_runner._tool_graph`) binds the agents and the gate, and
+"synthesizer" survives only as the routing key `route_next_step` returns
+for a plan's end, mapped to END; each tool renders its own block through
+`tool_runner.render`. No question reaches a stub.
 
 
 ### `shared_data` carries 160KB of raw prices — hot potato violated
@@ -2922,9 +2929,9 @@ date, and C-5, "today", asked back as this entry says, naming the phrase
 and the five spans, and nothing was printed in their place (benchmark.md
 Part 3c.6). Confirmed; decision 10 still pending.
 
-### `measure` set by the model under intent compliance is unread
+### `measure` set by the model under intent compliance is unread - RESOLVED 26 September (forty-fifth session)
 
-**Trigger:** pending decision 17, the selection axis.
+**Trigger:** none: resolved under decision 17, the field deleted with the router in Order 5.
 
 Recorded 8 September (eighth sitting). On "Is my JNJ position over any limit?" the model set
 `measure: allocation, group_by: position` under `compliance`; the terminal
@@ -2942,6 +2949,12 @@ compliance stays a sign of the rule's wording and nothing else.
 the tool-boundary pass, on paper: `measure` becomes the tool's name and
 the tool returns the whole block, and 45's entry says how. Closes on
 Order 5's commit. Trigger unchanged.
+
+**26 September 2026 (forty-fifth session), resolved under decision 17.**
+Grepped at 41a6d19: no input model, node or formatter reads a `measure`
+field; the tool the model calls is the measure, and the compliance tools
+take no such input. One docstring still names it (`nodes.py:593`), which
+is "Statements about the router and the synthesizer outlive them".
 
 ### No pytest reached the analysis node's allocation call - RESOLVED 8 September (eighth sitting)
 
@@ -3102,7 +3115,7 @@ wording, not arithmetic.
 
 ### One-figure questions get the whole block
 
-**Trigger:** pending decision 17, the selection axis.
+**Trigger:** the next paid turn, CLI or corpus, that asks for one figure a tool's block carries, such as the portfolio's total or one position's cost.
 
 Recorded 9 September, from the CLI session. "How much is my portfolio
 worth?" is `measure: allocation` with no `group_by`, so the answer is the
@@ -3126,6 +3139,13 @@ until a case asks.
 the tool-boundary pass, on paper: the tool returns the whole block and
 the conversation layer selects the total or the cost from it, and 45's
 entry says how. Closes on Order 5's commit. Trigger unchanged.
+
+**26 September 2026 (forty-fifth session), decision 17 taken; not
+closed.** The shape is built: `allocation` and `position_pnl` return the
+whole block and the model may select from it (the system prompt's last
+sentence). Whether it answers "How much is my portfolio worth?" with the
+total no loop has seen: no runner case and no corpus prompt asks one
+figure. The trigger now waits on a turn that asks.
 
 ### CLI session, 9 September: twenty-seven prompts - CLOSED 15 September (seventeenth session), history
 
@@ -7041,7 +7061,7 @@ commit does not reach, as the entry says. Nothing here changes; decision
 
 ### Cases 4.1 and 4.2 return the same answer
 
-**Trigger:** pending decision 17, the selection axis.
+**Trigger:** the next corpus run that sends 4.1 and 4.2, read for whether 4.1's answer still carries the range.
 
 Logged 21 September (thirty-second session), from the full test, the CLI's
 own identical-answer check reporting it unprompted. "Does GOOGL clear my
@@ -7079,6 +7099,15 @@ the tool-boundary pass, on paper: `philosophy_screen` returns the
 findings and the range together and the conversation layer shows the
 one asked for, and 45's entry says how. Closes on Order 5's commit.
 Trigger unchanged.
+
+**26 September 2026 (forty-fifth session), decision 17 taken; not
+closed.** The two answers are no longer one text: the model writes each
+from the same block. They are not yet two selections. The corpus run of
+24 September at 02a9e57 (benchmark.md Part 3c.6) read 4.1 as missed
+with "the range and a last close printed beside the stop", so a question
+about the philosophy still carried a valuation nobody asked for. The
+runner's 4.2 no longer asks for the screen's code pull date (decision
+17, a5f46ac); 4.1 is blocked at PHI-2.1 and cannot show it.
 
 ### The four intents outside the benchmark roster - DECIDED 21 September (thirty-second session)
 
@@ -8569,7 +8598,7 @@ fields.
 
 ### Statements about the router and the synthesizer outlive them
 
-**Trigger:** decision 17's commit, which touches the formatters these comments sit beside; or the console-glyph session, which reads the same files line by line.
+**Trigger:** the console-glyph session, which reads the same files line by line.
 
 Recorded 24 September 2026 (forty-first session), grepped at 4d971b1. 28
 comments and docstrings under `src/` name the synthesizer, most of them
@@ -8581,6 +8610,14 @@ validator and REQUIRES tests and no router, and
 `tests/test_synthesizer_formatters.py` tests the rebalance formatter. The
 CLI's routing block reads `router_decision`, which the state no longer
 carries, and prints empty fields; that block is the CLI's, after Order 5.
+
+**26 September 2026 (forty-fifth session), the trigger corrected.** It
+named decision 17's commit as one that touches the formatters. Decision
+17 was taken as the runner's checks (C2) and changes no file under
+`src/`, so that half could never fire; the console-glyph session is the
+trigger. One more site, found grepping for `measure`: `nodes.py:593`,
+"The router's `measure` says which was asked for; the synthesizer reads
+it".
 
 ### Two weights, or a weight outside a share of the portfolio, leave no record
 
@@ -8705,9 +8742,9 @@ block called them missed against the entry as written then, and the fifth
 records them as moved the other way, with the behaviour the fourth
 predicted.
 
-### The runner's first run through the layer: 5 of 18 against a prediction of 11
+### The runner's first run through the layer: 5 of 18 against a prediction of 11 - RESOLVED 26 September (forty-fifth session)
 
-**Trigger:** the next change to a check in `tests/benchmark/run_cases.py`.
+**Trigger:** none: the decision it left open is taken under decision 17; the runs are read on in "The runner after decision 77: 8 of 18 against a prediction of 6".
 
 Recorded 24 September 2026 (forty-second session). One run at 78c61cd,
 14:16 to 14:19 UTC, `tests/golden/run_cases_2026-09-24.txt`,
@@ -8768,6 +8805,16 @@ the tracing check allows the earlier turns' figures, which moves no
 verdict of this run. The prediction for the next run is in benchmark.md
 Part 3: 6 of 18, 3.1 the one line moving to PASS. The count stands at
 5/18 until the run. The decision this entry leaves open is untouched.
+
+**26 September 2026 (forty-fifth session), resolved: the decision this
+entry left open is taken.** Whether a check asks for more than the
+question or the answer carries less than it must is answered case by
+case against Part 18 under decision 17 ("The runner's checks against a
+selecting layer - decision 17, TAKEN 26 September (forty-fifth
+session)"): 1.4's whole-sector check narrowed to Part 18's two lines,
+2.2's every clause kept, 1.3's basis kept, and the as-of on every figure
+read from the record the client shows it from. The runs this entry and
+its successor record stand as run.
 
 ### Two tools in one turn leave the state only the last one's blocks - RESOLVED 26 September (forty-fourth session)
 
@@ -9129,7 +9176,7 @@ run since.
 
 ### The runner after decision 77: 8 of 18 against a prediction of 6
 
-**Trigger:** decision 17's commit, where C2 is taken case by case; and the next paid run that sends 1.2 or 1.3.
+**Trigger:** the next paid run of the runner, read against benchmark.md Part 3's prediction written on 26 September (forty-fifth session) after decision 17.
 
 Recorded 26 September 2026 (forty-fourth session). One run at ddf01f2,
 the code merged as 2b67e20, 14:31:01 to 14:33:12 UTC, on my word. Read
@@ -9173,3 +9220,143 @@ proposal not carried. 4.1 and 4.3 blocked at PHI-2.1 (decision 48).
 **What it cost.** 30,471 tokens in, 5,968 out, 2,428 written to the
 cache and 82,552 read from it, over 35 calls: about $0.14 at decision
 45's rates, as said before the run.
+
+**26 September 2026 (forty-fifth session), the trigger fired: decision
+17 taken, C2 built at dcded39, 3249dae, 0fb0dcc and a5f46ac.** Read
+against this run's verdicts as if the same answers were scored again,
+the rules move one: 2.3, whose only failure was the as-of in the prose,
+which is now read from the record. 1.4 still fails on the unsectored
+line's share, which Part 18 pins and the answer of the 24th left out;
+2.1 on the exempt funds; 2.2 on the clauses; 4.2 on the assumptions'
+sources and the fiscal year's dates; 4.4 on the readings and the
+proposal; 4.6 on the code's pull date. 9 of 18 on the same draw, which
+no run has shown: the next run is read against its own prediction.
+
+### The runner's checks against a selecting layer - decision 17, TAKEN 26 September (forty-fifth session)
+
+**Trigger:** the next paid run of the runner, which is read against benchmark.md Part 3's prediction written after this decision; and the next change to a check in `tests/benchmark/run_cases.py`, read against the four rules below.
+
+**What was open.** Decision 17's shape, the tool returning its whole
+block and the conversation layer selecting what the question asks, was
+taken inside decision 45 on 23 September and built with Order 5. What
+it left was C2: the runner's checks were written when the answer was the
+formatter's whole text, and seven of the eight failures of 26 September
+(2.1, 1.4, 2.2, 2.3, 4.2, 4.4, 4.6) fell on such a rule. Taken on my
+yes, as brought, with one reading added before the first commit.
+
+**The four rules.**
+- **A case names its tool and allows others beside it.** The tool the
+  case needs is called once with the right inputs; any other call is
+  the model's composition, and Part 18 pins 2.1's answer "whatever
+  routes it". 3.2 alone keeps one call alone, its entry pinning that no
+  other pipeline runs. **The reading added:** every portfolio tool's run
+  publishes the same three blocks, and the compliance block comes from
+  three tools, so a case reads its blocks and agents from its own tool's
+  record, not from the last record carrying the key. `figures_trace`
+  still reads every record. (dcded39)
+- **2.1's trace is read in the turn, its run found as one unbroken
+  stretch.** The turn carries one trace; the layer runs tools one after
+  another, so each run is contiguous and the compliance plan is the
+  stretch that is its plan. The handovers and `check_ips` as before.
+  (3249dae)
+- **The as-of and the source a record's provenance carries are read
+  there, not in the prose.** The client prints them under the answer
+  (decision 77); a check and the client read the same input. A record
+  carrying none, or another date, fails. A date the question asks about
+  stays in the prose (3.3's "today", 1.3's window, 1.2's purchase date),
+  and so does every date the provenance does not carry (the code's pull
+  date, the fiscal year's end and filed dates, the close's date, the
+  prediction's dates). (0fb0dcc)
+- **A prose check asks for what Part 18 pins for its case and nothing
+  it leaves out.** 1.4 narrowed to Technology's and the unsectored
+  line's shares; 4.2 no longer asks for the screen's code pull date; 4.4
+  and 4.3 no longer ask for each reading's fiscal year and filed date,
+  nor the value's source name. 2.2's every clause and 2.1's exempt funds
+  kept: Part 18 pins both. Checks were only narrowed, never widened in
+  this decision; where a check asks less than Part 18 pins (1.4's
+  per-position figures and "no other sector's positions"), it is left.
+  (a5f46ac)
+
+**Rejected.** The prose as-of kept and a prompt line asking for dates:
+a prompt change, and a field the record carries. Provenance grown to
+carry every date a block states: a change to the record and the client
+line, logged below as its own question. One trace per tool run: the
+turn's trace already holds each run unbroken. The trace check dropped
+for the record's agents: Level 2 pins the handovers. 2.2 narrowed to the
+breaches: Part 18 pins every clause.
+
+**Checked against the invariants.** Every figure still traces through
+`figures_trace`, unchanged. The gate, the hot potato, config and scope
+untouched. A missing provenance date or a run broken in the trace fails
+the case and repairs nothing. Part 18 was written before any output and
+the checks moved only toward it, each part's tests red first.
+
+**What was found while building.** The screen formatter's test fixture
+joined Part 10's screened block to a range dated and sourced otherwise,
+which the node cannot produce; built as the node builds it, in 0fb0dcc.
+Three of my own test mistakes were caught before their commits and named
+in them. And the one-ticker P&L record's provenance, below.
+
+**Closed with it.** "The synthesizer returns the same answer regardless
+of the question" and "`measure` set by the model under intent compliance
+is unread", both resolved; "The runner's first run through the layer: 5
+of 18 against a prediction of 11", resolved. **Re-triggered, not
+closed:** "One-figure questions get the whole block", on a turn that
+asks one; "Cases 4.1 and 4.2 return the same answer", on the next corpus
+run, the run of 24 September having read 4.1 with the range beside the
+stop. "Statements about the router and the synthesizer outlive them" has
+its trigger corrected to the console-glyph session.
+
+**Decision 54 is not in this commit.** Brought on its own after it,
+with its blast radius: `base_agent.py`, the two agents that subclass it,
+the package's exports, `AgentSettings` and two test files.
+
+**What each loop sees.** pytest: 2052 passed, 6 xfailed, from 2036. The
+runner: the rules change what it scores and nothing the model is sent;
+its prediction is written in benchmark.md Part 3 before the run. The
+corpus: nothing, being read by hand.
+
+### A one-ticker P&L record's provenance states the earliest close of all nine
+
+**Trigger:** the next paid run whose stored closes differ in date across the holdings; or the next change to `tool_runner._as_of`.
+
+Recorded 26 September 2026 (forty-fifth session), found building
+decision 17's third part. The analysis node publishes the P&L of every
+holding whatever tickers were asked, and `tool_runner._as_of` gives a
+`position_pnl` record the earliest of the block's dates. So "How has my
+JPM position performed?" prints under the answer the earliest close of
+the nine, which is JPM's only when no holding lags it. The runner's 1.2
+and 3.5 now read the asked position's date against the record's as-of
+and will fail when the dates differ, which is the defect showing and not
+repaired. Today every holding's last close is 2026-09-25, so nothing
+fails. Whether the as-of should be the asked positions' is a change to
+the record, not made here.
+
+### Whether a record's provenance should carry every date its block states
+
+**Trigger:** the presentation rebuild after Order 5, the CLI as the client; or a case that fails on a date the provenance could carry, twice.
+
+Recorded 26 September 2026 (forty-fifth session), from decision 17. The
+provenance carries one as-of and one source per record. The screen's
+block states the check's date, the code's pull date, the fiscal year's
+end and filed dates and the close's date with its source; the thesis
+block the readings' filed dates and the prediction's dates. Decision 17
+reads the one the provenance carries from the record and leaves the
+others in the prose, where Part 18 pins them. Carrying them all as
+fields would let no date depend on the narration, benchmark.md Part 3b's
+"sources as fields of the answer"; it changes the record's shape and the
+client's line for three tools, and is not taken.
+
+### 1.3's basis check asks for the covariance method, which Part 18 does not name
+
+**Trigger:** the next change to `check_1_3`; or the next run that fails 1.3 on the covariance method alone.
+
+Recorded 26 September 2026 (forty-fifth session), from decision 17's
+fourth rule. Part 18's 1.3 pins the basis: the portfolio's own daily
+returns, the weights at the valuation date with cash excluded, the
+window's two dates, 251 returns from 252 closes, the square root of 252.
+The check also requires `covariance_method` ("sample") in the prose,
+which Part 18 does not name. It is the rule decision 17 applied to 1.4,
+4.2 and 4.4, not applied here because 1.3 passed on 26 September and was
+not among the seven cases brought; 1.3 failed on it alone on 24
+September.
