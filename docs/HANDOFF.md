@@ -1,24 +1,24 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 26 September 2026 (forty-fifth session), the afternoon and evening, UTC.
-**Branches:** `checks`, cut from `baseline-v1` at 41a6d19, ten commits, **merged `--ff-only` and pushed by the owner at 61265ff**, its worktree removed. Then the tag **`agent-loop-parked`** at 61265ff, local and not pushed, and `loop`, cut from 61265ff in the worktree `.claude/worktrees/loop`, **six commits with this one**. Built under CLAUDE.md as revised on 26 September: each shape approved once, then one part per commit, then the branch shown for review. `loop` is not merged, not pushed, **to be merged `--ff-only` by the owner**.
+**Branches:** `checks`, cut from `baseline-v1` at 41a6d19, ten commits, **merged `--ff-only` and pushed by the owner at 61265ff**. Then the tag `agent-loop-parked` at 61265ff and `loop`, six commits, **merged and pushed with the tag at 7c52210**. Then the tag **`tracer-cost-parked`** at 7c52210, local and not pushed, and `cost`, cut from 7c52210 in the worktree `.claude/worktrees/cost`, **three commits with this one**. Built under CLAUDE.md as revised on 26 September: each shape approved once, then one part per commit, then the branch shown for review. `cost` is not merged, not pushed, **to be merged `--ff-only` by the owner**.
 
-**State:** pytest **2060 passed, 6 xfailed** (2052 at 61265ff, 2036 at the session's start). **The runner: 8 of 18** (run of 26 September, 15:43 UTC, at 22063f6), against a prediction of 9. The corpus at 33 of 67, not re-run.
+**State:** pytest **2061 passed, 6 xfailed** (2060 at 7c52210, 2036 at the session's start). **The runner: 8 of 18** (run of 26 September, 15:43 UTC, at 22063f6), against a prediction of 9. The corpus at 33 of 67, not re-run.
 
-**Decisions 17 and 54 are taken and built.** The pending list is six: 10, 13, 22, 48, 52 and 76.
+**Decisions 17 and 54 are taken and built, and the tracer's price is deleted under decision 53's rule.** The pending list is six: 10, 13, 22, 48, 52 and 76.
 
 Written for whoever picks this up cold, myself included.
 
 **Regenerate this document at the end of each session rather than patching it.**
 **Check every claim here against the code before acting on it, including
 this file.** This session checked:
-- the trunk against the remote at the start and after the owner's merge: 41a6d19, then 61265ff on both;
+- the trunk against the remote at the start and after each of the owner's merges: 41a6d19, then 61265ff, then 7c52210 on both, and `agent-loop-parked` on the remote;
 - pytest at each branch point and red before and green after each of the eight code parts;
 - every caller of each check, accessor, class and export the parts moved or deleted, by grep, in `src/` and `tests/`;
 - that `agents.base_agent` cannot be imported once the file is gone, with bytecode writing off, the orphan `.pyc` in `__pycache__` notwithstanding;
 - that `DataAgent`'s tools call `self.log` and nothing else of the base class, and that the nodes build both agents with `verbose=False`;
 - that only `PortfolioContext` of `protocols.py`'s eleven types has a reader outside the deleted loop;
-- that the tracer's `CostCalculator` runs on every trace, before leaving it out of decision 54;
+- that the tracer's `CostCalculator` runs on every trace, before leaving it out of decision 54, and then, measuring it, that no live code writes a trace's tokens and nothing live reads its cost, which corrected what I had first said of it;
 - that every holding's last stored close was 2026-09-25 and that the worktree's `run_cases.py` imports the worktree's `src`, before the paid run;
 - that each KNOWN_GAPS title cited exists, by grep.
 
@@ -31,10 +31,10 @@ It did not re-check §3's library versions, the filings clocks or the store beyo
 | File | What it is |
 |---|---|
 | `docs/DIRECTION.md` | **The end state and the invariants.** Unchanged this session. |
-| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **Start with the last four entries:** "The runner's checks against a selecting layer - decision 17, TAKEN 26 September (forty-fifth session)", "The runner after decision 17: 8 of 18 against a prediction of 9", "BaseAgent's loop and the config fields that describe it - decision 54, TAKEN 26 September (forty-fifth session)" and "`_get_prices_from_db` reports any database error as no data". Then "CostCalculator reports costs for the wrong model", whose trigger fired. **211 lines start `**Trigger:**`**, 9,531 lines. |
+| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **Start with the last four entries:** "The runner's checks against a selecting layer - decision 17, TAKEN 26 September (forty-fifth session)", "The runner after decision 17: 8 of 18 against a prediction of 9", "BaseAgent's loop and the config fields that describe it - decision 54, TAKEN 26 September (forty-fifth session)", "`_get_prices_from_db` reports any database error as no data" and "A trace's token counts are written by nothing". **212 lines start `**Trigger:**`**, 9,561 lines. |
 | `tests/benchmark/run_cases.py` | `_the_call` and `_of` (a case's own record), `_one_call` (3.2 alone), `_trace_shows_handovers` (the run as a stretch), `_date_shown` and `_source_shown` (the record's provenance), `_date_reaches_answer` (the prose). |
 | `tests/test_agents_without_loop.py` | What decision 54 left: two agents that subclass nothing, `protocols.py` with `PortfolioContext` alone, no `AgentSettings`. |
-| `src/observability/tracer.py` | `CostCalculator` at 393 and its use at 386: the one price the code still computes. |
+| `src/observability/tracer.py` | No price since efea73e; its token counts are never written (logged). |
 | `docs/benchmark.md` Part 3, the block written at c153d73 | The prediction the last run was read against. |
 | `tests/golden/expected_values.md` Part 18 | What each answer must carry. Part 18 is here and not in benchmark.md. |
 
@@ -59,7 +59,9 @@ called since the graph's nodes began calling the agents' tools
 directly, deleted behind the tag `agent-loop-parked` with the task
 loop's vocabulary, the settings describing it and the token counter.
 1,684 lines under `src/` that no question reached are gone; no live path
-changed.
+changed; merged. Last, on `cost`, the tracer's `CostCalculator`, which
+priced zero tokens on every trace for no reader, behind the tag
+`tracer-cost-parked`. No code computes a price now.
 
 ### How I work on this
 
@@ -67,6 +69,8 @@ changed.
   when building finds something the shape did not foresee: the blocks
   every portfolio tool publishes under decision 17, the tracer's price
   under decision 54.
+- **Measure before describing.** I called the tracer's calculator live
+  and read by the runner before measuring it; it was neither.
 - **A check moves toward its reference and never toward the output.**
 - **A deletion is measured before it is brought**: files, lines,
   importers, tests, what each loop loses, and any prompt hidden in it.
@@ -85,25 +89,26 @@ python tests/benchmark/run_cases.py        # PAYS, about $0.14: ask first
 python src/agents/cli.py --portfolio 3      # PAYS per turn
 ```
 
-**pytest: 2060 passed, 6 xfailed.**
+**pytest: 2061 passed, 6 xfailed.**
 
 **The runner: 8 of 18, 7 failing, 3 blocked** (26 September, 15:43:10
 to 15:45:02 UTC, at 22063f6, about $0.14). Predicted 9 of 18. 2.3 moved
 to PASS as predicted; 3.3 to BLOCKED against it, the model calling no
 tool; 2.1 failed on the client refusing an answer that carried the
-figure 48. Decision 54 touched nothing the runner reaches, so no run
-followed it.
+figure 48. Decisions 54 and the tracer's price touched nothing the
+runner reaches, so no run followed them.
 
 **The corpus: 33 of 67** (the forty-second session's run, unchanged).
 
 ### Branches and tags
 
-`baseline-v1` at **61265ff**, pushed. `loop` carries six commits, to be
-merged `--ff-only`. **`agent-loop-parked`** is a local tag at 61265ff,
-holding the deleted loop, to be pushed with the branch. The `loop`
-worktree has a `data/portfolio.db` symlink, which must go before the
-worktree can be removed (§7). `checks` is merged and can be deleted with
-`git branch -d checks`.
+`baseline-v1` at **7c52210**, pushed, with `agent-loop-parked` on the
+remote. `cost` carries three commits, to be merged `--ff-only`.
+**`tracer-cost-parked`** is a local tag at 7c52210, holding the deleted
+calculator, to be pushed with the branch. The `cost` worktree has a
+`data/portfolio.db` symlink, which must go before the worktree can be
+removed (§7). `checks` and `loop` are merged and can be deleted with
+`git branch -d checks loop`.
 
 ### Database
 
@@ -142,7 +147,7 @@ As the handoff at 41a6d19 gave it, and:
 | **57dbdb0** | KNOWN_GAPS: 3.3's draw called no tool; whether it asked back is not recorded | document |
 | **61265ff** | the handoff, regenerated again | document |
 
-**On `loop`, six commits, behind `agent-loop-parked`:**
+**On `loop`, six commits, behind `agent-loop-parked`, merged at 7c52210:**
 
 | Commit | What it is | pytest |
 |---|---|---|
@@ -151,6 +156,14 @@ As the handoff at 41a6d19 gave it, and:
 | **2cac7b4** | agents/config: AgentSettings goes | 1 failed, 2060 passed, then 2061 |
 | **c9da39c** | observability: the token counter goes | 1 failed, 2061 passed, then 2060, two tests deleted |
 | **84410af** | KNOWN_GAPS: decision 54 taken, its four entries resolved, two findings logged | document |
+| **7c52210** | the handoff, regenerated | document |
+
+**On `cost`, three commits, behind `tracer-cost-parked`:**
+
+| Commit | What it is | pytest |
+|---|---|---|
+| **efea73e** | observability: the tracer computes no price | 1 failed, 2060 passed, then 2061 |
+| **58a9a5d** | KNOWN_GAPS: the tracer's CostCalculator resolved, my note on it corrected, the trace's zero tokens logged | document |
 | **This commit** | the handoff, regenerated | document |
 
 **Mistakes of this session, recorded:**
@@ -171,20 +184,28 @@ As the handoff at 41a6d19 gave it, and:
   KNOWN_GAPS counts were wrong; corrected before its commit.
 - `max_conversation_history`'s entry placed it on `AgentConfig`; it was
   on `AgentSettings`. Corrected in the entry.
+- I told the owner, and wrote in KNOWN_GAPS, that the tracer's
+  `CostCalculator` was live code in the trace the runner reads, before
+  measuring it. It priced zero tokens and nothing live read it. Said
+  plainly when the deletion was brought; the note corrected at 58a9a5d.
+- The red test of efea73e first named `TraceLevel.QUIET`, which does not
+  exist; corrected before the change, named in the commit.
 
-**Resolved, seven:** under decision 17, "The synthesizer returns the
+**Resolved, eight:** under decision 17, "The synthesizer returns the
 same answer regardless of the question", "`measure` set by the model
 under intent compliance is unread" and "The runner's first run through
 the layer: 5 of 18 against a prediction of 11"; under decision 54,
 "`AgentConfig` fields declared but unenforced", "BaseAgent's tool-calling
 loop has no live caller", "`max_conversation_history` is read by nothing"
-and "The token counter prices a model it does not know at a default".
+and "The token counter prices a model it does not know at a default";
+and "CostCalculator reports costs for the wrong model".
 
-**Logged, four, each with a trigger:** "A one-ticker P&L record's
+**Logged, five, each with a trigger:** "A one-ticker P&L record's
 provenance states the earliest close of all nine", "Whether a record's
 provenance should carry every date its block states", "1.3's basis
 check asks for the covariance method, which Part 18 does not name",
-"`_get_prices_from_db` reports any database error as no data".
+"`_get_prices_from_db` reports any database error as no data", "A
+trace's token counts are written by nothing".
 
 ---
 
@@ -196,15 +217,15 @@ check asks for the covariance method, which Part 18 does not name",
 - **The paid run**, about $0.14.
 - **Decision 54, in six parts**, the token counter included, tagged
   `agent-loop-parked` first.
+- **The tracer's `CostCalculator` deleted**, in three parts, tagged
+  `tracer-cost-parked` first, by decision 53's rule.
 
 **Pending — six:** 10, 13, 22, 48, 52 and 76. The cap is 25. None
 opened, two closed.
 
 **Surfaced and not numbered:**
-- **Deleting the tracer's `CostCalculator`**, which estimates every
-  trace's cost at `gpt-4-turbo` rates. Decision 53 said delete behind a
-  tag; the trace the runner reads carries the figure, so it is its own
-  question. Its entry's trigger waits on it.
+- **What a trace records of tokens**: its counts are never written and
+  state 0, logged.
 - **The German figures**, whether the answer's notation or the check's
   reading of it moves.
 - **What the philosophy screen may be asked**, given R-2's pin and 4.6
@@ -220,7 +241,7 @@ the answer carrying less than Part 18 pins, or no tool called: 1.4's
 unsectored share, 2.2's clauses, 4.2's assumptions and dates, 4.4's
 readings and proposal, 4.6's pull date, 3.2's and 3.3's missing calls,
 and 2.1's refused answer. What remains is the prompt's and the layer's.
-Decision 54 moved no figure and no answer.
+Decision 54 and the tracer's price moved no figure and no answer.
 
 **What no loop has seen yet:** `rebalance`; a German span question; what
 a corpus run costs; a one-figure question through the layer.
@@ -234,17 +255,13 @@ first, from the VS Code terminal, then the merge, the push of the branch
 and of the tag, and the worktree:
 
 ```
-cd "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/.claude/worktrees/loop" && rm data/portfolio.db && rmdir data
+cd "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/.claude/worktrees/cost" && rm data/portfolio.db && rmdir data
 ```
 ```
-cd "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE" && git merge --ff-only loop && git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1 && git push https://github.com/fatihsenguel/agentic-pm.git agent-loop-parked && git fetch origin && git worktree remove .claude/worktrees/loop
+cd "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE" && git merge --ff-only cost && git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1 && git push https://github.com/fatihsenguel/agentic-pm.git tracer-cost-parked && git fetch origin && git worktree remove .claude/worktrees/cost
 ```
 
-**2. The tracer's `CostCalculator`**, as its own question, its blast
-radius measured: the trace's `total_cost_usd`, `format_summary`'s line,
-the export, and what the runner reads from the trace.
-
-**3. The two surfaced questions**, the German figures and the screen's
+**2. The two surfaced questions**, the German figures and the screen's
 scope, each a shape before any code.
 
 ### Later, with reasons
@@ -279,6 +296,10 @@ did not show it, the grep for `self.` in the tools did.
 **A deleted test assertion is not replaced by a true one.** When the
 attribute an assertion read is gone by design, the assertion goes.
 
+**A thing is not described as live until its writers and readers are
+grepped.** The tracer's calculator ran on every trace and was still
+dead: nothing fed it and nothing read it.
+
 Still true: the handoff at 41a6d19's list, and everything before it.
 
 ---
@@ -289,10 +310,11 @@ Still true: the handoff at 41a6d19's list, and everything before it.
 cd "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE"
 source .venv/bin/activate
 
-pytest -q          # 2060 passed, 6 xfailed
+pytest -q          # 2061 passed, 6 xfailed
 python tests/benchmark/run_cases.py                # PAYS, about $0.14 a run; ask first
 python src/agents/cli.py --portfolio 3             # PAYS per turn; :q to quit
 git show golden-parked:tests/golden/run_golden.py  # the parked golden set
 git show router-parked:src/agents/smart_router.py  # the parked router
 git show agent-loop-parked:src/agents/base_agent.py  # the parked agent loop
+git show tracer-cost-parked:src/observability/tracer.py  # the tracer with its price
 ```
