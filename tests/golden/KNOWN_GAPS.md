@@ -9094,7 +9094,7 @@ it.
 
 ### An answer offers a tool for a company the owner has not written down
 
-**Trigger:** any change to `SYSTEM_PROMPT`; any change to `philosophy_screen`'s input model.
+**Trigger:** any change to `SYSTEM_PROMPT`, where the offer in the prose is read; the tool's half is decided at d72982b.
 
 Recorded 24 September 2026 (forty-second session), from R-2 of the
 corpus run after the layer. The refusal was right. The answer then
@@ -9109,6 +9109,28 @@ no entry. So the pin and the tool disagree on what the screen may be
 asked, and 4.6 is the case against restricting it to the watchlist.
 R-3's and V-2.1b's answers offer too, naming no company. Surfaced, not
 taken.
+
+**26 September 2026 (forty-fifth session), the screen's scope decided at
+d72982b.** The screen may be asked of a company I have written down: one
+held, which PHI-7.2 rechecks after every annual report and 4.6 screens,
+or one on a watchlist entry. `philosophy_screen`'s input model refuses
+any other ticker, naming what is held and what is listed, before the
+node calls EDGAR, so C-2's ZZZZFAKE and an accepted offer to screen AAPL
+are both refused at the input. The tool and R-2's pin now agree. No
+prompt changed: the rule sits in a comment above the class, a model's
+docstring entering the schema the conversation model is shown, and a
+test holds the schema to what it was. Watchlist-only was rejected for
+4.6 and PHI-7.2; any named ticker, as before, for R-2's pin and
+invariant 8. The cost, said before the yes: a new company is written
+down on the watchlist before it is screened, the reverse of
+DIRECTION.md's workflow order for a name I have not yet listed.
+
+What stays open is the prose. The model may still offer a screen of a
+company I have not written down; accepting it now ends in the input's
+refusal, and whether the answer offers it at all is the system prompt's,
+on this entry's trigger. `_last_close`'s refusal of a ticker neither held
+nor listed (`nodes.py:1122`) is now unreachable through the tool and
+stays, the node being run directly by its tests.
 
 ### The narration adds comparisons and summaries no tool printed
 
