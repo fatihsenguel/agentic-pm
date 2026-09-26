@@ -31,7 +31,8 @@ What each case asserts instead:
     the ticker set - none of which move with prices
   - weakly on the prose: do the figures the blocks carry appear in the
     answer at all
-  - benchmark.md Part 3b: is an as-of date stated
+  - benchmark.md Part 3b: is an as-of date stated, read from the record's
+    provenance, which the client prints under the answer (decision 17)
   - on every turn, that every figure in the answer is one a tool printed
     that turn or one of the question the turn recorded (`figures_trace`,
     DIRECTION.md invariant 1)
@@ -40,7 +41,10 @@ The as-of check asserts on the allocation block's `as_of.worst_case`:
 that it exists, that it is a date, and that that exact date reaches the answer.
 It was a date-shaped regex over the prose until roadmap item 5 built the field,
 and it was replaced in the same commit so that 1.1 and 1.4 could not flip to
-PASS on the proxy.
+PASS on the proxy. Since decision 17 the date is read from the record's
+provenance, the as-of the client prints under the answer, and not from the
+prose; a date the question asks about, 3.3's "today", still reaches the
+answer, and so does every date the provenance does not carry.
 
 STATUSES
 
@@ -343,6 +347,9 @@ def _states_as_of(state):
     `_states_pnl_as_of` below; portfolio volatility carries a window and a
     weights date and `check_1_3` reads both. Searching for a date wherever
     one might live is what the regex version did.
+
+    The date is the one the client shows, the as-of of the record's
+    provenance, and it need not reach the prose (decision 17).
     """
     allocation = _block(state, "allocation")
     as_of = allocation.get("as_of") or {}
@@ -352,16 +359,19 @@ def _states_as_of(state):
         return ["no as_of.worst_case in the allocation block "
                 "(benchmark.md Part 3b)"]
 
-    return _date_reaches_answer(state, stated, "allocation.as_of.worst_case")
+    return _date_shown(state, stated, "allocation.as_of.worst_case")
 
 
-def _states_pnl_as_of(state, tickers):
+def _states_pnl_as_of(state, tickers, in_prose=False):
     """Per-position as-of: the position_pnl block's `[ticker]["as_of"]`.
 
     One holding, one close, so there is nothing to reduce and every position
-    asked about carries its own date. Each must be a date and each must reach
-    the answer.
+    asked about carries its own date. Each must be a date and each must be
+    the as-of the client shows from the record's provenance (decision 17),
+    or, `in_prose`, reach the answer: where the question asks about a time,
+    3.3's "today", the date is the answer's.
     """
+    reaches = _date_reaches_answer if in_prose else _date_shown
     pnl = _block(state, "position_pnl")
     fails = []
     for t in tickers:
@@ -370,8 +380,43 @@ def _states_pnl_as_of(state, tickers):
             fails.append(f"no as_of for {t} in the position_pnl block "
                          "(benchmark.md Part 3b)")
             continue
-        fails += _date_reaches_answer(state, stated, f"position_pnl[{t}].as_of")
+        fails += reaches(state, stated, f"position_pnl[{t}].as_of")
     return fails
+
+
+def _date_shown(state, stated, where):
+    """Part 3b's data age, as the client shows it. The as-of a record's
+    provenance carries prints under the answer beside the record (decision
+    77), so it is read there and not in the prose (decision 17): the date
+    the block states is a date, and it is the as-of of a record of the
+    turn as the case reads it. A record whose provenance carries none, or
+    another date, fails. The prose may repeat it and need not; a date the
+    question asks about is the answer's, and `_date_reaches_answer` reads
+    it."""
+    fails = []
+    if not AS_OF.fullmatch(str(stated)):
+        fails.append(f"{where} is not a YYYY-MM-DD date: {stated!r}")
+    shown = {str((record.get("provenance") or {}).get("as_of")) for record in _calls(state)}
+    if str(stated) not in shown:
+        fails.append(f"as-of date {stated} is in {where} but no record's provenance "
+                     "carries it; the client shows the as-of from the record")
+    return fails
+
+
+def _source_shown(state, source, where):
+    """The source a record's provenance names, as the client shows it,
+    read there and not in the prose (decision 17). A provenance naming
+    several sources, the readings' of a thesis, lists them joined by a
+    comma."""
+    shown = set()
+    for record in _calls(state):
+        named = (record.get("provenance") or {}).get("source")
+        if named:
+            shown.update(str(named).split(", "))
+    if str(source) not in shown:
+        return [f"source {source!r} is in {where} but no record's provenance carries it; "
+                "the client shows the source from the record"]
+    return []
 
 
 def _date_reaches_answer(state, stated, where):
@@ -553,7 +598,7 @@ def check_1_3(state):
         fails.append("no weights_as_of in the portfolio_volatility block "
                      "(benchmark.md Part 3b)")
     else:
-        fails += _date_reaches_answer(state, stated, "portfolio_volatility.weights_as_of")
+        fails += _date_shown(state, stated, "portfolio_volatility.weights_as_of")
     return fails
 
 
@@ -722,7 +767,8 @@ def check_3_3(state):
     if "price return" not in _answer(state).lower():
         fails.append("answer does not say it is price return only (D4)")
 
-    fails += _states_pnl_as_of(state, sorted(pnl))
+    # The question asks about today: the date is the answer's (Part 18, 3.3).
+    fails += _states_pnl_as_of(state, sorted(pnl), in_prose=True)
     return fails
 
 
@@ -933,7 +979,7 @@ def check_2_2(state):
         fails.append("no as_of.worst_case in the compliance block "
                      "(benchmark.md Part 3b)")
     else:
-        fails += _date_reaches_answer(state, as_of, "compliance.as_of.worst_case")
+        fails += _date_shown(state, as_of, "compliance.as_of.worst_case")
     return fails
 
 
@@ -1031,7 +1077,7 @@ def check_2_3(state):
         fails.append("no as_of.worst_case in the compliance block "
                      "(benchmark.md Part 3b)")
     else:
-        fails += _date_reaches_answer(state, as_of, "compliance.as_of.worst_case")
+        fails += _date_shown(state, as_of, "compliance.as_of.worst_case")
     return fails
 
 
@@ -1336,7 +1382,7 @@ def check_2_1(state):
         fails.append("no as_of.worst_case in the compliance block "
                      "(benchmark.md Part 3b)")
     else:
-        fails += _date_reaches_answer(state, as_of, "compliance.as_of.worst_case")
+        fails += _date_shown(state, as_of, "compliance.as_of.worst_case")
     return fails
 
 
@@ -1668,16 +1714,18 @@ def _unexplained_screen_percentages(state, findings):
 
 def _screen_dates_reach_answer(state):
     """Part 3b: the check's as-of date and the date EDGAR stated the code
-    both reach the answer. The code is as of its pull and the years as of
-    the check (KNOWN_GAPS, the two as-of entries); the answer prints both."""
+    are both stated. The code is as of its pull and the years as of the
+    check (KNOWN_GAPS, the two as-of entries). The check's date is the
+    record's as-of, which the client shows (decision 17); the pull date is
+    not on the provenance and reaches the answer."""
     block = _screening(state)
     fails = []
-    for key in ("as_of", "sic_as_of"):
+    for key, reaches in (("as_of", _date_shown), ("sic_as_of", _date_reaches_answer)):
         stated = block.get(key)
         if not stated:
             fails.append(f"no {key} in the screening block (benchmark.md Part 3b)")
             continue
-        fails += _date_reaches_answer(state, str(stated)[:10], f"screening.{key}")
+        fails += reaches(state, str(stated)[:10], f"screening.{key}")
     return fails
 
 
@@ -1757,8 +1805,8 @@ def check_4_1(state):
     if not source:
         fails.append("no source in the screening block; a figure without a source "
                      "is a number in the answer")
-    elif str(source) not in answer:
-        fails.append(f"source {source!r} never reaches the answer")
+    else:
+        fails += _source_shown(state, source, "screening.source")
 
     for st in block.get("statements") or []:
         if st.get("clause") not in answer:
@@ -1934,15 +1982,19 @@ def check_4_2(state):
     year = record.get("year")
     if year not in years:
         fails.append(f"valuation year {year!r} is not a year the block dates {sorted(years)}")
-    for key in ("as_of", "ends", "filed"):
+    # The range's as-of and source are the record's, shown by the client;
+    # the fiscal year's end and filed dates are not on the provenance and
+    # reach the answer (decision 17).
+    fails += _date_shown(state, record.get("as_of"), "valuation.as_of")
+    for key in ("ends", "filed"):
         fails += _date_reaches_answer(state, record.get(key), f"valuation.{key}")
     if year and year not in answer:
         fails.append(f"valuation year {year} never reaches the answer")
     source = record.get("source")
     if not source:
         fails.append("valuation record names no source")
-    elif str(source) not in answer:
-        fails.append(f"valuation source {source!r} never reaches the answer")
+    else:
+        fails += _source_shown(state, source, "valuation.source")
 
     assumptions = record.get("assumptions") or {}
     if sorted(assumptions) != sorted(RANGE_ASSUMPTIONS):
@@ -2063,7 +2115,7 @@ def check_4_5(state):
         return fails + ["no ledger block on the records"]
     answer = _answer(state)
     as_of = block.get("as_of")
-    fails += _date_reaches_answer(state, as_of, "ledger.as_of")
+    fails += _date_shown(state, as_of, "ledger.as_of")
 
     file = _ledger_file()
     records = block.get("records")
@@ -2254,9 +2306,11 @@ def _readings_invariants(state):
             fails.append(f"{where}: fiscal year {r.get('fiscal_year')!r} is not a label like FY2025")
         if not r.get("source"):
             fails.append(f"{where}: names no source")
-        for key in ("form", "accn", "section", "fiscal_year", "source"):
+        for key in ("form", "accn", "section", "fiscal_year"):
             if r.get(key) and str(r[key]) not in answer:
                 fails.append(f"{where}: {key} {r[key]!r} never reaches the answer")
+        if r.get("source"):
+            fails += _source_shown(state, r["source"], f"{where}.source")
         fails += _date_reaches_answer(state, r.get("filed"), f"{where}.filed")
 
         listed = r.get("claims")
@@ -2467,7 +2521,7 @@ def _research_invariants(state, entry):
     subject = block.get("subject") or {}
     if subject.get("ticker") != WATCHLIST_TICKER or subject.get("candidate") != entry["id"]:
         fails.append(f"subject {subject} is not {WATCHLIST_TICKER} under {entry['id']}")
-    fails += _date_reaches_answer(state, block.get("as_of"), "research.as_of")
+    fails += _date_shown(state, block.get("as_of"), "research.as_of")
 
     thesis = block.get("thesis") or {}
     if thesis.get("candidate") != entry["id"] or thesis.get("text") != entry["thesis"]:

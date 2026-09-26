@@ -88,16 +88,17 @@ def record_of(tool, inputs, shared, agents=None, text=""):
     """A record as the tool runner writes it from a run's final state, for
     a test that ran the nodes itself and hands the runner's checks the
     result: every block of the tool's table that `shared` carries, the
-    tool's own under `block`. A block the test did not publish is left
-    out rather than raised on, since the check under test reads only the
-    ones it names."""
-    from agents.tool_runner import BLOCKS, BLOCK_KEY
+    tool's own under `block`, and the provenance the runner derives from
+    it. A block the test did not publish is left out rather than raised
+    on, since the check under test reads only the ones it names."""
+    from agents.tool_runner import BLOCKS, BLOCK_KEY, _provenance
 
     key = BLOCK_KEY[tool]
     blocks = {k: shared[k] for k in BLOCKS[tool] if k in shared}
-    return {"tool": tool, "inputs": dict(inputs), "key": key, "block": blocks.get(key) or {},
+    block = blocks.get(key) or {}
+    return {"tool": tool, "inputs": dict(inputs), "key": key, "block": block,
             "text": text, "blocks": blocks, "agents": dict(agents or {}),
-            "provenance": dict(NO_PROVENANCE)}
+            "provenance": _provenance(tool, block)}
 
 
 def _state(log, **extra):
@@ -226,6 +227,96 @@ def test_2_1_reads_the_compliance_block_of_its_own_call():
     weight = _record("hypothetical_weight", {"weight": 0.15, "instrument_type": "share"},
                      key="compliance", block=other)
     assert _mentions(run_cases.check_2_1(_state([check, weight])), "refused") == []
+
+
+# ---------------------------------------------------------------------------
+# The as-of and the source a record's provenance carries are the client's
+# to show, printed under the answer beside the record (decision 77), and
+# the case reads them there and not in the prose (decision 17). A date the
+# question itself asks about, 3.3's "today", is the answer's and stays in
+# the prose, and so does every date the provenance does not carry.
+# ---------------------------------------------------------------------------
+
+DATE = "2026-09-25"
+OTHER = "2026-09-22"
+
+
+def _dated(record, as_of=DATE, source=None):
+    record["provenance"] = {"as_of": as_of, "source": source, "caveats": ()}
+    return record
+
+
+def _as_of_fails(fails, date=DATE):
+    return _mentions(fails, f"as-of date {date}", f"{date} is in")
+
+
+def test_an_as_of_the_record_carries_need_not_reach_the_prose():
+    compliance = {"as_of": {"worst_case": DATE}, "findings": [], "policy": {}}
+    allocation = {"as_of": {"worst_case": DATE}, "by_sector": {"lines": []},
+                  "by_asset_class": {"lines": []}}
+    pnl = {"JPM": {"as_of": DATE}}
+    volatility = {"weights_as_of": DATE, "window": {}}
+    cases = [
+        (run_cases.check_2_1, "compliance_check", {}, "compliance", compliance),
+        (run_cases.check_2_2, "compliance_check", {}, "compliance", compliance),
+        (run_cases.check_2_3, "compliance_check", {}, "compliance", compliance),
+        (run_cases.check_1_1, "allocation", {}, "allocation", allocation),
+        (run_cases.check_1_4, "allocation", {}, "allocation", allocation),
+        (run_cases.check_1_2, "position_pnl", {"tickers": ["JPM"]}, "position_pnl", pnl),
+        (run_cases.check_1_3, "portfolio_volatility", {"period": "1Y"},
+         "portfolio_volatility", volatility),
+    ]
+    for check, tool, inputs, key, block in cases:
+        shown = _state([_dated(_record(tool, inputs, key=key, block=block))],
+                       final_response="No date here.")
+        assert _as_of_fails(check(shown)) == [], check.__name__
+        unshown = _state([_record(tool, inputs, key=key, block=block)],
+                         final_response=f"As of {DATE}.")
+        assert _mentions(check(unshown), "provenance"), check.__name__
+        another = _state([_dated(_record(tool, inputs, key=key, block=block), as_of=OTHER)],
+                         final_response=f"As of {DATE}.")
+        assert _mentions(check(another), "provenance"), check.__name__
+
+
+def test_3_3_asks_about_today_and_its_date_stays_in_the_prose():
+    pnl = {t: {"as_of": DATE} for t in run_cases.TICKERS}
+    shown = _state([_dated(_record("position_pnl", {"tickers": []}, block=pnl))],
+                   final_response="No date here.")
+    assert _mentions(run_cases.check_3_3(shown), "never reaches the answer")
+
+
+def test_1_3_keeps_the_window_the_question_names_in_the_prose():
+    volatility = {"weights_as_of": DATE, "window": {"start": "2025-09-25", "end": DATE}}
+    shown = _state([_dated(_record("portfolio_volatility", {"period": "1Y"},
+                                   block=volatility))], final_response="No date here.")
+    fails = run_cases.check_1_3(shown)
+    assert _mentions(fails, "window.start 2025-09-25")
+    assert _mentions(fails, "weights_as_of") == []
+
+
+def test_the_screens_date_is_the_records_and_the_codes_pull_date_the_prose():
+    """4.6: the check's date is the record's as-of; the date EDGAR stated
+    the code is not on the provenance and stays in the prose."""
+    block = {"as_of": DATE, "sic_as_of": "2026-09-23T08:00:00+00:00", "source": "EDGAR"}
+    shown = _state([_dated(_record("philosophy_screen", {"ticker": "JPM"}, key="screening",
+                                   block=block), source="EDGAR")],
+                   final_response="No date here.")
+    fails = run_cases._screen_dates_reach_answer(shown)
+    assert _as_of_fails(fails) == []
+    assert _mentions(fails, "2026-09-23")
+
+
+def test_a_source_the_record_carries_need_not_reach_the_prose():
+    record = _dated(_record("thesis", {"ticker": "GOOGL"}, key="research"),
+                    source="EDGAR filing archive, EDGAR companyfacts")
+    state = _state([record], final_response="No source here.")
+    assert run_cases._source_shown(state, "EDGAR filing archive", "reading") == []
+    assert run_cases._source_shown(state, "EDGAR companyfacts", "reading") == []
+    assert _mentions(run_cases._source_shown(state, "EDGAR", "reading"), "provenance")
+    bare = _state([_record("thesis", {"ticker": "GOOGL"}, key="research")],
+                  final_response="EDGAR filing archive")
+    assert _mentions(run_cases._source_shown(bare, "EDGAR filing archive", "reading"),
+                     "provenance")
 
 
 def test_3_2_is_one_call_alone():

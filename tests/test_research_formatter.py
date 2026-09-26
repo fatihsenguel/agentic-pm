@@ -123,10 +123,12 @@ def price_record():
 def valued_block(base=stopped_block):
     """Alphabet as the node publishes it today: the screen stopped at
     PHI-2.1, the range and the price beside it (the range does not depend
-    on the screen)."""
+    on the screen). The range carries the screen's as-of and source, as
+    the node computes it from the same facts block on the same day."""
     block = base()
     block["years"]["FY2025"] = {"ends": "2025-12-31", "filed": "2026-02-05"}
-    block.update({"valuation": valuation_record(), "valuation_stopped": None,
+    valuation = {**valuation_record(), "as_of": block["as_of"], "source": block["source"]}
+    block.update({"valuation": valuation, "valuation_stopped": None,
                   "price": price_record(), "price_stopped": None})
     return block
 
