@@ -9394,7 +9394,8 @@ on the trace, or on a provenance date.
 **3.3 moved against the prediction, PASS to BLOCKED.** The model made
 one call and called no tool, so no P&L block was published and the
 probe blocked. The prediction held the tool call of both runner draws;
-the corpus draw of the 24th had asked back, and so did this one. A
+the corpus draw of the 24th had asked back, and this one called no tool
+too, whether to ask back or to answer the runner does not print. A
 failed hypothesis, recorded in "The same question called a tool on one
 draw and asked back on another".
 
