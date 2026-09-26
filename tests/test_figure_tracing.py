@@ -5,9 +5,12 @@ that turn, or one the user typed (DIRECTION.md invariant 1; decision 45).
 What it reads. The number tokens of the answer, digits with thousands
 commas and an optional decimal part as the formatters print them, each
 of which must be a token of the allowed text: the rendered text of every
-record in the turn's tool-call log, and the question. Tokens are compared
-whole and not as substrings, which is what catches a rounding: 4.4 is a
-substring of 4.41 and is not the same token.
+record in the turn's tool-call log, the question, and, under `earlier`,
+every earlier turn's records and the question it was checked against
+(decision 77: a figure that passed an earlier turn's check may be quoted
+in a follow-up). Tokens are compared whole and not as substrings, which
+is what catches a rounding: 4.4 is a substring of 4.41 and is not the
+same token.
 
 What it cannot see: a coincidence. A clause id the model invented whose
 digits match a distance the text printed passes on the token. It is a
@@ -118,6 +121,19 @@ def test_a_resolution_with_no_question_raises():
     state = {**_state("No figures.", POSITION), "resolved": {"reply": "A share."}}
     with pytest.raises(KeyError):
         run_cases.figures_trace(state, "A share.")
+
+
+def test_an_earlier_turns_texts_and_question_are_allowed():
+    """S-4's turn 2 quoted turn 1's distances, which turn 1's compliance
+    text had printed. The runner allows what the client allows: the
+    earlier turns' records and questions, carried under `earlier`."""
+    answer = "Equity was 69.41% last turn, and you asked about 15%."
+    earlier = [{"question": "Can I put 15% into one position?",
+                "tool_calls": _state("", TEXT)["tool_calls"]}]
+    state = {**_state(answer), "earlier": earlier}
+    assert run_cases.figures_trace(state, "What did we say?") == []
+    fails = _untraced(run_cases.figures_trace(_state(answer), "What did we say?"))
+    assert fails and "'69.41'" in fails[0] and "'15'" in fails[0]
 
 
 def test_a_turn_the_pre_pass_answered_is_not_read():

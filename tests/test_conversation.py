@@ -81,9 +81,9 @@ def tools_run(conversation, monkeypatch):
     return runs
 
 
-async def _turn(conversation, model, message="How has my JPM position performed?"):
+async def _turn(conversation, model, message="How has my JPM position performed?", **kwargs):
     return await conversation.answer(message, history=[], context=CONTEXT, portfolio_id=3,
-                                     model=model)
+                                     model=model, **kwargs)
 
 
 async def test_a_tool_is_called_its_text_shown_and_the_answer_narrated(conversation, tools_run):
@@ -95,10 +95,26 @@ async def test_a_tool_is_called_its_text_shown_and_the_answer_narrated(conversat
     assert tools_run == [("position_pnl", {"tickers": ["JPM"]}, 3)]
     assert turn["tool_calls"] == [JPM_RECORD]
     assert turn["text"] == "JPM is up +15,622.00, +78.11%, as of 2026-09-02."
-    assert "state" not in turn, "the run's state stops at the record (decision 77)"
+    assert set(turn) == {"text", "tool_calls", "model_calls"}, \
+        "the run's state stops at the record, and the messages nothing read are gone (decision 77)"
     [result] = model.requests[1]["messages"][-1]["content"]
     assert (result["type"], result["tool_use_id"], result["content"]) == \
         ("tool_result", "tu_1", JPM_TEXT)
+
+
+async def test_a_figure_an_earlier_turn_printed_or_asked_is_allowed(conversation, tools_run):
+    """S-4's follow-up (decision 77): the earlier turns' tool texts and
+    questions are given to the layer as `earlier`, and a figure from them
+    is allowed as this turn's own are. Without them the same answer is
+    refused by name."""
+    answer = "Last turn Equity was 69.41% of the total, and you asked about 15%."
+    earlier = ["Can I put 15% into one position?", "Equity: 69.41% of total"]
+    turn = await _turn(conversation, StandIn(_response("end_turn", _text(answer))),
+                       "What did we say?", earlier=earlier)
+    assert turn["text"] == answer
+    refused = await _turn(conversation, StandIn(_response("end_turn", _text(answer))),
+                          "What did we say?")
+    assert "not shown" in refused["text"] and "69.41" in refused["text"] and "15" in refused["text"]
 
 
 async def test_every_call_records_its_usage(conversation, tools_run):
