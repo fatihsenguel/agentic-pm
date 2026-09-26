@@ -1,21 +1,14 @@
 """
 Observability Module for Multi-Agent System.
 
-Provides comprehensive tracing, token counting, and cost management.
+Provides request, agent and tool tracing.
 
 Components:
 - Tracer: Full request/agent/tool tracing
-- TokenCounter: Token usage tracking
 - CostCalculator: Cost estimation
 
 Usage:
-    from observability import (
-        Tracer, 
-        get_tracer, 
-        TokenCounter, 
-        get_token_counter,
-        TraceLevel
-    )
+    from observability import Tracer, get_tracer, TraceLevel
     
     # Configure tracer
     tracer = Tracer(level=TraceLevel.VERBOSE)
@@ -34,11 +27,6 @@ Usage:
     
     # Get summary
     print(tracer.get_summary())
-    
-    # Token tracking
-    counter = get_token_counter()
-    counter.add_usage("DataAgent", 150, 80)
-    print(counter.format_report())
 """
 
 from .tracer import (
@@ -69,20 +57,6 @@ from .tracer import (
     trace_tool,
 )
 
-from .token_counter import (
-    TokenCounter,
-    TokenUsage,
-    UsageSummary,
-    
-    # Functions
-    calculate_cost,
-    get_token_counter,
-    set_token_counter,
-    
-    # Constants
-    MODEL_PRICING,
-)
-
 
 __all__ = [
     # Tracer
@@ -100,13 +74,4 @@ __all__ = [
     "set_tracer",
     "trace_agent",
     "trace_tool",
-    
-    # Token Counter
-    "TokenCounter",
-    "TokenUsage",
-    "UsageSummary",
-    "calculate_cost",
-    "get_token_counter",
-    "set_token_counter",
-    "MODEL_PRICING",
 ]

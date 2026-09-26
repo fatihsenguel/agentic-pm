@@ -66,38 +66,6 @@ def test_tracer_basic():
     print("\n✅ Basic tracer test PASSED")
 
 
-def test_token_counter():
-    """Test token counting functionality."""
-    print("\n" + "=" * 60)
-    print("TEST 2: Token Counter")
-    print("=" * 60)
-    
-    from observability import TokenCounter, calculate_cost
-    
-    counter = TokenCounter(budget_limit_usd=1.0)
-    
-    # Simulate usage
-    counter.add_usage("RiskManager", 200, 100, "req_001", "gpt-4-turbo")
-    counter.add_usage("DataAgent", 150, 80, "req_001", "gpt-4-turbo")
-    counter.add_usage("MacroAgent", 300, 150, "req_002", "gpt-4-turbo")
-    
-    # Check totals
-    assert counter.total_tokens == 980
-    
-    # Check breakdown
-    breakdown = counter.get_agent_breakdown()
-    assert "RiskManager" in breakdown
-    assert breakdown["RiskManager"]["input_tokens"] == 200
-    
-    # Test cost calculation
-    cost = calculate_cost(1000, 500, "gpt-4-turbo")
-    assert cost > 0
-    
-    print(counter.format_report())
-    
-    print("\n✅ Token counter test PASSED")
-
-
 def test_trace_export():
     """Test JSON export functionality."""
     print("\n" + "=" * 60)
@@ -197,30 +165,19 @@ def test_error_handling():
     print("\n✅ Error handling test PASSED")
 
 
-def test_cost_calculation():
-    """Test cost calculation for different models."""
-    print("\n" + "=" * 60)
-    print("TEST 6: Cost Calculation")
-    print("=" * 60)
-    
-    from observability import calculate_cost, MODEL_PRICING
-    
-    # Test GPT-4
-    cost_gpt4 = calculate_cost(1000, 500, "gpt-4")
-    print(f"   GPT-4 (1000 in, 500 out): ${cost_gpt4:.6f}")
-    
-    # Test GPT-4-turbo
-    cost_turbo = calculate_cost(1000, 500, "gpt-4-turbo")
-    print(f"   GPT-4-Turbo (1000 in, 500 out): ${cost_turbo:.6f}")
-    
-    # Test Claude
-    cost_claude = calculate_cost(1000, 500, "claude-3-sonnet")
-    print(f"   Claude-3-Sonnet (1000 in, 500 out): ${cost_claude:.6f}")
-    
-    # GPT-4 should be more expensive than turbo
-    assert cost_gpt4 > cost_turbo
-    
-    print("\n✅ Cost calculation test PASSED")
+def test_no_token_counter_prices_a_model():
+    """The token counter priced any model it did not know at a default
+    rate and had no caller since the router went; the conversation layer
+    records tokens and computes no price (decision 54)."""
+    import importlib.util
+
+    import observability
+
+    assert importlib.util.find_spec("observability.token_counter") is None
+    gone = {"TokenCounter", "TokenUsage", "UsageSummary", "calculate_cost",
+            "get_token_counter", "set_token_counter", "MODEL_PRICING"}
+    assert gone & set(observability.__all__) == set()
+    assert [name for name in gone if hasattr(observability, name)] == []
 
 
 def test_global_singleton():
@@ -251,11 +208,9 @@ def run_all_tests():
     
     tests = [
         test_tracer_basic,
-        test_token_counter,
         test_trace_export,
         test_nested_tools,
         test_error_handling,
-        test_cost_calculation,
         test_global_singleton,
     ]
     
