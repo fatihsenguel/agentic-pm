@@ -58,19 +58,6 @@ from .protocols import (
 )
 
 # =============================================================================
-# BASE AGENT CLASSES
-# =============================================================================
-
-from .base_agent import (
-    BaseAgent,
-    SupervisorAgent,
-    AgentConfig,
-    AgentRole,
-    AgentState as MultiAgentState,  # Renamed to avoid conflict with LangGraph state
-    AgentMessage,
-)
-
-# =============================================================================
 # SPECIALIZED AGENTS
 # =============================================================================
 
@@ -120,14 +107,6 @@ __all__ = [
     "RiskDecomposition",
     "CovarianceResult",
     "RebalanceAnalysis",
-    
-    # === Base Classes ===
-    "BaseAgent",
-    "SupervisorAgent",
-    "AgentConfig",
-    "AgentRole",
-    "MultiAgentState",
-    "AgentMessage",
     
     # === Specialized Agents ===
     # Data Agent

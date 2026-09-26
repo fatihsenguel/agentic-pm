@@ -2126,7 +2126,7 @@ async def rebalance_agent_node(state: AgentState) -> Dict[str, Any]:
         # Import and run agent
         try:
             from .rebalance_agent import create_rebalance_agent
-            agent = create_rebalance_agent(verbose=False)
+            agent = create_rebalance_agent()
             
             result = agent.analyze_rebalance_tool(
                 current_weights=current_positions,

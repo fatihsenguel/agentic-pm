@@ -32,12 +32,9 @@ from dataclasses import dataclass
 import pandas as pd
 import numpy as np
 
-from .base_agent import BaseAgent, AgentConfig, AgentRole, AgentState
-from .protocols import PortfolioTask, PortfolioResult, CovarianceResult
-
 from config import config
 
-class DataAgent(BaseAgent):
+class DataAgent:
     """
     Data Agent for fetching and processing market data.
     
@@ -53,16 +50,10 @@ class DataAgent(BaseAgent):
     - No direct yfinance calls
     """
     
-    def __init__(self, agent_config: Optional[AgentConfig] = None):
+    def __init__(self, verbose: bool = False):
         """Initialize Data Agent."""
-        if agent_config is None:
-            agent_config = AgentConfig(
-                name="DataAgent",
-                role=AgentRole.DATA,
-                temperature=0.0,  # Deterministic
-            )
-        super().__init__(agent_config)
-        
+        self.verbose = verbose
+
         # Lazy-loaded components
         self._data_manager = None
         
@@ -81,187 +72,11 @@ class DataAgent(BaseAgent):
             self._data_manager = get_data_manager()
         return self._data_manager
     
-    # ==================== AGENT INTERFACE ====================
-    
-    @property
-    def capabilities(self) -> List[str]:
-        """List of capabilities this agent provides."""
-        return [
-            "fetch_prices",
-            "calculate_returns",
-            "calculate_covariance",
-            "get_risk_free_rate",
-            "get_correlation_matrix",
-            "calculate_rolling_volatility",
-        ]
-    
-    def get_tools(self) -> List[Callable]:
-        """Get the list of tools available to this agent."""
-        return [
-            self.fetch_prices_tool,
-            self.calculate_returns_tool,
-            self.calculate_covariance_tool,
-            self.get_risk_free_rate_tool,
-            self.calculate_rolling_volatility_tool,
-        ]
-    
-    def get_system_prompt(self) -> str:
-        """Get the system prompt for this agent."""
-        return """You are the Data Agent for a Quant Portfolio Manager system.
+    def log(self, message: str) -> None:
+        """Print a progress line when the agent was created verbose."""
+        if self.verbose:
+            print(f"[{datetime.now():%H:%M:%S}] [DataAgent] {message}")
 
-Your role is to fetch and process market data for portfolio optimization and risk analysis.
-
-CAPABILITIES:
-- Fetch historical prices for any ticker
-- Calculate returns (simple, log, excess)
-- Estimate covariance matrices
-- Provide risk-free rate data
-
-GUIDELINES:
-1. Always validate ticker symbols before fetching
-2. Check for sufficient data (minimum 60 observations recommended)
-3. Handle missing data appropriately (report gaps, don't hide them)
-4. Include audit trails in all responses (dates, methods, data quality)
-5. Return PROCESSED summaries, not raw data (Hot Potato Principle)
-
-SCOPE GUARDS:
-- Do NOT make investment recommendations
-- Do NOT interpret market conditions
-- Do NOT make predictions about future prices
-- Only provide DATA - leave interpretation to other agents
-
-OUTPUT FORMAT:
-Always include in your responses:
-- Data period used
-- Number of observations
-- Any data quality warnings
-- Method used for calculations
-"""
-    
-    # ==================== PROCESS METHOD ====================
-    
-    async def process(self, state: AgentState) -> AgentState:
-        """
-        Process a data request.
-        
-        This is called by LangGraph when delegated to by the supervisor.
-        """
-        task = state.current_task
-        
-        if task is None:
-            state.add_message("assistant", "No task provided to Data Agent")
-            return state
-        
-        self.log(f"Processing task: {task.task_type.value}")
-        
-        # Based on task type, execute appropriate tools
-        if task.task_type.value == "fetch_data":
-            result = await self._handle_fetch_data(task)
-        else:
-            # For optimization tasks, prepare all required data
-            result = await self._prepare_optimization_data(task)
-        
-        # Store result in state
-        state.add_sub_result(self.name, result)
-        state.add_message("assistant", result.to_summary())
-        
-        return state
-    
-    async def _handle_fetch_data(self, task: PortfolioTask) -> PortfolioResult:
-        """Handle a data fetch request."""
-        prices_result = self.fetch_prices_tool(
-            tickers=",".join(task.universe),
-            period=task.historical_period
-        )
-        
-        if not prices_result.get("success"):
-            return self.create_result(
-                task_id=task.task_id,
-                success=False,
-                error_message=prices_result.get("error", "Failed to fetch prices")
-            )
-        
-        return self.create_result(
-            task_id=task.task_id,
-            success=True,
-            reasoning="Successfully fetched price data",
-            data_period=prices_result.get("period"),
-        )
-    
-    async def _prepare_optimization_data(self, task: PortfolioTask) -> PortfolioResult:
-        """Prepare all data needed for portfolio optimization."""
-        warnings = []
-        
-        # 1. Fetch prices
-        prices_result = self.fetch_prices_tool(
-            tickers=",".join(task.universe),
-            period=task.historical_period
-        )
-        
-        if not prices_result.get("success"):
-            return self.create_result(
-                task_id=task.task_id,
-                success=False,
-                error_message=f"Failed to fetch prices: {prices_result.get('error')}"
-            )
-        
-        # 2. Calculate covariance matrix
-        cov_result = self.calculate_covariance_tool(
-            tickers=",".join(task.universe),
-            period=task.historical_period,
-        )
-        
-        if not cov_result.get("success"):
-            return self.create_result(
-                task_id=task.task_id,
-                success=False,
-                error_message=f"Failed to calculate covariance: {cov_result.get('error')}"
-            )
-        
-        if cov_result.get("warnings"):
-            warnings.extend(cov_result["warnings"])
-        
-        # 3. Calculate expected returns
-        returns_result = self.calculate_returns_tool(
-            tickers=",".join(task.universe),
-            period=task.historical_period,
-            annualize=True
-        )
-        
-        # 4. Get risk-free rate (from macro data in DB)
-        rf_result = self.get_risk_free_rate_tool()
-        
-        # STRICT: Fail if risk-free rate is unavailable (no hardcoded default)
-        if not rf_result.get("success"):
-             return self.create_result(
-                task_id=task.task_id,
-                success=False,
-                error_message=f"Risk-free rate error: {rf_result.get('error')}"
-            )
-        
-        risk_free_rate = rf_result.get("rate")
-        
-        # Build result
-        result = self.create_result(
-            task_id=task.task_id,
-            success=True,
-            reasoning="Prepared optimization data: prices, covariance, returns",
-            data_period=cov_result.get("estimation_period"),
-            warnings=warnings
-        )
-        
-        # Attach data for optimization agent
-        result.metadata = {
-            "covariance_matrix": cov_result.get("covariance_matrix"),
-            "correlation_matrix": cov_result.get("correlation_matrix"),
-            "expected_returns": returns_result.get("annualized_returns"),
-            "volatilities": cov_result.get("annualized_volatilities"),
-            "risk_free_rate": risk_free_rate,
-            "num_observations": cov_result.get("num_observations"),
-        }
-        
-        return result
-    
     # ==================== HELPER METHODS ====================
     
     def _get_prices_from_db(
@@ -968,10 +783,4 @@ def create_data_agent(verbose: bool = False) -> DataAgent:
     Returns:
         Configured DataAgent instance
     """
-    agent_config = AgentConfig(
-        name="DataAgent",
-        role=AgentRole.DATA,
-        verbose=verbose,
-        temperature=0.0,
-    )
-    return DataAgent(agent_config)
+    return DataAgent(verbose=verbose)

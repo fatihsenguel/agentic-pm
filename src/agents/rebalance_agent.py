@@ -26,15 +26,12 @@ from typing import Any, Callable, Dict, List, Optional
 from datetime import datetime
 from dataclasses import dataclass
 
-from .base_agent import BaseAgent, AgentConfig, AgentRole, AgentState
-from .protocols import PortfolioTask, PortfolioResult, TaskType
-
 import importlib
 from config import config
 
 
 
-class RebalanceAgent(BaseAgent):
+class RebalanceAgent:
     """
     Rebalance Agent for portfolio rebalancing analysis.
     
@@ -47,138 +44,6 @@ class RebalanceAgent(BaseAgent):
     - generate_trades: Trade list generation
     - estimate_costs: Cost estimation
     """
-    
-    def __init__(self, agent_config: Optional[AgentConfig] = None):
-        """Initialize Rebalance Agent."""
-        if agent_config is None:
-            agent_config = AgentConfig(
-                name="RebalanceAgent",
-                role=AgentRole.DATA,  # Uses DATA role (could be separate REBALANCE role)
-                temperature=0.0,  # Deterministic
-            )
-        super().__init__(agent_config)
-    
-    @property
-    def capabilities(self) -> List[str]:
-        """List of capabilities this agent provides."""
-        return [
-            "analyze_rebalance",
-            "calculate_drift",
-            "generate_trades",
-            "estimate_costs",
-            "check_rebalance_threshold",
-        ]
-    
-    def get_tools(self) -> List[Callable]:
-        """Get the list of tools available to this agent."""
-        return [
-            self.analyze_rebalance_tool,
-            self.calculate_drift_tool,
-            self.generate_trades_tool,
-            self.quick_drift_check_tool,
-        ]
-    
-    def get_system_prompt(self) -> str:
-        """Get the system prompt for this agent."""
-        return """You are the Rebalance Agent for a Quant Portfolio Manager system.
-
-Your role is to analyze portfolio drift and generate rebalancing recommendations.
-
-⚠️ CRITICAL: You do NOT perform calculations yourself.
-All calculations are done by deterministic tools (rebalance_tools.py).
-Your job is to:
-1. Understand user requests
-2. Call the appropriate tools
-3. Explain the results clearly
-
-CAPABILITIES:
-- Analyze portfolio drift (current vs target weights)
-- Determine if rebalancing is needed
-- Generate specific trade lists
-- Estimate transaction costs and tax impact
-- Calculate break-even thresholds
-
-KEY CONCEPTS:
-- Drift: Difference between current and target weights
-- Threshold: Typically 5% - rebalance when max drift exceeds this
-- Turnover: Total trades as % of portfolio value
-- Break-even: Drift level at which rebalancing becomes cost-effective
-
-OUTPUT FORMAT:
-Always include:
-1. Current vs Target weights comparison
-2. Drift analysis (which assets are over/underweight)
-3. Clear recommendation (rebalance YES/NO)
-4. If YES: Specific trade list with costs
-5. Cost-benefit analysis
-
-SCOPE GUARDS:
-- Do NOT recommend specific timing for trades
-- Do NOT predict price movements
-- Do NOT guarantee any outcomes
-- Always note that actual execution prices may differ
-"""
-    
-    async def process(self, state: AgentState) -> AgentState:
-        """Process a rebalancing request."""
-        task = state.current_task
-        
-        if task is None:
-            state.add_message("assistant", "No task provided to Rebalance Agent")
-            return state
-        
-        self.log(f"Processing rebalance task: {task.task_id}")
-        
-        # Get data from shared state
-        shared = state.shared_data
-        
-        # Required: current and target weights
-        current_weights = shared.get("current_weights")
-        target_weights = shared.get("target_weights") or shared.get("optimal_weights")
-        portfolio_value = shared.get("portfolio_value", 100000)
-        prices = shared.get("current_prices", {})
-        
-        if not current_weights:
-            state.add_message("assistant", "❌ Missing current portfolio weights. Please provide current_weights.")
-            return state
-        
-        if not target_weights:
-            state.add_message("assistant", "❌ Missing target weights. Provide target_weights.")
-            return state
-        
-        # Perform analysis
-        result = self.analyze_rebalance_tool(
-            current_weights=current_weights,
-            target_weights=target_weights,
-            portfolio_value=portfolio_value,
-            prices=prices
-        )
-        
-        if not result.get("success"):
-            state.add_message("assistant", f"❌ Rebalancing analysis failed: {result.get('error')}")
-            return state
-        
-        # Store results in shared state
-        state.shared_data["rebalance_result"] = result
-        state.shared_data["should_rebalance"] = result["decision"]["should_rebalance"]
-        state.shared_data["rebalance_trades"] = result.get("trades", [])
-        
-        # Create result
-        portfolio_result = PortfolioResult(
-            agent_name=self.name,
-            task_id=task.task_id,
-            success=True,
-            result_type="rebalance_analysis",
-            data=result,
-            message=f"Rebalancing analysis complete. Recommendation: {result['decision']['recommendation']}",
-            reasoning=f"Max drift: {result['drift_analysis']['max_drift']}, "
-                      f"Threshold: {result['drift_analysis']['threshold']}",
-        )
-        
-        state.add_sub_result(self.name, portfolio_result)
-        state.add_message("assistant", result.get("summary", "Analysis complete"))
-        
-        return state
     
     # ==================== TOOL METHODS ====================
     
@@ -421,20 +286,11 @@ SCOPE GUARDS:
 
 # ==================== FACTORY FUNCTION ====================
 
-def create_rebalance_agent(verbose: bool = False) -> RebalanceAgent:
+def create_rebalance_agent() -> RebalanceAgent:
     """
-    Factory function to create configured Rebalance Agent.
-    
-    Args:
-        verbose: Enable verbose logging
-    
+    Factory function to create a Rebalance Agent.
+
     Returns:
-        Configured RebalanceAgent
+        RebalanceAgent
     """
-    agent_config = AgentConfig(  
-        name="RebalanceAgent",
-        role=AgentRole.DATA,
-        verbose=verbose,
-        temperature=0.0,
-    )
-    return RebalanceAgent(agent_config)
+    return RebalanceAgent()

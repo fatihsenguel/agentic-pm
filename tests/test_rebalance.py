@@ -227,10 +227,7 @@ def test_rebalance_agent():
     try:
         from agents.rebalance_agent import create_rebalance_agent
         
-        agent = create_rebalance_agent(verbose=True)
-        
-        print(f"\nAgent: {agent.name}")
-        print(f"Tools: {[t.__name__ for t in agent.get_tools()]}")
+        agent = create_rebalance_agent()
         
         # Test drift check
         result = agent.calculate_drift_tool(
