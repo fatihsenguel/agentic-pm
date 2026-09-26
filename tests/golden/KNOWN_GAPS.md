@@ -751,9 +751,9 @@ deterministic), the model's, and the fallback above (an exception wearing a
 question). The fallback is still confidence 0.0 with the German apology.
 
 
-### CostCalculator reports costs for the wrong model
+### CostCalculator reports costs for the wrong model - RESOLVED 26 September (forty-fifth session)
 
-**Trigger:** the owner's word on deleting the tracer's `CostCalculator`, brought after decision 54 (the token counter's deletion, c9da39c, fired the old trigger). Decision 53 closed 15 September (eighteenth session): delete behind a tag, by the rule for code no question reaches.
+**Trigger:** none: the tracer's `CostCalculator` deleted at efea73e, behind the tag `tracer-cost-parked`, by decision 53's rule.
 
 `observability/tracer.py:406` — `PRICING` is a 2024 table with no Anthropic 4.x
 entries, and `estimate_cost` does `PRICING.get(model, PRICING["gpt-4-turbo"])`.
@@ -774,6 +774,19 @@ as "Est. Cost". No code should compute a price; the conversation layer
 records tokens and the record converts them. Deleting it touches the
 tracer the runner reads, which decision 54's approved shape did not
 name, so it is brought to me as its own question.
+
+**26 September 2026 (forty-fifth session), resolved at efea73e, and the
+note above corrected.** It called the calculator "not dead" and its
+deletion one that "touches the tracer the runner reads". Measured before
+the deletion was brought: it ran on every request and priced nothing,
+since no live code writes a trace's tokens (`set_tokens` is called
+nowhere under `src/`), so every live estimate was 0.0000; and nothing
+live read it, the figure reaching only `format_summary` and `to_dict`,
+which the runner, the corpus and the CLI never call. The runner reads a
+trace's agent, delegation and tool events. The class, the tracer's
+instance of it, the estimate, `RequestTrace.total_cost_usd` with its key,
+the "Est. Cost" line and the export are gone;
+`test_the_tracer_computes_no_price` holds it.
 
 ### `ANTHROPIC_SONNET` points at the Haiku model id - RESOLVED 10 September (tenth sitting)
 
@@ -9529,3 +9542,20 @@ found for tickers", so a broken connection, a schema error and an empty
 table read the same. That is the repair shape invariant 5 forbids: the
 error is replaced by a plausible statement about the data. Not fixed
 here, a change to what live code raises being its own decision.
+
+### A trace's token counts are written by nothing
+
+**Trigger:** the next change to what a trace records; or any code that calls `AgentTrace.set_tokens`.
+
+Recorded 26 September 2026 (forty-fifth session), found measuring the
+tracer's `CostCalculator`. `AgentTrace.set_tokens` is called nowhere
+under `src/`, so every event's `input_tokens` and `output_tokens` are 0,
+every `RequestTrace.total_tokens` is 0, and the "Total Tokens" line of
+`format_summary` and the `total_tokens` key of `to_dict` state 0 for a
+request that used thousands. The tokens a turn uses are recorded by the
+conversation layer under `model_calls`, per call, which the runner sums.
+A zero where the count is unknown is a figure with a plausible face;
+whether a trace carries tokens at all, read from the layer's record, or
+drops the fields, is what a trace should record, a question of its own.
+Not deleted with the calculator, the approved shape naming the price
+alone.
