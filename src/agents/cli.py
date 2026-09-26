@@ -14,7 +14,7 @@ Usage:
 
 Commands:
     :p <id>     switch portfolio (:p with no id clears it)
-    :v          toggle verbose (full shared_data and sub_result payloads)
+    :v          toggle verbose (full inputs, and each record's agents)
     :r          show the last raw state dict
     :q          quit
 """
@@ -50,7 +50,14 @@ def _fmt(value, limit=None):
 
 
 def show(state, elapsed, verbose, question, seen):
-    """Print the routing decision, what ran, and the answer.
+    """Print the routing decision, the records of the tools the turn
+    called, and the answer.
+
+    Each record prints as one line, the tool, its inputs and its
+    provenance, with the tool's fixed caveats under it (decision 77); an
+    as-of or a source the block did not state prints as not recorded. The
+    last run's `shared_data` and `sub_results` are empty after a turn and
+    are not printed.
 
     seen maps an answer body to the first question that produced it, so a
     synthesizer returning boilerplate for every query is detectable.
@@ -69,33 +76,22 @@ def show(state, elapsed, verbose, question, seen):
     if decision.get("clarification_question"):
         print(f"  asked back  : {decision['clarification_question']}")
 
-    sub_results = state.get("sub_results") or {}
-    print("\nAGENTS RUN")
-    if not sub_results:
-        print("  (none — router answered directly or nothing executed)")
-    for name, result in sub_results.items():
-        ok = result.get("success") if isinstance(result, dict) else None
-        rtype = result.get("result_type") if isinstance(result, dict) else None
-        print(f"  {name}: success={ok} type={rtype}")
-        if isinstance(result, dict):
-            if result.get("message"):
-                print(f"      message: {_fmt(result['message'], limit)}")
-            if result.get("data") is not None:
-                print(f"      data:    {_fmt(result['data'], limit)}")
-
-    # Plan vs reality. A plan that lists agents which never ran is bug 7's
-    # shape: the router produced a correct plan and nothing consumed it.
-    planned = decision.get("execution_order") or []
-    missing = [a for a in planned if a not in sub_results]
-    if missing:
-        print(f"\n  !! PLANNED BUT DID NOT RUN: {missing}")
-
-    shared = state.get("shared_data") or {}
-    print("\nSHARED_DATA")
-    if not shared:
-        print("  (empty)")
-    for key, value in shared.items():
-        print(f"  {key}: {_fmt(value, limit)}")
+    records = state.get("tool_calls") or []
+    print("\nTOOLS CALLED")
+    if not records:
+        print("  (none)")
+    for record in records:
+        provenance = record.get("provenance") or {}
+        as_of = provenance.get("as_of") or "not recorded"
+        source = provenance.get("source") or "not recorded"
+        print(f"  {record.get('tool')} {_fmt(record.get('inputs') or {}, limit)}  "
+              f"as of {as_of}; source {source}")
+        for caveat in provenance.get("caveats") or ():
+            print(f"      {caveat}")
+        if verbose:
+            agents = record.get("agents") or {}
+            ran = ", ".join(f"{name} {'ok' if ok else 'not ok'}" for name, ok in agents.items())
+            print(f"      agents: {ran or '(none recorded)'}")
 
     errors = state.get("errors") or []
     warnings = state.get("warnings") or []
@@ -125,10 +121,10 @@ def show(state, elapsed, verbose, question, seen):
     # remained the body. "DataAgent: ✓" survives that filter, so the check
     # missed the exact case it was written for. Two better signals:
     if answer:
-        # 1. Numbers exist in shared_data but none reached the answer.
+        # 1. A tool printed numbers this turn and none reached the answer.
         if not any(c.isdigit() for c in answer):
-            if any(c.isdigit() for c in _fmt(shared, None)):
-                print("\n  !! NO NUMBERS IN ANSWER while shared_data has them"
+            if any(c.isdigit() for r in records for c in (r.get("text") or "")):
+                print("\n  !! NO NUMBERS IN ANSWER while a tool's text has them"
                       " — Part 3b failure")
 
         # 2. The same text came back for a different question.
