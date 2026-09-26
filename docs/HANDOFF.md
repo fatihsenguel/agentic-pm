@@ -1,23 +1,24 @@
 # AGENTIC_FINANCE — Session Handoff
 
-**Session date:** 24 September 2026 (forty-third session), begun about 17:40 local time.
-**Branch:** `tracing-question`, cut from `baseline-v1` at **a66bc02** before its first commit, in the worktree `.claude/worktrees/tracing-question`; **five commits with this one**, each on the owner's yes after its diff was shown. Not merged, not pushed, **to be merged `--ff-only` by the owner**.
+**Session date:** 25 and 26 September 2026 (forty-fourth session), begun about 05:00 local time on the 25th; its commits run from 05:31 on the 25th to the afternoon of the 26th.
+**Branch:** `turn-records`, cut from `baseline-v1` at **8e7f962** before its first commit, in the worktree `.claude/worktrees/turn-records`; **sixteen commits with this one**, each on the owner's yes after its diff was shown in full. Not merged, not pushed, **to be merged `--ff-only` by the owner**.
 
-**State:** pytest **2011 passed, 6 xfailed** (2008 at a66bc02). **No paid loop ran.** The runner stands at 5/18 and the corpus at 33 of 67, both from the forty-second session's runs.
+**State:** pytest **2036 passed, 6 xfailed** (2011 at 8e7f962). **No paid loop ran.** The runner stands at 5/18 and the corpus at 33 of 67, both from the forty-second session's runs; the runner's next run has its prediction written, 6 of 18.
 
-**B is taken and done.** **A with C1 is decision 77, numbered and pending.** The pending list is nine: 10, 13, 17, 22, 48, 52, 54, 76 and 77.
+**Decision 77 is taken and built.** The pending list is eight: 10, 13, 17, 22, 48, 52, 54 and 76.
 
 Written for whoever picks this up cold, myself included.
 
 **Regenerate this document at the end of each session rather than patching it.**
 **Check every claim here against the code before acting on it, including
 this file.** This session checked:
-- the trunk head against the remote: `baseline-v1` and `origin/baseline-v1` both at a66bc02, where the last handoff said 02a9e57 (the merge after it was written);
-- pytest at the branch point, at the red commit and after the change;
-- that the client checks the resolved question (`graph._turn`, `conversation.answer`) and the runner the typed one, before changing the runner;
-- that `resolved` is reset to `None` on every turn (`create_initial_state`);
-- every call site the blast radius of decision 77 counts, by grep;
-- that every title it cites exists once in KNOWN_GAPS.
+- the trunk against the remote and against every other branch and worktree, at the start and again mid-session: `baseline-v1` and `origin/baseline-v1` both at 8e7f962, no branch newer than this one's, the previous handoff's claim that the trunk stood at a66bc02 stale by one merge;
+- pytest at the branch point and after every one of the sixteen commits, red before each change and green after;
+- every reader of the turn's `shared_data`, `sub_results`, the record's `as_of` and the layer's `state` and `messages` returns, by grep, before each was moved: in the layer, the runner, the CLI and the tests;
+- that the analysis node publishes its three blocks together or raises, before the block table was written;
+- that the pytest test the 1.3 sub-question would have added already existed, before writing the node test instead;
+- that the worktree's pytest and `run_cases.py` import the worktree's `src`, by printing the import path;
+- that every title cited exists once in KNOWN_GAPS, and that the stored closes run to 2026-09-23, by query.
 
 It did not re-check §3's library versions, the filings clocks or the store.
 
@@ -28,9 +29,11 @@ It did not re-check §3's library versions, the filings clocks or the store.
 | File | What it is |
 |---|---|
 | `docs/DIRECTION.md` | **The end state and the invariants.** Unchanged this session. |
-| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **Start with "What a turn's result carries - decision 77, pending"**, the last entry in the file. **203 lines start `**Trigger:**`**, 9,049 lines. |
-| `tests/benchmark/run_cases.py` | `figures_trace`, changed this session; the accessors `_shared`, `_compliance` and the rest, which decision 77 would move. |
-| `src/agents/graph.py`, `conversation.py`, `tool_runner.py` | `graph._turn` keeps the last tool run's `shared_data` and `sub_results`; `run_tool` builds the record decision 77 would extend. |
+| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **Start with "What a turn's result carries - decision 77, TAKEN 26 September (forty-fourth session)"**, the last entry in the file, whose closing account lists the six parts and their commits. **203 lines start `**Trigger:**`**, 9,128 lines. |
+| `src/agents/tool_runner.py` | The record as it is now: `tool`, `inputs`, `key`, `block`, `text`, `blocks`, `agents`, `provenance`; the tables `BLOCKS` and `CAVEATS`. |
+| `src/agents/state.py`, `graph.py`, `conversation.py` | `earlier`, the earlier turns carried forward; the turn that copies nothing out of a run; the layer's check taking `earlier`. |
+| `tests/benchmark/run_cases.py` | `_block`, `_published`, `_agents`, the accessors that read the records; `figures_trace` with the earlier turns. |
+| `docs/benchmark.md` Part 3, the block written 26 September | The runner's prediction for its next run, 6 of 18, before Part 3b. |
 | `docs/benchmark.md` Part 3c.6, the fifth block | The corpus run of the forty-second session, unchanged. |
 
 ---
@@ -45,22 +48,30 @@ It did not re-check §3's library versions, the filings clocks or the store.
 
 ### What this session did, in one paragraph
 
-B on paper, then on the owner's yes, its tests red and its change: the
-runner's tracing check now reads a resolved reply against the question
-it was resolved into, the one the client already checks against. Then A
-with C1 on paper, measured before it was proposed, and numbered decision
-77 on the owner's word, pending. Then the record swept for B. Nothing was
-paid for, no prompt changed, and nothing of A was built.
+Decision 77 in plain words first, checked against the code, with two
+readings added and the blast radius recounted; then, on the owner's
+yes, built in six parts, each part its tests red and then its change,
+with one green test commit between for the sub-question. The record
+carries every block its run published, the agents that ran and its
+provenance; the runner reads the records; a finished turn copies
+nothing out of the last run; the earlier turns' figures are allowed in
+a follow-up by the client's check and the runner's alike; the layer's
+unread messages return is gone; the CLI prints one line per record.
+Then the record swept, the runner's prediction written, and nothing
+paid for.
 
 ### How I work on this
 
-- **Measure before proposing.** Decision 77's blast radius was counted by
-  grep, and the count found a read the shape had not accounted for (1.3's
-  single-name volatilities, §5).
-- **One question per message, asked as a yes or a no.**
-- **A decision that touches the state gets a number; one that makes a
-  check agree with a rule already decided does not.** B was the second
-  kind, 77 the first.
+- **Say the decision in plain words before the yes**: what it is, what
+  each part changes, what changes on yes, and where the record is wrong.
+- **Grep the reader before moving what it reads, and grep the tests that
+  call a check, not only the tests named for it.** Four formatter test
+  files called the runner's checks and were not on the entry's list.
+- **A check that may already exist is grepped for before it is written.**
+  The 1.3 sub-question's pytest test existed; the node test was the
+  thing missing.
+- **One question per message, asked as a yes or a no; every diff in the
+  message that asks.**
 
 ---
 
@@ -71,153 +82,161 @@ cd "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_
 source .venv/bin/activate
 
 pytest -q
-python tests/benchmark/run_cases.py        # PAYS, about $0.15: ask first
+python tests/benchmark/run_cases.py        # PAYS, about $0.14: ask first
 python src/agents/cli.py --portfolio 3      # PAYS per turn
 ```
 
-**pytest: 2011 passed, 6 xfailed.**
+**pytest: 2036 passed, 6 xfailed.**
 
-**The runner: 5/18** (run of 14:16 UTC at 78c61cd, unchanged). **Predicted
-for its next run: 3.1 PASS**, the one line it failed on, `['15']`, being
-the line this session's change removes, provided the model again calls
-`hypothetical_weight` at 0.15 and cites IPS-4.1. Nothing else is
-predicted to move from B. The prediction is written here and in
-KNOWN_GAPS, not in benchmark.md; it goes there before a run the owner
-orders.
+**The runner: 5/18** (run of 14:16 UTC on 24 September at 78c61cd,
+unchanged). **Predicted for its next run, in benchmark.md Part 3, written
+at dda1f4a: 6 of 18, 10 failing, 2 blocked.** 3.1 to PASS on B's change;
+2.1 out of BLOCKED to FAIL, on `_one_call` if the model again calls two
+tools, on the as-of if it calls one; every other verdict unchanged.
 
-**The corpus: 33 of 67** (the forty-second session's run, unchanged). B
-moves nothing the corpus reads: the client's check did not change.
+**The corpus: 33 of 67** (the forty-second session's run, unchanged).
+Decision 77 changes no answer's text. S-4's turn 2 is no longer refused
+if the model again quotes turn 1's distances. Each record's as-of, source
+and caveats now print under the answer; whether Part 3c's reading counts
+them is a question about the reading rules.
 
 ### Branches
 
-`baseline-v1` at **a66bc02**, pushed. `tracing-question` carries this
-session's five commits, to be merged `--ff-only`; its worktree holds a
+`baseline-v1` at **8e7f962**, pushed. `turn-records` carries this
+session's sixteen commits, to be merged `--ff-only`; its worktree holds a
 symlink `data/portfolio.db`, removed with the worktree after the merge.
 
 ### Database
 
-`data/portfolio.db`, untracked, not touched this session. Still no close
-of 2026-09-22 for JNJ, NEE and VNQ (logged).
+`data/portfolio.db`, untracked, not touched this session. Closes stored
+to 2026-09-23 for eleven assets. Still no close of 2026-09-22 for JNJ,
+NEE and VNQ (logged).
 
 ---
 
 ## 3. Environment
 
-As the handoff at a66bc02 gave it, and:
+As the handoff at 8e7f962 gave it, and:
 
 - **From a worktree, pytest and `run_cases.py` import the worktree's
-  `src`**: `tests/conftest.py` and `run_cases.py` each put their own
-  checkout's `src` first. Checked this session by printing
-  `run_cases.__file__` before running anything.
-- **CLAUDE.md says the pending list "stands at 8".** It is nine now. The
-  file is the owner's and excluded from the repository; not edited.
+  `src`**, checked again this session by printing the import path.
+- **The permission layer refuses `source` and any command whose name is
+  computed inside a worktree session**, and `git -C` to the shared
+  checkout. Run the venv's python by relative path
+  (`../../../.venv/bin/python`), and plain git from the worktree.
+- **CLAUDE.md's pending list, "10, 13, 17, 22, 48, 52, 54 and 76", is
+  right again** now that 77 is closed.
 
 ---
 
-## 4. What the forty-third session did
+## 4. What the forty-fourth session did
 
-**Five commits on `tracing-question`:**
+**Sixteen commits on `turn-records`, each on the owner's yes:**
 
 | Commit | What it is |
 |---|---|
-| **5cc3a9a** | three tests of `figures_trace` on a resolved reply, red: pytest 3 failed, 2008 passed |
-| **d893747** | `figures_trace` reads `state["resolved"]["message"]` where a reply was resolved; 2011 passed |
-| **11bee81** | KNOWN_GAPS, decision 77 numbered and pending |
-| **709c4af** | KNOWN_GAPS, B's entry resolved and the runner's entry read against it |
+| **e5e7e6e** | tests: the record carries every summary block its run published and the agents that ran, red (14 failed) |
+| **6ce404a** | tool_runner: `blocks` from the `BLOCKS` table, `agents` from the run's results; 2013 passed |
+| **21eb097** | tests: the record's provenance, its as-of, source and caveats, red (16 failed, 2 errors) |
+| **a65916b** | tool_runner and nodes: `provenance`; six caveat tuples beside their formatters; `tests/test_caveats.py` holds each to the text; 2018 passed |
+| **811d710** | tests: the analysis node's volatility over the committed closes is Part 4's figure (the 1.3 sub-question); 2019 passed |
+| **fe2bb42** | tests: the runner's accessors read every block and every agent from the records, red (15 failed) |
+| **fd38d22** | run_cases: `_block`, `_published`, `_agents`; the 1.3 volatilities read gone; four formatter test files build records through `record_of`; 2024 passed |
+| **982b5bf** | tests: a finished turn leaves the run's state empty and the layer returns none, red (6 failed) |
+| **441c104** | graph, conversation: the turn copies nothing out of the last run; `answer` returns no state; 2025 passed |
+| **685f33a** | tests: the allowed set takes the earlier turns' records and questions, and the messages return goes, red (6 failed) |
+| **903e90d** | graph, conversation, state, run_cases: `earlier` on the state, given to the layer as texts and read by `figures_trace`; the messages return gone; 2029 passed |
+| **104f0d0** | tests: the CLI prints one line per record with its provenance, red (7 failed) |
+| **dda1f4a** | cli: TOOLS CALLED, one line per record with its provenance and caveats, in place of the two dumps; 2036 passed |
+| **49b3b8f** | KNOWN_GAPS: decision 77 taken, its three entries resolved, the runner's entry read against it |
+| **ddf01f2** | benchmark: the runner's prediction for its next run, 6 of 18, written at dda1f4a |
 | **This commit** | the handoff, regenerated |
 
-**What the three tests pin:**
-- the runner reads a resolved reply against the resolved question, as the
-  client does (3.1's "15" passes, and `untraced_figures` is asserted on the
-  same input);
-- the typed reply is not what is read on a resolved turn;
-- a resolution with no message raises, rather than falling back to the
-  typed turn.
+**Which loop sees what.** pytest saw every commit, red then green.
+The runner sees fd38d22 onwards on its next paid run, against the block
+at ddf01f2. The corpus sees 903e90d on S-4 and dda1f4a under every
+answer. The CLI shows the per-record lines.
 
-**Resolved, one:** "The runner's tracing check and the client's read
-different questions on a resolved reply".
+**Mistakes of this session, recorded:**
+- The layer's new test for `earlier` was inserted in the middle of an
+  existing test, leaving two assertions dangling in the new one; caught
+  before the commit by reading the diff.
+- The three-turn test's third message asked about a weight with no
+  instrument type, so the pre-pass asked back and the layer was not
+  called; the red commit carried the mistake and the change commit
+  carried the correction, said so in its message.
+- The blast radius missed four test files that call the runner's checks
+  over node-built states, and counted 16 direct `_shared` reads where
+  there were 9 beside 6 accessors.
 
-**Mistakes of this session, recorded:** none found. The blast radius's
-line counts for the layer and the CLI (about 60 and about 40) are
-estimates from reading, not a diff; the runner's and the tests' are
-counted.
+**Resolved, three:** "The turn's `messages` from the layer are read by
+nothing", "Two tools in one turn leave the state only the last one's
+blocks", "A follow-up answered from the previous turn's figures is
+refused".
 
 ---
 
 ## 5. Decisions taken, and decisions pending
 
 **Taken this session, on the owner's yes:**
-- **B**, on the recommendation and without a number: the runner reads the
-  question the turn recorded. It applies decision 45's rule, which the
-  client already enforces; nothing about the state, the tools or the
-  roster moved.
-- **Decision 77 numbered**, pending, with its recommendation recorded.
+- **Decision 77, as recommended with two readings added.** The earlier
+  turns' questions in the allowed set beside their records; and "to
+  pytest" for 1.3 meaning the runner's read deleted and the node test
+  added, since the function's test already existed. Every part of its
+  shape is built; the entry's closing account has the commits.
 
-**Pending — nine:** 10, 13, 17, 22, 48, 52, 54, 76 and **77**. The cap is
-25. One opened, none closed.
-
-**Decision 77, what a turn's result carries.** In KNOWN_GAPS under "What a
-turn's result carries - decision 77, pending", with the shape, the
-rejected alternatives, the blast radius and what each loop would show.
-In one breath: the tool records replace the turn's one `shared_data`;
-each record carries every summary block its run published, the agents
-that ran, and its provenance (as-of, source where the block states one,
-fixed caveats per tool); the CLI prints a line per record; the tracing
-check allows the records of the conversation's earlier turns, which
-answers S-4's follow-up. **One sub-question inside it:** 1.3's check
-reads the nine single-name volatilities from `shared_data`, which no
-block carries; recommended, to pytest.
+**Pending — eight:** 10, 13, 17, 22, 48, 52, 54 and 76. The cap is 25.
+None opened, one closed.
 
 **Surfaced and not numbered, unchanged from the forty-second session:**
 - **C2. The runner's prose checks against a selecting layer**, inside
-  decision 17.
+  decision 17. 2.1's next verdict lands on it.
 - **The German figures**, whether the answer's notation or the check's
   reading of it moves.
 - **What the philosophy screen may be asked**, given R-2's pin and 4.6
   screening a held JPM.
 
-The follow-up question the forty-second session surfaced is now part of
-decision 77.
-
 ---
 
 ## 6. Where we stand against the benchmark
 
-**Runner 5/18, corpus 33 of 67**, neither re-run. One runner failure,
-3.1's, was the runner's own check disagreeing with the client's, and is
-removed. The rest of the forty-second session's reading stands: the
+**Runner 5/18, corpus 33 of 67**, neither re-run. The runner's next run
+is predicted at 6 of 18. The forty-second session's reading stands: the
 layer reads names, German and referents, and loses the formatters'
-completeness, dates and caveats first.
+completeness, dates and caveats first. The caveats now travel as a field
+on every record and print under every answer, which is the client's to
+show and not the model's to write.
 
 **What no loop has seen yet:** `rebalance`; a German span question; what
-a corpus run costs; the runner after B.
+a corpus run costs; the runner after B and after 77; the CLI's
+per-record lines on a live turn.
 
 ---
 
 ## 7. Next steps, in order
 
-**1. The merge.** `tracing-question` onto the trunk, `--ff-only`, the push
-by URL, `git fetch origin`, the worktree removed.
+**1. The merge.** `turn-records` onto the trunk, `--ff-only`, the push
+by URL, `git fetch origin`, the worktree removed with its symlink: one
+line from the VS Code terminal that `cd`s into
+`.claude/worktrees/turn-records`'s parent and runs `git worktree remove
+turn-records`.
 
-**2. Decision 77**, the owner's. If taken: tests first, per tool record
-and per runner accessor, then the change, one change per commit. The
-record's fields, the runner's reads and the CLI's lines are separate
-commits.
+**2. The runner's next paid run**, on the owner's word, about $0.14,
+read against the block at ddf01f2. Each of the eighteen verdicts against
+its line; 2.1's reason is C2's first measurement.
 
 **3. C2 inside decision 17's commit**, case by case against Part 18;
-decision 54's commit beside it. After 77, since the runner's reads move
-under it.
+decision 54's commit beside it. The runner's reads now sit on the
+records, so the move is the checks' wording and nothing else.
 
-**4. The runner's next paid run**, on the owner's word, with 3.1's
-prediction written into benchmark.md first.
-
-**5. The two remaining surfaced questions**, the German figures and the
+**4. The two remaining surfaced questions**, the German figures and the
 screen's scope, each a shape before any code.
 
 ### Later, with reasons
 
 - **The CLI as the client, the README, the demo recordings**, after
-  Order 5.
+  Order 5. The per-record lines are the least the corpus needs, not the
+  client.
 - **The console glyphs**, their own session.
 - **Decision 76**, on the owner's word only. **W-2**, out of scope.
 
@@ -225,16 +244,18 @@ screen's scope, each a shape before any code.
 
 ## 8. Rules learned the hard way
 
-**Grep the reader before proposing to move what it reads.** The shape of
-decision 77 assumed each tool's block was what the runner read; 1.3 reads
-a DataAgent key beside the block, and `position`'s record needs three
-blocks, not one. Both showed up only when every read site was listed.
+**Grep the callers of a check, not only the tests named for it.** The
+runner's checks are called from six formatter and node test files over
+hand-built states; the entry counted the five named for the runner.
 
-**A check and its client read the same input or they are two rules.** B
-was a runner that enforced invariant 1 on a different question from the
-one the client enforced it on; each was right by its own reading.
+**Look for the test before writing it.** The sub-question's pytest
+check existed under another name, and what was missing was one level
+up, the node.
 
-Still true: the handoff at a66bc02's list, and everything before it.
+**A red commit's mistake is corrected in the change commit and named
+there.** The three-turn test.
+
+Still true: the handoff at 8e7f962's list, and everything before it.
 
 ---
 
@@ -244,8 +265,8 @@ Still true: the handoff at a66bc02's list, and everything before it.
 cd "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE"
 source .venv/bin/activate
 
-pytest -q          # 2011 passed, 6 xfailed
-python tests/benchmark/run_cases.py                # PAYS, about $0.15 a run; ask first
+pytest -q          # 2036 passed, 6 xfailed
+python tests/benchmark/run_cases.py                # PAYS, about $0.14 a run; ask first
 python src/agents/cli.py --portfolio 3             # PAYS per turn; :q to quit
 git show golden-parked:tests/golden/run_golden.py  # the parked golden set
 git show router-parked:src/agents/smart_router.py  # the parked router
