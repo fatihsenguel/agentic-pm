@@ -1,7 +1,7 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 26 September 2026 (forty-fifth session), the afternoon, UTC.
-**Branch:** `checks`, cut from `baseline-v1` at **41a6d19** in the worktree `.claude/worktrees/checks`, **eight commits with this one**. Built under CLAUDE.md as revised on 26 September: the shape approved once, then one part per commit without a yes each, then the branch shown for review. `checks` is not merged, not pushed, **to be merged `--ff-only` by the owner**.
+**Branch:** `checks`, cut from `baseline-v1` at **41a6d19** in the worktree `.claude/worktrees/checks`, **ten commits with this one**. Built under CLAUDE.md as revised on 26 September: the shape approved once, then one part per commit without a yes each, then the branch shown for review. `checks` is not merged, not pushed, **to be merged `--ff-only` by the owner**.
 
 **State:** pytest **2052 passed, 6 xfailed** (2036 at 41a6d19). **The runner: 8 of 18** (run of 26 September, 15:43 UTC, at 22063f6), against a prediction of 9. The corpus at 33 of 67, not re-run.
 
@@ -31,7 +31,7 @@ It did not re-check §3's library versions, the filings clocks or the store beyo
 | File | What it is |
 |---|---|
 | `docs/DIRECTION.md` | **The end state and the invariants.** Unchanged this session. |
-| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **Start with the last two entries:** "The runner's checks against a selecting layer - decision 17, TAKEN 26 September (forty-fifth session)", with its four rules and their commits, and "The runner after decision 17: 8 of 18 against a prediction of 9". **209 lines start `**Trigger:**`**, 9,425 lines. |
+| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **Start with the last two entries:** "The runner's checks against a selecting layer - decision 17, TAKEN 26 September (forty-fifth session)", with its four rules and their commits, and "The runner after decision 17: 8 of 18 against a prediction of 9". **209 lines start `**Trigger:**`**, 9,426 lines. |
 | `tests/benchmark/run_cases.py` | `_the_call` and `_of` (a case's own record), `_one_call` (3.2 alone), `_trace_shows_handovers` (the run as a stretch), `_date_shown` and `_source_shown` (the record's provenance), `_date_reaches_answer` (the prose). |
 | `tests/test_runner_probes.py` | The four rules' tests, and `record_of`, which now writes the provenance the tool runner derives. |
 | `src/agents/tool_runner.py` | The record and `_provenance`: one as-of and one source per record. |
@@ -103,7 +103,7 @@ Decision 17 changes nothing the model is sent or the client prints.
 
 ### Branches
 
-`baseline-v1` at **41a6d19**, pushed. `checks` carries eight commits, to
+`baseline-v1` at **41a6d19**, pushed. `checks` carries ten commits, to
 be merged `--ff-only`. Its worktree has a `data/portfolio.db` symlink,
 which must go before the worktree can be removed (§7).
 
@@ -130,7 +130,7 @@ As the handoff at 41a6d19 gave it, and:
 
 ## 4. What the forty-fifth session did
 
-**On `checks`, eight commits:**
+**On `checks`, ten commits:**
 
 | Commit | What it is | pytest |
 |---|---|---|
@@ -141,7 +141,9 @@ As the handoff at 41a6d19 gave it, and:
 | **c153d73** | KNOWN_GAPS: decision 17 taken as the runner's checks, its entries read against it | document |
 | **22063f6** | benchmark: the runner's prediction after decision 17, 9 of 18 | document |
 | **9723c0f** | KNOWN_GAPS: the runner after decision 17, 8 of 18 against a prediction of 9 | document |
-| **This commit** | the handoff, regenerated | document |
+| **dd719c5** | the handoff, regenerated before the correction below | document |
+| **57dbdb0** | KNOWN_GAPS: 3.3's draw of 15:43 called no tool; whether it asked back is not recorded | document |
+| **This commit** | the handoff, regenerated again with the correction | document |
 
 **Mistakes of this session, recorded:**
 - The instruction pointed to "Part 18 in benchmark.md"; it is in
@@ -161,6 +163,13 @@ As the handoff at 41a6d19 gave it, and:
   it; removed before the commit.
 - In the message after the run I said sixteen verdicts matched their
   lines; seventeen did. The entry says seventeen.
+- The run's entry said 3.3's draw asked back, as the corpus draw of the
+  24th did; the runner prints no answer, so only that it called no tool
+  is known. Found reading the branch's diffs for the review, corrected
+  at 57dbdb0, and this handoff regenerated after it.
+- The first regeneration of this handoff gave KNOWN_GAPS 210 trigger
+  lines and 9,438 lines where it had 209 and 9,425; corrected before its
+  commit.
 
 **Resolved, three:** "The synthesizer returns the same answer regardless
 of the question", "`measure` set by the model under intent compliance is
