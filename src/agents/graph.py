@@ -124,9 +124,10 @@ async def run_agent_graph(user_message: str, request_id: str = None, portfolio_i
     The reply is resolved against that record first, then the pre-pass
     reads the message: where extraction asks back, that is the turn's
     answer and no model is called. Otherwise the conversation layer answers
-    with the tools, and the turn's state carries the tool-call log, the
-    usage of every call and the last tool run's `shared_data` and
-    `sub_results`.
+    with the tools, and the turn's state carries the tool-call log and the
+    usage of every call. Each record carries every block its run
+    published; `shared_data` and `sub_results` are the tool graph's inside
+    a run, and a finished turn leaves them empty (decision 77).
     """
     state = create_initial_state(user_message, request_id, portfolio_id=portfolio_id,
                                  previous=previous)
@@ -193,9 +194,6 @@ async def _turn(state: Dict[str, Any], user_message: str) -> Dict[str, Any]:
     state["final_response"] = turn["text"]
     state["tool_calls"] = turn["tool_calls"]
     state["model_calls"] = turn["model_calls"]
-    ran = turn["state"] or {}
-    state["shared_data"] = ran.get("shared_data") or {}
-    state["sub_results"] = ran.get("sub_results") or {}
     return state
 
 

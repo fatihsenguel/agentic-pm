@@ -183,8 +183,8 @@ def _usage(response) -> Dict[str, Any]:
 
 
 def _turn(text: str, records: List[Dict[str, Any]], calls: List[Dict[str, Any]],
-          state: Optional[Dict[str, Any]], messages: List[Any]) -> Dict[str, Any]:
-    return {"text": text, "tool_calls": records, "model_calls": calls, "state": state,
+          messages: List[Any]) -> Dict[str, Any]:
+    return {"text": text, "tool_calls": records, "model_calls": calls,
             "messages": messages + [{"role": "assistant", "content": text}]}
 
 
@@ -192,13 +192,13 @@ async def answer(message: str, *, history: Sequence[Any], context: ToolContext,
                  portfolio_id: Optional[int], model: ConversationModel,
                  request_id: Optional[str] = None) -> Dict[str, Any]:
     """One turn: the answer's text, the tool-call records in call order,
-    the usage of every model call, the last tool run's final state, and the
-    turn's messages for the next turn to carry."""
+    the usage of every model call, and the turn's messages for the next
+    turn to carry. A run's final state stops at its record, which carries
+    every block the run published (decision 77)."""
     messages: List[Any] = list(history) + [{"role": "user", "content": message}]
     tools = tool_definitions()
     records: List[Dict[str, Any]] = []
     calls: List[Dict[str, Any]] = []
-    state: Optional[Dict[str, Any]] = None
 
     for _ in range(MAX_MODEL_CALLS):
         try:
@@ -213,7 +213,7 @@ async def answer(message: str, *, history: Sequence[Any], context: ToolContext,
             if untraced:
                 text = (f"The answer carried figures no tool printed this turn: "
                         f"{', '.join(untraced)}. It is not shown.")
-            return _turn(text, records, calls, state, messages)
+            return _turn(text, records, calls, messages)
         if response.stop_reason != "tool_use":
             raise ConversationError(f"The model stopped on {response.stop_reason!r} before "
                                     "finishing its answer; nothing is shown.", calls)
@@ -224,9 +224,9 @@ async def answer(message: str, *, history: Sequence[Any], context: ToolContext,
                 continue
             try:
                 inputs = validate_inputs(block.name, block.input, context)
-                record, state = await run_tool(block.name, inputs, portfolio_id, request_id)
+                record, _ = await run_tool(block.name, inputs, portfolio_id, request_id)
             except (ToolInputError, ToolRunError) as error:
-                return _turn(str(error), records, calls, state, messages)
+                return _turn(str(error), records, calls, messages)
             records.append(record)
             results.append({"type": "tool_result", "tool_use_id": block.id,
                             "content": record["text"]})

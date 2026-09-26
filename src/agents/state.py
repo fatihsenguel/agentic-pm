@@ -70,11 +70,16 @@ class AgentState(TypedDict):
     execution_step: int
     agents_to_run: List[str]  # Remaining agents in execution order
     
-    # Results from sub-agents
+    # Results from sub-agents, inside one tool run. The turn's record
+    # carries each agent's success under agents; a finished turn leaves
+    # this empty (decision 77).
     sub_results: Dict[str, Dict[str, Any]]
-    
+
     # Shared computed data (Hot Potato - pass summaries, not raw data!)
-    # Example keys: "covariance_matrix", "macro_regime", "latest_prices"
+    # Example keys: "covariance_matrix", "macro_regime", "latest_prices".
+    # The tool graph's inside one run: the summary blocks leave it on the
+    # run's record, the raw arrays stop here, and a finished turn leaves
+    # it empty (decision 77).
     shared_data: Dict[str, Any]
     
     # Request tracking
