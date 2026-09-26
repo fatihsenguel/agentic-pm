@@ -6,10 +6,12 @@ A turn resolves a reply against the record the previous turn asked back,
 then runs the pre-pass: where extraction asks back, that is the answer, no
 model is called, and the record is written under `clarification`.
 Otherwise the layer answers with the tools, and the turn's state carries
-the tool-call log, the usage of every call, and the last tool run's
-`shared_data` and `sub_results`. The layer is stood in here, so nothing is
-paid for; extraction and the tools' context are read for real, from the
-suite's copy of the database and the committed watchlist.
+the tool-call log and the usage of every call. The records carry every
+block a run published; the state's `shared_data` and `sub_results` are
+the tool graph's inside a run and a finished turn leaves them empty
+(decision 77). The layer is stood in here, so nothing is paid for;
+extraction and the tools' context are read for real, from the suite's
+copy of the database and the committed watchlist.
 """
 
 import pytest
@@ -20,7 +22,8 @@ from agents.state import AgentState
 TYPE_QUESTION = "I want to put 15% into a single position, is that allowed?"
 LOG = [{"tool": "hypothetical_weight", "inputs": {"weight": 0.15, "instrument_type": "share"},
         "key": "compliance", "block": {"findings": []}, "text": "IPS-4.1 15.00% refused",
-        "as_of": None}]
+        "blocks": {"compliance": {"findings": []}}, "agents": {"ComplianceAgent": True},
+        "provenance": {"as_of": None, "source": None, "caveats": ()}}]
 CALLS = [{"model": "claude-sonnet-5", "input_tokens": 1, "output_tokens": 1,
           "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}]
 
@@ -28,15 +31,15 @@ CALLS = [{"model": "claude-sonnet-5", "input_tokens": 1, "output_tokens": 1,
 @pytest.fixture
 def layer(monkeypatch):
     """The conversation layer stood in: every call it is asked records what
-    it was given and answers with one hypothetical_weight call."""
+    it was given and answers with one hypothetical_weight call. It returns
+    what the layer returns and no run's state: the record carries the
+    block."""
     asked = []
 
     async def answer(message, *, history, context, portfolio_id, model, request_id=None):
         asked.append({"message": message, "history": list(history), "context": context,
                       "portfolio_id": portfolio_id, "model": model})
         return {"text": "Refused under IPS-4.1.", "tool_calls": LOG, "model_calls": CALLS,
-                "state": {"shared_data": {"compliance": {"findings": []}},
-                          "sub_results": {"ComplianceAgent": {"success": True}}},
                 "messages": []}
 
     monkeypatch.setattr(graph, "answer", answer)
@@ -68,8 +71,15 @@ async def test_the_reply_is_resolved_and_answered_as_the_question_it_stands_for(
     assert second["clarification"] is None
     assert (second["tool_calls"], second["model_calls"]) == (LOG, CALLS)
     assert second["final_response"] == "Refused under IPS-4.1."
-    assert second["shared_data"] == {"compliance": {"findings": []}}
-    assert list(second["sub_results"]) == ["ComplianceAgent"]
+
+
+async def test_a_finished_turn_leaves_the_runs_state_empty(layer):
+    """The block is on the record; `shared_data` and `sub_results` are the
+    tool graph's inside a run, and a turn copies nothing out of the last
+    run into the state it returns (decision 77)."""
+    state = await graph.run_agent_graph("What is my allocation?", portfolio_id=3)
+    assert state["tool_calls"] == LOG
+    assert (state["shared_data"], state["sub_results"]) == ({}, {})
 
 
 async def test_the_layer_is_given_the_portfolio_the_vocabulary_and_the_watchlist(layer):

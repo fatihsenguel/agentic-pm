@@ -95,6 +95,7 @@ async def test_a_tool_is_called_its_text_shown_and_the_answer_narrated(conversat
     assert tools_run == [("position_pnl", {"tickers": ["JPM"]}, 3)]
     assert turn["tool_calls"] == [JPM_RECORD]
     assert turn["text"] == "JPM is up +15,622.00, +78.11%, as of 2026-09-02."
+    assert "state" not in turn, "the run's state stops at the record (decision 77)"
     [result] = model.requests[1]["messages"][-1]["content"]
     assert (result["type"], result["tool_use_id"], result["content"]) == \
         ("tool_result", "tu_1", JPM_TEXT)
