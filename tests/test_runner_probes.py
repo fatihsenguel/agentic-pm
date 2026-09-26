@@ -164,10 +164,73 @@ def test_1_2_reads_the_pnl_call_for_jpm_alone():
     assert _mentions(run_cases.check_1_2(padded), "tickers ['JPM', 'AAPL'] != ['JPM']")
     wrong = _state([_record("allocation")])
     assert _mentions(run_cases.check_1_2(wrong), "not 'position_pnl'")
-    two = _state([_record("allocation"), _record("position_pnl", {"tickers": ["JPM"]})])
-    assert _mentions(run_cases.check_1_2(two), "tools called")
+    twice = _state([_record("position_pnl", {"tickers": ["JPM"]}),
+                    _record("position_pnl", {"tickers": ["JPM"]})])
+    assert _mentions(run_cases.check_1_2(twice), "'position_pnl' was called 2 times")
     none = _state([])
     assert _mentions(run_cases.check_1_2(none), "no tool was called")
+
+
+# ---------------------------------------------------------------------------
+# A case names its tool and allows others beside it (decision 17): the
+# model composes, and Part 18 pins the answer whatever routes it. The case
+# reads its blocks from its own tool's record, since every portfolio tool
+# publishes the same three blocks. 3.2 alone keeps one call, its Part 18
+# entry pinning that no other pipeline runs.
+# ---------------------------------------------------------------------------
+
+ROUTING = ("tools called", "the case is one call", "not '", "called 2 times")
+
+
+def test_a_case_allows_other_tools_beside_its_own():
+    beside = _record("allocation")
+    cases = [
+        (run_cases.check_1_2, _state([beside, _record("position_pnl", {"tickers": ["JPM"]})])),
+        (run_cases.check_1_3, _state([_record("portfolio_volatility", {"period": "1Y"}), beside])),
+        (run_cases.check_3_3, _state([beside, _record("position_pnl", {"tickers": []})])),
+        (run_cases.check_2_1, _state([beside, _record("compliance_check",
+                                                      key="compliance")])),
+    ]
+    for check, state in cases:
+        assert _mentions(check(state), *ROUTING) == [], check.__name__
+    three_one = _type_turns()
+    three_one[1]["tool_calls"].insert(0, _record("policy_lookup", {"topic": "limits"},
+                                                 key="compliance"))
+    assert _mentions(run_cases.check_3_1(three_one), *ROUTING) == []
+    three_five = _typo_turns(clarification=ASKED, resolved=RESOLVED)
+    three_five[1]["tool_calls"].append(beside)
+    assert _mentions(run_cases.check_3_5(three_five), *ROUTING) == []
+
+
+def test_a_case_reads_its_blocks_from_its_own_tools_record():
+    """1.2's P&L for JPM alone, then the allocation, whose run publishes a
+    position_pnl block of its own: the case reads the P&L call's."""
+    own = {"JPM": {"cost_basis": 20_000.00, "quantity": 100, "average_price": 200.0,
+                   "purchase_date": "2024-07-15"}}
+    other = {"JPM": {"cost_basis": 1.00, "quantity": 1, "average_price": 1.0,
+                     "purchase_date": "2020-01-01"}}
+    pnl = _record("position_pnl", {"tickers": ["JPM"]}, block=own)
+    allocation = _record("allocation", blocks={"position_pnl": other})
+    fails = run_cases.check_1_2(_state([pnl, allocation]))
+    assert _mentions(fails, "cost basis", "holding", "purchase_date") == []
+    fails = run_cases.check_1_2(_state([allocation, pnl]))
+    assert _mentions(fails, "cost basis", "holding", "purchase_date") == []
+
+
+def test_2_1_reads_the_compliance_block_of_its_own_call():
+    """A hypothetical weight after the check publishes a compliance block
+    of refused findings; 2.1 reads the check's."""
+    own = {"findings": [], "policy": {}}
+    other = {"findings": [{"status": "refused", "clause": "IPS-4.1", "subject": "x"}]}
+    check = _record("compliance_check", key="compliance", block=own)
+    weight = _record("hypothetical_weight", {"weight": 0.15, "instrument_type": "share"},
+                     key="compliance", block=other)
+    assert _mentions(run_cases.check_2_1(_state([check, weight])), "refused") == []
+
+
+def test_3_2_is_one_call_alone():
+    beside = _state([_record("allocation"), _lookup(["IPS-1.3"])], final_response="IPS-1.3")
+    assert _mentions(run_cases.check_3_2(beside), "tools called")
 
 
 def test_1_3_reads_the_volatility_call_at_one_year():

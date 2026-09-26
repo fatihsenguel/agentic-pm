@@ -230,11 +230,40 @@ def _what_ran(state):
     return "the model called no tool"
 
 
+def _the_call(state, tool):
+    """The record of the tool a case names, called once. Other tools the
+    model called beside it are allowed: the model composes, and Part 18
+    pins the answer whatever routes it (decision 17). Returns the record
+    and the failures; the record is None when the tool was not called or
+    was called more than once, and the caller then reads no input from
+    it."""
+    calls = _called(state)
+    if not calls:
+        return None, [f"no tool was called; the answer came from no tool output, "
+                      f"and the case calls {tool!r}"]
+    named = [record for record in _calls(state) if record.get("tool") == tool]
+    if not named:
+        return None, [f"the layer called {calls}, not {tool!r}"]
+    if len(named) > 1:
+        return None, [f"{tool!r} was called {len(named)} times; the case reads one call"]
+    return named[0], []
+
+
+def _of(state, record):
+    """The turn as a case reads it once its call is found: every key of
+    the state, with the named record the only one its blocks and agents
+    are read from. Every portfolio tool's run publishes the same three
+    blocks, so the last record carrying one may be another tool's.
+    `figures_trace` reads the whole turn, every record's text having been
+    shown to the model. With no record found, the turn as it is."""
+    return state if record is None else {**state, "tool_calls": [record]}
+
+
 def _one_call(state, tool):
-    """The one record a single-tool case expects: the tool named, called
-    once and alone. Returns the record and the failures; the record is
-    None when the log shows anything else, and the caller then reads no
-    input from it."""
+    """The one record a case whose Part 18 entry pins the trace expects
+    (3.2: "no other pipeline"): the tool named, called once and alone.
+    Returns the record and the failures; the record is None when the log
+    shows anything else, and the caller then reads no input from it."""
     calls = _called(state)
     if not calls:
         return None, [f"no tool was called; the answer came from no tool output, "
@@ -475,7 +504,8 @@ def check_1_3(state):
     is checked as an invariant against the per-holding figures Part 4 names.
     """
     fails = _ran_clean(state)
-    record, call_fails = _one_call(state, "portfolio_volatility")
+    record, call_fails = _the_call(state, "portfolio_volatility")
+    state = _of(state, record)
     fails += call_fails
     if record is not None and record["inputs"].get("period") != "1Y":
         fails.append(f"period is {record['inputs'].get('period')!r}; 'twelve months' is 1Y")
@@ -568,13 +598,14 @@ def check_1_2(state):
     and the purchase date; the moving ones are checked as invariants and for
     reaching the prose.
 
-    The log must show one call, `position_pnl` with tickers exactly ["JPM"].
+    The log must show `position_pnl` called once, with tickers exactly ["JPM"].
     For P&L an empty list means every position, so a list the layer padded
     from the portfolio would silently turn a question about one position
     into an answer about nine.
     """
     fails = _ran_clean(state)
-    record, call_fails = _one_call(state, "position_pnl")
+    record, call_fails = _the_call(state, "position_pnl")
+    state = _of(state, record)
     fails += call_fails
     if record is not None and record["inputs"].get("tickers") != ["JPM"]:
         fails.append(f"tickers {record['inputs'].get('tickers')} != ['JPM']; the position "
@@ -677,7 +708,8 @@ def check_3_3(state):
     7 September, in the same run that failed 1.2 for exactly that padding.
     """
     fails = _ran_clean(state)
-    record, call_fails = _one_call(state, "position_pnl")
+    record, call_fails = _the_call(state, "position_pnl")
+    state = _of(state, record)
     fails += call_fails
     if record is not None and record["inputs"].get("tickers"):
         fails.append(f"tickers {record['inputs'].get('tickers')} is not empty; the question "
@@ -1014,7 +1046,7 @@ def check_3_1(states):
     an empty log, no agent, the record of what it asked back under
     `clarification` with kind `instrument_type`, an answer naming a share
     and a fund, and no clause cited. Turn 2 carries the resolved question
-    under `resolved` and one call, `hypothetical_weight` with weight 0.15
+    under `resolved` and `hypothetical_weight` called once, with weight 0.15
     and instrument type share.
 
     The checker applied to a hypothetical weight, not to holdings: every
@@ -1059,7 +1091,8 @@ def check_3_1(states):
     elif "share" not in (resolved.get("message") or "").lower():
         fails.append(f"turn 2 resolved to {resolved.get('message')!r}, not the question "
                      "for a share")
-    record, call_fails = _one_call(state, "hypothetical_weight")
+    record, call_fails = _the_call(state, "hypothetical_weight")
+    state = _of(state, record)
     fails += [f"turn 2: {f}" for f in call_fails]
     if record is not None:
         inputs = record["inputs"]
@@ -1231,7 +1264,7 @@ def check_2_1(state):
     investment policy?" passes when Data, Risk and Compliance agents all run
     and the trace shows contract handovers.
 
-    Risk is PortfolioAnalysisAgent (decision, 8 September). So: one call,
+    Risk is PortfolioAnalysisAgent (decision, 8 September). So: one call of
     `compliance_check`, which takes no input; its three steps each
     successful and the trace carrying their spans in plan order, the two
     handovers and the checker's tool call; the block sound; and the answer
@@ -1243,7 +1276,8 @@ def check_2_1(state):
     Which subjects breach is not asserted.
     """
     fails = _ran_clean(state)
-    record, call_fails = _one_call(state, "compliance_check")
+    record, call_fails = _the_call(state, "compliance_check")
+    state = _of(state, record)
     fails += call_fails
     if record is not None and record["inputs"]:
         fails.append(f"compliance_check takes no input; the call carried {record['inputs']}")
@@ -1350,7 +1384,7 @@ def check_3_5(states):
     Turn 1 is the pre-pass's: an empty log, no agent, and the record of
     what it asked back under `clarification`, the token APPL for the
     candidate AAPL. Turn 2 carries the resolved question under `resolved`
-    and one call, `position_pnl` with tickers ["AAPL"].
+    and `position_pnl` called once, with tickers ["AAPL"].
     """
     first, second = states
     fails = _ran_clean(first) + _ran_clean(second)
@@ -1374,7 +1408,8 @@ def check_3_5(states):
         fails.append("turn 2 records no resolution; the reply was routed as a new message")
     elif "AAPL" not in (resolved.get("message") or "") or "APPL" in (resolved.get("message") or ""):
         fails.append(f"turn 2 resolved to {resolved.get('message')!r}, not the question with AAPL")
-    record, call_fails = _one_call(second, "position_pnl")
+    record, call_fails = _the_call(second, "position_pnl")
+    second = _of(second, record)
     fails += [f"turn 2: {f}" for f in call_fails]
     if record is not None and record["inputs"].get("tickers") != ["AAPL"]:
         fails.append(f"turn 2 tickers {record['inputs'].get('tickers')} != ['AAPL']")
