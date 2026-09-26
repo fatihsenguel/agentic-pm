@@ -5,7 +5,6 @@ Provides request, agent and tool tracing.
 
 Components:
 - Tracer: Full request/agent/tool tracing
-- CostCalculator: Cost estimation
 
 Usage:
     from observability import Tracer, get_tracer, TraceLevel
@@ -45,7 +44,6 @@ from .tracer import (
     RequestTrace,
     
     # Utilities
-    CostCalculator,
     ConsoleFormatter,
     
     # Singleton
@@ -68,7 +66,6 @@ __all__ = [
     "ToolTrace",
     "TraceEvent",
     "RequestTrace",
-    "CostCalculator",
     "ConsoleFormatter",
     "get_tracer",
     "set_tracer",

@@ -180,6 +180,31 @@ def test_no_token_counter_prices_a_model():
     assert [name for name in gone if hasattr(observability, name)] == []
 
 
+def test_the_tracer_computes_no_price():
+    """The tracer priced every request at a 2024 rate for a model it
+    defaulted to, from a guessed split of tokens it was never given. No
+    code computes a price; the conversation layer records tokens and the
+    record states the rates (decision 53, the tag tracer-cost-parked)."""
+    import dataclasses
+
+    import observability
+    from observability import tracer as tracer_module
+    from observability.tracer import RequestTrace, Tracer, TraceLevel
+
+    assert not hasattr(tracer_module, "CostCalculator")
+    assert "CostCalculator" not in observability.__all__
+    assert not hasattr(Tracer(level=TraceLevel.MINIMAL, console_output=False),
+                       "cost_calculator")
+    assert "total_cost_usd" not in {f.name for f in dataclasses.fields(RequestTrace)}
+
+    tracer = Tracer(level=TraceLevel.MINIMAL, console_output=False)
+    with tracer.trace_request("priced", "q"):
+        pass
+    trace = tracer.get_last_trace()
+    assert "total_cost_usd" not in trace.to_dict()["summary"]
+    assert "Cost" not in tracer.get_summary()
+
+
 def test_global_singleton():
     """Test global tracer singleton."""
     print("\n" + "=" * 60)

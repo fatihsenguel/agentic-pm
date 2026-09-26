@@ -133,7 +133,6 @@ class RequestTrace:
     
     # Aggregates
     total_tokens: int = 0
-    total_cost_usd: float = 0.0
     agents_used: List[str] = field(default_factory=list)
     tools_called: List[str] = field(default_factory=list)
     
@@ -160,7 +159,6 @@ class RequestTrace:
             "events": [e.to_dict() for e in self.events],
             "summary": {
                 "total_tokens": self.total_tokens,
-                "total_cost_usd": round(self.total_cost_usd, 4),
                 "agents_used": list(set(self.agents_used)),
                 "tools_called": list(set(self.tools_called)),
                 "num_events": len(self.events),
@@ -381,58 +379,6 @@ class RequestTraceContext:
             
             if event.tool_name and event.tool_name not in self.trace.tools_called:
                 self.trace.tools_called.append(event.tool_name)
-        
-        # Estimate cost (GPT-4 pricing as default)
-        self.trace.total_cost_usd = self.tracer.cost_calculator.estimate_cost(
-            self.trace.total_tokens
-        )
-
-
-# ==================== COST CALCULATOR ====================
-
-class CostCalculator:
-    """Calculate estimated costs for LLM usage."""
-    
-    # Pricing per 1M tokens (as of 2024)
-    PRICING = {
-        "gpt-4": {"input": 30.0, "output": 60.0},
-        "gpt-4-turbo": {"input": 10.0, "output": 30.0},
-        "gpt-3.5-turbo": {"input": 0.5, "output": 1.5},
-        "claude-3-opus": {"input": 15.0, "output": 75.0},
-        "claude-3-sonnet": {"input": 3.0, "output": 15.0},
-        "claude-3-haiku": {"input": 0.25, "output": 1.25},
-    }
-    
-    def __init__(self, default_model: str = "gpt-4-turbo"):
-        self.default_model = default_model
-    
-    def estimate_cost(
-        self, 
-        total_tokens: int, 
-        model: Optional[str] = None,
-        input_ratio: float = 0.7  # Assume 70% input, 30% output
-    ) -> float:
-        """
-        Estimate cost for token usage.
-        
-        Args:
-            total_tokens: Total tokens used
-            model: Model name (uses default if not specified)
-            input_ratio: Ratio of input tokens (for estimation)
-        
-        Returns:
-            Estimated cost in USD
-        """
-        model = model or self.default_model
-        pricing = self.PRICING.get(model, self.PRICING["gpt-4-turbo"])
-        
-        input_tokens = int(total_tokens * input_ratio)
-        output_tokens = total_tokens - input_tokens
-        
-        input_cost = (input_tokens / 1_000_000) * pricing["input"]
-        output_cost = (output_tokens / 1_000_000) * pricing["output"]
-        
-        return input_cost + output_cost
 
 
 # ==================== CONSOLE FORMATTER ====================
@@ -538,7 +484,6 @@ class ConsoleFormatter:
             f"   Request ID:    {trace.request_id[:16]}...",
             f"   Duration:      {trace.duration_ms:.0f}ms",
             f"   Total Tokens:  {trace.total_tokens:,}",
-            f"   Est. Cost:     ${trace.total_cost_usd:.4f}",
             f"   Agents Used:   {', '.join(trace.agents_used)}",
             f"   Tools Called:  {len(trace.tools_called)}",
             f"   Status:        {'✅ Success' if trace.success else '❌ Failed'}",
@@ -596,7 +541,6 @@ class Tracer:
         self._lock = threading.Lock()
         
         self.formatter = ConsoleFormatter(level)
-        self.cost_calculator = CostCalculator()
         
         # Callbacks for custom handlers
         self._event_callbacks: List[Callable[[TraceEvent], None]] = []
