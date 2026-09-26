@@ -127,7 +127,10 @@ async def run_agent_graph(user_message: str, request_id: str = None, portfolio_i
     with the tools, and the turn's state carries the tool-call log and the
     usage of every call. Each record carries every block its run
     published; `shared_data` and `sub_results` are the tool graph's inside
-    a run, and a finished turn leaves them empty (decision 77).
+    a run, and a finished turn leaves them empty (decision 77). The
+    earlier turns' questions and records travel under `earlier`, and their
+    texts are what the layer may let a follow-up quote beside this turn's
+    own; the model is shown the earlier answers only.
     """
     state = create_initial_state(user_message, request_id, portfolio_id=portfolio_id,
                                  previous=previous)
@@ -160,6 +163,17 @@ def _history(messages) -> List[Dict[str, str]]:
     return [{"role": roles[type(m)], "content": m.content} for m in messages if type(m) in roles]
 
 
+def _earlier_texts(earlier) -> List[str]:
+    """What the earlier turns printed or were asked, as the texts whose
+    figures a follow-up may carry: each turn's question, then the text of
+    each of its records (decision 77)."""
+    texts = []
+    for turn in earlier:
+        texts.append(turn.get("question") or "")
+        texts.extend(record.get("text") or "" for record in turn.get("tool_calls") or [])
+    return texts
+
+
 async def _turn(state: Dict[str, Any], user_message: str) -> Dict[str, Any]:
     held = _held_tickers(state["portfolio_id"])
     periods = tuple(app_config.data.period_days.keys())
@@ -184,7 +198,8 @@ async def _turn(state: Dict[str, Any], user_message: str) -> Dict[str, Any]:
     try:
         turn = await answer(message, history=history, context=context,
                             portfolio_id=state["portfolio_id"], model=conversation_model(),
-                            request_id=state["request_id"])
+                            request_id=state["request_id"],
+                            earlier=_earlier_texts(state.get("earlier") or []))
     except ConversationError as error:
         state["final_response"] = str(error)
         state["errors"] = [str(error)]

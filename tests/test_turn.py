@@ -125,7 +125,8 @@ async def test_a_resolved_turn_is_carried_under_the_question_it_was_checked_agai
     question its answer was checked against, and not the reply."""
     first = await graph.run_agent_graph(TYPE_QUESTION, portfolio_id=3)
     second = await graph.run_agent_graph("A share.", portfolio_id=3, previous=first)
-    third = await graph.run_agent_graph("And at 10%?", portfolio_id=3, previous=second)
+    third = await graph.run_agent_graph("What is my allocation?", portfolio_id=3,
+                                        previous=second)
     assert third["earlier"] == [
         {"question": TYPE_QUESTION, "tool_calls": []},
         {"question": TYPE_QUESTION + " It would be a share.", "tool_calls": LOG},

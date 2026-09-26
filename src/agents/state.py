@@ -54,6 +54,13 @@ class AgentState(TypedDict):
     resolved: Optional[Dict[str, Any]]
     # The usage of every model call the turn made (decision 45).
     model_calls: List[Dict[str, Any]]
+    # The conversation's earlier turns, oldest first, each as the question
+    # its answer was checked against (the message a reply was resolved
+    # into, else the turn as typed) and its tool-call log. The figures the
+    # tracing check allows this turn beside its own records and question
+    # (decision 77): what an earlier turn printed or was asked may be
+    # quoted in a follow-up. The model is shown answers only, never these.
+    earlier: List[Dict[str, Any]]
 
     # What the previous turn asked back, as a record extraction wrote (kind,
     # token, candidate, message), carried in so this turn's reply can be
@@ -102,6 +109,21 @@ class AgentState(TypedDict):
 # STATE FACTORY
 # =============================================================================
 
+def _as_earlier(turn: Dict[str, Any]) -> Dict[str, Any]:
+    """A finished turn as the next one carries it: the question its answer
+    was checked against, the message a reply was resolved into where the
+    turn was a reply and the message as typed otherwise, and its tool-call
+    log. The typed message is the last one the user sent in that turn's
+    messages."""
+    resolved = turn.get("resolved")
+    if resolved is not None:
+        question = resolved["message"]
+    else:
+        typed = [m for m in turn.get("messages") or [] if isinstance(m, HumanMessage)]
+        question = typed[-1].content if typed else ""
+    return {"question": question, "tool_calls": list(turn.get("tool_calls") or [])}
+
+
 def create_initial_state(
     user_message: str,
     request_id: Optional[str] = None,
@@ -119,8 +141,10 @@ def create_initial_state(
             turn. Its messages are carried forward with its answer, and if
             it ended by asking back, the record of what it asked, its
             `clarification`, is carried as `pending` for extraction to
-            resolve the reply against.
-    
+            resolve the reply against. Its own `earlier` turns and then
+            itself, as the question it was checked against with its
+            tool-call log, are carried as this turn's `earlier`.
+
     Returns:
         Initialized AgentState
     """
@@ -128,16 +152,19 @@ def create_initial_state(
 
     messages: List[BaseMessage] = []
     pending = None
+    earlier: List[Dict[str, Any]] = []
     if previous:
         messages.extend(previous.get("messages") or [])
         if previous.get("final_response"):
             messages.append(AIMessage(content=previous["final_response"]))
         pending = previous.get("clarification")
+        earlier = list(previous.get("earlier") or []) + [_as_earlier(previous)]
     messages.append(HumanMessage(content=user_message))
 
     return AgentState(
         messages=messages,
         pending=pending,
+        earlier=earlier,
         tool=None,
         inputs={},
         tool_calls=[],

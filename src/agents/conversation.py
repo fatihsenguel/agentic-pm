@@ -12,8 +12,11 @@ a guessed value cannot happen.
 
 What the model narrates is held to DIRECTION.md invariant 1 before it is
 shown: every number token of the answer is a token of a tool's text from
-this turn or of the question. An answer that carries any other is refused
-with the figures named; nothing is redacted.
+this turn, of the question, or of what the conversation's earlier turns
+printed or were asked, which the caller passes as `earlier` (decision 77:
+a figure that passed an earlier turn's check may be quoted in a
+follow-up). An answer that carries any other is refused with the figures
+named; nothing is redacted.
 
 `usage` is recorded for every call, the four token counts the API returns,
 so that what a turn costs is a measurement (decision 45). No price is
@@ -182,19 +185,20 @@ def _usage(response) -> Dict[str, Any]:
             "cache_read_input_tokens": usage.cache_read_input_tokens or 0}
 
 
-def _turn(text: str, records: List[Dict[str, Any]], calls: List[Dict[str, Any]],
-          messages: List[Any]) -> Dict[str, Any]:
-    return {"text": text, "tool_calls": records, "model_calls": calls,
-            "messages": messages + [{"role": "assistant", "content": text}]}
+def _turn(text: str, records: List[Dict[str, Any]], calls: List[Dict[str, Any]]) -> Dict[str, Any]:
+    return {"text": text, "tool_calls": records, "model_calls": calls}
 
 
 async def answer(message: str, *, history: Sequence[Any], context: ToolContext,
                  portfolio_id: Optional[int], model: ConversationModel,
-                 request_id: Optional[str] = None) -> Dict[str, Any]:
-    """One turn: the answer's text, the tool-call records in call order,
-    the usage of every model call, and the turn's messages for the next
-    turn to carry. A run's final state stops at its record, which carries
-    every block the run published (decision 77)."""
+                 request_id: Optional[str] = None,
+                 earlier: Sequence[str] = ()) -> Dict[str, Any]:
+    """One turn: the answer's text, the tool-call records in call order and
+    the usage of every model call. A run's final state stops at its record,
+    which carries every block the run published (decision 77). `earlier`
+    is the texts of the conversation's earlier turns, each question and
+    each tool's text, whose figures the answer may carry beside this
+    turn's own; the model is not shown them, only `history`."""
     messages: List[Any] = list(history) + [{"role": "user", "content": message}]
     tools = tool_definitions()
     records: List[Dict[str, Any]] = []
@@ -209,11 +213,12 @@ async def answer(message: str, *, history: Sequence[Any], context: ToolContext,
 
         if response.stop_reason == "end_turn":
             text = "\n".join(b.text for b in response.content if b.type == "text").strip()
-            untraced = untraced_figures(text, [r["text"] for r in records], message)
+            untraced = untraced_figures(text, [r["text"] for r in records] + list(earlier),
+                                        message)
             if untraced:
                 text = (f"The answer carried figures no tool printed this turn: "
                         f"{', '.join(untraced)}. It is not shown.")
-            return _turn(text, records, calls, messages)
+            return _turn(text, records, calls)
         if response.stop_reason != "tool_use":
             raise ConversationError(f"The model stopped on {response.stop_reason!r} before "
                                     "finishing its answer; nothing is shown.", calls)
@@ -226,7 +231,7 @@ async def answer(message: str, *, history: Sequence[Any], context: ToolContext,
                 inputs = validate_inputs(block.name, block.input, context)
                 record, _ = await run_tool(block.name, inputs, portfolio_id, request_id)
             except (ToolInputError, ToolRunError) as error:
-                return _turn(str(error), records, calls, messages)
+                return _turn(str(error), records, calls)
             records.append(record)
             results.append({"type": "tool_result", "tool_use_id": block.id,
                             "content": record["text"]})

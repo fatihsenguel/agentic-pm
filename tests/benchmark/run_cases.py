@@ -361,13 +361,14 @@ FIGURE = re.compile(r"\d+(?:,\d{3})*(?:\.\d+)?")
 
 
 def figures_trace(state, question):
-    """Every figure in the answer is a figure a tool printed this turn or
-    one of the question the turn recorded (DIRECTION.md invariant 1,
-    decision 45): each number token of the answer is a token of the
-    allowed text, the rendered text of every record in the tool-call log
-    plus the question. Compared whole and not as substrings: 4.4 is a
-    substring of 4.41 and not the same token, which is what makes a
-    rounding fail.
+    """Every figure in the answer is a figure a tool printed this turn,
+    one of the question the turn recorded, or one an earlier turn of the
+    conversation printed or was asked (DIRECTION.md invariant 1, decision
+    45, decision 77): each number token of the answer is a token of the
+    allowed text, the rendered text of every record in the tool-call log,
+    the question, and under `earlier` each earlier turn's question and
+    records. Compared whole and not as substrings: 4.4 is a substring of
+    4.41 and not the same token, which is what makes a rounding fail.
 
     The question is the one the client checks against: on a reply the
     pre-pass resolved, the message it was resolved into, read from
@@ -390,6 +391,10 @@ def figures_trace(state, question):
     allowed = set(FIGURE.findall(question or ""))
     for record in _calls(state):
         allowed.update(FIGURE.findall(record.get("text") or ""))
+    for turn in state.get("earlier") or []:
+        allowed.update(FIGURE.findall(turn.get("question") or ""))
+        for record in turn.get("tool_calls") or []:
+            allowed.update(FIGURE.findall(record.get("text") or ""))
     untraced = sorted(set(FIGURE.findall(_answer(state))) - allowed)
     if untraced:
         return [f"answer carries figures no tool printed this turn: {untraced}; "
