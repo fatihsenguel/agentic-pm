@@ -8666,9 +8666,9 @@ formatter. Whether each text is right line by line the run does not show,
 the runner printing no answer. `rebalance` is called by no case and stays
 unseen; the trigger is repointed to it.
 
-### The turn's `messages` from the layer are read by nothing
+### The turn's `messages` from the layer are read by nothing - RESOLVED 26 September (forty-fourth session)
 
-**Trigger:** the commit that next changes what a turn carries to the next.
+**Trigger:** none: resolved at 903e90d under decision 77.
 
 Recorded 24 September 2026 (forty-first session). `conversation.answer`
 returns the turn's messages for the next turn to carry (cd9c375); the turn
@@ -8676,6 +8676,13 @@ in `graph.py` carries the conversation's questions and answers from the
 state's `messages` instead (5f0d2f7), so the tools' texts of an earlier
 turn reach the model only through the answer that quoted them. A value
 nothing consumes; one of the two goes when the history is decided again.
+
+**26 September 2026 (forty-fourth session), resolved at 903e90d.** The
+history was decided with decision 77: the model is shown the earlier
+answers only, the tools' texts of an earlier turn reach the tracing
+check through `earlier` and the model not at all, and the layer's
+`messages` return is gone. `answer` returns the text, the records and
+the usage, and `tests/test_conversation.py` pins that set of keys.
 
 ### The prediction's 3.1 line names the tool where the pre-pass asks back - RESOLVED 24 September (forty-second session)
 
@@ -8754,9 +8761,17 @@ this run's verdicts it moves 3.1's alone, whose only failure was that
 check's "15"; nothing was run again, so the count stands at 5/18 until
 the next paid run. The decision this entry leaves open is untouched.
 
-### Two tools in one turn leave the state only the last one's blocks
+**26 September 2026 (forty-fourth session), the trigger fired again at
+fd38d22 and 903e90d.** The accessors read the records (decision 77), so
+2.1 is no longer blocked and is predicted to FAIL on `_one_call`, and
+the tracing check allows the earlier turns' figures, which moves no
+verdict of this run. The prediction for the next run is in benchmark.md
+Part 3: 6 of 18, 3.1 the one line moving to PASS. The count stands at
+5/18 until the run. The decision this entry leaves open is untouched.
 
-**Trigger:** the commit that next changes what a turn carries to the next.
+### Two tools in one turn leave the state only the last one's blocks - RESOLVED 26 September (forty-fourth session)
+
+**Trigger:** none: resolved at 441c104 under decision 77; 2.1's verdict is read at the next paid run against benchmark.md's prediction of 26 September.
 
 Recorded 24 September 2026 (forty-second session), from case 2.1 of the
 run above. The model called `compliance_check` and then `allocation` in
@@ -8779,6 +8794,15 @@ allocation's text prints, and the client's tracing check let it through.
 So 2.1 called `allocation` here too, and `compliance_check` after it,
 whose agents are the last run the CLI shows. The same question called
 two tools on both of today's draws. The shape stands.
+
+**26 September 2026 (forty-fourth session), resolved at 441c104.** Each
+record carries every summary block its run published under `blocks`
+(6ce404a), the runner reads the blocks from the records (fd38d22), and
+the turn copies nothing out of the last run (441c104). A turn of
+`compliance_check` then `allocation` leaves both blocks on their records
+and the probe reads the compliance one. `_one_call` still fails the
+case on the second call, which is C2 inside decision 17 and not this
+entry's; the prediction for the next run says FAIL for that reason.
 
 ### A price forecast was answered with no tool called
 
@@ -8866,9 +8890,9 @@ German now and then. Which side moves, the answer's notation or the
 check's reading of it, is mine to decide, and a prompt line is a
 hypothesis with a prediction first.
 
-### A follow-up answered from the previous turn's figures is refused
+### A follow-up answered from the previous turn's figures is refused - RESOLVED 26 September (forty-fourth session)
 
-**Trigger:** the commit that next changes what a turn carries to the next.
+**Trigger:** none: resolved at 903e90d under decision 77; S-4's turn 2 is read at the next corpus run.
 
 Recorded 24 September 2026 (forty-second session), from S-4 of the
 corpus run after the layer. Turn 1, "Does my current allocation violate
@@ -8886,6 +8910,13 @@ in the turn that quotes it, or the allowed set takes the earlier turns'
 tool texts. The second is a change to what a turn carries and belongs
 with "The turn's `messages` from the layer are read by nothing".
 Surfaced, not taken.
+
+**26 September 2026 (forty-fourth session), resolved at 903e90d.** The
+second, under decision 77 and with the earlier turns' questions beside
+their records: the state carries `earlier`, the client's check and the
+runner's both allow its figures, and the model's history stays answers
+only. The same S-4 answer now passes if the model again quotes turn 1's
+distances; whether it does is the next corpus run's to say.
 
 ### The same question called a tool on one draw and asked back on another
 
@@ -8966,9 +8997,9 @@ the layer, 55 turns reaching the model, has no measured cost. It was
 estimated before the run at about $0.55, from the runner's $0.008 a
 turn, plus about eight Level 4 calls that record nothing anywhere.
 
-### What a turn's result carries - decision 77, pending
+### What a turn's result carries - decision 77, TAKEN 26 September (forty-fourth session)
 
-**Trigger:** pending decision 77. Read it with "Two tools in one turn leave the state only the last one's blocks", "A follow-up answered from the previous turn's figures is refused" and "The turn's `messages` from the layer are read by nothing", and before any commit that changes what a turn carries to the next.
+**Trigger:** the next commit that changes what a turn carries to the next, or what a record carries. Read it with the three entries it resolved, "Two tools in one turn leave the state only the last one's blocks", "A follow-up answered from the previous turn's figures is refused" and "The turn's `messages` from the layer are read by nothing", each RESOLVED 26 September.
 
 **Numbered 24 September 2026 (forty-third session) at my word, and not
 decided.** It joins A and C1 of the forty-second session's handoff into
@@ -9047,3 +9078,51 @@ verdicts predicted not to move. The corpus: the answers' text unchanged,
 each record's as-of and caveats printed under it; whether Part 3c's
 reading counts them is a question about the reading rules, not this
 decision. The CLI: the per-record lines.
+
+**Taken 25 and 26 September 2026 (forty-fourth session), as recommended
+with two readings added, on my yes, and built in six parts on
+`turn-records`, each part its tests red and then its change.** The
+record gains `blocks`, every summary block its run published as a table
+per tool in `tool_runner` names them, and `agents`, each agent with its
+success (e5e7e6e, 6ce404a); then `provenance`, the as-of as before, the
+source the block states at its top level or the one its readings or its
+candidates' figures share, joined where they differ, None where none is
+stated, and a fixed tuple of caveats per tool, the sentences its
+formatter prints, beside the formatter and held to its text by
+`tests/test_caveats.py`, empty for the five tools whose answer states
+none (21eb097, a65916b). The runner's accessors read every block and
+every agent from the records, the last record carrying a key winning as
+the last run's state did, and its 1.3 no longer reads the nine
+single-name volatilities (fe2bb42, fd38d22), the sub-question taken as
+recommended: pytest already held the function to Part 4's weighted
+average, and now holds the node itself to Part 4's figure over the
+committed closes (811d710). Then the turn stops copying `shared_data`
+and `sub_results` out of the last run and the layer stops returning its
+state (982b5bf, 441c104); the two fields stay in the state as the tool
+graph's inside a run. Then the follow-up: the state carries `earlier`,
+each earlier turn as the question its answer was checked against and its
+records, the client's check and the runner's both allow their figures,
+and the layer's unread `messages` return goes (685f33a, 903e90d). Last
+the CLI, one line per record with its provenance and the caveats under
+it, in place of the two dumps (104f0d0, dda1f4a).
+
+**The two readings added.** The earlier turns' questions are in the
+allowed set beside their records, since each earlier turn allowed its
+own question and a follow-up quoting a figure from one would otherwise
+be refused. And "to pytest" for 1.3 meant deleting the runner's read and
+adding the node test, since the function's test already existed.
+
+**What the blast radius missed.** Four formatter test files hand the
+runner's checks a state built from a real node run, the ledger,
+research, position and thesis formatters'; they now build the record
+through `record_of` in `tests/test_runner_probes.py`. The tool-runner
+tests assert the record's exact key set. The `_shared` count was 9
+direct reads and 6 accessors, 15 sites, not 16 and 6.
+
+**What each loop can see now.** pytest: 2036 passed, 6 xfailed, from
+2011. The runner: the prediction for its next run is in benchmark.md
+Part 3, written at dda1f4a; 2.1 from BLOCKED to FAIL and 3.1 to PASS,
+nothing else predicted to move. The corpus: no answer's text changes;
+S-4's turn 2 is no longer refused if it again quotes turn 1's distances;
+each record's provenance prints under the answer. Neither paid loop has
+run since.
