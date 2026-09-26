@@ -143,3 +143,19 @@ def test_a_turn_the_pre_pass_answered_is_not_read():
     assert _untraced(run_cases.figures_trace(asked, "What is my volatility over last quarter?"))
     asked["clarification"] = {"kind": "unknown_span", "message": "..."}
     assert run_cases.figures_trace(asked, "What is my volatility over last quarter?") == []
+
+
+def test_german_notation_is_refused_by_the_client_and_the_runner():
+    """V-1.1a of 24 September: the answer wrote the tool's 284,500.00 and
+    69.41 as 284.500,00 and 69,41. The check compares tokens as printed
+    and does not read another notation back: 1.234 is a thousand in one
+    and one-point-two in the other, and a check reading both would pass a
+    misquote. The answer's notation moves instead; the check stays."""
+    answer = "Aktien sind 69,41% des Gesamtwerts, auf 284.500,00 USD investiert."
+    assert untraced_figures(answer, [TEXT], "Wie ist meine Allokation?")
+    fails = _untraced(run_cases.figures_trace(_state(answer, TEXT),
+                                              "Wie ist meine Allokation?"))
+    assert fails and "'284.500'" in fails[0]
+    kept = "Aktien sind 69.41% des Gesamtwerts, auf 284,500.00 USD investiert."
+    assert untraced_figures(kept, [TEXT], "Wie ist meine Allokation?") == []
+    assert run_cases.figures_trace(_state(kept, TEXT), "Wie ist meine Allokation?") == []

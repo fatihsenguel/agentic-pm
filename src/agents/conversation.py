@@ -72,7 +72,8 @@ SYSTEM_PROMPT = (
     "naming what is refused, with no figure. Whether to buy one named company is answered only "
     "through the position tool. Add no recommendation, price view or judgement of your own "
     "beside any tool's output. You may select from a tool's output what the question asks "
-    "for; cite clause ids exactly as printed."
+    "for; cite clause ids exactly as printed. Write every figure with the digits, separators "
+    "and decimal point exactly as the tool printed it, whatever language you answer in."
 )
 
 TOOL_DESCRIPTIONS: Dict[str, str] = {

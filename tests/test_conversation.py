@@ -240,3 +240,15 @@ def test_no_prompt_quotes_a_benchmark_or_corpus_prompt(conversation):
         d["description"] for d in conversation.tool_definitions())
     quoted = sorted(p for p in prompts if p.lower() in words.lower())
     assert quoted == []
+
+
+NOTATION = ("Write every figure with the digits, separators and decimal point exactly as "
+            "the tool printed it, whatever language you answer in.")
+
+
+def test_the_prompt_keeps_the_tools_notation_in_any_language(conversation):
+    """A German answer wrote 406,229.50 as 406.229,50 and the client
+    refused it whole (KNOWN_GAPS, "The tracing check refuses an answer
+    written in German number format"). The notation of a figure is the
+    tool's, whatever the language of the prose; the check does not move."""
+    assert conversation.SYSTEM_PROMPT.endswith(NOTATION)
