@@ -48,6 +48,31 @@ def test_the_rebalance_factory_takes_no_verbose():
     assert list(inspect.signature(create_rebalance_agent).parameters) == []
 
 
+def test_the_protocols_carry_the_portfolio_context_alone():
+    """The task loop's vocabulary went with it: tasks, results, their
+    enums and supporting records, and a CovarianceResult that duplicated
+    the one `portfolio_tool.quant.covariance` defines and uses. The
+    portfolio context is what the nodes read."""
+    from dataclasses import is_dataclass
+
+    from agents import protocols
+
+    declared = sorted(name for name, value in vars(protocols).items()
+                      if isinstance(value, type) and value.__module__ == protocols.__name__)
+    assert declared == ["PortfolioContext"]
+    assert is_dataclass(protocols.PortfolioContext)
+
+
+def test_the_package_exports_no_task_loop_vocabulary():
+    import agents
+
+    loop = {"TaskType", "OptimizationMethod", "RebalanceFrequency", "PortfolioTask",
+            "PortfolioResult", "PortfolioConstraints", "TAARule", "RiskDecomposition",
+            "CovarianceResult", "RebalanceAnalysis"}
+    assert loop & set(agents.__all__) == set()
+    assert [name for name in loop if hasattr(agents, name)] == []
+
+
 def test_the_data_agents_log_prints_only_when_verbose(capsys):
     create_data_agent(verbose=False).log("quiet")
     assert capsys.readouterr().out == ""

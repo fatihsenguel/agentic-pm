@@ -38,26 +38,6 @@ from .config import (
 from .state import AgentState, trim_messages
 
 # =============================================================================
-# PROTOCOLS - DTOs for Agent Communication
-# =============================================================================
-
-from .protocols import (
-    # Enums
-    TaskType,
-    OptimizationMethod,
-    RebalanceFrequency,
-    # Core DTOs
-    PortfolioTask,
-    PortfolioResult,
-    PortfolioConstraints,
-    # Supporting DTOs
-    TAARule,
-    RiskDecomposition,
-    CovarianceResult,
-    RebalanceAnalysis,
-)
-
-# =============================================================================
 # SPECIALIZED AGENTS
 # =============================================================================
 
@@ -91,22 +71,6 @@ __all__ = [
     # === State Management ===
     "AgentState",
     "trim_messages",
-    
-    # === Protocols (Enums) ===
-    "TaskType",
-    "OptimizationMethod",
-    "RebalanceFrequency",
-    
-    # === Protocols (Core DTOs) ===
-    "PortfolioTask",
-    "PortfolioResult", 
-    "PortfolioConstraints",
-    
-    # === Protocols (Supporting DTOs) ===
-    "TAARule",
-    "RiskDecomposition",
-    "CovarianceResult",
-    "RebalanceAnalysis",
     
     # === Specialized Agents ===
     # Data Agent
