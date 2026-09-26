@@ -1232,8 +1232,10 @@ async def screening_agent_node(state: AgentState) -> Dict[str, Any]:
         # no entry has neither, so the refusal belongs here, before the
         # first call to EDGAR - the screen would otherwise fetch a filer's
         # submissions and facts to discover what the watchlist says in a
-        # lookup. A philosophy check is not narrowed this way: case 4.6
-        # screens JPM, which is held and is on no entry.
+        # lookup. A philosophy check is narrowed less: its input takes a
+        # company held, which PHI-7.2 rechecks and case 4.6 screens (JPM),
+        # or one on an entry, and refuses any other before this node runs
+        # (tool_inputs.PhilosophyScreen; Part 18, R-2).
         if state.get("tool") == POSITION:
             try:
                 load_watchlist(WATCHLIST_PATH).by_ticker(ticker)

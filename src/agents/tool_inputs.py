@@ -125,13 +125,23 @@ def _one_ticker(ticker: str) -> str:
     return ticker
 
 
+# A company the owner has written down: one held, which PHI-7.2 rechecks,
+# or one on a watchlist entry. Any other is refused here, before the screen
+# calls EDGAR (Part 18, R-2). A comment and not a docstring: a model's
+# docstring enters its JSON schema, which the conversation model is shown.
 class PhilosophyScreen(_Inputs):
     ticker: str = Field(description="The one company's ticker.")
 
     @field_validator("ticker")
     @classmethod
-    def _one(cls, ticker: str) -> str:
-        return _one_ticker(ticker)
+    def _written_down(cls, ticker: str, info: ValidationInfo) -> str:
+        context = _context(info)
+        if _one_ticker(ticker) not in context.held + context.watchlist:
+            raise ValueError(f"{ticker} is neither held nor on a watchlist entry; the portfolio "
+                             f"holds {', '.join(context.held)} and the watchlist lists "
+                             f"{', '.join(context.watchlist)}. The philosophy is checked on a "
+                             "company the owner has written down.")
+        return ticker
 
 
 class _Candidate(_Inputs):

@@ -147,6 +147,35 @@ def test_a_screen_refuses_anything_but_one_ticker(inputs, ti, context):
         ti.validate_inputs("philosophy_screen", inputs, context)
 
 
+@pytest.mark.parametrize("ticker", ["JPM", "GOOGL", "ADBE"])
+def test_a_screen_takes_a_held_company_or_a_watchlist_candidate(ticker, ti, context):
+    """PHI-7.2 rechecks a holding (4.6 screens JPM, held and on no entry);
+    a candidate is screened because I listed it."""
+    assert ti.validate_inputs("philosophy_screen", {"ticker": ticker}, context) == {
+        "ticker": ticker}
+
+
+@pytest.mark.parametrize("ticker", ["NVDA", "ZZZZFAKE"])
+def test_a_screen_refuses_a_company_i_have_not_written_down(ticker, ti, context):
+    """Part 18, R-2: the philosophy check is not run on a company I have
+    not written down. Refused at the input, before any call to EDGAR (C-2
+    was stopped only there), naming what is held and what is listed."""
+    with pytest.raises(ti.ToolInputError) as raised:
+        ti.validate_inputs("philosophy_screen", {"ticker": ticker}, context)
+    message = str(raised.value)
+    assert ticker in message
+    assert "JPM" in message and "GOOGL" in message and "ADBE" in message
+
+
+def test_the_screens_rule_adds_nothing_the_model_is_shown(ti):
+    """The rule lives in the validator; the schema the conversation model
+    is shown is the one it was shown before, so no prompt changed."""
+    assert ti.tool_schema("philosophy_screen") == {
+        "additionalProperties": False,
+        "properties": {"ticker": {"description": "The one company's ticker.", "type": "string"}},
+        "required": ["ticker"], "type": "object"}
+
+
 @pytest.mark.parametrize("tool", ["thesis", "position"])
 def test_a_thesis_or_a_position_takes_a_watchlist_ticker(tool, ti, context):
     assert ti.validate_inputs(tool, {"ticker": "GOOGL"}, context) == {"ticker": "GOOGL"}
