@@ -644,6 +644,46 @@ shape is expected; the fixed prefix is unchanged. Nothing new is
 fetched: every stored close is 2026-09-25 and no market has closed
 since.
 
+**Prediction for the runner's next run, written 26 September 2026
+(forty-fifth session) at 55a63e9, before the run.** Read against the run
+of 26 September at 22063f6, 8 of 18, 7 failing, 3 blocked, whose verdicts
+are in KNOWN_GAPS, "The runner after decision 17: 8 of 18 against a
+prediction of 9". One change reaches the model: a sentence at the end of
+`SYSTEM_PROMPT`, "Write every figure with the digits, separators and
+decimal point exactly as the tool printed it, whatever language you
+answer in." (55a63e9). Decision 54 and the tracer's price changed
+nothing the runner reaches. Written once and not edited after the run.
+
+**The hypothesis.** Every runner prompt is English, and on every earlier
+draw the English answers copied the tools' notation; no runner case has
+failed on a figure written in another notation. So the sentence moves no
+verdict. What moves between draws is the prose and the choice of tool,
+as on the last three runs, and each line predicts the verdict seen on
+most earlier draws.
+
+| Case | Prediction |
+| --- | --- |
+| 1.1, 1.2, 1.3, 2.3, 3.1, 3.4, 3.5, 4.5 | PASS, as on the last run |
+| 1.4 | FAIL: the unsectored line's share of invested value not carried |
+| 2.1 | FAIL: on the exempt funds, or on a figure of its own as on the last run; the notation sentence is not about either |
+| 2.2 | FAIL: the clauses not computed not named |
+| 3.2 | FAIL: no tool called |
+| 3.3 | PASS: position_pnl called, as on two of the three runner draws; the risk is the draw that called no tool |
+| 4.1, 4.3 | BLOCKED at PHI-2.1 (decision 48) |
+| 4.2 | FAIL: the assumptions' names and sources, the fiscal year's dates and PHI-4.3 not carried |
+| 4.4 | FAIL: the readings and the proposal not carried |
+| 4.6 | FAIL: the code's pull date not carried |
+
+**9 of 18, 7 failing, 2 blocked.** A case that moves against its line is
+a failed hypothesis; one that fails on a figure's notation is this
+sentence failing.
+
+**What it costs, said before the run.** The last run measured 29,395
+tokens in, 5,591 out, 2,428 written to the cache and 80,124 read, over
+34 calls: about $0.14. The sentence adds about 30 tokens to the cached
+prefix, written once. The same shape is expected. Nothing is fetched,
+every stored close being 2026-09-25 and no market having closed since.
+
 ---
 
 ## Part 3b — Output contract (previously undefined)
@@ -1249,6 +1289,30 @@ with its trigger; nothing was fixed.
 | S-7 turn 2 | missed, as 4.1: the frame carried, the as-of not stated | moved against |
 | S-8 turn 1 | missed, as V-2.1a: no as-of; IPS-4.3 reported as the sector's; "the larger, 6.59 pp, governs" nets the two clauses | moved against |
 | S-8 turn 2 | missed, as 1.3: nothing of AAPL carried, the basis not stated | moved against |
+
+**Prediction for the two German prompts, written 26 September 2026
+(forty-fifth session) at 55a63e9, before they are sent.** Not a corpus
+run: V-1.1a and V-3.4b alone, through the CLI, each as the first turn of
+a fresh session, read by hand against the lines below and against Part
+18. The one change since the fifth block that reaches them is the
+sentence at the end of `SYSTEM_PROMPT` asking for every figure in the
+tool's notation whatever the language (55a63e9). Written once and not
+edited after the run.
+
+| # | Tool | Prediction |
+| --- | --- | --- |
+| V-1.1a | allocation | matched on the notation: answered in German prose, every figure in the tool's notation (406,229.50, not 406.229,50), the client's check passing and the answer shown. Against Part 18, 1.1 the five classes' shares of total carried at the run's closes; the as-of shown by the client from the record; "including cash" and no look-through at risk, as on the English 1.1 of the fifth block |
+| V-3.4b | policy_lookup | matched, as on the fifth block: answered in German, no clause, nothing invented; no figure to write |
+
+**The hypothesis.** The model changed the notation on its own on the
+24th while the prompt already asked for figures "exactly as printed";
+naming the separators and the language is the whole of the change. If
+V-1.1a is refused again for a German figure, the sentence failed once;
+a second failure on the same prompt stops the wording and brings a
+diagnostic (CLAUDE.md, prompt changes).
+
+**What it costs, said before the run.** Two first turns of about the
+size of the runner's 1.1 and 3.4: under $0.02.
 
 ---
 
