@@ -595,6 +595,55 @@ shape is expected, 35 or 36 calls; the fixed prefix is unchanged, so the
 cache is written once. Nothing new is fetched: the stored closes run to
 the 23rd, and the run fetches the closes since, once, on 1.1.
 
+**Prediction for the runner's next run, written 26 September 2026
+(forty-fifth session) at c153d73, before the run.** Read against the run
+of 26 September at ddf01f2, 8 of 18, 8 failing, 2 blocked, whose
+verdicts and reasons are in KNOWN_GAPS, "The runner after decision 77: 8
+of 18 against a prediction of 6". Decision 17 changed the runner's rules
+and nothing the model is sent (dcded39 to a5f46ac): a case names its tool
+and allows others, reading its blocks from that tool's record; 2.1's run
+is found as one unbroken stretch of the turn's trace; the as-of and the
+source a record's provenance carries are read from the record and not
+the prose, except 3.3's "today" and the dates the provenance does not
+carry; 1.4, 4.2 and 4.4 ask what Part 18 pins and no more. Written once
+and not edited after the run.
+
+**The hypothesis.** The prose varies between draws of the same question
+(1.2 and 1.3 on the 24th and the 26th), so each line predicts the
+failure seen on both earlier draws where they agree, and names the risk
+where they did not. Every record's provenance date agrees with its
+block's: the stored closes all run to 2026-09-25, and the 26th is a
+Saturday, so no holding's last close lags another's.
+
+| Case | Prediction |
+| --- | --- |
+| 1.1 | PASS: the five shares of total in the prose; the as-of from the allocation record |
+| 1.2 | PASS: the purchase date and "price return" carried, as on the 26th; the risk is the purchase date dropped, as on the 24th. The as-of from the record |
+| 1.3 | PASS: the basis carried, as on the 26th; the risk is the covariance method dropped, as on the 24th, which the check still asks for (KNOWN_GAPS, "1.3's basis check asks for the covariance method, which Part 18 does not name") |
+| 1.4 | FAIL: the unsectored line's share of invested value not carried, as on both earlier draws; the other three sectors and the as-of no longer asked |
+| 2.1 | FAIL: the exempt funds not named, as on both draws. The tool rule, the trace and the as-of now hold whether or not the model calls allocation beside compliance_check |
+| 2.2 | FAIL: the clauses not computed are not named, as on both draws; Part 18 pins every clause and the check keeps it |
+| 2.3 | PASS: its one failure on both draws was the as-of in the prose, now read from the compliance record |
+| 3.1 | PASS, as on the 26th |
+| 3.2 | FAIL: no tool called, as on both runner draws (KNOWN_GAPS, "A price forecast was answered with no tool called") |
+| 3.3 | PASS: the date in the prose, as on both draws; the check keeps it there, the question asking about today |
+| 3.4, 3.5, 4.5 | PASS, as on both draws |
+| 4.1, 4.3 | BLOCKED at PHI-2.1 (decision 48) |
+| 4.2 | FAIL: the assumptions' names and sources, the fiscal year and its dates and PHI-4.3 not carried; the screen's dates no longer asked, the range's as-of and source read from the record |
+| 4.4 | FAIL: the readings' sections and accession, the proposal's statement and "proposed, not entered", the claims and quotes not carried; each reading's year and filed date, the value's source name and the as-of no longer asked |
+| 4.6 | FAIL: the code's pull date not carried, as on both draws; the check's date now read from the record |
+
+**9 of 18, 7 failing, 2 blocked.** 2.3 is the one line moving. A verdict
+against this table is a failed hypothesis whatever the answer reads
+like.
+
+**What it costs, said before the run.** The run of the 26th measured
+30,471 tokens in, 5,968 out, 2,428 written to the cache and 82,552 read
+from it over 35 calls: about $0.14 at decision 45's rates. The same
+shape is expected; the fixed prefix is unchanged. Nothing new is
+fetched: every stored close is 2026-09-25 and no market has closed
+since.
+
 ---
 
 ## Part 3b — Output contract (previously undefined)
