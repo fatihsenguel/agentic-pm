@@ -420,6 +420,67 @@ def test_2_1_reads_the_compliance_call_and_leaves_the_plan_to_the_trace():
 
 
 # ---------------------------------------------------------------------------
+# check_2_1's trace: the turn carries one trace, and each tool's run in it
+# is one unbroken stretch, the layer running its tools one after another.
+# The case's run is the stretch whose agents are its plan (decision 17).
+# ---------------------------------------------------------------------------
+
+ALLOCATION_PLAN = ["DataAgent", "PortfolioAnalysisAgent"]
+
+
+def _turn_trace(*runs, request_id="turn-2-1"):
+    """A tracer holding one turn's trace: each run's agents open their
+    spans in plan order, each but the last delegating to the next, and
+    ComplianceAgent's check traced as its tool call."""
+    from observability import Tracer, TraceLevel
+
+    tracer = Tracer(level=TraceLevel.VERBOSE, console_output=False)
+    with tracer.trace_request(request_id, "q") as request:
+        for plan in runs:
+            for i, name in enumerate(plan):
+                with request.trace_agent(name) as agent:
+                    if name == "ComplianceAgent":
+                        with agent.trace_tool("check_ips"):
+                            pass
+                    if i + 1 < len(plan):
+                        agent.log_delegation(plan[i + 1], "task")
+    return tracer
+
+
+def _handover_fails(monkeypatch, *runs):
+    monkeypatch.setattr(run_cases, "get_tracer", lambda: _turn_trace(*runs))
+    return run_cases._trace_shows_handovers({"request_id": "turn-2-1"},
+                                            run_cases.COMPLIANCE_PLAN)
+
+
+def test_2_1_finds_the_compliance_run_in_a_turn_of_one_run(monkeypatch):
+    assert _handover_fails(monkeypatch, run_cases.COMPLIANCE_PLAN) == []
+
+
+def test_2_1_finds_the_compliance_run_beside_another_tools(monkeypatch):
+    """The 26 September draw: the allocation, then the check. The turn's
+    agents are DataAgent and PortfolioAnalysisAgent twice."""
+    plan = run_cases.COMPLIANCE_PLAN
+    assert _handover_fails(monkeypatch, ALLOCATION_PLAN, plan) == []
+    assert _handover_fails(monkeypatch, plan, ALLOCATION_PLAN) == []
+
+
+def test_2_1_fails_a_turn_where_the_plan_is_not_one_run(monkeypatch):
+    fails = _handover_fails(monkeypatch, ALLOCATION_PLAN, ["DataAgent", "ComplianceAgent"])
+    assert _mentions(fails, "not one unbroken run")
+    fails = _handover_fails(monkeypatch, ALLOCATION_PLAN)
+    assert _mentions(fails, "not one unbroken run")
+
+
+def test_2_1_fails_agents_in_plan_order_that_did_not_hand_over(monkeypatch):
+    """The allocation's run, then ComplianceAgent alone: the spans read as
+    the plan, and the missing handover is what fails."""
+    fails = _handover_fails(monkeypatch, ALLOCATION_PLAN, ["ComplianceAgent"])
+    assert _mentions(fails, "not one unbroken run") == []
+    assert _mentions(fails, "handovers missing")
+
+
+# ---------------------------------------------------------------------------
 # What a case cost: the usage the layer records for every model call
 # (decision 45), summed over every turn, in tokens and never in money
 # ---------------------------------------------------------------------------

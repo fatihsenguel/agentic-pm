@@ -1232,18 +1232,26 @@ def _trace_for(state):
 
 
 def _trace_shows_handovers(state, plan):
-    """benchmark 2.1: "trace shows contract handovers". Each planned agent
-    opened a span, in plan order; each agent but the last delegated to the
-    next; ComplianceAgent's check ran as a traced tool call."""
+    """benchmark 2.1: "trace shows contract handovers". The planned agents
+    opened their spans as one unbroken run, in plan order; each agent but
+    the last delegated to the next; ComplianceAgent's check ran as a traced
+    tool call.
+
+    The turn carries one trace, and the model may call other tools beside
+    the case's (decision 17). The layer runs its tools one after another,
+    so each run is an unbroken stretch of the turn's agent spans, and the
+    case's run is the stretch that is its plan. A turn whose runs
+    interleaved would fail here rather than be read apart."""
     trace, fails = _trace_for(state)
     if trace is None:
         return fails
 
     started = [e.agent_name for e in trace.events
-               if e.event_type == TraceEventType.AGENT_START and e.agent_name in plan]
-    if started != plan:
-        fails.append(f"agents in trace: {started}; the plan {plan} is not what the "
-                     "trace shows ran")
+               if e.event_type == TraceEventType.AGENT_START]
+    width = len(plan)
+    if not any(started[i:i + width] == plan for i in range(len(started) - width + 1)):
+        fails.append(f"agents in trace: {started}; the plan {plan} is not one unbroken "
+                     "run in the turn's trace")
 
     handovers = [(e.agent_name, e.metadata.get("to_agent"))
                  for e in trace.events if e.event_type == TraceEventType.DELEGATION]
