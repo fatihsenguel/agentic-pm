@@ -753,7 +753,7 @@ question). The fallback is still confidence 0.0 with the German apology.
 
 ### CostCalculator reports costs for the wrong model
 
-**Trigger:** the commit that deletes the cost tracker. Decision 53 closed 15 September (eighteenth session): delete behind a tag, by the rule for code no question reaches.
+**Trigger:** the owner's word on deleting the tracer's `CostCalculator`, brought after decision 54 (the token counter's deletion, c9da39c, fired the old trigger). Decision 53 closed 15 September (eighteenth session): delete behind a tag, by the rule for code no question reaches.
 
 `observability/tracer.py:406` — `PRICING` is a 2024 table with no Anthropic 4.x
 entries, and `estimate_cost` does `PRICING.get(model, PRICING["gpt-4-turbo"])`.
@@ -762,6 +762,18 @@ silently uses GPT-4-Turbo rates.
 
 Fix the table and raise on unknown models. Matters disproportionately: the target
 role names LLM monitoring and evaluation, and this is the monitoring layer.
+
+**26 September 2026 (forty-fifth session), the trigger fired and the
+deletion waits.** Decision 54 deleted the token counter (c9da39c), a cost
+tracker, and this entry's trigger read as that commit. The tracer's
+`CostCalculator` is a second one and is not dead: every request trace
+ends in `RequestTraceContext._calculate_aggregates` (`tracer.py:386`)
+estimating `total_cost_usd` from the total tokens at `gpt-4-turbo`
+rates, with a guessed 70% of them input, and `format_summary` prints it
+as "Est. Cost". No code should compute a price; the conversation layer
+records tokens and the record converts them. Deleting it touches the
+tracer the runner reads, which decision 54's approved shape did not
+name, so it is brought to me as its own question.
 
 ### `ANTHROPIC_SONNET` points at the Haiku model id - RESOLVED 10 September (tenth sitting)
 
@@ -2092,9 +2104,9 @@ backtest engine's inline volatility. Decide before the next optimiser change.
 
 **15 September (seventeenth session).** `risk_parity.py` is deleted (a81fbac). The sites left are `constraints.py`'s volatility constraint and check, and `max_sharpe`'s objective in `mean_variance.py`, all on the optimisation intent (decision 51).
 
-### `AgentConfig` fields declared but unenforced
+### `AgentConfig` fields declared but unenforced - RESOLVED 26 September (forty-fifth session)
 
-**Trigger:** pending decision 54: BaseAgent's tool loop and the three config fields that describe it.
+**Trigger:** none: `AgentConfig` deleted with `base_agent.py` under decision 54, behind the tag `agent-loop-parked`.
 
 `log_tool_calls` and `max_tool_calls_per_turn` are read nowhere. The first reads
 as "tool calls are being logged" and they are not; the second reads as a loop
@@ -2109,6 +2121,10 @@ the tool-boundary pass, on paper: the loop, the supervisor, the role
 enum and the `AgentSettings` fields go with the router, and 45's entry
 says which. The two fields above are comment lines in the tree today.
 Trigger unchanged.
+
+**26 September 2026 (forty-fifth session), resolved under decision 54
+at 3657afb.** `AgentConfig` went with `base_agent.py`; `DataAgent` keeps
+`verbose` as a plain attribute, the one field its tools read.
 
 ---
 
@@ -2433,9 +2449,9 @@ after the grep. `portfolio_value` keeps its reader in the backtest node
 and no writer, and stays.
 
 
-### BaseAgent's tool-calling loop has no live caller - confirmed, 8 September
+### BaseAgent's tool-calling loop has no live caller - RESOLVED 26 September (forty-fifth session)
 
-**Trigger:** pending decision 54.
+**Trigger:** none: the loop deleted under decision 54, behind the tag `agent-loop-parked`.
 
 Grep run 8 September (seventh sitting, after the merge): `.process(` is
 called on an agent nowhere in `src/`; the only caller is
@@ -2459,6 +2475,14 @@ the tool-boundary pass, on paper: the loop goes with the router, and
 in the tree at 495b845, `.process(` is called nowhere under `src/` or
 `tests/`; the test file named above no longer mentions it, and
 `risk_manager_agent.py` is gone. Trigger unchanged.
+
+**26 September 2026 (forty-fifth session), resolved under decision 54
+at 3657afb.** `base_agent.py` deleted whole: `BaseAgent`,
+`SupervisorAgent`, `AgentRole`, `AgentConfig`, `AgentMessage`, its own
+`AgentState` and `register_agent`. `DataAgent` and `RebalanceAgent`
+subclass nothing and keep the tool functions the nodes call; their
+`process`, `get_tools`, `get_system_prompt` and `capabilities` went.
+`tests/test_agents_without_loop.py` holds the shape.
 
 
 ### Roster sites the registry does not read - CLOSED 15 September (seventeenth session), cosmetic
@@ -3184,9 +3208,9 @@ manager, the way `test_router_plans.py` stubs it. Not built.
 exercised live by `test_strict_nodes.py` over the database copy, through
 `record_transaction` since be14e4b.
 
-### `max_conversation_history` is read by nothing
+### `max_conversation_history` is read by nothing - RESOLVED 26 September (forty-fifth session)
 
-**Trigger:** pending decision 54.
+**Trigger:** none: `AgentSettings` deleted under decision 54 at 2cac7b4.
 
 Recorded 9 September (ninth sitting), seen while deleting
 `conversation_history` from the router path (1320913). `AgentConfig`
@@ -3196,6 +3220,12 @@ family as `log_tool_calls`. Logged, not chased.
 **23 September 2026 (thirty-ninth session).** Folded into decision 45,
 the tool-boundary pass, on paper: the `AgentSettings` dataclass goes
 whole with the router, and 45's entry says so. Trigger unchanged.
+
+**26 September 2026 (forty-fifth session), resolved under decision 54
+at 2cac7b4.** The dataclass went whole with `max_tool_iterations` and
+`verbose_tool_results`, and `AGENT_SETTINGS` left the package's exports.
+The entry placed it in `AgentConfig` (`agents/config.py`); it was on
+`AgentSettings` in that file, as decision 45's entry said.
 
 ### The `transactions` table has no portfolio - RESOLVED 10 September (tenth sitting)
 
@@ -4005,7 +4035,7 @@ a deletion commit. The model keeps being told VaR is a thing it can ask for.
 
 ### What the seventeenth session's deletions left behind
 
-**Trigger:** pending decision 54 for the task loop's remains; the next change to each file for the rest.
+**Trigger:** the next change to each file for the rest; the task loop's remains went under decision 54.
 
 **Recorded 15 September (seventeenth session), from the greps before each deletion.** Each lost its
 last caller or reader this session and was not on the list:
@@ -4030,6 +4060,12 @@ is in Part 13 C, dated.
 decision 54's part of this trigger, folded into decision 45, the
 tool-boundary pass, on paper; 45's entry says what goes. The rest of
 the trigger unchanged.
+
+**26 September 2026 (forty-fifth session), decision 54's part done.**
+`TaskType` with `CALCULATE_RISK`, `protocols.OptimizationMethod` and
+`SupervisorAgent` are deleted: the first two with every type of
+`protocols.py` but `PortfolioContext` (0e6ce46), the third with
+`base_agent.py` (3657afb). The rest of the list stands on its trigger.
 
 ### The macro answer, now that it prints - RESOLVED 22 September (thirty-third session)
 
@@ -8582,9 +8618,9 @@ prediction block counts 3.1 and 3.1c missed on the first, and 3.2 and
 R-6 matched on the subject and the clause, reading the quote and the
 trace line as this entry's to settle.
 
-### The token counter prices a model it does not know at a default
+### The token counter prices a model it does not know at a default - RESOLVED 26 September (forty-fifth session)
 
-**Trigger:** decision 54's commit, which deletes the config fields beside it; or any code that calls `calculate_cost` or `TokenCounter.add_usage`.
+**Trigger:** none: `token_counter.py` deleted under decision 54 at c9da39c, behind the tag `agent-loop-parked`.
 
 Recorded 24 September 2026 (forty-first session). `observability/token_counter.py`
 carries a price table from 2024 with no current model in it, and
@@ -8595,6 +8631,10 @@ none since 4d971b1. The conversation layer records tokens and computes no
 price; the record converts tokens at the rates it states. Not reused, not
 fixed: code no question reaches is deleted behind a tag, with decision 54's
 fields.
+
+**26 September 2026 (forty-fifth session), resolved under decision 54 at
+c9da39c.** The module, its seven exports and the two tests that held
+its table went; `test_observability.py` now asserts the module is gone.
 
 ### Statements about the router and the synthesizer outlive them
 
@@ -9424,3 +9464,68 @@ second draw each.
 **What it cost.** 29,395 tokens in, 5,591 out, 2,428 written to the
 cache and 80,124 read from it, over 34 calls: about $0.14 at decision
 45's rates, as said before the run.
+
+### BaseAgent's loop and the config fields that describe it - decision 54, TAKEN 26 September (forty-fifth session)
+
+**Trigger:** none for the decision; the two entries it logged or re-triggered carry their own, "`_get_prices_from_db` reports any database error as no data" and "CostCalculator reports costs for the wrong model".
+
+**What it was.** Decision 45 took on paper, on 23 September, that
+`BaseAgent`'s tool-calling loop, the supervisor, the role enum and the
+config fields describing the loop go with the router, and that 54 closes
+on the commit that deletes them. The router went at 4d971b1; nothing had
+called the loop since the graph's nodes began calling the agents' tool
+functions directly. Brought on its own after decision 17 with its blast
+radius measured, and taken on my yes as brought, the token counter
+included, its trigger naming this commit.
+
+**What went, behind the tag `agent-loop-parked` at 61265ff.**
+- `src/agents/base_agent.py`, 409 lines, whole (3657afb). `DataAgent`
+  and `RebalanceAgent` subclass nothing and keep the tools the nodes
+  call; their `process` paths, `get_tools`, `get_system_prompt` and
+  `capabilities` went, `data_agent.py` from 976 lines to 785 and
+  `rebalance_agent.py` from 440 to 296. `DataAgent` keeps `verbose` and
+  a plain `log`, the one thing its tools used from the base class,
+  printing as before when asked and with no glyph. `RebalanceAgent`'s
+  factory lost `verbose`, read only inside `process`. The two agent
+  prompts were sent to no model.
+- `protocols.py` to `PortfolioContext` alone, 427 lines to 33 (0e6ce46):
+  ten types read only by the loop and the package's exports, one of them
+  a `CovarianceResult` duplicating `portfolio_tool.quant.covariance`'s.
+- `AgentSettings` and `AGENT_SETTINGS` (2cac7b4).
+- `src/observability/token_counter.py`, 404 lines, whole, its exports
+  and the two tests of its price table (c9da39c).
+The owner removed the two files from the worktree, the permission layer
+refusing whole-file deletion. The package's exports shrank to match at
+each part; nothing imported what they dropped.
+
+**What each loop sees.** pytest: 2060 passed, 6 xfailed, from 2052:
+ten tests added in `tests/test_agents_without_loop.py` and
+`tests/test_observability.py`, two deleted with the token counter, and
+two `.name` assertions and one printout gone with the attributes they
+read. The runner, the corpus and the CLI reach none of it; no paid run
+was made.
+
+**Found while measuring, not taken.** The tracer computes a price on
+every trace, a second calculator the shape did not name, and
+`_get_prices_from_db` turns any database error into no data. Each is its
+own entry; neither was folded in. The four glyphs in `BaseAgent.log`
+went with the file, which the console-glyph session will count as gone.
+
+**Resolved with it:** "`AgentConfig` fields declared but unenforced",
+"BaseAgent's tool-calling loop has no live caller", "`max_conversation_history`
+is read by nothing", "The token counter prices a model it does not know
+at a default". "What the seventeenth session's deletions left behind"
+keeps its trigger for the rest of its list.
+
+### `_get_prices_from_db` reports any database error as no data
+
+**Trigger:** the next change to `DataAgent._get_prices_from_db`; or the next run where a figure fails with "No data found for tickers" while the store has the rows.
+
+Recorded 26 September 2026 (forty-fifth session), found measuring
+decision 54. `data_agent.py:130` catches every exception of the price
+query and returns `None`, logging it only when the agent was created
+verbose, which the nodes never do. Its caller then reports "No data
+found for tickers", so a broken connection, a schema error and an empty
+table read the same. That is the repair shape invariant 5 forbids: the
+error is replaced by a plausible statement about the data. Not fixed
+here, a change to what live code raises being its own decision.
