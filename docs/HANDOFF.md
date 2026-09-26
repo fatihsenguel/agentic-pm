@@ -1,18 +1,19 @@
 # AGENTIC_FINANCE — Session Handoff
 
 **Session date:** 26 September 2026 (forty-fifth session), the afternoon and evening, UTC.
-**Branches:** `checks`, cut from `baseline-v1` at 41a6d19, ten commits, **merged `--ff-only` and pushed by the owner at 61265ff**. Then the tag `agent-loop-parked` at 61265ff and `loop`, six commits, **merged and pushed with the tag at 7c52210**. Then the tag `tracer-cost-parked` at 7c52210 and `cost`, three commits, **merged and pushed with the tag at a6436b1**. Then `notation`, cut from a6436b1 in the worktree `.claude/worktrees/notation`, **four commits with this one**, among them the session's one prompt change. Built under CLAUDE.md as revised on 26 September: each shape approved once, then one part per commit, then the branch shown for review. `notation` is not merged, not pushed, **to be merged `--ff-only` by the owner**.
+**Branches:** `checks`, cut from `baseline-v1` at 41a6d19, ten commits, **merged `--ff-only` and pushed by the owner at 61265ff**. Then the tag `agent-loop-parked` at 61265ff and `loop`, six commits, **merged and pushed with the tag at 7c52210**. Then the tag `tracer-cost-parked` at 7c52210 and `cost`, three commits, **merged and pushed with the tag at a6436b1**. Then `notation`, four commits, among them the session's one prompt change, **merged and pushed at ecb9b90**. Then `screen`, cut from ecb9b90 in the worktree `.claude/worktrees/screen`, **three commits with this one**. Built under CLAUDE.md as revised on 26 September: each shape approved once, then one part per commit, then the branch shown for review. `screen` is not merged, not pushed, **to be merged `--ff-only` by the owner**.
 
-**State:** pytest **2063 passed, 6 xfailed** (2061 at a6436b1, 2036 at the session's start). **The runner: 10 of 18** (run of 26 September, 17:02 UTC, at b67e865), against a prediction of 9. The corpus at 33 of 67, not re-run; V-1.1a and V-3.4b sent alone after the prompt change.
+**State:** pytest **2069 passed, 6 xfailed** (2063 at ecb9b90, 2036 at the session's start). **The runner: 10 of 18** (run of 26 September, 17:02 UTC, at b67e865), against a prediction of 9. The corpus at 33 of 67, not re-run; V-1.1a and V-3.4b sent alone after the prompt change.
 
-**Decisions 17 and 54 are taken and built, the tracer's price is deleted under decision 53's rule, and the German figures are decided: the notation moves, the check does not. The prompt sentence that moves it failed its first draw.** The pending list is six: 10, 13, 22, 48, 52 and 76.
+**Decisions 17 and 54 are taken and built, the tracer's price is deleted under decision 53's rule, and the German figures are decided: the notation moves, the check does not. The prompt sentence that moves it failed its first draw. The screen's scope is decided: a held company or a watchlist candidate.** The pending list is six: 10, 13, 22, 48, 52 and 76.
 
 Written for whoever picks this up cold, myself included.
 
 **Regenerate this document at the end of each session rather than patching it.**
 **Check every claim here against the code before acting on it, including
 this file.** This session checked:
-- the trunk against the remote at the start and after each of the owner's merges: 41a6d19, then 61265ff, 7c52210 and a6436b1 on both, and `agent-loop-parked` and `tracer-cost-parked` on the remote;
+- the trunk against the remote at the start and after each of the owner's merges: 41a6d19, then 61265ff, 7c52210, a6436b1 and ecb9b90 on both, and `agent-loop-parked` and `tracer-cost-parked` on the remote;
+- that the screen's input schema, which the conversation model is shown, is byte for byte what it was before its validator changed, after finding that the first draft's class docstring had entered it;
 - that the owner's `git worktree remove` of `cost` succeeded with the `data/portfolio.db` link still in place, and that the real database was untouched after it: §3's rule that the link blocks the removal did not hold there;
 - pytest at each branch point and red before and green after each of the eight code parts;
 - every caller of each check, accessor, class and export the parts moved or deleted, by grep, in `src/` and `tests/`;
@@ -32,10 +33,11 @@ It did not re-check §3's library versions, the filings clocks or the store beyo
 | File | What it is |
 |---|---|
 | `docs/DIRECTION.md` | **The end state and the invariants.** Unchanged this session. |
-| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **Start with:** "The tracing check refuses an answer written in German number format", whose last note records the decision and the failed draw; "The runner after the notation sentence: 10 of 18 against a prediction of 9"; and the session's decision entries, "The runner's checks against a selecting layer - decision 17, TAKEN 26 September (forty-fifth session)" and "BaseAgent's loop and the config fields that describe it - decision 54, TAKEN 26 September (forty-fifth session)". **213 lines start `**Trigger:**`**, 9,639 lines. |
+| `tests/golden/KNOWN_GAPS.md` | **Every open entry carries a `Trigger:` line.** Read the entries whose trigger has fired or whose decision is on §5's list, and no other. **Start with:** "An answer offers a tool for a company the owner has not written down", whose last note records the screen's scope; "The tracing check refuses an answer written in German number format", whose last note records the decision and the failed draw; "The runner after the notation sentence: 10 of 18 against a prediction of 9"; and the session's decision entries, "The runner's checks against a selecting layer - decision 17, TAKEN 26 September (forty-fifth session)" and "BaseAgent's loop and the config fields that describe it - decision 54, TAKEN 26 September (forty-fifth session)". **213 lines start `**Trigger:**`**, 9,661 lines. |
 | `tests/benchmark/run_cases.py` | `_the_call` and `_of` (a case's own record), `_one_call` (3.2 alone), `_trace_shows_handovers` (the run as a stretch), `_date_shown` and `_source_shown` (the record's provenance), `_date_reaches_answer` (the prose). |
 | `tests/test_agents_without_loop.py` | What decision 54 left: two agents that subclass nothing, `protocols.py` with `PortfolioContext` alone, no `AgentSettings`. |
 | `src/agents/conversation.py` | `SYSTEM_PROMPT`'s last sentence, the notation, 55a63e9; `untraced_figures`, unchanged. |
+| `src/agents/tool_inputs.py` | `PhilosophyScreen`: held or listed, the rule in a comment and not the docstring. |
 | `docs/benchmark.md` Part 3, the block written at c153d73 | The prediction the last run was read against. |
 | `tests/golden/expected_values.md` Part 18 | What each answer must carry. Part 18 is here and not in benchmark.md. |
 
@@ -66,6 +68,9 @@ priced zero tokens on every trace for no reader, behind the tag
 `notation`, the German figures: one sentence asking for every figure in
 the tool's notation whatever the language, the check unchanged; its
 prediction written first, and V-1.1a refused again on the paid draw.
+Last, on `screen`, what the philosophy screen may be asked: a company
+held or on a watchlist entry, refused at its input otherwise, with no
+prompt change.
 
 ### How I work on this
 
@@ -93,7 +98,7 @@ python tests/benchmark/run_cases.py        # PAYS, about $0.14: ask first
 python src/agents/cli.py --portfolio 3      # PAYS per turn
 ```
 
-**pytest: 2063 passed, 6 xfailed.**
+**pytest: 2069 passed, 6 xfailed.**
 
 **The runner: 10 of 18, 6 failing, 2 blocked** (26 September, 17:02:34
 to 17:04:35 UTC, at b67e865, about $0.14). Predicted 9 of 18, the
@@ -109,12 +114,12 @@ matched.
 
 ### Branches and tags
 
-`baseline-v1` at **a6436b1**, pushed, with `agent-loop-parked` and
-`tracer-cost-parked` on the remote. `notation` carries four commits, to
+`baseline-v1` at **ecb9b90**, pushed, with `agent-loop-parked` and
+`tracer-cost-parked` on the remote. `screen` carries three commits, to
 be merged `--ff-only`. Its worktree has a `data/portfolio.db` symlink;
-removing the link first is the safe order (§3). `checks`, `loop` and
-`cost` are merged and can be deleted with `git branch -d checks loop
-cost`.
+removing the link first is the safe order (§3). `checks`, `loop`, `cost`
+and `notation` are merged and can be deleted with `git branch -d checks
+loop cost notation`.
 
 ### Database
 
@@ -133,9 +138,9 @@ As the handoff at 41a6d19 gave it, and:
   harness refuses heredoc appends; `git stash list` was refused.
 - **A deleted module leaves its `.pyc` in `__pycache__`**; Python 3 does
   not import it without the source, checked with bytecode writing off.
-- **A worktree with the database link did `git worktree remove`** when
-  the owner removed `cost` without deleting the link first, and the
-  real database was untouched. The earlier handoffs' rule that the link
+- **A worktree with the database link did `git worktree remove`**, twice
+  (`cost` and `notation`), and the real database was untouched both
+  times. The earlier handoffs' rule that the link
   blocks the removal did not hold there; removing the link first stays
   the safe order, since what the removal does to a symlinked file was
   not tested.
@@ -181,13 +186,21 @@ As the handoff at 41a6d19 gave it, and:
 | **58a9a5d** | KNOWN_GAPS: the tracer's CostCalculator resolved, my note on it corrected, the trace's zero tokens logged | document |
 | **a6436b1** | the handoff, regenerated | document |
 
-**On `notation`, four commits:**
+**On `notation`, four commits, merged at ecb9b90:**
 
 | Commit | What it is | pytest |
 |---|---|---|
 | **55a63e9** | conversation: a figure keeps the tool's notation in any language; the prompt's one new sentence, and the check held to refusing German notation | 1 failed, 2062 passed, then 2063 |
 | **b67e865** | benchmark: predictions for the notation sentence, the runner at 9 of 18 and the two German prompts | document |
 | **72e398e** | KNOWN_GAPS: the notation sentence failed on V-1.1a once; the runner 10 of 18 against 9 | document |
+| **ecb9b90** | the handoff, regenerated | document |
+
+**On `screen`, three commits:**
+
+| Commit | What it is | pytest |
+|---|---|---|
+| **d72982b** | tool_inputs: the philosophy screen takes a held company or a watchlist candidate; a test holds the schema the model is shown | 2 failed, 2066 passed, then 2069 |
+| **c46a5a6** | KNOWN_GAPS: the screen's scope decided, the tool's half of the offer entry closed | document |
 | **This commit** | the handoff, regenerated | document |
 
 **Mistakes of this session, recorded:**
@@ -221,6 +234,10 @@ As the handoff at 41a6d19 gave it, and:
   the tool's notation failed on its first draw. A failed hypothesis,
   recorded, not a mistake of the build; the next draw decides whether
   the wording stops.
+- The screen's validator was first written with a class docstring,
+  which pydantic puts into the JSON schema the model is shown: a prompt
+  change the owner had not approved. Found by printing the schema before
+  the commit, moved to a comment, and pinned by a test.
 
 **Resolved, eight:** under decision 17, "The synthesizer returns the
 same answer regardless of the question", "`measure` set by the model
@@ -253,6 +270,8 @@ trace's token counts are written by nothing".
 - **The German figures: the answer's notation moves, the check does
   not**, by one sentence at the end of `SYSTEM_PROMPT`, with its
   prediction written first; and the paid check after it, about $0.16.
+- **The screen's scope: a held company or a watchlist candidate**,
+  refused at the input otherwise, with no prompt change.
 
 **Pending — six:** 10, 13, 22, 48, 52 and 76. The cap is 25. None
 opened, two closed.
@@ -260,8 +279,6 @@ opened, two closed.
 **Surfaced and not numbered:**
 - **What a trace records of tokens**: its counts are never written and
   state 0, logged.
-- **What the philosophy screen may be asked**, given R-2's pin and 4.6
-  screening a held JPM.
 - **Whether provenance should carry every date a block states**, logged.
 
 ---
@@ -288,18 +305,19 @@ first, from the VS Code terminal, then the merge, the push and the
 worktree:
 
 ```
-cd "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/.claude/worktrees/notation" && rm data/portfolio.db && rmdir data
+cd "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE/.claude/worktrees/screen" && rm data/portfolio.db && rmdir data
 ```
 ```
-cd "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE" && git merge --ff-only notation && git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1 && git fetch origin && git worktree remove .claude/worktrees/notation
+cd "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE" && git merge --ff-only screen && git push https://github.com/fatihsenguel/agentic-pm.git baseline-v1 && git fetch origin && git worktree remove .claude/worktrees/screen
 ```
 
 **2. V-1.1a's second draw**, on the owner's word, a few cents: if it is
 refused again, the wording stops and a diagnostic separating the causes
 is brought, not a third wording.
 
-**3. The screen's scope**, the one surfaced question left, a shape
-before any code.
+**3. The corpus run**, the first since the layer's fifth block, when
+the owner wants one: its cost is unmeasured, the CLI printing no tokens.
+It is where C-2's refusal at the input and the prose's offers are read.
 
 ### Later, with reasons
 
@@ -333,6 +351,10 @@ did not show it, the grep for `self.` in the tools did.
 **A deleted test assertion is not replaced by a true one.** When the
 attribute an assertion read is gone by design, the assertion goes.
 
+**A docstring on an input model is part of a prompt.** Pydantic puts
+it in the JSON schema the model is shown; a rule meant for code goes in
+a comment, and the schema is printed before the commit.
+
 **A thing is not described as live until its writers and readers are
 grepped.** The tracer's calculator ran on every trace and was still
 dead: nothing fed it and nothing read it.
@@ -347,7 +369,7 @@ Still true: the handoff at 41a6d19's list, and everything before it.
 cd "/Users/sengul/Programming/AI Engineering/Finance/Korrekte_Versionen/AGENTIC_FINANCE"
 source .venv/bin/activate
 
-pytest -q          # 2063 passed, 6 xfailed
+pytest -q          # 2069 passed, 6 xfailed
 python tests/benchmark/run_cases.py                # PAYS, about $0.14 a run; ask first
 python src/agents/cli.py --portfolio 3             # PAYS per turn; :q to quit
 git show golden-parked:tests/golden/run_golden.py  # the parked golden set
