@@ -568,6 +568,33 @@ facts: none, the clocks running to the 29th and 30th. `filed_documents`
 and `document_readings`: none. The provider is yfinance, and a fetch
 costs nothing but the rows.
 
+**Prediction for the runner's next run, written 26 September 2026
+(forty-fourth session) at dda1f4a, before the run.** Read against the run
+of 24 September at 78c61cd, `tests/golden/run_cases_2026-09-24.txt`,
+5 of 18, 10 failing, 3 blocked. Two changes since alter what the runner
+reads and nothing the model is sent: the tracing check reads a resolved
+reply against the question it was resolved into (d893747), and decision
+77, the records carrying every block, the accessors reading them, and the
+earlier turns' figures allowed (fd38d22 to dda1f4a). Every verdict of
+that run stands except two, and this block is written once and not
+edited after the run.
+
+| Case | Prediction |
+| --- | --- |
+| 3.1 | PASS. Its one failure was the "15" of the typed reply read against "A share."; the check now reads the resolved question, which carries it. Stands on the model again calling hypothetical_weight at 0.15 as a share and citing IPS-4.1 and IPS-4.2 with no figure outside the tool's text |
+| 2.1 | FAIL, out of BLOCKED. The probe reads the compliance block from the compliance_check record, whichever tool ran last. If the model again calls allocation beside compliance_check, as it did on both draws of the 24th, `_one_call` fails the case on the second call, which is C2 inside decision 17. If it calls compliance_check alone, the case fails as 2.3 did on the as-of dropped from the prose, the hypothesis of the 24th that failed on five cases |
+| all others | unchanged: 1.1, 3.3, 3.4, 3.5 and 4.5 PASS; 1.2, 1.3, 1.4, 2.2, 2.3, 3.2, 4.2, 4.4 and 4.6 FAIL on the reasons of the 24th; 4.1 and 4.3 BLOCKED at PHI-2.1. The earlier turns' allowance moves no single-turn case, and 3.5's second turn quotes its own record. 1.3 loses one check, the weighted average of the single names, which pytest now holds over the committed closes; its failure on the covariance method stands |
+
+**6 of 18, 10 failing, 2 blocked.** A verdict against this table is a
+failed hypothesis whatever the answer reads like.
+
+**What it costs, said before the run.** The run of the 24th measured
+30,484 tokens in, 5,583 out, 2,428 written to the cache and 82,552 read
+from it over 35 calls: about $0.14 at decision 45's rates. The same
+shape is expected, 35 or 36 calls; the fixed prefix is unchanged, so the
+cache is written once. Nothing new is fetched: the stored closes run to
+the 23rd, and the run fetches the closes since, once, on 1.1.
+
 ---
 
 ## Part 3b — Output contract (previously undefined)
