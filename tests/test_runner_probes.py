@@ -319,6 +319,78 @@ def test_a_source_the_record_carries_need_not_reach_the_prose():
                      "provenance")
 
 
+# ---------------------------------------------------------------------------
+# A prose check requires what Part 18's entry pins for its case and nothing
+# it leaves out (decision 17). The checks were written when the answer was
+# the formatter's whole text; the layer selects what the question asks.
+# ---------------------------------------------------------------------------
+
+SECTORS = {"Technology": 0.2905, "(no sector)": 0.4725, "Healthcare": 0.1005,
+           "Financials": 0.0868, "Utilities": 0.0405}
+
+
+def _sectors_state(answer):
+    lines = [{"label": label, "pct_of_invested": pct} for label, pct in SECTORS.items()]
+    block = {"by_sector": {"lines": lines}, "by_asset_class": {"lines": []}}
+    return _state([_record("allocation", block=block)], final_response=answer)
+
+
+def test_1_4_asks_for_the_technology_line_and_the_unsectored_line_alone():
+    """Part 18, 1.4: Technology's share of invested value and the
+    unsectored line's; no other sector's positions."""
+    fails = run_cases.check_1_4(_sectors_state("Technology 29.05%; no sector 47.25%."))
+    assert _mentions(fails, "does not carry the figure") == []
+    fails = run_cases.check_1_4(_sectors_state("Technology 29.05%."))
+    assert _mentions(fails, "does not carry the figure for: (no sector)") == [
+        "answer does not carry the figure for: (no sector)"]
+
+
+def test_4_2_does_not_ask_for_the_screens_code_date():
+    """Part 18, 4.2 pins the range's dates and the close's, and no SIC:
+    the code and its pull date are the screen's answer, 4.1's."""
+    block = {"subject": {"ticker": "GOOGL"}, "as_of": DATE,
+             "sic_as_of": "2026-09-23T08:00:00+00:00",
+             "valuation": {"low": 1.0, "high": 2.0, "as_of": DATE}}
+    state = _state([_dated(_record("philosophy_screen", {"ticker": "GOOGL"},
+                                   key="screening", block=block))],
+                   final_response="1.00 to 2.00")
+    assert _mentions(run_cases.check_4_2(state), "sic_as_of", "2026-09-23") == []
+
+
+def test_4_4_does_not_ask_for_each_readings_filed_date_or_year_or_the_values_source_name():
+    """Part 18, 4.4 pins the sections read of the 10-K by its accession,
+    and the form, the accession and the filed date beside the value; not
+    each reading's filed date and fiscal year, nor the value's source
+    name."""
+    reading = {"form": "10-K", "accn": "0001652044-26-000018", "section": "Item 1",
+               "fiscal_year": "FY2025", "source": "EDGAR filing archive",
+               "filed": "2026-02-05", "claims": []}
+    block = {"readings": [reading], "as_of": DATE}
+    state = _state([_dated(_record("thesis", {"ticker": "GOOGL"}, key="research",
+                                   block=block), source="EDGAR filing archive")],
+                   final_response="Item 1 of the 10-K 0001652044-26-000018.")
+    fails, _ = run_cases._readings_invariants(state)
+    assert _mentions(fails, "2026-02-05", "FY2025") == []
+    assert _mentions(fails, "form", "accn", "section") == []
+    unnamed = _state(state["tool_calls"], final_response="Item 1.")
+    assert _mentions(run_cases._readings_invariants(unnamed)[0], "accn")
+
+    filing = {"form": "10-K", "accn": "0001652044-26-000018", "filed": "2026-02-05",
+              "source": "EDGAR companyfacts"}
+    prediction = {"id": "W-1.3", "candidate": "W-1", "author": "system", "kind": "figure",
+                  "status": "proposed", "made_on": DATE, "due": "2027-09-25",
+                  "statement": "Revenue for FY2026 is at least 1.", "metric": "revenue",
+                  "bound": "min", "value": 1.0, "period": "FY2026", "source": filing,
+                  "reasons": []}
+    proposed = _state([_record("thesis", {"ticker": "GOOGL"}, key="research",
+                               block={"as_of": DATE, "predictions": [prediction]})],
+                      final_response="10-K 0001652044-26-000018 filed 2026-02-05")
+    entry = run_cases._watchlist_entry(run_cases.WATCHLIST_TICKER)
+    fails = run_cases._proposed_predictions(proposed, entry, {})
+    assert _mentions(fails, "EDGAR companyfacts") == []
+    assert _mentions(fails, "value's form", "value's accn", "source.filed") == []
+
+
 def test_3_2_is_one_call_alone():
     beside = _state([_record("allocation"), _lookup(["IPS-1.3"])], final_response="IPS-1.3")
     assert _mentions(run_cases.check_3_2(beside), "tools called")

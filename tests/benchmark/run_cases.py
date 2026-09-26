@@ -633,7 +633,11 @@ def check_1_4(state):
     if abs(sectored - COST_SECTORED) > CENT:
         fails.append(f"sectored cost basis {sectored} != {COST_SECTORED}")
 
-    fails += _prose_carries(state, lines, "pct_of_invested")
+    # Part 18, 1.4: the sector asked about and the unsectored line, each as
+    # a share of invested value; no other sector (decision 17).
+    asked = {label: line for label, line in lines.items()
+             if label in ("Technology", UNSECTORED_LABEL)}
+    fails += _prose_carries(state, asked, "pct_of_invested")
     fails += _states_as_of(state)
     return fails
 
@@ -2040,7 +2044,9 @@ def check_4_2(state):
                      "forecast")
 
     fails += _unexplained_screen_percentages(state, block.get("findings") or [])
-    fails += _screen_dates_reach_answer(state)
+    # The screen's check date is the range's as-of, read above; the code's
+    # pull date is the screen's answer, 4.1's, and Part 18 pins no SIC for
+    # 4.2 (decision 17).
     fails += _not_from_the_ips(state)
     fails += _no_recommendation(state, WATCHLIST_TICKER)
     return fails
@@ -2306,12 +2312,13 @@ def _readings_invariants(state):
             fails.append(f"{where}: fiscal year {r.get('fiscal_year')!r} is not a label like FY2025")
         if not r.get("source"):
             fails.append(f"{where}: names no source")
-        for key in ("form", "accn", "section", "fiscal_year"):
+        # Part 18, 4.4: the sections read of the 10-K by its accession; not
+        # each reading's fiscal year or filed date (decision 17).
+        for key in ("form", "accn", "section"):
             if r.get(key) and str(r[key]) not in answer:
                 fails.append(f"{where}: {key} {r[key]!r} never reaches the answer")
         if r.get("source"):
             fails += _source_shown(state, r["source"], f"{where}.source")
-        fails += _date_reaches_answer(state, r.get("filed"), f"{where}.filed")
 
         listed = r.get("claims")
         if not isinstance(listed, list) or not 1 <= len(listed) <= CLAIMS_CAP:
@@ -2441,7 +2448,9 @@ def _proposed_predictions(state, entry, claims):
                 fails.append(f"{where}: the value's filing lacks {missing}; a threshold "
                              "without its filing is a number from nowhere")
             else:
-                for k in ("form", "accn", "source"):
+                # Part 18, 4.4: the form, the accession and the filed date
+                # beside the value; not its source's name (decision 17).
+                for k in ("form", "accn"):
                     if str(source[k]) not in answer:
                         fails.append(f"{where}: the value's {k} {source[k]!r} never reaches "
                                      "the answer")
